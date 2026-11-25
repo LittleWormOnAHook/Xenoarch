@@ -29,7 +29,10 @@ namespace DMI.Xenoarch.Player
         [Header("Look")]
         public float mouseSensitivity = 0.08f;
         public float stickSensitivity = 140f;
+        [Tooltip("Max look-up angle (degrees).")]
         public float pitchLimit = 85f;
+        [Tooltip("Max look-down angle (degrees). Kept at 65-70 so the full body's neck/collar never comes into view.")]
+        [Range(30f, 89f)] public float pitchDownLimit = 68f;
 
         CharacterController _cc;
         InputAction _move, _sprint, _jump;
@@ -127,7 +130,7 @@ namespace DMI.Xenoarch.Player
             if (stick.sqrMagnitude > 0.01f) delta = stick * (stickSensitivity * dt);
             else delta = (Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero) * mouseSensitivity;
             transform.Rotate(0f, delta.x, 0f, Space.Self);
-            _pitch = Mathf.Clamp(_pitch - delta.y, -pitchLimit, pitchLimit);
+            _pitch = Mathf.Clamp(_pitch - delta.y, -pitchLimit, pitchDownLimit); // +pitch = looking down
             if (head != null) head.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
         }
     }

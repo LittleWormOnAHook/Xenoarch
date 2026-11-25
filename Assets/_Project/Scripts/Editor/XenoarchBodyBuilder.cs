@@ -25,6 +25,14 @@ namespace DMI.Xenoarch.EditorTools
         public const string ClipFolder = XenoarchSetup.Root + "/Art/Characters/Animations/BasicMotions";
         public const string BodyControllerPath = XenoarchSetup.Root + "/Animation/XA_Body_Locomotion.controller";
         public const string BodyName = "Body";
+        public const string UpperBodyMaskPath = XenoarchSetup.Root + "/Animation/XA_Body_UpperStiff.mask";
+        public const string StiffLayer = "UpperBodyStiff";
+        /// <summary>Weight of the idle-posture override on spine/chest/neck/head (run bob/lean suppression).</summary>
+        public const float StiffWeight = 0.8f;
+        /// <summary>Vertices with at least this much neck/head skin weight move to the shadow-only mesh (hides the collar ring too).</summary>
+        public const float HeadWeightThreshold = 0.2f;
+        public const float NearClip = 0.06f;
+        public const float PitchDownLimit = 68f;
         /// <summary>Body sits slightly behind the camera so looking down shows chest/legs rather than the inside of the torso.</summary>
         public const float BodyBackOffset = 0.14f;
         /// <summary>Target height of the head bone (eyes sit ~0.1 m above it, at the camera).</summary>
@@ -145,6 +153,28 @@ namespace DMI.Xenoarch.EditorTools
             T(land, loco, 0.15f).AddCondition(AnimatorConditionMode.Greater, 1.0f, "Speed");
             var anyJump = T(fall, jumpStart, 0.08f); anyJump.AddCondition(AnimatorConditionMode.If, 0, "Jump"); // coyote-ish jump off a step
 
+            // Stiff upper body: humanoid mask on spine/chest/neck/head holding the idle posture over locomotion,
+            // so running doesn't pitch the torso/neck forward into the camera. Arms and legs keep animating.
+            var mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
+            if (mask == null) { mask = new AvatarMask(); AssetDatabase.CreateAsset(mask, UpperBodyMaskPath); }
+            for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
+            {
+                var part = (AvatarMaskBodyPart)i;
+                mask.SetHumanoidBodyPartActive(part, part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head);
+            }
+            mask.transformCount = 0;
+            EditorUtility.SetDirty(mask);
+            ac.AddLayer(StiffLayer);
+            var lays = ac.layers;
+            var sl = lays[lays.Length - 1];
+            sl.avatarMask = mask;
+            sl.blendingMode = AnimatorLayerBlendingMode.Override;
+            sl.defaultWeight = StiffWeight;
+            ac.layers = lays;
+            var stiff = sl.stateMachine.AddState("IdlePosture");
+            stiff.motion = idle;
+            sl.stateMachine.defaultState = stiff;
+
             EditorUtility.SetDirty(ac);
             AssetDatabase.SaveAssets();
             Debug.Log($"[Xenoarch] Body: controller built ({motions} locomotion motions; walk {walk} / sprint {sprint} m/s)");
@@ -193,7 +223,7 @@ namespace DMI.Xenoarch.EditorTools
                 for (int i = 0; i < tris.Length; i += 3)
                 {
                     float m = Mathf.Max(headW[tris[i]], Mathf.Max(headW[tris[i + 1]], headW[tris[i + 2]]));
-                    var dst = m >= 0.5f ? hd : keep;
+                    var dst = m >= HeadWeightThreshold ? hd : keep;
                     dst.Add(tris[i]); dst.Add(tris[i + 1]); dst.Add(tris[i + 2]);
                 }
                 noHead.SetTriangles(keep, s, true); head.SetTriangles(hd, s, true);
@@ -242,6 +272,10 @@ namespace DMI.Xenoarch.EditorTools
                     so.ApplyModifiedPropertiesWithoutUndo();
                 }
                 else Debug.LogError("[Xenoarch] Body: XA_Player has no Head/ArmsMount/FirstPersonArms; rebuild with Setup 5 first");
+
+                // ---- camera: near clip + look-down limit (camera stays on the controller root, never on a body bone)
+                if (cam != null) cam.nearClipPlane = NearClip;
+                if (fpc != null) { var fso = new SerializedObject(fpc); fso.FindProperty("pitchDownLimit").floatValue = PitchDownLimit; fso.ApplyModifiedPropertiesWithoutUndo(); }
 
                 // ---- body
                 var old = root.transform.Find(BodyName);
@@ -375,6 +409,11 @@ namespace DMI.Xenoarch.EditorTools
             check(urp, "Kade materials are URP");
             float lateral = body != null ? body.LateralOffsetFromCamera() : 99f;
             check(body != null && body.Hips != null && body.Neck != null && Mathf.Abs(lateral) < 0.01f, $"Camera laterally centred on body spine (offset {lateral * 100f:F1} cm)");
+            var fpc = player != null ? player.GetComponent<FirstPersonController>() : null;
+            check(fpc != null && fpc.pitchDownLimit >= 65f && fpc.pitchDownLimit <= 70f, $"Look-down clamp 65-70 deg ({(fpc != null ? fpc.pitchDownLimit : 0f)})");
+            var vcam = fpc != null ? fpc.ViewCamera : null;
+            check(vcam != null && body != null && !vcam.transform.IsChildOf(body.transform) && vcam.nearClipPlane >= 0.05f, $"Camera on controller root (not a body/head bone), near clip {(vcam != null ? vcam.nearClipPlane : 0f):F2}");
+            check(ac != null && ac.layers.Any(l => l.name == StiffLayer && l.avatarMask != null && l.defaultWeight > 0.5f), "Body controller has stiff upper-body layer (humanoid spine/head mask)");
             var arms = player != null ? player.GetComponentInChildren<FirstPersonArms>(true) : null;
             check(arms != null && arms.LeftSlot != null && arms.RightSlot != null, "Arms have HandSlot_L / HandSlot_R");
             var armsAc = AssetDatabase.LoadAssetAtPath<AnimatorController>(XenoarchPlayerBuilder.ControllerPath);

@@ -40,7 +40,11 @@ namespace DMI.Xenoarch.Player
         [SerializeField] private float centerTime = 1.0f;
         [SerializeField] private float maxCenterCorrection = 0.2f;
 
-        float _airTime, _centerCorr, _baseX;
+        [Header("Sprint stability")]
+        [Tooltip("Extra distance (m) the body slides back at full sprint so the forward run lean never reaches the camera.")]
+        [SerializeField] private float sprintExtraBack = 0.12f;
+
+        float _airTime, _centerCorr, _baseX, _baseZ, _back;
 
         public Animator Animator => animator;
         public Transform Hips => hips;
@@ -76,6 +80,7 @@ namespace DMI.Xenoarch.Player
                 if (neck == null) neck = animator.GetBoneTransform(HumanBodyBones.Neck);
             }
             _baseX = transform.localPosition.x;
+            _baseZ = transform.localPosition.z;
             SetFirstPersonView(firstPersonView);
         }
 
@@ -99,10 +104,17 @@ namespace DMI.Xenoarch.Player
         void LateUpdate()
         {
             // After animation: nudge the body sideways so its spine stays under the camera on average.
-            if (!autoCenter || hips == null || neck == null || controller == null) return;
-            float err = LateralOffsetFromCamera();
-            _centerCorr = Mathf.Clamp(_centerCorr - err * Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.05f, centerTime)), -maxCenterCorrection, maxCenterCorrection);
-            var lp = transform.localPosition; lp.x = _baseX + _centerCorr; transform.localPosition = lp;
+            if (controller == null) return;
+            float dt = Time.deltaTime;
+            // slide the body back with speed above walk (sprint lean), smoothly
+            float over = Mathf.InverseLerp(controller.walkSpeed, controller.SprintSpeed, controller.PlanarSpeed);
+            _back = Mathf.MoveTowards(_back, over * sprintExtraBack, dt * 0.6f);
+            if (autoCenter && hips != null && neck != null)
+            {
+                float err = LateralOffsetFromCamera();
+                _centerCorr = Mathf.Clamp(_centerCorr - err * Mathf.Clamp01(dt / Mathf.Max(0.05f, centerTime)), -maxCenterCorrection, maxCenterCorrection);
+            }
+            var lp = transform.localPosition; lp.x = _baseX + _centerCorr; lp.z = _baseZ - _back; transform.localPosition = lp;
         }
     }
 }
