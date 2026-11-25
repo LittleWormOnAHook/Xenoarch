@@ -22,6 +22,12 @@ MonoBehaviour:
   discoveryChains:
   - {fileID: 11400000, guid: 7cf9bce3c472b664e9dd972afbb71680, type: 2}
   labTranslationCap: 0.6
+  refineRecipes:
+  - {fileID: 11400000, guid: 8b6d7775187075d46afd8e767ace90fd, type: 2}
+  - {fileID: 11400000, guid: 614703f72d8e1fa479169e0993dbf7fa, type: 2}
+  - {fileID: 11400000, guid: 0f9f52e8102d6b948a7ff528dc1e4326, type: 2}
+  - {fileID: 11400000, guid: d61bab55597d5654792e01ad53c321f5, type: 2}
+  - {fileID: 11400000, guid: a099d911c01a44c42b557c7b8d734d6a, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   defaultSpaceSkybox: {fileID: 2100000, guid: a01121a83277da848a2a5f4917888ed4, type: 2}
   firstGameplayScene: Ship_Starter
@@ -36,6 +42,10 @@ MonoBehaviour:
     count: 1
   - item: {fileID: 11400000, guid: 4e71e72536b02ce4394934fa11c03ab1, type: 2}
     count: 5
+  - item: {fileID: 11400000, guid: 75f5491531c394b4399a9c012df7c266, type: 2}
+    count: 8
+  - item: {fileID: 11400000, guid: eff4e5e168cd61844a9f346199508bbb, type: 2}
+    count: 2
   mainMenuScene: MainMenu
   fadeDuration: 0.35
   saveFolderName: Saves

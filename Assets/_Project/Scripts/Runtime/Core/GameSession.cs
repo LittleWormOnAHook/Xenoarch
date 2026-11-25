@@ -35,6 +35,7 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Discovery.DiscoveryService Discovery { get; }
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
+        public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
         public PlayerLocationState Location { get; internal set; } = new PlayerLocationState();
         public float PlaySeconds { get; set; }
 
@@ -57,6 +58,9 @@ namespace DMI.Xenoarch.Core
             Discovery = new DMI.Xenoarch.Discovery.DiscoveryService(config.discoveryChains, Exploration, Saves) { Clock = () => PlaySeconds };
             Artifacts = new DMI.Xenoarch.Artifacts.ArtifactService(items, config.civilizations, Discovery, Saves) { Clock = () => PlaySeconds, TranslationCap = config.labTranslationCap };
             Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
+            Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
+            Artifacts.HasReagents = n => Materials.ReagentUnits() >= n;
+            Artifacts.PayReagents = n => Materials.PayReagents(n);
             Exploration.Gate = key => Discovery.Has(key);
             Exploration.SiteRevealed += (id, level) => Discovery.Publish(DMI.Xenoarch.Discovery.Facts.Site(id), level);
         }

@@ -83,5 +83,7 @@ First playable slice, batch 1C-1 (compiled clean 17:21 ET, smoke 114/0). Nothing
 - ◐ Lab UI: each column scrolls vertically (keeps its scroll position while the lab refreshes).
 - ◐ Return to the ship from Moon/Mars/TradeHub always arrives at the airlock spawn.
 - ☑ Fixed (latent since 1B): galaxy, body, site, ship, scanner and environment assets had no script binding (several ScriptableObject classes in one file) and would have loaded empty after an Editor restart. Each class now has its own file; the 39 assets are re-linked. Smoke 121/0.
+- ◐ Materials loop (batch 1C-2c): 6 raw planet materials (deposits on Moon/Mars, hold E, respawn after 1200 s), 3 refined products, 5 refine recipes, ship Refiner terminal (timed batch, cancel refunds, refuel ship from cargo). Lab operations cost reagents (1-3 units); start kit 8 reagents + 2 fuel cells. Design: Economy doc, "Materials and refining". Smoke: recipes, timing, refund, refuel, reagent gating, respawn, save.
+- ☐ Refiner placed in Ship_Starter: waiting on Ship_Starter being saved (the pass skips scenes with unsaved changes). It will swap a "Refiner" station placeholder if Anthony places one, otherwise it adds a pillar 1.6 m right of the Research Laboratory.
 - ☐ Mars buried chamber (walls/tunnels) for the Canyon Relay: design decision pending.
 

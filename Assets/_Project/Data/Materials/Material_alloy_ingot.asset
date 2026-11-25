@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f820f3ffdc684741979c34890e26e4f, type: 3}
+  m_Name: Material_alloy_ingot
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Materials.MaterialDefinition
+  id: material.alloy_ingot
+  displayName: Alloy Ingot
+  description: Smelted alloy for ship and tool upgrades (Phase 1D).
+  icon: {fileID: 0}
+  category: 3
+  maxStack: 50
+  uniqueInstance: 0
+  mass: 0.5
+  baseValue: 30
+  worldPrefab: {fileID: 0}
+  refined: 1
+  fuelValue: 0
+  reagentValue: 0
+  tint: {r: 0.7, g: 0.72, b: 0.78, a: 1}
+  bodies: []
+  nodesPerScene: 0
+  unitsPerNode: {x: 0, y: 0}
+  respawnSeconds: 1200

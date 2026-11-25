@@ -31,6 +31,13 @@ namespace DMI.Xenoarch.Artifacts
             ResearchOp.Translation => 15f, _ => 18f,
         };
 
+        /// <summary>Lab reagent units an operation consumes (paid when it starts; see Economy doc, Materials and refining).</summary>
+        public static int ReagentCost(ResearchOp op) => op switch
+        {
+            ResearchOp.CivilizationIdentification => 2, ResearchOp.Translation => 2,
+            ResearchOp.Restoration => 3, ResearchOp.TechnologyAnalysis => 3, _ => 1,
+        };
+
         public static ResearchOp? Prerequisite(ResearchOp op) => op switch
         {
             ResearchOp.Cleaning => null,

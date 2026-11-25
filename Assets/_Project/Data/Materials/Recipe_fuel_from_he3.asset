@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9497b799dadf65b4fa952b7fbcfff877, type: 3}
+  m_Name: Recipe_fuel_from_he3
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Materials.RefineRecipe
+  id: recipe.fuel_from_he3
+  displayName: He-3 fuel pellets
+  inputs:
+  - itemId: material.helium3
+    count: 1
+  - itemId: material.water_ice
+    count: 1
+  outputs:
+  - itemId: material.fuel_cell
+    count: 3
+  seconds: 20

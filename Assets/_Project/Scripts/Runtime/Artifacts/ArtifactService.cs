@@ -60,6 +60,8 @@ namespace DMI.Xenoarch.Artifacts
         readonly DiscoveryService _discovery;
         public ArtifactState State { get; private set; } = new ArtifactState();
         public float TranslationCap = 0.6f;
+        /// <summary>Lab reagent payment (wired to the materials loop by GameSession). Null = free (tests, tools).</summary>
+        public Func<int, bool> HasReagents, PayReagents;
         public Func<float> Clock = () => 0f;
         public event Action Changed;
         public event Action<ArtifactInstance, ResearchOp, string> ResearchCompleted;
@@ -137,12 +139,16 @@ namespace DMI.Xenoarch.Artifacts
             if (pre.HasValue && !a.Done(pre.Value)) { reason = $"Needs {ResearchRules.Label(pre.Value)}."; return false; }
             if (op == ResearchOp.Translation && a.translation >= TranslationCap - 1e-3f) { reason = $"Lab limit reached ({TranslationCap:P0}). Needs a better translator."; return false; }
             if (op == ResearchOp.Restoration && a.condition >= 0.999f) { reason = "Already pristine."; return false; }
+            int cost = ResearchRules.ReagentCost(op);
+            if (cost > 0 && HasReagents != null && !HasReagents(cost)) { reason = $"Needs {cost} lab reagent{(cost == 1 ? "" : "s")} (refine some at the refiner)."; return false; }
             return true;
         }
 
         public bool Start(ArtifactInstance a, ResearchOp op, out string reason)
         {
             if (!CanStart(a, op, out reason)) return false;
+            int cost = ResearchRules.ReagentCost(op);
+            if (cost > 0 && PayReagents != null && !PayReagents(cost)) { reason = "Not enough lab reagents."; return false; }
             State.hasJob = true;
             State.job = new ResearchJob { instanceId = a.instanceId, op = op, elapsed = 0f, duration = ResearchRules.Duration(op) };
             Changed?.Invoke();

@@ -73,6 +73,7 @@ namespace DMI.Xenoarch.Ship
                 Btn(lab, "Cancel", () => { arts.Cancel(); Refresh(); }).AddToClassList("xa-term__btn--ghost");
             }
             else Text(lab, "Idle. One operation at a time (Mk I lab).");
+            Text(lab, $"Lab reagents in cargo: {Session.Materials.ReagentUnits()} units (refine more at the refiner)", "xa-term__dim");
             if (!string.IsNullOrEmpty(_message)) Text(lab, _message);
 
             Text(lab, "JOURNAL", "xa-term__h");
@@ -113,7 +114,8 @@ namespace DMI.Xenoarch.Ship
                 bool done = a.Done(op) && !ResearchRules.Repeatable(op);
                 if (done) { Text(col, $"Done: {ResearchRules.Label(op)}"); continue; }
                 bool can = arts.CanStart(a, op, out var why);
-                string label = $"{ResearchRules.Label(op)} ({ResearchRules.Duration(op):0} s)" + (can ? "" : $"  - {why}");
+                int cost = ResearchRules.ReagentCost(op);
+                string label = $"{ResearchRules.Label(op)} ({ResearchRules.Duration(op):0} s, {cost} reagent{(cost == 1 ? "" : "s")})" + (can ? "" : $"\n{why}");
                 Btn(col, label, () => { if (!arts.Start(a, op, out var r)) _message = r; else _message = null; Refresh(); }, can);
             }
         }

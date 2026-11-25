@@ -145,6 +145,7 @@ namespace DMI.Xenoarch.UI
         {
             var b = new Button(onClick) { text = text };
             b.AddToClassList("xa-term__btn");
+            b.style.whiteSpace = WhiteSpace.Normal; // long labels wrap instead of running off the panel
             b.SetEnabled(enabled);
             return b;
         }

@@ -8,6 +8,8 @@ using DMI.Xenoarch.Discovery;
 using DMI.Xenoarch.Excavation;
 using DMI.Xenoarch.Galaxy;
 using DMI.Xenoarch.Items;
+using DMI.Xenoarch.Interaction;
+using DMI.Xenoarch.Materials;
 using DMI.Xenoarch.Ship;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -53,6 +55,19 @@ namespace DMI.Xenoarch.EditorTools
             reg.SetEntries(entries);
             EditorUtility.SetDirty(reg);
 
+            var mats = Materials(log);
+            entries = reg.Entries.Where(e => e != null).ToList();
+            foreach (var m in mats) if (!entries.Any(e => e.Id == m.Id)) entries.Add(m);
+            reg.SetEntries(entries);
+            var recipes = Recipes(log);
+            config.refineRecipes = recipes;
+            void Kit(string id, int n)
+            {
+                var item = mats.FirstOrDefault(m => m.Id == id);
+                if (item != null && !config.startingItems.Any(k => k != null && k.item == item)) config.startingItems.Add(new StartingItem { item = item, count = n });
+            }
+            Kit(LabReagent, 8); Kit(FuelCell, 2);
+
             var chain = Chain();
             if (!config.civilizations.Contains(civ)) config.civilizations.Add(civ);
             if (!config.discoveryChains.Contains(chain)) config.discoveryChains.Add(chain);
@@ -69,6 +84,7 @@ namespace DMI.Xenoarch.EditorTools
                 var all = s.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
                 var sb = new StringBuilder();
                 XenoarchShipSceneBuilder.SwapStation<ResearchTerminal>(all, LabName, LabName, sb);
+                PlaceRefiner(all, sb);
                 log.Append(sb);
                 return true;
             });
@@ -311,6 +327,149 @@ namespace DMI.Xenoarch.EditorTools
             ["site.mars.buried_spire"] = "digstyle.canyon_sediment",
         };
 
+        // ------------------------------------------------------------------ materials loop
+        public const string MaterialsFolder = XenoarchSetup.Root + "/Data/Materials";
+        public const string FuelCell = "material.fuel_cell", LabReagent = "material.lab_reagent", WaterIce = "material.water_ice", Regolith = "material.regolith";
+        public const string RefinerName = "Refiner";
+        const string Moon = "body.sol.moon", Mars = "body.sol.mars";
+
+        static List<MaterialDefinition> Materials(StringBuilder log)
+        {
+            XenoarchSetup.EnsureFolder(MaterialsFolder);
+            var defs = new (string id, string name, string desc, bool refined, float fuel, int reagent, Color tint, string[] bodies, int nodes, int min, int max, int value)[]
+            {
+                (Regolith, "Regolith", "Loose surface rock and dust. Leach it into lab reagent at the refiner.", false, 0f, 0, new Color(0.55f, 0.55f, 0.56f), new[] { Moon, Mars }, 5, 3, 5, 2),
+                (WaterIce, "Water Ice", "Ice from shaded ground. Split it into fuel cells, or use it to make reagent from salts.", false, 0f, 0, new Color(0.75f, 0.88f, 0.98f), new[] { Moon, Mars }, 3, 2, 4, 6),
+                ("material.helium3", "Helium-3 Regolith", "Regolith rich in helium-3. With ice it makes three fuel cells.", false, 0f, 0, new Color(0.9f, 0.85f, 0.55f), new[] { Moon }, 2, 1, 2, 20),
+                ("material.iron_ore", "Iron Ore", "Iron-rich rock. Smelt into alloy ingots (upgrades, Phase 1D).", false, 0f, 0, new Color(0.45f, 0.28f, 0.2f), new[] { Moon }, 3, 2, 3, 5),
+                ("material.mineral_salts", "Mineral Salts", "Perchlorate-rich salts. The lab can use them directly (1 reagent each) or refine them with ice.", false, 0f, 1, new Color(0.92f, 0.82f, 0.8f), new[] { Mars }, 3, 2, 4, 4),
+                ("material.methane_frost", "Methane Frost", "Frozen methane. Burns straight in the ship's engines (4 fuel each).", false, 4f, 0, new Color(0.35f, 0.75f, 0.7f), new[] { Mars }, 3, 2, 3, 6),
+                (FuelCell, "Fuel Cell", "Refined fuel. 25 units of ship fuel each.", true, 25f, 0, new Color(1f, 0.7f, 0.2f), new string[0], 0, 0, 0, 40),
+                (LabReagent, "Lab Reagent", "Refined chemistry for the research lab (1 reagent unit each).", true, 0f, 1, new Color(0.5f, 0.9f, 0.6f), new string[0], 0, 0, 0, 15),
+                ("material.alloy_ingot", "Alloy Ingot", "Smelted alloy for ship and tool upgrades (Phase 1D).", true, 0f, 0, new Color(0.7f, 0.72f, 0.78f), new string[0], 0, 0, 0, 30),
+            };
+            var list = new List<MaterialDefinition>();
+            foreach (var d in defs)
+            {
+                var a = Asset<MaterialDefinition>($"{MaterialsFolder}/Material_{d.id.Substring("material.".Length)}.asset");
+                a.SetIdForTooling(d.id); a.displayName = d.name; a.description = d.desc;
+                a.category = ItemCategory.Resource; a.uniqueInstance = false; a.maxStack = 50; a.mass = 0.5f; a.baseValue = d.value;
+                a.refined = d.refined; a.fuelValue = d.fuel; a.reagentValue = d.reagent; a.tint = d.tint;
+                a.bodies = d.bodies.ToList(); a.nodesPerScene = d.nodes; a.unitsPerNode = new Vector2Int(d.min, d.max); a.respawnSeconds = 1200f;
+                EditorUtility.SetDirty(a);
+                list.Add(a);
+            }
+            log.AppendLine($"Materials: {list.Count} ({list.Count(m => !m.refined)} raw, {list.Count(m => m.refined)} refined)");
+            return list;
+        }
+
+        static List<RefineRecipe> Recipes(StringBuilder log)
+        {
+            var defs = new (string id, string name, (string, int)[] ins, (string, int)[] outs, float secs)[]
+            {
+                ("recipe.fuel_from_ice", "Electrolysis", new[] { (WaterIce, 2) }, new[] { (FuelCell, 1) }, 12f),
+                ("recipe.fuel_from_he3", "He-3 fuel pellets", new[] { ("material.helium3", 1), (WaterIce, 1) }, new[] { (FuelCell, 3) }, 20f),
+                ("recipe.reagent_from_regolith", "Regolith leach", new[] { (Regolith, 3) }, new[] { (LabReagent, 1) }, 8f),
+                ("recipe.reagent_from_salts", "Brine reagent", new[] { ("material.mineral_salts", 1), (WaterIce, 1) }, new[] { (LabReagent, 3) }, 10f),
+                ("recipe.alloy", "Smelt alloy", new[] { ("material.iron_ore", 3) }, new[] { ("material.alloy_ingot", 1) }, 15f),
+            };
+            var list = new List<RefineRecipe>();
+            foreach (var d in defs)
+            {
+                var r = Asset<RefineRecipe>($"{MaterialsFolder}/Recipe_{d.id.Substring("recipe.".Length)}.asset");
+                r.SetIdForTooling(d.id); r.displayName = d.name; r.seconds = d.secs;
+                r.inputs = d.ins.Select(i => new ItemAmount(i.Item1, i.Item2)).ToList();
+                r.outputs = d.outs.Select(o => new ItemAmount(o.Item1, o.Item2)).ToList();
+                EditorUtility.SetDirty(r);
+                list.Add(r);
+            }
+            log.AppendLine($"Refine recipes: {string.Join(", ", list.Select(r => r.displayName))}");
+            return list;
+        }
+
+        /// <summary>
+        /// Refiner station: swaps a "Refiner" station placeholder if Anthony placed one; otherwise adds a placeholder
+        /// pillar 1.6 m to the right of the Research Laboratory (new object only, nothing existing is moved).
+        /// </summary>
+        static void PlaceRefiner(List<GameObject> all, StringBuilder log)
+        {
+            if (all.Any(g => g.GetComponent<RefinerTerminal>() != null)) { log.AppendLine("Refiner: already present, kept where it is"); return; }
+            if (all.Any(g => g.GetComponents<StationPlaceholderInteractable>().Any(p => p.stationName == RefinerName)))
+            { XenoarchShipSceneBuilder.SwapStation<RefinerTerminal>(all, RefinerName, RefinerName, log); return; }
+            var lab = all.FirstOrDefault(g => g.GetComponent<ResearchTerminal>() != null);
+            if (lab == null) { log.AppendLine("Refiner: no Research Laboratory to place it next to; skipped"); return; }
+            var go = new GameObject("Refiner (placeholder, move freely)");
+            Undo.RegisterCreatedObjectUndo(go, "Refiner");
+            go.transform.SetParent(lab.transform.parent, false);
+            go.transform.position = lab.transform.position + lab.transform.right * 1.6f;
+            go.transform.rotation = lab.transform.rotation;
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            body.name = "Refiner Body";
+            body.transform.SetParent(go.transform, false);
+            body.transform.localPosition = new Vector3(0f, 0.65f, 0f);
+            body.transform.localScale = new Vector3(0.9f, 1.3f, 0.7f);
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(XenoarchSetup.Root + "/Art/Materials/Placeholder_Metal.mat");
+            if (mat != null) body.GetComponent<Renderer>().sharedMaterial = mat;
+            var t = go.AddComponent<RefinerTerminal>();
+            t.terminalName = RefinerName;
+            log.AppendLine($"Refiner: placeholder pillar added next to the Research Laboratory at {go.transform.position} (parent '{(go.transform.parent != null ? go.transform.parent.name : "scene root")}')");
+        }
+
+        public static void ValidateMaterials(System.Action<bool, string> check, XenoarchConfig config)
+        {
+            var mats = config.itemRegistry.Entries.OfType<MaterialDefinition>().ToList();
+            if (mats.Count == 0) { check(true, "1C materials: setup not run yet - skipped"); return; }
+            check(mats.Count >= 9 && mats.Any(m => m.fuelValue > 0 && !m.refined) && mats.Any(m => m.reagentValue > 0 && !m.refined) && mats.Count(m => m.refined) >= 3,
+                $"1C materials: {mats.Count} materials (raw direct fuel + direct reagent + refined products)");
+            check(config.refineRecipes.Count >= 5 && config.refineRecipes.All(r => r != null && r.inputs.Count > 0 && r.outputs.Count > 0 && r.inputs.Concat(r.outputs).All(i => mats.Any(m => m.Id == i.itemId))),
+                $"1C materials: {config.refineRecipes.Count} refine recipes, all items resolve");
+
+            var s = new GameSession(config, config.itemRegistry, new DMI.Xenoarch.Save.MemorySaveStorage());
+            s.StartNewGame();
+            var M = s.Materials; var inv = s.Inventory;
+            check(M.ReagentUnits() >= 8 && inv.Count(FuelCell) >= 2, $"1C materials: starting kit has lab reagents ({M.ReagentUnits()}) and fuel cells ({inv.Count(FuelCell)})");
+            var ice = M.Recipe("recipe.fuel_from_ice");
+            bool refused = !M.CanRefine(ice, out var why);
+            inv.Add(WaterIce, 4);
+            int cellsBefore = inv.Count(FuelCell);
+            bool started = M.StartRefine(ice, out _);
+            M.Tick(5f); bool mid = M.Busy && inv.Count(FuelCell) == cellsBefore;
+            M.Tick(10f);
+            check(refused && started && mid && !M.Busy && inv.Count(WaterIce) == 2 && inv.Count(FuelCell) == cellsBefore + 1,
+                $"1C refiner: inputs taken at start, timed batch delivers outputs (2 ice -> 1 fuel cell; refused without ice: {why})");
+            M.StartRefine(ice, out _); M.CancelRefine();
+            check(inv.Count(WaterIce) == 2 && !M.Busy, "1C refiner: cancel returns the inputs");
+
+            var x = s.Exploration;
+            x.Ship.fuel = 10f;
+            float cargoFuel = M.FuelInCargo();
+            float added = M.Refuel(x);
+            check(added > 40f && x.Ship.fuel > 50f && inv.Count(FuelCell) == 0 && Mathf.Approximately(M.FuelInCargo(), 0f), $"1C refiner: refuel uses fuel items from cargo (+{added:0} fuel from {cargoFuel:0} in cargo)");
+
+            int units = M.ReagentUnits();
+            var tablet = s.Artifacts.Recover(s.Artifacts.Definition(Tablet), 0.8f, "site.moon.tranquility_cache", Moon);
+            inv.AddInstance(Tablet, tablet.instanceId);
+            bool paid = s.Artifacts.Start(tablet, ResearchOp.Cleaning, out _);
+            check(paid && M.ReagentUnits() == units - ResearchRules.ReagentCost(ResearchOp.Cleaning), $"1C lab: operations consume lab reagents ({units} -> {M.ReagentUnits()})");
+            s.Artifacts.Tick(100f);
+            inv.Remove(LabReagent, 999); inv.Remove("material.mineral_salts", 999);
+            check(!s.Artifacts.CanStart(tablet, ResearchOp.Identification, out var why2) && why2.Contains("reagent"), $"1C lab: no reagents, no research ({why2})");
+
+            string node = "node.Moon_Excavation_01.material.regolith.0";
+            M.MarkHarvested(node, 100f);
+            check(!M.NodeAvailable(node, 500f, 1200f) && M.NodeAvailable(node, 1400f, 1200f), "1C materials: harvested node respawns after its timer");
+            inv.Add(WaterIce, 2); M.StartRefine(ice, out _); M.Tick(3f);
+            s.Saves.Save("smoke1c_mat");
+            var re = new GameSession(config, config.itemRegistry, s.Saves.Storage);
+            re.StartNewGame();
+            bool ok = re.Saves.TryRead("smoke1c_mat", out var file, out _);
+            if (ok) re.Saves.Apply(file);
+            check(ok && re.Materials.Busy && Mathf.Approximately(re.Materials.State.job.elapsed, 3f) && !re.Materials.NodeAvailable(node, 500f, 1200f), "1C materials: refiner job and harvested nodes survive save/load");
+            string ship = File.Exists(XenoarchSetup.ScenePath(SceneNames.ShipStarter)) ? File.ReadAllText(XenoarchSetup.ScenePath(SceneNames.ShipStarter)) : "";
+            bool placed = ship.Contains("terminalName: Refiner");
+            check(true, placed ? "1C ship: Refiner station in Ship_Starter" : "1C ship: Refiner not placed yet (Ship_Starter had unsaved changes) - skipped");
+        }
+
         // ------------------------------------------------------------------ content
         static T Asset<T>(string path) where T : ScriptableObject
         {
@@ -507,6 +666,8 @@ namespace DMI.Xenoarch.EditorTools
             var styled = config.siteRegistry.Entries.Where(x => x != null && x.style != null).ToList();
             check(styled.Count >= 6 && styled.Select(x => x.style.Id).Distinct().Count() >= 4 && styled.All(x => x.style.layers.Count >= 3),
                 $"1C sites: data-driven dig site styles ({string.Join(", ", styled.Select(x => x.style.displayName).Distinct())})");
+
+            ValidateMaterials(check, config);
 
             // Grid rules
             var grid = ExcavationGrid.ForSite(3f, 1.2f, 0.25f);
