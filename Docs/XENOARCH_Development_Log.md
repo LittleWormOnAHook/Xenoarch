@@ -61,3 +61,15 @@ Times are US Eastern (ET).
 - `P_Spaceship_Constellation_Mark_1_{Fake,FlyMode,StandMode}`: FlyMode and StandMode are the same ship. The only difference is the landing gear: up in FlyMode, down in StandMode. Fake is the exterior shell, with no interior lights and fewer interior pieces.
 - The doors (`DoorDoubleSlide`) are trigger-based, with no Input API. Station-to-room mapping for Phase 1B is in the audit.
 - Post-processing profiles are PPv1/PPv2, not URP. They need recreating as URP Volume profiles.
+
+## 2026-11-25 (afternoon, ET): Phase 1B systems, skyboxes, travel plan
+- Phase 1B code is in and compiles. Smoke check 77 pass / 0 fail. Added:
+  - Sol data: 18 bodies plus TradeHub Sol, with environment profiles and gravity
+  - starter ship data, saved in the `ship.state` and `world.discovery` sections
+  - Navigation and orbital scanner terminals (UITK)
+  - handheld surface scanner (1 to equip, LMB/RT to pulse) and site markers
+  - XenoarchDoor wrapper for the Creepy Cat doors, and the ship airlock
+  - environment applier (gravity, ambient/fog, URP Volume, skybox)
+- Ship_Starter: Anthony aligned the stations to the Mark 1 StandMode ship (committed 53ca720). The additive pass (Setup/8) only swaps placeholder components on his objects. It never moves anything and runs only on a saved, clean scene. It is pending while he keeps editing the scene.
+- Space skyboxes: the kit's .mat files reference a shader that isn't in this project, so new Skybox/6 Sided materials were built from the kit's face textures in `Art/Skyboxes`. The sky is applied at runtime per orbit (Earth/TradeHub, Moon, Mars, Europa/Enceladus; deep space by default), so the scene file isn't edited.
+- Travel plan (map, cockpit, FTL through the front window) is documented in the Roadmap. Not built yet.
