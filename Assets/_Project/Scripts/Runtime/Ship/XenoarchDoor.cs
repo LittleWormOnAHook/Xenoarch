@@ -42,18 +42,21 @@ namespace DMI.Xenoarch.Ship
 
         void Awake()
         {
-            AdoptVendor("DoorDoubleSlide", Motion.Slide);
-            AdoptVendor("DoorDoubleRotate", Motion.Rotate);
-            _audio = GetComponent<AudioSource>();
+            bool vendor = AdoptVendor("DoorDoubleSlide", Motion.Slide) | AdoptVendor("DoorDoubleRotate", Motion.Rotate);
+            // Unity still sends trigger messages to the disabled vendor script, which plays the door sound itself.
+            _audio = vendor ? null : GetComponent<AudioSource>();
             if (doorL) { _restL = doorL.localPosition; _rotL = doorL.localRotation; }
             if (doorR) { _restR = doorR.localPosition; _rotR = doorR.localRotation; }
+            foreach (var leaf in new[] { doorL, doorR })
+                if (leaf != null && leaf.TryGetComponent(out Renderer r) && r.isPartOfStaticBatch)
+                    Debug.LogWarning($"[Xenoarch] Door '{name}': leaf '{leaf.name}' is static-batched and cannot move visually. Clear its Static flags (Xenoarch/Setup/8 does this).", leaf);
             if (string.IsNullOrEmpty(doorId)) doorId = $"door.{gameObject.scene.name}.{name}".ToLowerInvariant().Replace(' ', '_');
         }
 
-        void AdoptVendor(string typeName, Motion m)
+        bool AdoptVendor(string typeName, Motion m)
         {
             var c = GetComponent(typeName) as Behaviour;
-            if (c == null) return;
+            if (c == null) return false;
             var t = c.GetType();
             T Get<T>(string f, T fallback) { var fi = t.GetField(f, BindingFlags.Public | BindingFlags.Instance); return fi != null && fi.GetValue(c) is T v ? v : fallback; }
             motion = m;
@@ -64,6 +67,7 @@ namespace DMI.Xenoarch.Ship
             if (m == Motion.Slide) { speed = Get("speed", speed); openAmount = Get("openDistance", openAmount); }
             else { speed = Get("openSmooth", speed); openAmount = Get("doorOpenAngle", 90f); closeAngle = Get("doorCloseAngle", 0f); }
             c.enabled = false;
+            return true;
         }
 
         bool Accepts(Collider other)

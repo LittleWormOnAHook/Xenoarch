@@ -82,15 +82,26 @@ namespace DMI.Xenoarch.EditorTools
             }
             else log.AppendLine($"Airlock: no '{AirlockOldName}' found, skipped");
 
-            // 3) Doors: wrap every Creepy Cat trigger door in an active ship (component override on the instance only).
-            int doors = 0;
+            // 3) Doors. Root cause of "audio plays but doors don't open": the kit marks every ship object Static
+            //    (incl. Batching Static), so the door leaves are merged into a static batch at Play start and moving
+            //    their transforms no longer moves the rendered mesh. Clear static flags on the moving leaves (scene
+            //    instance override, vendor prefab untouched) and add the XenoarchDoor wrapper.
+            int doors = 0, leaves = 0;
             foreach (var g in all)
             {
-                if (g.GetComponent("DoorDoubleSlide") == null && g.GetComponent("DoorDoubleRotate") == null) continue;
-                if (g.GetComponent<XenoarchDoor>() != null) continue;
-                g.AddComponent<XenoarchDoor>(); doors++;
+                Component vendor = g.GetComponent("DoorDoubleSlide");
+                if (vendor == null) vendor = g.GetComponent("DoorDoubleRotate");
+                if (vendor == null) continue;
+                foreach (var f in new[] { "doorL", "doorR" })
+                {
+                    var leaf = vendor.GetType().GetField(f)?.GetValue(vendor) as Transform;
+                    if (leaf == null) continue;
+                    foreach (var t in leaf.GetComponentsInChildren<Transform>(true))
+                        if (GameObjectUtility.GetStaticEditorFlags(t.gameObject) != 0) { Undo.RecordObject(t.gameObject, "Door leaf static"); GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0); leaves++; }
+                }
+                if (g.GetComponent<XenoarchDoor>() == null) { Undo.AddComponent<XenoarchDoor>(g); doors++; }
             }
-            log.AppendLine($"Doors: XenoarchDoor added to {doors} vendor door(s)");
+            log.AppendLine($"Doors: XenoarchDoor added to {doors} door(s); static flags cleared on {leaves} door-leaf object(s)");
 
             // 4) Lights in ship instances: Mixed mode, shadows only on the strongest few (no transforms touched, no bake run).
             var lights = all.Where(g => g.activeInHierarchy).Select(g => g.GetComponent<Light>()).Where(l => l != null && l.type != LightType.Directional && PrefabUtility.IsPartOfPrefabInstance(l)).ToList();
@@ -114,6 +125,15 @@ namespace DMI.Xenoarch.EditorTools
                 log.AppendLine("Added global Volume (VP_Ship_Interior)");
             }
 
+            // 6) Scene Lighting skybox = default deep space (runtime swaps it per orbit).
+            var cfg = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
+            if (cfg != null && cfg.defaultSpaceSkybox != null && RenderSettings.skybox != cfg.defaultSpaceSkybox)
+            {
+                RenderSettings.skybox = cfg.defaultSpaceSkybox;
+                DynamicGI.UpdateEnvironment();
+                log.AppendLine($"Lighting skybox = {cfg.defaultSpaceSkybox.name}");
+            }
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             log.AppendLine("Saved Ship_Starter.");
@@ -122,11 +142,40 @@ namespace DMI.Xenoarch.EditorTools
 
         static void SwapStation<T>(List<GameObject> all, string objectName, string terminalName, StringBuilder log) where T : DMI.Xenoarch.UI.TerminalWindow
         {
-            var go = all.FirstOrDefault(g => g.name == objectName);
+            // Find by placeholder stationName first (Anthony may have renamed/moved it into his own prefab), then by name.
+            var go = all.Select(g => g.GetComponent<StationPlaceholderInteractable>()).Where(p => p != null && p.stationName == objectName).Select(p => p.gameObject).FirstOrDefault()
+                     ?? all.FirstOrDefault(g => g.GetComponent<T>() != null)
+                     ?? all.FirstOrDefault(g => g.name == objectName);
             if (go == null) { log.AppendLine($"{objectName}: not found, skipped"); return; }
-            foreach (var p in go.GetComponents<StationPlaceholderInteractable>()) Object.DestroyImmediate(p, true);
+            if (go.GetComponent<T>() != null && go.GetComponent<StationPlaceholderInteractable>() == null) { log.AppendLine($"{objectName}: already {typeof(T).Name} at '{Path(go.transform)}'"); return; }
+
+            var placeholder = go.GetComponent<StationPlaceholderInteractable>();
+            if (placeholder != null && PrefabUtility.GetCorrespondingObjectFromSource(placeholder) != null)
+            {
+                // Component lives in a prefab asset: swap it in the asset (component only; transforms untouched).
+                var src = PrefabUtility.GetCorrespondingObjectFromOriginalSource(placeholder);
+                string assetPath = AssetDatabase.GetAssetPath(src);
+                if (assetPath.StartsWith("Assets/_Creepy_Cat")) { log.AppendLine($"{objectName}: placeholder is inside a vendor prefab ({assetPath}); skipped, move it to an own prefab"); return; }
+                var contents = PrefabUtility.LoadPrefabContents(assetPath);
+                try
+                {
+                    foreach (var p in contents.GetComponentsInChildren<StationPlaceholderInteractable>(true))
+                    {
+                        if (p.stationName != placeholder.stationName) continue;
+                        var host = p.gameObject;
+                        Object.DestroyImmediate(p);
+                        var t = host.GetComponent<T>(); if (t == null) t = host.AddComponent<T>();
+                        t.terminalName = terminalName;
+                    }
+                    PrefabUtility.SaveAsPrefabAsset(contents, assetPath);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(contents); }
+                log.AppendLine($"{objectName}: {typeof(T).Name} swapped into prefab asset {assetPath} (instance '{Path(go.transform)}', position kept)");
+                return;
+            }
+            if (placeholder != null) Undo.DestroyObjectImmediate(placeholder);
             var term = go.GetComponent<T>();
-            if (term == null) term = go.AddComponent<T>();
+            if (term == null) term = Undo.AddComponent<T>(go);
             term.terminalName = terminalName;
             EditorUtility.SetDirty(go);
             log.AppendLine($"{objectName}: {typeof(T).Name} at '{Path(go.transform)}' (position kept)");
