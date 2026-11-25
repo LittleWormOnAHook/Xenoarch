@@ -18,6 +18,12 @@ namespace DMI.Xenoarch.EditorTools
         /// <summary>Create this (empty) file to re-run "Create Foundation Assets" (idempotent) after the next script reload.</summary>
         const string AssetsTrigger = "Temp/xenoarch_assets.trigger";
 
+        /// <summary>Create this (empty) file to build the first-person player and swap it into the scenes after the next reload.</summary>
+        const string PlayerTrigger = "Temp/xenoarch_player.trigger";
+
+        /// <summary>Create this (empty) file to convert Assets/_Creepy_Cat materials to URP after the next reload.</summary>
+        const string ConvertTrigger = "Temp/xenoarch_convert.trigger";
+
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
         static void TryRun()
@@ -26,6 +32,16 @@ namespace DMI.Xenoarch.EditorTools
             {
                 File.Delete(AssetsTrigger);
                 XenoarchSetup.CreateFoundationAssets();
+            }
+            if (File.Exists(ConvertTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(ConvertTrigger);
+                Art.VendorMaterialConverter.ConvertCreepyCat();
+            }
+            if (File.Exists(PlayerTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(PlayerTrigger);
+                XenoarchPlayerBuilder.BuildAll();
             }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {

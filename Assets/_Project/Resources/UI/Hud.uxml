@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Xenoarch.uss" />
+    <ui:VisualElement name="hud-root" class="xa-fill" picking-mode="Ignore">
+        <ui:VisualElement name="crosshair" class="xa-crosshair" picking-mode="Ignore" />
+        <ui:VisualElement name="prompt" class="xa-prompt" picking-mode="Ignore">
+            <ui:Label name="prompt-key" class="xa-key" text="E" picking-mode="Ignore" />
+            <ui:Label name="prompt-text" class="xa-prompt-text" text="Interact" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="hold-track" class="xa-hold-track" picking-mode="Ignore">
+            <ui:VisualElement name="hold-fill" class="xa-hold-fill" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="bottom" class="xa-bottom" picking-mode="Ignore">
+            <ui:VisualElement name="inventory-strip" class="xa-strip" picking-mode="Ignore" />
+            <ui:Label name="hints" class="xa-hints" text="" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,34 +1,48 @@
 using DMI.Xenoarch.Core;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace DMI.Xenoarch.UI
 {
-    /// <summary>PLACEHOLDER main menu (IMGUI): New Game, Continue (quick save), Quit. Real UI comes with the UI pass.</summary>
+    /// <summary>PLACEHOLDER main menu (UI Toolkit, Resources/UI/MainMenu.uxml): New Game, Continue (quick save), Quit.</summary>
     public sealed class MainMenuPlaceholder : MonoBehaviour
     {
-        void OnEnable() => UIState.SetOpen(Panels.MainMenu, true);
+        public const string Uxml = "UI/MainMenu";
+        Button _continue;
+
+        void OnEnable()
+        {
+            UIState.SetOpen(Panels.MainMenu, true);
+            var doc = XenoarchUI.CreateDocument(gameObject, Uxml, 20);
+            if (doc == null) return;
+            var r = doc.rootVisualElement;
+            r.Q<Button>("btn-new")?.RegisterCallback<ClickEvent>(_ => { if (!Busy) XenoarchRuntime.Instance.NewGame(); });
+            _continue = r.Q<Button>("btn-continue");
+            _continue?.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (Busy) return;
+                XenoarchRuntime.Instance.LoadGame(XenoarchRuntime.Session.Config.quickSaveSlot);
+            });
+            r.Q<Button>("btn-quit")?.RegisterCallback<ClickEvent>(_ => Quit());
+        }
+
         void OnDisable() => UIState.SetOpen(Panels.MainMenu, false);
 
-        void OnGUI()
+        static bool Busy => XenoarchRuntime.Instance == null || XenoarchRuntime.Scenes.IsLoading;
+
+        void Update()
         {
-            var rt = XenoarchRuntime.Instance;
-            if (rt == null || XenoarchRuntime.Scenes.IsLoading) return;
-            float w = 260f, x = (Screen.width - w) * 0.5f, y = Screen.height * 0.4f;
-            GUI.Label(new Rect(x, y - 70, w, 30), "XENOARCH");
-            GUI.Label(new Rect(x, y - 45, w + 200, 30), "Discover the past. Unlock the future.");
-            if (GUI.Button(new Rect(x, y, w, 36), "New Game")) rt.NewGame();
-            var slot = XenoarchRuntime.Session.Config.quickSaveSlot;
-            GUI.enabled = XenoarchRuntime.Session.Saves.HasSave(slot);
-            if (GUI.Button(new Rect(x, y + 44, w, 36), "Continue (quick save)")) rt.LoadGame(slot);
-            GUI.enabled = true;
-            if (GUI.Button(new Rect(x, y + 88, w, 36), "Quit"))
-            {
+            if (_continue == null || XenoarchRuntime.Session == null) return;
+            _continue.SetEnabled(XenoarchRuntime.Session.Saves.HasSave(XenoarchRuntime.Session.Config.quickSaveSlot));
+        }
+
+        static void Quit()
+        {
 #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
+            UnityEditor.EditorApplication.isPlaying = false;
 #else
-                Application.Quit();
+            Application.Quit();
 #endif
-            }
         }
     }
 }

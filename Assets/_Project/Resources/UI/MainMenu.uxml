@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Xenoarch.uss" />
+    <ui:VisualElement name="menu-root" class="xa-fill xa-menu-root">
+        <ui:VisualElement name="menu-panel" class="xa-menu-panel">
+            <ui:Label text="XENOARCH" class="xa-title" />
+            <ui:Label text="Discover the past. Unlock the future." class="xa-subtitle" />
+            <ui:Button name="btn-new" class="xa-button"><ui:VisualElement class="xa-glyph xa-glyph--play" picking-mode="Ignore" /><ui:Label text="New Game" picking-mode="Ignore" /></ui:Button>
+            <ui:Button name="btn-continue" class="xa-button"><ui:VisualElement class="xa-glyph xa-glyph--continue" picking-mode="Ignore" /><ui:Label text="Continue (quick save)" picking-mode="Ignore" /></ui:Button>
+            <ui:Button name="btn-quit" class="xa-button"><ui:VisualElement class="xa-glyph xa-glyph--quit" picking-mode="Ignore" /><ui:Label text="Quit" picking-mode="Ignore" /></ui:Button>
+            <ui:Label text="Phase 1A placeholder UI" class="xa-version" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

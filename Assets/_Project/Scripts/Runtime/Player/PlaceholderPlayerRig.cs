@@ -9,6 +9,7 @@ namespace DMI.Xenoarch.Player
     /// Left/Right arrow to turn 45 degrees so the interaction test stations placed around it can be targeted.
     /// Replace with the vendor prefab + an IPlayerRig adapter; delete this component then.
     /// </summary>
+    [System.Obsolete("Replaced by FirstPersonController (XA_Player prefab). Kept only so old scenes load; delete in Phase 1B.")]
     [DisallowMultipleComponent]
     public sealed class PlaceholderPlayerRig : MonoBehaviour, IPlayerRig
     {

@@ -36,6 +36,23 @@ namespace DMI.Xenoarch.EditorTools
             var problems = reg.Validate();
             Check(problems.Count == 0, "Item registry ids valid and unique" + (problems.Count > 0 ? ": " + string.Join("; ", problems) : ""));
             Check(reg.Entries.Count >= 7, $"Item registry has starter items ({reg.Entries.Count})");
+            var ps = Resources.Load<UnityEngine.UIElements.PanelSettings>(DMI.Xenoarch.UI.XenoarchUI.PanelSettingsResource);
+            Check(ps != null && ps.themeStyleSheet != null, "UITK PanelSettings + theme in Resources");
+            foreach (var u in new[] { DMI.Xenoarch.UI.InteractionPromptHud.Uxml, DMI.Xenoarch.UI.MainMenuPlaceholder.Uxml, DMI.Xenoarch.Scenes.SceneLoader.FadeUxml })
+                Check(Resources.Load<UnityEngine.UIElements.VisualTreeAsset>(u) != null, $"UXML {u} loads");
+            var player = AssetDatabase.LoadAssetAtPath<GameObject>(XenoarchPlayerBuilder.PlayerPrefabPath);
+            Check(player != null && player.GetComponent<DMI.Xenoarch.Player.IPlayerRig>() != null && player.GetComponent<CharacterController>() != null, "XA_Player prefab: CharacterController + IPlayerRig");
+            var armsAnim = player != null ? player.GetComponentInChildren<Animator>(true) : null;
+            Check(armsAnim != null && armsAnim.runtimeAnimatorController != null, "XA_Player arms Animator has controller");
+            float cov = XenoarchPlayerBuilder.ArmsBindingCoverage(out var covDetail);
+            Check(cov >= 0.9f, $"Arms clip bindings resolve on arms rig ({covDetail})");
+            string prefabGuid = AssetDatabase.AssetPathToGUID(XenoarchPlayerBuilder.PlayerPrefabPath);
+            foreach (var n in new[] { SceneNames.ShipStarter, SceneNames.TradeHubSol, SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
+            {
+                var p = XenoarchSetup.ScenePath(n);
+                string txt = File.Exists(p) ? File.ReadAllText(p) : "";
+                Check(prefabGuid.Length > 0 && txt.Contains(prefabGuid), $"{n} uses XA_Player");
+            }
             int withIcon = 0; foreach (var e in reg.Entries) if (e != null && e.icon != null) withIcon++;
             Check(withIcon >= XenoarchSetup.PlaceholderIcons.Count, $"Starter items have icons ({withIcon}/{reg.Entries.Count})");
 

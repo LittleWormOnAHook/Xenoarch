@@ -4,7 +4,7 @@ using DMI.Xenoarch.Player;
 using DMI.Xenoarch.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace DMI.Xenoarch.Scenes
 {
@@ -21,7 +21,9 @@ namespace DMI.Xenoarch.Scenes
         public event Action<string> LoadStarted;
         public event Action<string> LoadCompleted;
 
-        CanvasGroup _fade;
+        public const string FadeUxml = "UI/Fade";
+        VisualElement _fade;
+        float _alpha;
 
         /// <summary>Arrival request: a spawn id, or an exact pose (loading a save).</summary>
         public struct Arrival
@@ -83,33 +85,30 @@ namespace DMI.Xenoarch.Scenes
         IEnumerator Fade(float target)
         {
             if (_fade == null) BuildOverlay();
-            _fade.blocksRaycasts = target > 0.5f;
-            float start = _fade.alpha, t = 0f, d = Mathf.Max(0.0001f, fadeDuration);
+            if (_fade == null) yield break;
+            _fade.pickingMode = target > 0.5f ? PickingMode.Position : PickingMode.Ignore;
+            float start = _alpha, t = 0f, d = Mathf.Max(0.0001f, fadeDuration);
             while (t < d)
             {
                 t += Time.unscaledDeltaTime;
-                _fade.alpha = Mathf.Lerp(start, target, Mathf.Clamp01(t / d));
+                _alpha = Mathf.Lerp(start, target, Mathf.Clamp01(t / d));
+                _fade.style.opacity = _alpha;
                 yield return null;
             }
-            _fade.alpha = target;
+            _alpha = target;
+            _fade.style.opacity = target;
         }
 
         void BuildOverlay()
         {
             if (_fade != null) return;
-            var go = new GameObject("FadeOverlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasGroup));
+            var go = new GameObject("FadeOverlay");
             go.transform.SetParent(transform, false);
-            var canvas = go.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 32000;
-            _fade = go.GetComponent<CanvasGroup>();
-            _fade.alpha = 0f; _fade.blocksRaycasts = false; _fade.interactable = false;
-
-            var img = new GameObject("Black", typeof(RectTransform), typeof(Image));
-            img.transform.SetParent(go.transform, false);
-            var rt = (RectTransform)img.transform;
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
-            img.GetComponent<Image>().color = Color.black;
+            var doc = XenoarchUI.CreateDocument(go, FadeUxml, 1000);
+            _fade = doc != null ? doc.rootVisualElement.Q("fade") : null;
+            if (_fade == null) { Debug.LogWarning("[Xenoarch] SceneLoader: fade overlay unavailable; transitions will cut"); return; }
+            _fade.style.opacity = 0f;
+            _fade.pickingMode = PickingMode.Ignore;
         }
     }
 }

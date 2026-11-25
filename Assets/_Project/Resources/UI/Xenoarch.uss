@@ -1,0 +1,74 @@
+/* Xenoarch placeholder UI: graphite panels, pale-blue text, amber accents. Art: Art/Placeholder (Genesis Shift UI frames). */
+:root {
+    --xa-graphite: rgba(22, 25, 30, 0.82);
+    --xa-paleblue: rgb(170, 205, 240);
+    --xa-amber: rgb(242, 168, 56);
+    --xa-text: rgb(215, 228, 240);
+}
+.xa-fill { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+
+/* ---------- HUD ---------- */
+.xa-crosshair {
+    position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; margin-left: -18px; margin-top: -18px;
+    background-image: url("/Assets/_Project/Art/Placeholder/Genesis/HUD/Crosshair_Default.png"); -unity-background-image-tint-color: rgba(170, 205, 240, 0.65);
+}
+.xa-crosshair--target { background-image: url("/Assets/_Project/Art/Placeholder/Genesis/HUD/Crosshair_Interact.png"); -unity-background-image-tint-color: var(--xa-amber); width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
+.xa-prompt {
+    position: absolute; left: 50%; top: 56%; width: 640px; margin-left: -320px;
+    flex-direction: row; justify-content: center; align-items: center;
+}
+.xa-key {
+    min-width: 34px; height: 34px; margin-right: 10px; -unity-text-align: middle-center; -unity-font-style: bold; font-size: 16px;
+    color: var(--xa-amber); background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Frames/CutFrame_Glow_3px.png");
+    -unity-slice-left: 20; -unity-slice-right: 20; -unity-slice-top: 20; -unity-slice-bottom: 20; -unity-slice-scale: 0.35px;
+    -unity-background-image-tint-color: var(--xa-amber);
+}
+.xa-prompt-text {
+    font-size: 18px; color: var(--xa-text); padding: 4px 14px; background-color: var(--xa-graphite);
+    border-left-width: 2px; border-left-color: var(--xa-amber);
+}
+.xa-hold-track {
+    position: absolute; left: 50%; top: 61%; width: 220px; height: 6px; margin-left: -110px;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+.xa-hold-fill { height: 100%; width: 0; background-color: var(--xa-amber); }
+.xa-bottom {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 20px 10px 20px;
+    background-image: url("/Assets/_Project/Art/Placeholder/Genesis/HUD/Gradient_Bottom.png"); -unity-background-image-tint-color: rgba(0, 0, 0, 0.7);
+}
+.xa-strip { flex-direction: row; align-items: flex-end; margin-bottom: 6px; }
+.xa-slot {
+    width: 84px; height: 96px; margin-right: 8px; align-items: center; justify-content: flex-start; padding-top: 6px;
+    background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Frames/Slot_Background.png");
+    border-width: 1px; border-color: rgba(170, 205, 240, 0.35);
+}
+.xa-slot__icon { width: 56px; height: 56px; -unity-background-scale-mode: scale-to-fit; }
+.xa-slot__count { position: absolute; right: 4px; top: 2px; font-size: 13px; color: var(--xa-amber); -unity-font-style: bold; }
+.xa-slot__name { font-size: 10px; color: var(--xa-text); white-space: normal; -unity-text-align: upper-center; width: 80px; overflow: hidden; height: 26px; }
+.xa-hint, .xa-hints { font-size: 13px; color: rgba(170, 205, 240, 0.75); }
+
+/* ---------- Main menu ---------- */
+.xa-menu-root { align-items: center; justify-content: center; background-color: rgb(10, 12, 16); }
+.xa-menu-panel {
+    width: 520px; padding: 36px 40px; align-items: stretch; background-color: var(--xa-graphite);
+    background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Frames/CutFrame_Glow_3px.png");
+    -unity-slice-left: 24; -unity-slice-right: 24; -unity-slice-top: 24; -unity-slice-bottom: 24; -unity-slice-scale: 1px;
+    -unity-background-image-tint-color: rgba(170, 205, 240, 0.6);
+}
+.xa-title { font-size: 54px; -unity-font-style: bold; color: var(--xa-text); -unity-text-align: middle-center; letter-spacing: 12px; }
+.xa-subtitle { font-size: 16px; color: var(--xa-amber); -unity-text-align: middle-center; margin-bottom: 28px; }
+.xa-button {
+    height: 52px; margin: 6px 0; flex-direction: row; align-items: center; padding-left: 18px;
+    font-size: 18px; color: var(--xa-text); -unity-text-align: middle-left;
+    background-color: rgba(40, 46, 56, 0.9); border-width: 1px; border-color: rgba(170, 205, 240, 0.35); border-radius: 0;
+}
+.xa-button:hover { border-color: var(--xa-amber); color: var(--xa-amber); background-color: rgba(60, 50, 30, 0.9); }
+.xa-button:disabled { opacity: 0.35; }
+.xa-glyph { width: 20px; height: 20px; margin-right: 14px; -unity-background-image-tint-color: var(--xa-paleblue); }
+.xa-glyph--play { background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Glyphs/Glyph_Play.png"); }
+.xa-glyph--continue { background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Glyphs/Glyph_Refresh.png"); }
+.xa-glyph--quit { background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Glyphs/Glyph_Exit.png"); }
+.xa-version { font-size: 11px; color: rgba(170, 205, 240, 0.4); -unity-text-align: middle-center; margin-top: 20px; }
+
+/* ---------- Fade ---------- */
+.xa-fade { background-color: rgb(0, 0, 0); opacity: 0; }

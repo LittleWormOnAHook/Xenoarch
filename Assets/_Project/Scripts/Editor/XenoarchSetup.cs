@@ -58,6 +58,7 @@ namespace DMI.Xenoarch.EditorTools
             };
 
             AssignPlaceholderIcons(items, false);
+            EnsurePanelSettings();
 
             var registry = LoadOrCreate<ItemRegistry>(RegistryPath);
             registry.SetEntries(items);
@@ -101,6 +102,30 @@ namespace DMI.Xenoarch.EditorTools
             { "item.test.unique_fragment", PlaceholderArt + "/ASH/Items/Icon_UnidentifiedFragment.png" },
         };
         public const string PlaceholderArt = Root + "/Art/Placeholder";
+
+        public const string PanelSettingsPath = ResourcesFolder + "/UI/XenoarchPanelSettings.asset";
+        public const string ThemePath = ResourcesFolder + "/UI/XenoarchTheme.tss";
+
+        /// <summary>UI Toolkit PanelSettings used by every Xenoarch UIDocument (1920x1080 reference, scale with screen).</summary>
+        public static UnityEngine.UIElements.PanelSettings EnsurePanelSettings()
+        {
+            EnsureFolder(ResourcesFolder + "/UI");
+            var ps = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.PanelSettings>(PanelSettingsPath);
+            if (ps == null)
+            {
+                ps = ScriptableObject.CreateInstance<UnityEngine.UIElements.PanelSettings>();
+                AssetDatabase.CreateAsset(ps, PanelSettingsPath);
+            }
+            ps.scaleMode = UnityEngine.UIElements.PanelScaleMode.ScaleWithScreenSize;
+            ps.referenceResolution = new Vector2Int(1920, 1080);
+            ps.screenMatchMode = UnityEngine.UIElements.PanelScreenMatchMode.MatchWidthOrHeight;
+            ps.match = 0.5f;
+            var theme = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.ThemeStyleSheet>(ThemePath);
+            if (theme != null) ps.themeStyleSheet = theme;
+            else Debug.LogWarning($"[Xenoarch] Setup: theme {ThemePath} not found");
+            EditorUtility.SetDirty(ps);
+            return ps;
+        }
 
         [MenuItem("Xenoarch/Setup/4. Assign Placeholder Item Icons (overwrite)", priority = 24)]
         public static void AssignPlaceholderIconsMenu()
@@ -169,6 +194,8 @@ namespace DMI.Xenoarch.EditorTools
 
         // ------------------------------------------------------------------ scenes
 
+        static string _buildingScene;
+
         static void Build(string name, bool overwrite, Action populate)
         {
             string path = ScenePath(name);
@@ -176,6 +203,7 @@ namespace DMI.Xenoarch.EditorTools
             for (int i = 0; i < SceneManager.sceneCount; i++)
                 if (SceneManager.GetSceneAt(i).path == path) { Debug.LogWarning($"[Xenoarch] Setup: {path} is open, skipped"); return; }
 
+            _buildingScene = name;
             var previous = SceneManager.GetActiveScene();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
             try
@@ -282,27 +310,7 @@ namespace DMI.Xenoarch.EditorTools
 
         static GameObject Rig(Vector3 pos, float yaw)
         {
-            var root = new GameObject("Player_Placeholder (vendor FPC pending)");
-            root.transform.SetPositionAndRotation(pos, Quaternion.Euler(0, yaw, 0));
-            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            body.name = "Capsule";
-            body.transform.SetParent(root.transform, false);
-            body.transform.localPosition = new Vector3(0, 1f, 0);
-            body.GetComponent<Renderer>().sharedMaterial = LoadMat("Placeholder_PaleBlue");
-            var camGo = new GameObject("ViewCamera", typeof(Camera), typeof(AudioListener));
-            camGo.tag = "MainCamera";
-            camGo.transform.SetParent(root.transform, false);
-            camGo.transform.localPosition = new Vector3(0, 1.65f, 0);
-            var cam = camGo.GetComponent<Camera>();
-            cam.nearClipPlane = 0.05f;
-            var rig = root.AddComponent<PlaceholderPlayerRig>();
-            var so = new SerializedObject(rig);
-            so.FindProperty("viewCamera").objectReferenceValue = cam;
-            so.ApplyModifiedPropertiesWithoutUndo();
-            root.AddComponent<InputSystemInteractionInput>();
-            root.AddComponent<Interactor>();
-            root.AddComponent<InteractionPromptHud>();
-            return root;
+            return XenoarchPlayerBuilder.InstantiatePlayer(pos, yaw, XenoarchPlayerBuilder.GravityFor(_buildingScene));
         }
 
         static void Spawn(string id, Vector3 pos, float yaw)

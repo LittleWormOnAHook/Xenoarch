@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Xenoarch.uss" />
+    <ui:VisualElement name="fade" class="xa-fill xa-fade" picking-mode="Ignore" />
+</ui:UXML>
