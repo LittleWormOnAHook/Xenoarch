@@ -30,7 +30,7 @@ namespace DMI.Xenoarch.EditorTools
         /// <summary>Weight of the idle-posture override on spine/chest/neck/head (run bob/lean suppression).</summary>
         public const float StiffWeight = 0.8f;
         /// <summary>Vertices with at least this much neck/head skin weight move to the shadow-only mesh (hides the collar ring too).</summary>
-        public const float HeadWeightThreshold = 0.2f;
+        public const float HeadWeightThreshold = 0.1f;
         public const float NearClip = 0.06f;
         public const float PitchDownLimit = 68f;
         /// <summary>Body sits slightly behind the camera so looking down shows chest/legs rather than the inside of the torso.</summary>
@@ -413,6 +413,7 @@ namespace DMI.Xenoarch.EditorTools
             check(fpc != null && fpc.pitchDownLimit >= 65f && fpc.pitchDownLimit <= 70f, $"Look-down clamp 65-70 deg ({(fpc != null ? fpc.pitchDownLimit : 0f)})");
             var vcam = fpc != null ? fpc.ViewCamera : null;
             check(vcam != null && body != null && !vcam.transform.IsChildOf(body.transform) && vcam.nearClipPlane >= 0.05f, $"Camera on controller root (not a body/head bone), near clip {(vcam != null ? vcam.nearClipPlane : 0f):F2}");
+            check(body != null && body.SprintExtraBack >= 0.2f && body.StiffWeightRun >= 0.99f, $"Run stability: stiff 100% when running, sprint pullback {(body != null ? body.SprintExtraBack : 0f):F2} m");
             check(ac != null && ac.layers.Any(l => l.name == StiffLayer && l.avatarMask != null && l.defaultWeight > 0.5f), "Body controller has stiff upper-body layer (humanoid spine/head mask)");
             var arms = player != null ? player.GetComponentInChildren<FirstPersonArms>(true) : null;
             check(arms != null && arms.LeftSlot != null && arms.RightSlot != null, "Arms have HandSlot_L / HandSlot_R");
