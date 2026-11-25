@@ -21,8 +21,8 @@ namespace DMI.Xenoarch.Ship
         public Transform seatAnchor;
         [Tooltip("Console the seat faces (set by Setup/9). Empty = the chair's forward.")]
         public CockpitHelm console;
-        [Tooltip("Camera height above the floor while seated.")]
-        public float seatedEyeHeight = 1.15f;
+        [Tooltip("Camera height above the floor while seated (m).")]
+        public float eyeHeight = 1.3f;
         [Tooltip("Shift of the seated position from the chair centre, along the facing (negative = back into the seat).")]
         public float depthOffset = -0.05f;
         public float transitionSeconds = 0.65f;
@@ -118,10 +118,10 @@ namespace DMI.Xenoarch.Ship
             for (float t = 0f; t < transitionSeconds; t += Time.deltaTime)
             {
                 float k = Mathf.SmoothStep(0f, 1f, t / transitionSeconds);
-                p.SetSeatPose(Vector3.Lerp(startPos, seatPos, k), Mathf.LerpAngle(startYaw, seatYaw, k), Mathf.Lerp(startPitch, 8f, k), Mathf.Lerp(startEye, seatedEyeHeight, k));
+                p.SetSeatPose(Vector3.Lerp(startPos, seatPos, k), Mathf.LerpAngle(startYaw, seatYaw, k), Mathf.Lerp(startPitch, 8f, k), Mathf.Lerp(startEye, eyeHeight, k));
                 yield return null;
             }
-            p.SetSeatPose(seatPos, seatYaw, 8f, seatedEyeHeight);
+            p.SetSeatPose(seatPos, seatYaw, 8f, eyeHeight);
             p.EnableSeatLook(seatYaw, yawRange, pitchDown, pitchUp);
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
@@ -139,7 +139,7 @@ namespace DMI.Xenoarch.Ship
             for (float t = 0f; t < transitionSeconds; t += Time.deltaTime)
             {
                 float k = Mathf.SmoothStep(0f, 1f, t / transitionSeconds);
-                p.SetSeatPose(Vector3.Lerp(from, to, k), yaw, Mathf.Lerp(pitch, 0f, k), Mathf.Lerp(seatedEyeHeight, p.StandingEyeHeight, k));
+                p.SetSeatPose(Vector3.Lerp(from, to, k), yaw, Mathf.Lerp(pitch, 0f, k), Mathf.Lerp(eyeHeight, p.StandingEyeHeight, k));
                 yield return null;
             }
             p.SetSeatPose(to, yaw, 0f, p.StandingEyeHeight);

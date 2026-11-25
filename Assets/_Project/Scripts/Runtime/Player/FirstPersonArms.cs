@@ -54,6 +54,32 @@ namespace DMI.Xenoarch.Player
         Transform _arms;
         readonly List<Renderer> _renderers = new List<Renderer>();
         bool _visible = true;
+        Transform _rightHand;
+
+        // Procedural reach (cockpit console buttons): right arm aims at a world point, out -> press -> back.
+        [Header("Reach (button press)")]
+        [SerializeField] private float reachOutSeconds = 0.35f;
+        [SerializeField] private float reachHoldSeconds = 0.12f;
+        [SerializeField] private float reachBackSeconds = 0.3f;
+        [Tooltip("How far (m) the whole arms rig leans toward the target at full reach.")]
+        [SerializeField] private float reachLean = 0.18f;
+        Vector3 _reachTarget;
+        float _reachStart = -1f, _reachWeight;
+        bool _reachFired;
+        System.Action _onPress;
+
+        /// <summary>True while a reach gesture is playing.</summary>
+        public bool Reaching => _reachStart >= 0f;
+
+        /// <summary>Reach the right hand toward <paramref name="worldTarget"/>, press, return. <paramref name="onPress"/>
+        /// fires at the press (or immediately if the arms rig is missing).</summary>
+        public void Reach(Vector3 worldTarget, System.Action onPress)
+        {
+            if (rightUpperArm == null || _rightHand == null) { onPress?.Invoke(); return; }
+            if (Reaching) { var prev = _onPress; _onPress = null; prev?.Invoke(); }
+            _reachTarget = worldTarget; _reachStart = Time.time; _reachFired = false; _onPress = onPress;
+            RaiseTemporarily(Hand.Right, reachOutSeconds + reachHoldSeconds + reachBackSeconds + 0.1f);
+        }
 
         public Transform LeftSlot => leftSlot;
         public Transform RightSlot => rightSlot;
@@ -90,6 +116,7 @@ namespace DMI.Xenoarch.Player
             _arms = animator != null ? animator.transform : transform;
             if (leftUpperArm == null) leftUpperArm = FindDeep(_arms, "upperarm_l");
             if (rightUpperArm == null) rightUpperArm = FindDeep(_arms, "upperarm_r");
+            _rightHand = FindDeep(_arms, "hand_r");
             foreach (var r in _arms.GetComponentsInChildren<Renderer>(true)) if (r.enabled) _renderers.Add(r);
             if (animator != null)
             {
@@ -122,6 +149,7 @@ namespace DMI.Xenoarch.Player
         void Update()
         {
             float dt = Time.deltaTime;
+            UpdateReach();
             for (int i = 0; i < 2; i++)
             {
                 bool up = _held[i] || Time.time < _tempUntil[i];
@@ -152,6 +180,33 @@ namespace DMI.Xenoarch.Player
             Lower(rightUpperArm, 1f - Smooth(_weight[1]), axis);
             float both = 1f - Smooth(Mathf.Max(_weight[0], _weight[1]));
             transform.localPosition = _restLocalPos + loweredOffset * both;
+            ApplyReach();
+        }
+
+        void UpdateReach()
+        {
+            if (!Reaching) { _reachWeight = 0f; return; }
+            float t = Time.time - _reachStart;
+            float press = reachOutSeconds + reachHoldSeconds * 0.5f;
+            if (!_reachFired && t >= press) { _reachFired = true; var cb = _onPress; _onPress = null; cb?.Invoke(); }
+            if (t < reachOutSeconds) _reachWeight = Smooth(t / reachOutSeconds);
+            else if (t < reachOutSeconds + reachHoldSeconds) _reachWeight = 1f;
+            else if (t < reachOutSeconds + reachHoldSeconds + reachBackSeconds) _reachWeight = 1f - Smooth((t - reachOutSeconds - reachHoldSeconds) / reachBackSeconds);
+            else { _reachWeight = 0f; _reachStart = -1f; }
+        }
+
+        void ApplyReach()
+        {
+            if (_reachWeight <= 0.0001f || rightUpperArm == null || _rightHand == null) return;
+            // Lean the rig toward the target (a press has some push), then swing the upper arm so shoulder->hand points at it.
+            var view = transform.parent != null ? transform.parent : transform;
+            Vector3 lean = view.InverseTransformDirection((_reachTarget - transform.position).normalized) * reachLean;
+            transform.localPosition += lean * _reachWeight;
+            Vector3 cur = _rightHand.position - rightUpperArm.position;
+            Vector3 want = _reachTarget - rightUpperArm.position;
+            if (cur.sqrMagnitude < 1e-6f || want.sqrMagnitude < 1e-6f) return;
+            var full = Quaternion.FromToRotation(cur, want);
+            rightUpperArm.rotation = Quaternion.Slerp(Quaternion.identity, full, _reachWeight) * rightUpperArm.rotation;
         }
 
         void Lower(Transform bone, float amount, Vector3 axis)

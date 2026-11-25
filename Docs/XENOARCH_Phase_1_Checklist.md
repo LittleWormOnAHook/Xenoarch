@@ -26,7 +26,7 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 | # | Criterion | Status |
 |---|---|---|
 | 1 | Start new game inside spacecraft | ◐ (New Game → Ship_Starter) |
-| 2 | Access navigation terminal | ☐ (placeholder station only) |
+| 2 | Access navigation terminal | ☑ (holo-table, Anthony in Play) |
 | 3 | Select Moon | ☐ |
 | 4 | Orbital scan | ☐ |
 | 5 | Discover archaeological site | ☐ |
@@ -59,4 +59,10 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 - ☑ Ship doors open and close. Static batching was freezing the door leaves; they are now non-static and run through XenoarchDoor. Anthony checked this in Play.
 - ☑ Space skyboxes: per-orbit sky plus deep space by default. Anthony checked this in Play.
 - ◐ Ship lights set to Mixed (4 with shadows), ship Volume added. Lighting bake still pending.
-- ☐ Cockpit FTL travel sequence, world labels replaced by a "Press E" popup, Creepy Cat post-processing recreated as URP Volume (polish batch)
+- ◐ Cockpit FTL travel sequence from the ship console (smoke: FX linked, plot course -> travel clears course). Anthony's Play log shows an FTL run reaching Mars and autosaving; the full sequence is not yet signed off.
+- ☑ World labels removed in all scenes, the E popup is the only prompt (smoke: no "Label" objects)
+- ◐ Creepy Cat post-processing recreated as URP Volume profiles (A_2018 on the ship). Look not yet reviewed.
+- ◐ Cockpit seats: E on either P_Chair_07 sits (0.65 s glide, eye 1.3 m, clamped look), E/Space stands (smoke: 2 seats facing the console). Not yet tested by hand.
+- ◐ Ship console on P_Cockpit_Tech_02 (UITK menu: Engage drive, Clear course, Nav map, Orbital scanner, status, Stand up), with a right-hand reach/press before a command fires (smoke: one console with a collider). Not yet tested by hand.
+- ☑ Sky: the ship scene's own skybox = open space; Earth/Moon/Mars use their orbit skies; restored from the save (smoke)
+- ☑ Tooling: `Editor/XenoarchAutoCompile` + `Tools/unity_compile.ps1` compile in the open Editor without a manual click and log results to `Logs/xenoarch_compile.txt` (used 17:03-17:05 ET)

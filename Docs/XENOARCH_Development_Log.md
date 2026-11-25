@@ -41,7 +41,7 @@ Times are US Eastern (ET).
   - Missing nested prefabs (Genesis-only additions, not part of the vendor kit): DM_ForceField_Plane (Genesis _Project/Prefabs/ForceFields), Stairs01 (_DLNK Space Base Pack), Smoke Colored (Genesis _Project/Prefabs/VFX). Affects 6 example prefabs only: P_Glass_Tunnel_Part_01, P_Base_Biobase_A, P_Base_ComStation_A, P_Base_RadarStation_A, P_Room_Space_Station_01, P_Biodome_01.
   - Missing textures in 16 materials (see Logs/xenoarch_material_conversion.txt).
   - Kit scripts compile; several use legacy `Input.*` (MouseLook, Rover*, *_Example_Keys, LaserShoot, TurretLookAt, Crate_Open_Close) and will throw if run with Input System only. Do not use those demo controllers.
-- PlanetPack02 (Genesis): **not imported**. Built-in render pipeline only (surface shaders + ForwardBase CG passes, render pink in URP), 572 MB of 8K textures, one trivial rotate script. If we want its planets for skyboxes, port one Shader Graph planet shader and downscale 1–2 texture sets.
+- PlanetPack02 (Genesis): **not imported**. Built-in render pipeline only (surface shaders + ForwardBase CG passes, render pink in URP), 572 MB of 8K textures, one trivial rotate script. If we want its planets for skyboxes, port one Shader Graph planet shader and downscale 1-2 texture sets.
 
 ## 2026-11-25 (1:50 PM ET): Kade body, hands lowered/hand slots, ship prefab survey
 
@@ -77,3 +77,10 @@ Times are US Eastern (ET).
   - Doors did not open because the kit marks everything Static, so the leaves were static-batched. Static is cleared on the leaves in this scene only, and XenoarchDoor is added.
   - The navigation terminal is swapped onto Anthony's holo-table (`P_Holo_Table_04/.../Holo_Globe_01`). Every placeholder copy is now swapped.
   - Smoke check: 83/0. Anthony checked doors, nav and skybox in Play.
+
+## 2026-11-25 (4:00-5:05 PM ET): 1B polish, cockpit seats/console, sky rule, auto-compile
+- Polish pass (Setup/9) ran on the saved Ship_Starter at 16:24: 8 floating labels removed (plus TradeHub 4, Moon 2, Mars 2), console `CockpitHelm` on Anthony's `P_Cockpit_Tech_02`, `CockpitSeat` on both `P_Chair_07` (StandMode ship; components only, nothing moved, vendor prefabs untouched), ship Volume -> `VP_CC_Profile_A_2018`. Smoke 92/0. Commit bd13ca6.
+- Sky rule (Anthony): the ship scene's own skybox is open space; Earth/Moon/Mars swap in EarthOrbit/MoonOrbit/MarsOrbit; every other body uses the scene sky. Derived from the saved ship location, so it survives save/load. The ship builder no longer overwrites the scene skybox. New game starts in Earth orbit (Anthony OK).
+- Seats: no sit animation in the Kade set, so the body is hidden while seated. Seated eye height raised 1.15 -> 1.3 m (`CockpitSeat.eyeHeight`). Saves taken while seated store the standing spot.
+- Console commands (Engage drive, Nav map, Orbital scanner) now play a procedural right-arm reach to the console (about 0.35 s out, press, back) and fire on the press (`FirstPersonArms.Reach`, aim point from `CockpitHelm.PressPointFor` or an optional `pressPoint`).
+- Compile tooling: the earlier "Unity is in Play mode" reports were wrong. Unity was idle and already in the foreground, so it never got the focus event that triggers auto-refresh. `XenoarchAutoCompile` now polls `Temp/xenoarch_compile.trigger` (refresh + compile, works in the background), logs each assembly result to `Logs/xenoarch_compile.txt`, writes a play/compile heartbeat to `Logs/xenoarch_editor_state.txt`, and supports `Temp/xenoarch_stopplay.trigger` (used only with Anthony's OK). `Tools/unity_compile.ps1` drives it and toggles focus if needed. 17:03 and 17:05 compiles: all assemblies OK, no errors. Smoke 92/0 at 17:04.

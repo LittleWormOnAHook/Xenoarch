@@ -20,6 +20,8 @@ namespace DMI.Xenoarch.Ship
         public Transform viewTarget;
         [Tooltip("World direction out of the front window (set by Setup/9 from the ship's nose).")]
         public Vector3 windowDirection = Vector3.forward;
+        [Tooltip("Optional: where the hand presses on the console. Empty = the console surface point in front of the camera.")]
+        public Transform pressPoint;
 
         ShipFtlSequence _seq;
         string _message;
@@ -84,7 +86,7 @@ namespace DMI.Xenoarch.Ship
                 Text(helm, $"Distance {x.DistanceAU(x.CurrentBody, to):0.##} AU   |   Fuel cost {x.FuelCost(to):0.#}");
                 bool can = x.CanTravel(to, out var why);
                 if (!can) Text(helm, why, "xa-term__warn");
-                Btn(helm, $"Engage drive: {to.displayName}", EngageClick, can);
+                Btn(helm, $"Engage drive: {to.displayName}", () => Press(() => Engage()), can);
                 Btn(helm, "Clear course", () => { x.ClearCourse(); _message = "Course cleared."; Refresh(); }).AddToClassList("xa-term__btn--ghost");
             }
             Btn(helm, "Navigation map", () => SwitchTo<NavigationTerminal>("navigation terminal"));
@@ -116,8 +118,32 @@ namespace DMI.Xenoarch.Ship
         {
             var t = FindAnyObjectByType<T>();
             if (t == null) { _message = $"No {label} aboard."; Refresh(); return; }
+            Press(t.Open);
+        }
+
+        /// <summary>Close the console, reach the right hand to the console and press, then run the command.
+        /// Standing (or no arms rig): the command runs right away.</summary>
+        void Press(System.Action command)
+        {
             Close();
-            t.Open();
+            var rig = PlayerRigLocator.Find();
+            var arms = rig != null ? rig.Root.GetComponentInChildren<FirstPersonArms>() : null;
+            if (arms == null || CockpitSeat.Occupied == null) { command(); return; }
+            arms.Reach(PressPointFor(rig.ViewCamera.transform.position), command);
+        }
+
+        /// <summary>Press point: <see cref="pressPoint"/>, else where the camera ray toward the console hits it, else the
+        /// nearest point on its bounds.</summary>
+        public Vector3 PressPointFor(Vector3 eye)
+        {
+            if (pressPoint != null) return pressPoint.position;
+            var rs = GetComponentsInChildren<Renderer>();
+            if (rs.Length == 0) return transform.position;
+            var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
+            var aim = b.ClosestPoint(eye) * 0.5f + b.center * 0.5f;
+            if (Physics.Raycast(eye, aim - eye, out var hit, 4f, ~0, QueryTriggerInteraction.Ignore) && hit.collider.transform.IsChildOf(transform))
+                return hit.point;
+            return b.ClosestPoint(eye);
         }
 
         /// <summary>Fly the plotted course now (console button; also a tooling hook).</summary>
@@ -132,6 +158,5 @@ namespace DMI.Xenoarch.Ship
             return _seq.Play(rig, to, dir);
         }
 
-        void EngageClick() => Engage();
     }
 }

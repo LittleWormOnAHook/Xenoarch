@@ -34,7 +34,7 @@ namespace DMI.Xenoarch.EditorTools
 
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
-        static void TryRun()
+        internal static void TryRun()
         {
             if (File.Exists(AssetsTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
