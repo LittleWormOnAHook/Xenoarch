@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Body_pluto
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:CelestialBodyDefinition
+  id: body.sol.pluto
+  displayName: Pluto
+  kind: 2
+  parentId: 
+  orbitAU: 39.5
+  orbitPeriodDays: 90560
+  radiusKm: 1188
+  gravityG: 0.063
+  environment: {fileID: 11400000, guid: 662b5bb5e5742854bb64aa533ec2b189, type: 2}
+  sceneName: 
+  arrivalSpawnId: default
+  discoveredByDefault: 1
+  archaeologicalPotential: 0.35
+  seed: 89339
+  mapColor: {r: 0.8, g: 0.7, b: 0.6, a: 1}
+  description: Edge of charted space.

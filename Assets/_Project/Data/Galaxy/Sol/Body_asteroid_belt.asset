@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Body_asteroid_belt
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:CelestialBodyDefinition
+  id: body.sol.asteroid_belt
+  displayName: Asteroid Belt
+  kind: 4
+  parentId: 
+  orbitAU: 2.7
+  orbitPeriodDays: 1680
+  radiusKm: 0
+  gravityG: 0
+  environment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
+  sceneName: 
+  arrivalSpawnId: default
+  discoveredByDefault: 1
+  archaeologicalPotential: 0.3
+  seed: 96842
+  mapColor: {r: 0.55, g: 0.5, b: 0.45, a: 1}
+  description: Navigational entry. Mining claims; occasional anomalous returns.

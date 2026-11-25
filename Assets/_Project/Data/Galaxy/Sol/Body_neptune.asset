@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Body_neptune
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:CelestialBodyDefinition
+  id: body.sol.neptune
+  displayName: Neptune
+  kind: 1
+  parentId: 
+  orbitAU: 30.1
+  orbitPeriodDays: 60190
+  radiusKm: 24622
+  gravityG: 1.14
+  environment: {fileID: 11400000, guid: dae5847469d624746bd7e1e0b982df98, type: 2}
+  sceneName: 
+  arrivalSpawnId: default
+  discoveredByDefault: 1
+  archaeologicalPotential: 0
+  seed: 82040
+  mapColor: {r: 0.3, g: 0.45, b: 0.95, a: 1}
+  description: Ice giant. Orbit only.

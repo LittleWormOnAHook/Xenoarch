@@ -2,7 +2,10 @@
     "name": "DMI.Xenoarch.Editor",
     "rootNamespace": "DMI.Xenoarch.EditorTools",
     "references": [
-        "DMI.Xenoarch.Runtime"
+        "DMI.Xenoarch.Runtime",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [
         "Editor"

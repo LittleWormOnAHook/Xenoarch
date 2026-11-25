@@ -72,3 +72,53 @@
 
 /* ---------- Fade ---------- */
 .xa-fade { background-color: rgb(0, 0, 0); opacity: 0; }
+
+/* ---------- Terminals (Phase 1B) ---------- */
+.xa-term-root { align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.45); }
+.xa-term {
+    width: 1180px; height: 760px; padding: 22px 26px; background-color: rgba(14, 18, 24, 0.94);
+    border-width: 1px; border-color: rgba(170, 205, 240, 0.45); border-top-width: 3px; border-top-color: var(--xa-amber);
+}
+.xa-term__header { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.xa-term__title { font-size: 26px; -unity-font-style: bold; color: var(--xa-text); letter-spacing: 4px; }
+.xa-term__status { font-size: 15px; color: var(--xa-paleblue); }
+.xa-term__body { flex-grow: 1; flex-direction: row; }
+.xa-term__col { flex-grow: 1; flex-basis: 0; margin-right: 14px; }
+.xa-term__col--wide { flex-grow: 1.6; }
+.xa-term__footer { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 10px; }
+.xa-term__hint { font-size: 13px; color: rgba(170, 205, 240, 0.7); }
+.xa-term__h { font-size: 15px; -unity-font-style: bold; color: var(--xa-amber); margin: 8px 0 6px 0; letter-spacing: 2px; }
+.xa-term__text { font-size: 15px; color: var(--xa-text); white-space: normal; margin-bottom: 3px; }
+.xa-term__dim { font-size: 14px; color: rgba(170, 205, 240, 0.55); white-space: normal; }
+.xa-term__warn { font-size: 15px; color: rgb(255, 120, 90); white-space: normal; }
+.xa-term__good { font-size: 15px; color: rgb(140, 230, 160); white-space: normal; }
+.xa-term__list { flex-grow: 1; background-color: rgba(255, 255, 255, 0.03); border-width: 1px; border-color: rgba(170, 205, 240, 0.15); }
+.xa-term__row {
+    flex-direction: row; justify-content: space-between; padding: 5px 10px; margin: 1px 0;
+    background-color: rgba(0, 0, 0, 0); border-width: 0; border-left-width: 3px; border-left-color: rgba(0, 0, 0, 0);
+    color: var(--xa-text); font-size: 15px; -unity-text-align: middle-left;
+}
+.xa-term__row:hover { background-color: rgba(170, 205, 240, 0.1); }
+.xa-term__row--sel { background-color: rgba(242, 168, 56, 0.16); border-left-color: var(--xa-amber); }
+.xa-term__row--here { -unity-font-style: bold; }
+.xa-term__row--child { padding-left: 34px; }
+.xa-term__row--locked { color: rgba(170, 205, 240, 0.35); }
+.xa-term__btn {
+    height: 40px; margin: 6px 0; font-size: 16px; -unity-font-style: bold; color: rgb(20, 20, 20);
+    background-color: var(--xa-amber); border-width: 0; border-radius: 2px;
+}
+.xa-term__btn:hover { background-color: rgb(255, 196, 100); }
+.xa-term__btn:disabled { background-color: rgba(120, 120, 120, 0.35); color: rgba(255, 255, 255, 0.4); }
+.xa-term__btn--ghost { background-color: rgba(170, 205, 240, 0.12); color: var(--xa-text); }
+.xa-term__bar { height: 10px; background-color: rgba(255, 255, 255, 0.1); margin: 4px 0 8px 0; }
+.xa-term__bar-fill { height: 100%; background-color: var(--xa-amber); }
+.xa-term__map { flex-grow: 1; background-color: rgba(0, 0, 0, 0.35); border-width: 1px; border-color: rgba(170, 205, 240, 0.15); margin-bottom: 8px; min-height: 260px; overflow: hidden; }
+.xa-map-dot { position: absolute; border-radius: 50%; }
+.xa-map-label { position: absolute; font-size: 11px; color: rgba(215, 228, 240, 0.8); }
+.xa-map-ring { position: absolute; border-width: 1px; border-color: rgba(170, 205, 240, 0.12); border-radius: 50%; }
+
+/* ---------- Surface scanner HUD ---------- */
+.xa-scan { position: absolute; right: 28px; top: 28px; width: 360px; padding: 12px 14px; background-color: var(--xa-graphite); border-left-width: 3px; border-left-color: var(--xa-amber); }
+.xa-scan__title { font-size: 15px; -unity-font-style: bold; color: var(--xa-amber); letter-spacing: 2px; }
+.xa-scan__text { font-size: 15px; color: var(--xa-text); white-space: normal; }
+.xa-scan__pulse { position: absolute; left: 50%; top: 50%; border-width: 2px; border-color: rgba(242, 168, 56, 0.8); border-radius: 50%; }

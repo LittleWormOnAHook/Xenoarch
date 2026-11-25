@@ -1,0 +1,166 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Interaction;
+using DMI.Xenoarch.Player;
+using DMI.Xenoarch.Ship;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+
+namespace DMI.Xenoarch.EditorTools
+{
+    /// <summary>
+    /// Phase 1B, additive pass over Ship_Starter. Anthony's layout is authoritative: this never moves, re-parents,
+    /// resets or deletes anything. It only swaps placeholder components for working ones on the same GameObjects,
+    /// adds new objects (airlock spawn, volume) and component overrides (door wrappers, light modes).
+    /// Refuses to run unless Ship_Starter is open and saved (not dirty).
+    /// </summary>
+    public static class XenoarchShipSceneBuilder
+    {
+        public const string NavName = "Navigation Terminal";
+        public const string ScanName = "Orbital Scanning Terminal";
+        public const string AirlockOldName = "Airlock [DEBUG: Moon surface]";
+        public const string AirlockName = "Airlock";
+        public const string VolumeName = "Ship Interior Volume (Phase 1B)";
+        public const int MaxShadowLights = 4;
+
+        [MenuItem("Xenoarch/Setup/8. Ship_Starter: add Phase 1B systems (additive, open+saved scene)", priority = 28)]
+        public static void Run()
+        {
+            var log = new StringBuilder();
+            bool ok = Apply(log);
+            Debug.Log($"[Xenoarch] Ship 1B pass {(ok ? "done" : "SKIPPED")}:\n{log}");
+            System.IO.File.WriteAllText("Logs/xenoarch_ship_1b.txt", log.ToString());
+        }
+
+        public static bool Apply(StringBuilder log)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { log.AppendLine("Exit Play Mode first."); return false; }
+            var scene = SceneManager.GetActiveScene();
+            if (scene.name != SceneNames.ShipStarter) { log.AppendLine($"Active scene is '{scene.name}', open Ship_Starter."); return false; }
+            if (scene.isDirty) { log.AppendLine("Ship_Starter has unsaved changes: save it first (your layout is authoritative)."); return false; }
+            var all = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
+
+            // 1) Terminals: swap placeholder -> working component, same GameObject (transform untouched).
+            SwapStation<NavigationTerminal>(all, NavName, "Navigation Terminal", log);
+            SwapStation<OrbitalScannerTerminal>(all, ScanName, "Orbital Scanning Terminal", log);
+
+            // 2) Airlock: debug Moon travel -> real airlock (disembarks wherever the ship is landed/docked).
+            var airlock = all.FirstOrDefault(g => g.name == AirlockOldName) ?? all.FirstOrDefault(g => g.name == AirlockName && g.GetComponent<ShipAirlockInteractable>() != null);
+            if (airlock != null)
+            {
+                foreach (var t in airlock.GetComponents<SceneTravelInteractable>()) Object.DestroyImmediate(t, true);
+                if (airlock.GetComponent<ShipAirlockInteractable>() == null) airlock.AddComponent<ShipAirlockInteractable>();
+                if (airlock.name != AirlockName)
+                {
+                    RenameLabel(all, airlock.name, AirlockName);
+                    airlock.name = AirlockName;
+                }
+                log.AppendLine($"Airlock: ShipAirlockInteractable on '{Path(airlock.transform)}' (position kept)");
+
+                // Arrival spawn for 'return to ship': beside the airlock, on the floor, facing into the ship.
+                if (!all.Any(g => g.TryGetComponent(out PlayerSpawnPoint sp) && sp.spawnId == DMI.Xenoarch.Galaxy.ShipTravel.ShipSpawnAirlock))
+                {
+                    var def = all.Select(g => g.GetComponent<PlayerSpawnPoint>()).FirstOrDefault(s => s != null && s.spawnId == PlayerSpawnIds.Default);
+                    Vector3 a = airlock.transform.position;
+                    Vector3 toward = def != null ? def.transform.position - a : -airlock.transform.forward;
+                    toward.y = 0f; toward = toward.sqrMagnitude > 0.01f ? toward.normalized : Vector3.forward;
+                    Vector3 p = a + toward * 1.2f;
+                    if (Physics.Raycast(p + Vector3.up * 1.5f, Vector3.down, out var hit, 5f, ~0, QueryTriggerInteraction.Ignore)) p = hit.point;
+                    else if (def != null) p.y = def.transform.position.y;
+                    var go = new GameObject($"Spawn_{DMI.Xenoarch.Galaxy.ShipTravel.ShipSpawnAirlock}");
+                    SceneManager.MoveGameObjectToScene(go, scene);
+                    go.transform.SetPositionAndRotation(p, Quaternion.LookRotation(toward, Vector3.up));
+                    go.AddComponent<PlayerSpawnPoint>().spawnId = DMI.Xenoarch.Galaxy.ShipTravel.ShipSpawnAirlock;
+                    Undo.RegisterCreatedObjectUndo(go, "Airlock spawn");
+                    log.AppendLine($"Added Spawn_airlock at {p} (check it in the Scene view)");
+                }
+            }
+            else log.AppendLine($"Airlock: no '{AirlockOldName}' found, skipped");
+
+            // 3) Doors: wrap every Creepy Cat trigger door in an active ship (component override on the instance only).
+            int doors = 0;
+            foreach (var g in all)
+            {
+                if (g.GetComponent("DoorDoubleSlide") == null && g.GetComponent("DoorDoubleRotate") == null) continue;
+                if (g.GetComponent<XenoarchDoor>() != null) continue;
+                g.AddComponent<XenoarchDoor>(); doors++;
+            }
+            log.AppendLine($"Doors: XenoarchDoor added to {doors} vendor door(s)");
+
+            // 4) Lights in ship instances: Mixed mode, shadows only on the strongest few (no transforms touched, no bake run).
+            var lights = all.Where(g => g.activeInHierarchy).Select(g => g.GetComponent<Light>()).Where(l => l != null && l.type != LightType.Directional && PrefabUtility.IsPartOfPrefabInstance(l)).ToList();
+            var shadowers = lights.OrderByDescending(l => l.intensity * l.range).Take(MaxShadowLights).ToHashSet();
+            foreach (var l in lights)
+            {
+                Undo.RecordObject(l, "Ship lights");
+                l.lightmapBakeType = LightmapBakeType.Mixed;
+                l.shadows = shadowers.Contains(l) ? LightShadows.Soft : LightShadows.None;
+            }
+            log.AppendLine($"Lights: {lights.Count} ship light(s) set to Mixed; shadows kept on {shadowers.Count} ({string.Join(", ", shadowers.Select(s => s.name))}). Bake lighting when the layout settles.");
+
+            // 5) URP Volume with the ship interior profile (editor preview; runtime also applies it via the environment).
+            var vp = XenoarchPhase1BSetup.EnsureShipVolumeProfile();
+            if (!all.Any(g => g.name == VolumeName))
+            {
+                var vgo = new GameObject(VolumeName);
+                SceneManager.MoveGameObjectToScene(vgo, scene);
+                var vol = vgo.AddComponent<Volume>(); vol.isGlobal = true; vol.priority = 1f; vol.sharedProfile = vp;
+                Undo.RegisterCreatedObjectUndo(vgo, "Ship volume");
+                log.AppendLine("Added global Volume (VP_Ship_Interior)");
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            log.AppendLine("Saved Ship_Starter.");
+            return true;
+        }
+
+        static void SwapStation<T>(List<GameObject> all, string objectName, string terminalName, StringBuilder log) where T : DMI.Xenoarch.UI.TerminalWindow
+        {
+            var go = all.FirstOrDefault(g => g.name == objectName);
+            if (go == null) { log.AppendLine($"{objectName}: not found, skipped"); return; }
+            foreach (var p in go.GetComponents<StationPlaceholderInteractable>()) Object.DestroyImmediate(p, true);
+            var term = go.GetComponent<T>();
+            if (term == null) term = go.AddComponent<T>();
+            term.terminalName = terminalName;
+            EditorUtility.SetDirty(go);
+            log.AppendLine($"{objectName}: {typeof(T).Name} at '{Path(go.transform)}' (position kept)");
+        }
+
+        static void RenameLabel(List<GameObject> all, string oldText, string newText)
+        {
+            foreach (var g in all)
+                if (g.TryGetComponent(out TextMesh tm) && tm.text == oldText) { Undo.RecordObject(tm, "Label"); tm.text = newText; }
+        }
+
+        static string Path(Transform t) => t.parent == null ? t.name : Path(t.parent) + "/" + t.name;
+
+        /// <summary>Smoke checks on the saved Ship_Starter (read from disk, no scene opened).</summary>
+        public static void Validate(System.Action<bool, string> check)
+        {
+            string path = XenoarchSetup.ScenePath(SceneNames.ShipStarter);
+            if (!System.IO.File.Exists(path)) return;
+            string text = System.IO.File.ReadAllText(path);
+            string Guid<T>() where T : MonoBehaviour
+            {
+                foreach (var g in AssetDatabase.FindAssets($"t:MonoScript {typeof(T).Name}"))
+                {
+                    var ms = AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(g));
+                    if (ms != null && ms.GetClass() == typeof(T)) return g;
+                }
+                return null;
+            }
+            bool InScene<T>() where T : MonoBehaviour { var g = Guid<T>(); return g != null && text.Contains(g); }
+            if (!InScene<NavigationTerminal>()) { check(true, "1B ship: Ship_Starter not yet upgraded (run Setup 8 after saving the scene) - skipped"); return; }
+            check(InScene<NavigationTerminal>(), "1B ship: Navigation Terminal working component in Ship_Starter");
+            check(InScene<OrbitalScannerTerminal>(), "1B ship: Orbital Scanning Terminal working component in Ship_Starter");
+            check(InScene<ShipAirlockInteractable>(), "1B ship: airlock component in Ship_Starter");
+            check(text.Contains("spawnId: airlock"), "1B ship: airlock arrival spawn in Ship_Starter");
+        }
+    }
+}

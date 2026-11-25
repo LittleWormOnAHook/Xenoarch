@@ -26,6 +26,10 @@ namespace DMI.Xenoarch.EditorTools
 
         /// <summary>Create this (empty) file to add the Kade body + hand slots to XA_Player (prefab only, no scenes) after the next reload.</summary>
         const string BodyTrigger = "Temp/xenoarch_body.trigger";
+        /// <summary>Phase 1B data assets (no scenes).</summary>
+        const string Phase1BTrigger = "Temp/xenoarch_1b.trigger";
+        /// <summary>Additive Ship_Starter pass (only runs if Ship_Starter is the open, saved scene).</summary>
+        const string ShipTrigger = "Temp/xenoarch_ship1b.trigger";
 
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
@@ -50,6 +54,16 @@ namespace DMI.Xenoarch.EditorTools
             {
                 File.Delete(BodyTrigger);
                 XenoarchBodyBuilder.BuildBodyAndHands();
+            }
+            if (File.Exists(Phase1BTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(Phase1BTrigger);
+                XenoarchPhase1BSetup.CreateAll();
+            }
+            if (File.Exists(ShipTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(ShipTrigger);
+                XenoarchShipSceneBuilder.Run();
             }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {

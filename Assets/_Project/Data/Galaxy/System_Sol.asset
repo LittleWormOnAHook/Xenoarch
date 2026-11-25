@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: System_Sol
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:StarSystemDefinition
+  id: sys.sol
+  displayName: Sol
+  galacticPosition: {x: 0, y: 0, z: 0}
+  stellarClass: G2V
+  seed: 1
+  knownByDefault: 1
+  minFtlRangeLy: 0
+  archaeologicalPotential: 0.6
+  bodies:
+  - {fileID: 11400000, guid: 9deb431fcbdb8c74894d8f96ef579319, type: 2}
+  - {fileID: 11400000, guid: f02a03eb521c5b44d96f0152be47cc44, type: 2}
+  - {fileID: 11400000, guid: 860725267bcbe164da5e22cf860f5937, type: 2}
+  - {fileID: 11400000, guid: b27120f67101085478ff032a3ac4be0a, type: 2}
+  - {fileID: 11400000, guid: cba139a619c4eb845a33f6b9a2c4ebca, type: 2}
+  - {fileID: 11400000, guid: 994096036408dd940a5d7918ae40101a, type: 2}
+  - {fileID: 11400000, guid: 4594f551386176b40b10421903c84b5a, type: 2}
+  - {fileID: 11400000, guid: 84f1cdf8cbd7b484593457f163b46e11, type: 2}
+  - {fileID: 11400000, guid: f31b5cb347820cb42ad69fef4af37907, type: 2}
+  - {fileID: 11400000, guid: 896ab9c19af91b94eb2d18bc63f0052b, type: 2}
+  - {fileID: 11400000, guid: a3525538edb96ff4ba48789915f65cfc, type: 2}
+  - {fileID: 11400000, guid: 0405e53f9bd295040aed5c330ed28bc7, type: 2}
+  - {fileID: 11400000, guid: cf23a307ab962174e9d634fff350cf56, type: 2}
+  - {fileID: 11400000, guid: f57c840f7d5d3b24689bbae796de5571, type: 2}
+  - {fileID: 11400000, guid: 83af86b331bf9104c8b4b30ab4987129, type: 2}
+  - {fileID: 11400000, guid: 5612f4702bb180b4289605b8134c0de2, type: 2}
+  - {fileID: 11400000, guid: a12f582627fcdc7459b693cd39858e1d, type: 2}
+  - {fileID: 11400000, guid: 9dd9347aeb0c8834c926ac201498c7c4, type: 2}
+  - {fileID: 11400000, guid: abdef8cfecc9b8244adbf9da8b453c85, type: 2}

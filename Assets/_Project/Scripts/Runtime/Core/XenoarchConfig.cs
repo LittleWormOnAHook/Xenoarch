@@ -20,6 +20,11 @@ namespace DMI.Xenoarch.Core
 
         [Header("Content")]
         public ItemRegistry itemRegistry;
+        public DMI.Xenoarch.Galaxy.GalaxyDefinition galaxy;
+        public DMI.Xenoarch.Galaxy.ShipDefinition starterShip;
+        public DMI.Xenoarch.Galaxy.SiteRegistry siteRegistry;
+        public DMI.Xenoarch.Galaxy.SurfaceScannerDefinition surfaceScanner;
+        [Tooltip("Environment for scenes not tied to a body (fallback).")] public DMI.Xenoarch.Galaxy.EnvironmentProfile defaultEnvironment;
 
         [Header("New game")]
         public string firstGameplayScene = SceneNames.ShipStarter;

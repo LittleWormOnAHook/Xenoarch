@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Body_titan
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:CelestialBodyDefinition
+  id: body.sol.titan
+  displayName: Titan
+  kind: 3
+  parentId: body.sol.saturn
+  orbitAU: 0.0082
+  orbitPeriodDays: 15.9
+  radiusKm: 2575
+  gravityG: 0.138
+  environment: {fileID: 11400000, guid: 662b5bb5e5742854bb64aa533ec2b189, type: 2}
+  sceneName: 
+  arrivalSpawnId: default
+  discoveredByDefault: 1
+  archaeologicalPotential: 0.5
+  seed: 92499
+  mapColor: {r: 0.85, g: 0.65, b: 0.35, a: 1}
+  description: Thick nitrogen haze, hydrocarbon lakes.

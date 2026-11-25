@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Body_tradehub
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:CelestialBodyDefinition
+  id: body.sol.tradehub
+  displayName: TradeHub Sol
+  kind: 5
+  parentId: body.sol.earth
+  orbitAU: 0.0004
+  orbitPeriodDays: 0.07
+  radiusKm: 0
+  gravityG: 1
+  environment: {fileID: 11400000, guid: 7f16a53721f09844fb9a9e93d82d2a7d, type: 2}
+  sceneName: TradeHub_Sol
+  arrivalSpawnId: default
+  discoveredByDefault: 1
+  archaeologicalPotential: 0
+  seed: 79050
+  mapColor: {r: 0.95, g: 0.66, b: 0.22, a: 1}
+  description: 'Orbital trade hub: artifact buyers, equipment, refuelling.'

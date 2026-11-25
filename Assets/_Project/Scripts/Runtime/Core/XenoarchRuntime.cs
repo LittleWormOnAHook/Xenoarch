@@ -54,6 +54,8 @@ namespace DMI.Xenoarch.Core
 
             _loader = gameObject.AddComponent<SceneLoader>();
             _loader.fadeDuration = config.fadeDuration;
+            gameObject.AddComponent<DMI.Xenoarch.Galaxy.EnvironmentDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Exploration.SiteMarkerDirector>();
             Debug.Log($"[Xenoarch] Runtime ready (save folder: {storage.Folder})");
         }
 

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Ship_ConstellationMk1
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:ShipDefinition
+  id: ship.constellation_mk1
+  displayName: Constellation Mk I
+  fuelCapacity: 100
+  fuelPerAU: 10
+  minimumHopFuel: 1
+  ftlRangeLy: 0
+  scannerLevel: 1
+  moduleSlots: 4
+  cargoSlots: 12
+  startingModules:
+  - module.drive.ion_mk1
+  - module.scanner.orbital_mk1
+  - module.lab.basic
+  startingBodyId: body.sol.earth
+  interiorEnvironment: {fileID: 11400000, guid: 5ae26c1115b7bd2439193ada9b7d9737, type: 2}
+  exteriorPrefab: {fileID: 3198018136977382735, guid: 81c71b9da00451b4da51657e307b823f, type: 3}
+  interiorPrefab: {fileID: 8058210074484244086, guid: c683c5eab30515d48a8380e659f63621, type: 3}

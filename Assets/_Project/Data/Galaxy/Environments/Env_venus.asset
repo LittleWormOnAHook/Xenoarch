@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ec190fd0f13ef141984790237bbd44d, type: 3}
+  m_Name: Env_venus
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.EnvironmentProfile
+  id: env.venus
+  displayName: Venusian (inaccessible)
+  gravity: 8.87
+  atmosphere: Dense CO2, sulfuric acid clouds
+  breathable: 0
+  surfaceTemperatureC: 465
+  applyLighting: 0
+  ambientColor: {r: 0, g: 0, b: 0, a: 0}
+  fog: 0
+  fogColor: {r: 0, g: 0, b: 0, a: 0}
+  fogDensity: 0
+  volumeProfile: {fileID: 0}

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Site_moon_deep_echo
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:ArchaeologicalSiteDefinition
+  id: site.moon.deep_echo
+  displayName: Deep Echo
+  bodyId: body.sol.moon
+  sceneName: Moon_Excavation_01
+  position: {x: -70, y: 0, z: 60}
+  radius: 5
+  depth: 4.5
+  difficulty: 3
+  orbitalPassesNeeded: 3
+  signalStrength: 0.45
+  seed: 103
+  artifactTableId: loot.moon.deep_echo
+  description: Faint, deep return. Beyond Mk I scanner depth.

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Body_ganymede
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:CelestialBodyDefinition
+  id: body.sol.ganymede
+  displayName: Ganymede
+  kind: 3
+  parentId: body.sol.jupiter
+  orbitAU: 0.0072
+  orbitPeriodDays: 7.15
+  radiusKm: 2634
+  gravityG: 0.146
+  environment: {fileID: 11400000, guid: 662b5bb5e5742854bb64aa533ec2b189, type: 2}
+  sceneName: 
+  arrivalSpawnId: default
+  discoveredByDefault: 1
+  archaeologicalPotential: 0.35
+  seed: 71689
+  mapColor: {r: 0.65, g: 0.6, b: 0.55, a: 1}
+  description: Largest moon in the system.

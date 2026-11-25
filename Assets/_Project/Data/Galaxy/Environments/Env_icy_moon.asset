@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ec190fd0f13ef141984790237bbd44d, type: 3}
+  m_Name: Env_icy_moon
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.EnvironmentProfile
+  id: env.icy_moon
+  displayName: Icy moon surface
+  gravity: 1.3
+  atmosphere: None / trace
+  breathable: 0
+  surfaceTemperatureC: -170
+  applyLighting: 0
+  ambientColor: {r: 0, g: 0, b: 0, a: 0}
+  fog: 0
+  fogColor: {r: 0, g: 0, b: 0, a: 0}
+  fogDensity: 0
+  volumeProfile: {fileID: 0}

@@ -13,6 +13,11 @@ MonoBehaviour:
   m_Name: XenoarchConfig
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Core.XenoarchConfig
   itemRegistry: {fileID: 11400000, guid: 7f25114f002e5c64b8d1ff42bd67fb04, type: 2}
+  galaxy: {fileID: 11400000, guid: 5a9fc0fa98f149343975eac0e35504de, type: 2}
+  starterShip: {fileID: 11400000, guid: ac0311128b5f4c74988913c0d2a56446, type: 2}
+  siteRegistry: {fileID: 11400000, guid: 1b679ded134abbf49bfd0cce9772f8a2, type: 2}
+  surfaceScanner: {fileID: 11400000, guid: b49a5fd836d440a4a875840d9c5826e6, type: 2}
+  defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   firstGameplayScene: Ship_Starter
   firstSpawnId: default
   inventoryCapacity: 24

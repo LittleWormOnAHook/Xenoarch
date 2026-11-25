@@ -1,4 +1,5 @@
 using System;
+using DMI.Xenoarch.Galaxy;
 using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
 using DMI.Xenoarch.Save;
@@ -30,6 +31,7 @@ namespace DMI.Xenoarch.Core
         public InventoryModel Inventory { get; }
         public WorldPersistence World { get; }
         public SaveService Saves { get; }
+        public ExplorationService Exploration { get; }
         public PlayerLocationState Location { get; internal set; } = new PlayerLocationState();
         public float PlaySeconds { get; set; }
 
@@ -48,6 +50,7 @@ namespace DMI.Xenoarch.Core
             Saves.Register(new JsonStateSection<PlayerLocationState>(LocationKey, 0, () => Location, v => Location = v));
             Saves.Register(new InventorySection(InventoryKey, 0, Inventory));
             Saves.Register(World);
+            Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
         }
 
         /// <summary>Resets every section and grants the starting kit. Does not load a scene.</summary>

@@ -48,6 +48,8 @@ namespace DMI.Xenoarch.EditorTools
             float cov = XenoarchPlayerBuilder.ArmsBindingCoverage(out var covDetail);
             Check(cov >= 0.9f, $"Arms clip bindings resolve on arms rig ({covDetail})");
             XenoarchBodyBuilder.Validate(Check);
+            XenoarchPhase1BSetup.Validate(Check);
+            XenoarchShipSceneBuilder.Validate(Check);
             string prefabGuid = AssetDatabase.AssetPathToGUID(XenoarchPlayerBuilder.PlayerPrefabPath);
             foreach (var n in new[] { SceneNames.ShipStarter, SceneNames.TradeHubSol, SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
             {
