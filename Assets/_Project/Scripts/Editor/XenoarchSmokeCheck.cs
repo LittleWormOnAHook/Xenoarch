@@ -51,6 +51,7 @@ namespace DMI.Xenoarch.EditorTools
             XenoarchPhase1BSetup.Validate(Check);
             XenoarchShipSceneBuilder.Validate(Check);
             XenoarchPolishPass.Validate(Check);
+            XenoarchPhase1CSetup.Validate(Check);
             string prefabGuid = AssetDatabase.AssetPathToGUID(XenoarchPlayerBuilder.PlayerPrefabPath);
             foreach (var n in new[] { SceneNames.ShipStarter, SceneNames.TradeHubSol, SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
             {

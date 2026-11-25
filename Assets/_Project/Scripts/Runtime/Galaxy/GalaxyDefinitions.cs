@@ -163,6 +163,20 @@ namespace DMI.Xenoarch.Galaxy
         public int seed;
         [Tooltip("Phase 1C stub: artifact/loot table id.")] public string artifactTableId;
         [TextArea] public string description;
+        [Header("Excavation (Phase 1C)")]
+        [Range(0.1f, 0.5f)] public float cellSize = 0.25f;
+        [Tooltip("Buried finds: artifact id + cell (x, z across the site from its min corner; y = layer down from the surface).")]
+        public List<SiteArtifactSpawn> artifacts = new List<SiteArtifactSpawn>();
+        [Tooltip("Discovery fact needed before scans can reveal this site (chain gating). Empty = always revealable.")]
+        public string gateFact;
+    }
+
+    [System.Serializable]
+    public sealed class SiteArtifactSpawn
+    {
+        public string artifactId;
+        public Vector3Int cell;
+        [Range(1, 3)] public int footprint = 1;
     }
 
     [CreateAssetMenu(menuName = "Xenoarch/Galaxy/Site Registry", fileName = "SiteRegistry")]

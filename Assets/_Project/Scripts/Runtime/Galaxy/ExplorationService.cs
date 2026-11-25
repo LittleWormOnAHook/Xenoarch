@@ -68,6 +68,10 @@ namespace DMI.Xenoarch.Galaxy
         public ShipState Ship { get; private set; } = new ShipState();
         public DiscoveryData Discovery { get; private set; } = new DiscoveryData();
         public event Action Changed;
+        /// <summary>(siteId, new level) whenever a site's reveal level rises.</summary>
+        public event Action<string, int> SiteRevealed;
+        /// <summary>Discovery fact check for gated sites (set by the session). Null = no gating.</summary>
+        public Func<string, bool> Gate;
 
         public ExplorationService(GalaxyDefinition galaxy, ShipDefinition ship, SiteRegistry sites, SaveService saves)
         {
@@ -233,7 +237,10 @@ namespace DMI.Xenoarch.Galaxy
         {
             var s = Site(siteId);
             if (level <= s.revealLevel) return false;
+            var def = Sites != null ? Sites.Get(siteId) : null;
+            if (def != null && !string.IsNullOrEmpty(def.gateFact) && Gate != null && !Gate(def.gateFact)) return false;
             s.revealLevel = Mathf.Clamp(level, 0, (int)SiteRevealLevel.Pinpointed);
+            SiteRevealed?.Invoke(siteId, s.revealLevel);
             Changed?.Invoke();
             return true;
         }

@@ -32,10 +32,10 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 | 5 | Discover archaeological site | ☐ |
 | 6 | Travel to surface | ◐ debug pad only |
 | 7 | Locate buried artifact | ☐ |
-| 8 | Excavate and recover | ☐ |
+| 8 | Excavate and recover | ◐ (1C slice: rules + save in smoke; not yet played) |
 | 9 | Return to spacecraft | ◐ debug pad only |
-| 10 | Research and partially translate | ☐ |
-| 11 | Discover Mars coordinates | ☐ |
+| 10 | Research and partially translate | ◐ (ship lab; rules in smoke; not yet played) |
+| 11 | Discover Mars coordinates | ◐ (chain: tablet translation 35% reveals the Mars canyon site; smoke) |
 | 12 | Visit trade hub | ◐ debug pad only |
 | 13 | Sell ordinary artifacts | ☐ |
 | 14 | Purchase improved equipment | ☐ |
@@ -66,3 +66,16 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 - ◐ Ship console on P_Cockpit_Tech_02 (UITK menu: Engage drive, Clear course, Nav map, Orbital scanner, status, Stand up), with a right-hand reach/press before a command fires (smoke: one console with a collider). Not yet tested by hand.
 - ☑ Sky: the ship scene's own skybox = open space; Earth/Moon/Mars use their orbit skies; restored from the save (smoke)
 - ☑ Tooling: `Editor/XenoarchAutoCompile` + `Tools/unity_compile.ps1` compile in the open Editor without a manual click and log results to `Logs/xenoarch_compile.txt` (used 17:03-17:05 ET)
+
+## Phase 1C: Excavation and research (started 2026-11-25)
+First playable slice, batch 1C-1 (compiled clean 17:21 ET, smoke 114/0). Nothing below has been played by hand yet.
+- ◐ Dig sites: each site in Moon/Mars is a layered cell grid (0.25 m cells; dust / loose / compacted / bedrock floor), built at runtime from the site definition and rendered as a stepped trench mesh with collider inside a terrain hole. Excavation state saved per site (RLE cells, `excavation.sites`). Smoke: tool rules, bounded floor, save round trip.
+- ◐ Tools: 2 shovel (fast, damages finds), 3 precision tool (slow, safe), 4 brush (dust and loose soil only), 5 powered drill (anything but bedrock). Hold LMB/RT to dig, HUD shows soil, depth, exposure and condition.
+- ◐ Buried artifacts: 22 placed across the 6 sites; hold E to recover at 50% exposure or more (prying before 90% costs condition). Recovery creates a unique instance (inventory item id + instance id) and never respawns.
+- ☑ ~30 artifact definitions (30), one civilization (the Vael, working name), condition, rarity, value formula (smoke)
+- ◐ Research lab (ship, swapped onto the existing "Research Laboratory" placeholder on the old test ring): cleaning, identification, material, age, civilization, restoration, translation (capped 60% in the Mk I lab), technology analysis. One timed job at a time. Rules + save in smoke.
+- ◐ Discovery chain evaluator (facts, prerequisites All/Any/Count, optional nodes, rewards, journal) + Moon-to-Mars chain: tablet -> origin -> translation 35% (Mars canyon site un-gated, revealed as an orbital anomaly) -> orbital scan -> navigation core -> decoded extrasolar coordinates; optional sensor lattice -> scanner tier +1. Smoke runs the whole chain and save/load.
+- ◐ Moon/Mars ground: flat 256 m Unity Terrain (surface y=0) with holes over the site footprints; the primitive ground and the old orange excavation marker are deactivated, not deleted.
+- ☐ Digger PRO: strokes are mirrored to an `IExcavationSurface` when a scene has one, but no scene has Digger set up yet (needs Anthony's call on sculpted terrain; see the Development Log).
+- ☐ Mars buried chamber (walls/tunnels) for the Canyon Relay: design decision pending.
+

@@ -32,6 +32,9 @@ namespace DMI.Xenoarch.Core
         public WorldPersistence World { get; }
         public SaveService Saves { get; }
         public ExplorationService Exploration { get; }
+        public DMI.Xenoarch.Discovery.DiscoveryService Discovery { get; }
+        public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
+        public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         public PlayerLocationState Location { get; internal set; } = new PlayerLocationState();
         public float PlaySeconds { get; set; }
 
@@ -51,6 +54,11 @@ namespace DMI.Xenoarch.Core
             Saves.Register(new InventorySection(InventoryKey, 0, Inventory));
             Saves.Register(World);
             Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
+            Discovery = new DMI.Xenoarch.Discovery.DiscoveryService(config.discoveryChains, Exploration, Saves) { Clock = () => PlaySeconds };
+            Artifacts = new DMI.Xenoarch.Artifacts.ArtifactService(items, config.civilizations, Discovery, Saves) { Clock = () => PlaySeconds, TranslationCap = config.labTranslationCap };
+            Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
+            Exploration.Gate = key => Discovery.Has(key);
+            Exploration.SiteRevealed += (id, level) => Discovery.Publish(DMI.Xenoarch.Discovery.Facts.Site(id), level);
         }
 
         /// <summary>Resets every section and grants the starting kit. Does not load a scene.</summary>

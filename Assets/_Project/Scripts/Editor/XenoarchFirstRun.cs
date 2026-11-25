@@ -31,6 +31,7 @@ namespace DMI.Xenoarch.EditorTools
         /// <summary>Additive Ship_Starter pass (only runs if Ship_Starter is the open, saved scene).</summary>
         const string ShipTrigger = "Temp/xenoarch_ship1b.trigger";
         const string PolishTrigger = "Temp/xenoarch_polish.trigger";
+        const string Phase1CTrigger = "Temp/xenoarch_1c.trigger";
 
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
@@ -70,6 +71,11 @@ namespace DMI.Xenoarch.EditorTools
             {
                 File.Delete(PolishTrigger);
                 XenoarchPolishPass.Run();
+            }
+            if (File.Exists(Phase1CTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(Phase1CTrigger);
+                XenoarchPhase1CSetup.CreateAll();
             }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {

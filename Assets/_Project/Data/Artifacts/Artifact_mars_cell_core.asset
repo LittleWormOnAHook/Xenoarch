@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6770eddc2c30cc94bad8a50effb2e6aa, type: 3}
+  m_Name: Artifact_mars_cell_core
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Artifacts.ArtifactDefinition
+  id: artifact.mars_cell_core
+  displayName: Lattice Cell
+  description: A faceted energy cell.
+  icon: {fileID: 0}
+  category: 2
+  maxStack: 1
+  uniqueInstance: 1
+  mass: 0.5
+  baseValue: 330
+  worldPrefab: {fileID: 0}
+  unidentifiedName: Faceted cell
+  researchedDescription: Power cell, partly charged.
+  civilizationId: civ.vael
+  artifactCategory: 10
+  rarity: 1
+  material: Doped crystal
+  ageEstimate: ~1.2 million years
+  fragility: 0.5
+  historicalSignificance: 0.2
+  technologicalSignificance: 0.6
+  buriedCondition: 0.85
+  researchOps: 00000000010000000200000003000000040000000500000007000000
+  translation: []
+  shape: 5
+  tint: {r: 0.95, g: 0.66, b: 0.22, a: 1}
+  size: 0.15

@@ -1,0 +1,175 @@
+using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Exploration;
+using DMI.Xenoarch.Player;
+using DMI.Xenoarch.UI;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
+
+namespace DMI.Xenoarch.Excavation
+{
+    /// <summary>
+    /// Excavation tools on the player (added at runtime by <see cref="ExcavationDirector"/>). 2 shovel, 3 precision tool,
+    /// 4 brush, 5 powered drill (each needs its item in the inventory; same key again holsters). Hold LMB / RT on a dig
+    /// site to dig: strokes go to the site's cell grid, which decides removal, refusals and artifact damage.
+    /// </summary>
+    public sealed class DigTool : MonoBehaviour
+    {
+        public const float Reach = 3f;
+        public int Equipped { get; private set; } = -1;
+        public DigToolSpec Current => Equipped >= 0 ? DigTools.All[Equipped] : default;
+
+        FirstPersonArms _arms;
+        SurfaceScannerTool _scanner;
+        IPlayerRig _rig;
+        float _nextStroke, _flashUntil;
+        Label _line1, _line2;
+        VisualElement _panel;
+        AudioSource _audio;
+        AudioClip _scrape, _clunk;
+        string _flash;
+
+        void Awake()
+        {
+            _arms = GetComponentInChildren<FirstPersonArms>(true);
+            _scanner = GetComponentInChildren<SurfaceScannerTool>(true);
+            _rig = GetComponent<IPlayerRig>() ?? GetComponentInParent<IPlayerRig>();
+            _audio = gameObject.AddComponent<AudioSource>();
+            _audio.playOnAwake = false; _audio.spatialBlend = 0f; _audio.volume = 0.4f;
+            _scrape = Noise("scrape", 0.16f, 0.5f);
+            _clunk = Noise("clunk", 0.08f, 0.15f);
+        }
+
+        void Start() => BuildUi();
+        void OnDisable() => Holster();
+
+        static bool Has(string itemId) => XenoarchRuntime.Session != null && XenoarchRuntime.Session.Inventory.Count(itemId) > 0;
+
+        public void Equip(int index)
+        {
+            if (index < 0 || index >= DigTools.All.Length || index == Equipped) { Holster(); return; }
+            if (!Has(DigTools.All[index].itemId)) { Toast.Show($"No {DigTools.All[index].name} in your inventory.", 2.5f); return; }
+            if (_scanner != null && _scanner.Equipped) _scanner.SetEquipped(false);
+            Equipped = index;
+            if (_arms != null) _arms.SetHeld(Hand.Right, true);
+            XenoarchUI.Show(_panel, true);
+        }
+
+        public void Holster()
+        {
+            if (Equipped < 0) return;
+            Equipped = -1;
+            if (_arms != null) _arms.SetHeld(Hand.Right, false);
+            XenoarchUI.Show(_panel, false);
+        }
+
+        void Update()
+        {
+            if (XenoarchRuntime.Session == null) return;
+            var kb = Keyboard.current; var gp = Gamepad.current; var mouse = Mouse.current;
+            if (!UIState.BlocksGameplay && kb != null)
+            {
+                if (kb.digit2Key.wasPressedThisFrame) Equip(Equipped == 0 ? -1 : 0);
+                if (kb.digit3Key.wasPressedThisFrame) Equip(Equipped == 1 ? -1 : 1);
+                if (kb.digit4Key.wasPressedThisFrame) Equip(Equipped == 2 ? -1 : 2);
+                if (kb.digit5Key.wasPressedThisFrame) Equip(Equipped == 3 ? -1 : 3);
+            }
+            if (Equipped < 0) return;
+            if (!Has(Current.itemId) || (_scanner != null && _scanner.Equipped)) { Holster(); return; }
+
+            var cam = _rig?.ViewCamera != null ? _rig.ViewCamera : Camera.main;
+            ExcavationSite site = null; RaycastHit hit = default;
+            if (cam != null && Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, Reach, ~0, QueryTriggerInteraction.Ignore))
+                site = hit.collider.GetComponentInParent<ExcavationSite>();
+
+            bool held = !UIState.BlocksGameplay && ((mouse != null && mouse.leftButton.isPressed) || (gp != null && gp.rightTrigger.isPressed));
+            if (held && site != null && Time.time >= _nextStroke)
+            {
+                _nextStroke = Time.time + 1f / Mathf.Max(0.5f, Current.rate);
+                var r = site.Stroke(hit.point, Current);
+                if (r.accepted)
+                {
+                    _audio.pitch = Random.Range(0.85f, 1.15f);
+                    _audio.PlayOneShot(_scrape);
+                    if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
+                    if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Use the precision tool or brush.");
+                }
+                else if (r.refused)
+                {
+                    _audio.PlayOneShot(_clunk);
+                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {Current.name.ToLowerInvariant()} ({Label(r.material)}). Try the drill.");
+                }
+            }
+            UpdateHud(site, hit);
+        }
+
+        void Flash(string text) { _flash = text; _flashUntil = Time.time + 2.5f; }
+
+        public static string Label(SoilMaterial m) => m switch { SoilMaterial.Dust => "surface dust", SoilMaterial.Loose => "loose regolith", SoilMaterial.Compacted => "compacted layer", _ => "bedrock" };
+
+        void UpdateHud(ExcavationSite site, RaycastHit hit)
+        {
+            if (_line1 == null) return;
+            string l1 = $"{Current.name}   [hold LMB to dig]   2 shovel  3 precision  4 brush  5 drill";
+            string l2;
+            if (site == null) l2 = "Aim at a dig site within 3 m.";
+            else
+            {
+                var l = site.transform.InverseTransformPoint(hit.point);
+                int x = Mathf.Clamp(Mathf.FloorToInt(l.x / site.Grid.cell), 0, site.Grid.nx - 1), z = Mathf.Clamp(Mathf.FloorToInt(l.z / site.Grid.cell), 0, site.Grid.nz - 1);
+                int top = site.Grid.TopLayer(x, z);
+                var mat = top >= site.Grid.ny ? SoilMaterial.Bedrock : site.Grid.MaterialAt(top);
+                l2 = $"{site.Definition.displayName}: {Label(mat)}, depth {site.Grid.TopDepth(x, z):0.00} m";
+                GridArtifact near = null; float best = 1.2f;
+                foreach (var a in site.Grid.artifacts)
+                {
+                    if (a.recovered) continue;
+                    float d = Vector3.Distance(site.CellCentre(a.x, a.y, a.z), hit.point);
+                    if (d < best && site.Exposure(a) > 0.01f) { best = d; near = a; }
+                }
+                if (near != null) l2 += $"   |   find {site.Exposure(near):P0} exposed, condition {near.condition:P0}";
+            }
+            if (_flash != null && Time.time < _flashUntil) l2 = _flash;
+            _line1.text = l1; _line2.text = l2;
+        }
+
+        void BuildUi()
+        {
+            var host = new GameObject("DigTool HUD");
+            host.transform.SetParent(transform, false);
+            var doc = host.AddComponent<UIDocument>();
+            doc.panelSettings = XenoarchUI.LoadPanelSettings();
+            doc.sortingOrder = 30;
+            var root = doc.rootVisualElement;
+            if (root == null) return;
+            root.pickingMode = PickingMode.Ignore;
+            root.style.position = Position.Absolute; root.style.left = 0; root.style.right = 0; root.style.top = 0; root.style.bottom = 0;
+            root.style.justifyContent = Justify.FlexEnd; root.style.alignItems = Align.Center;
+            _panel = new VisualElement { pickingMode = PickingMode.Ignore };
+            _panel.style.marginBottom = 150; _panel.style.paddingLeft = 14; _panel.style.paddingRight = 14; _panel.style.paddingTop = 6; _panel.style.paddingBottom = 6;
+            _panel.style.backgroundColor = new Color(0.04f, 0.06f, 0.08f, 0.7f);
+            _line1 = new Label { pickingMode = PickingMode.Ignore }; _line1.style.color = new Color(0.95f, 0.66f, 0.22f); _line1.style.fontSize = 17;
+            _line2 = new Label { pickingMode = PickingMode.Ignore }; _line2.style.color = new Color(0.85f, 0.9f, 0.95f); _line2.style.fontSize = 17;
+            _panel.Add(_line1); _panel.Add(_line2);
+            root.Add(_panel);
+            XenoarchUI.Show(_panel, Equipped >= 0);
+        }
+
+        static AudioClip Noise(string name, float seconds, float lowpass)
+        {
+            int rate = 22050, n = Mathf.CeilToInt(seconds * rate);
+            var data = new float[n];
+            var rng = new System.Random(name.GetHashCode());
+            float y = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)n;
+                y += lowpass * ((float)rng.NextDouble() * 2f - 1f - y);
+                data[i] = y * Mathf.Sin(Mathf.PI * t) * 0.8f;
+            }
+            var c = AudioClip.Create(name, n, 1, rate, false);
+            c.SetData(data, 0);
+            return c;
+        }
+    }
+}

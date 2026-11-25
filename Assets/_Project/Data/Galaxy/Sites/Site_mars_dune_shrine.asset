@@ -25,3 +25,18 @@ MonoBehaviour:
   seed: 201
   artifactTableId: loot.mars.dune_shrine
   description: Geometric shapes under shifting dust.
+  cellSize: 0.25
+  artifacts:
+  - artifactId: artifact.mars_shrine_idol
+    cell: {x: 12, y: 3, z: 12}
+    footprint: 1
+  - artifactId: artifact.mars_offering_bowl
+    cell: {x: 7, y: 2, z: 16}
+    footprint: 1
+  - artifactId: artifact.mars_glyph_tablet
+    cell: {x: 16, y: 3, z: 7}
+    footprint: 1
+  - artifactId: artifact.mars_bead_string
+    cell: {x: 10, y: 1, z: 8}
+    footprint: 1
+  gateFact: 

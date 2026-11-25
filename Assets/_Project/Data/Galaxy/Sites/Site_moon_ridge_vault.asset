@@ -25,3 +25,18 @@ MonoBehaviour:
   seed: 102
   artifactTableId: loot.moon.ridge_vault
   description: Regular voids below a low ridge.
+  cellSize: 0.25
+  artifacts:
+  - artifactId: artifact.moon_seal_disc
+    cell: {x: 14, y: 6, z: 16}
+    footprint: 1
+  - artifactId: artifact.moon_vault_plate
+    cell: {x: 20, y: 4, z: 10}
+    footprint: 2
+  - artifactId: artifact.moon_power_cell
+    cell: {x: 9, y: 8, z: 20}
+    footprint: 1
+  - artifactId: artifact.moon_tool_head
+    cell: {x: 24, y: 2, z: 24}
+    footprint: 1
+  gateFact: 

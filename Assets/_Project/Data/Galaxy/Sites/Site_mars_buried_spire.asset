@@ -25,3 +25,15 @@ MonoBehaviour:
   seed: 203
   artifactTableId: loot.mars.buried_spire
   description: Tall, narrow structure, mostly buried. Needs a better scanner.
+  cellSize: 0.25
+  artifacts:
+  - artifactId: artifact.mars_spire_cap
+    cell: {x: 24, y: 12, z: 24}
+    footprint: 2
+  - artifactId: artifact.mars_star_disc
+    cell: {x: 18, y: 9, z: 30}
+    footprint: 1
+  - artifactId: artifact.mars_cell_core
+    cell: {x: 30, y: 14, z: 18}
+    footprint: 1
+  gateFact: 

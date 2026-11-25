@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5486af95c2414a44b143bd2197e77d9, type: 3}
+  m_Name: Civ_Vael
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Artifacts.CivilizationDefinition
+  id: civ.vael
+  displayName: the Vael (working name)
+  unknownName: Unknown culture
+  historicalPeriod: ~1.2 million years ago
+  languageName: Vael script
+  writingSystem: Angular glyph rows read in spirals
+  architectureStyle: Buried waystations of fused regolith
+  techTraits: Interplanetary travel, metallic data tablets, lattice sensors.
+  culturalTraits: Mapped and marked routes between worlds; left guide-stones.
+  preferredMaterials: Titanium-iridium alloys, fused glass
+  disappearanceStatus: Unknown

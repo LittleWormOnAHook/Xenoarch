@@ -56,6 +56,10 @@ namespace DMI.Xenoarch.Core
             _loader.fadeDuration = config.fadeDuration;
             gameObject.AddComponent<DMI.Xenoarch.Galaxy.EnvironmentDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Exploration.SiteMarkerDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Excavation.ExcavationDirector>();
+            _session.Artifacts.ResearchCompleted += (a, op, result) =>
+                DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
+            _session.Discovery.JournalAdded += e => DMI.Xenoarch.UI.Toast.Show($"Journal: {e.text}", 8f);
             Debug.Log($"[Xenoarch] Runtime ready (save folder: {storage.Folder})");
         }
 
@@ -74,7 +78,7 @@ namespace DMI.Xenoarch.Core
 
         void Update()
         {
-            if (_sessionActive && !_loader.IsLoading) _session.PlaySeconds += Time.unscaledDeltaTime;
+            if (_sessionActive && !_loader.IsLoading) { _session.PlaySeconds += Time.unscaledDeltaTime; _session.Artifacts.Tick(Time.deltaTime); }
             if (!_session.Config.enableDebugHotkeys || _loader.IsLoading) return;
             var kb = Keyboard.current;
             if (kb == null) return;

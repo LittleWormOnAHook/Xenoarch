@@ -140,7 +140,7 @@ namespace DMI.Xenoarch.EditorTools
             return true;
         }
 
-        static void SwapStation<T>(List<GameObject> all, string objectName, string terminalName, StringBuilder log) where T : DMI.Xenoarch.UI.TerminalWindow
+        internal static void SwapStation<T>(List<GameObject> all, string objectName, string terminalName, StringBuilder log) where T : DMI.Xenoarch.UI.TerminalWindow
         {
             // Every placeholder with this stationName (Anthony places copies on ship props, e.g. the cockpit holo-table
             // inside the Mark 1 instance), else an object with that name. Each is swapped in place.

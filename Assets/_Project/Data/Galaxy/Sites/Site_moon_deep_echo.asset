@@ -25,3 +25,15 @@ MonoBehaviour:
   seed: 103
   artifactTableId: loot.moon.deep_echo
   description: Faint, deep return. Beyond Mk I scanner depth.
+  cellSize: 0.25
+  artifacts:
+  - artifactId: artifact.moon_deep_cache
+    cell: {x: 20, y: 17, z: 20}
+    footprint: 2
+  - artifactId: artifact.moon_lens
+    cell: {x: 14, y: 12, z: 25}
+    footprint: 1
+  - artifactId: artifact.moon_data_crystal
+    cell: {x: 27, y: 15, z: 13}
+    footprint: 1
+  gateFact: 

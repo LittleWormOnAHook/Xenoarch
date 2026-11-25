@@ -25,3 +25,18 @@ MonoBehaviour:
   seed: 202
   artifactTableId: loot.mars.canyon_relay
   description: Metallic signature with a periodic echo.
+  cellSize: 0.25
+  artifacts:
+  - artifactId: artifact.mars_navigation_core
+    cell: {x: 15, y: 8, z: 15}
+    footprint: 2
+  - artifactId: artifact.mars_sensor_lattice
+    cell: {x: 19, y: 7, z: 13}
+    footprint: 1
+  - artifactId: artifact.mars_relay_fragment
+    cell: {x: 10, y: 4, z: 20}
+    footprint: 2
+  - artifactId: artifact.mars_canyon_marker
+    cell: {x: 22, y: 2, z: 22}
+    footprint: 1
+  gateFact: chain.moon_mars.mars_coords

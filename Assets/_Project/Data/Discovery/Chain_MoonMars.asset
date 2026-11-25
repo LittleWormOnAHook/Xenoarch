@@ -1,0 +1,149 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a07417ef545146c408e6a348808ea95f, type: 3}
+  m_Name: Chain_MoonMars
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Discovery.DiscoveryChainDefinition
+  id: chain.moon_mars
+  title: The Waystations
+  nodes:
+  - id: tablet
+    title: Recover the metallic tablet
+    factKey: artifact.recovered:artifact.moon_metallic_tablet
+    threshold: 1
+    prerequisites: []
+    mode: 0
+    count: 1
+    optional: 0
+    reward:
+      journal: Recovered an engraved metal plate from the Tranquility Cache. Nothing
+        like it exists in any human record.
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+  - id: origin
+    title: Identify its origin
+    factKey: civ.identified:civ.vael
+    threshold: 1
+    prerequisites:
+    - tablet
+    mode: 0
+    count: 1
+    optional: 0
+    reward:
+      journal: 'Lab result: the tablet is not of human make. Its makers: the Vael
+        (working name).'
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+  - id: mars_coords
+    title: Translate the tablet (35%)
+    factKey: translation:artifact.moon_metallic_tablet
+    threshold: 0.35
+    prerequisites:
+    - origin
+    mode: 0
+    count: 1
+    optional: 0
+    reward:
+      journal: 'Partial translation: a second waystation on Mars, in a long canyon.
+        Scan Mars from orbit to find it.'
+      setFact: chain.moon_mars.mars_coords
+      revealSiteId: site.mars.canyon_relay
+      revealLevel: 1
+      discoverBodyId: body.sol.mars
+      scannerLevelBonus: 0
+  - id: mars_scan
+    title: Locate the Mars waystation from orbit
+    factKey: site.revealed:site.mars.canyon_relay
+    threshold: 2
+    prerequisites:
+    - mars_coords
+    mode: 0
+    count: 1
+    optional: 0
+    reward:
+      journal: 'Orbital scan: metallic anomaly confirmed in the canyon. Land and
+        pinpoint it with the handheld scanner.'
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+  - id: nav_core
+    title: Recover the navigation device
+    factKey: artifact.recovered:artifact.mars_navigation_core
+    threshold: 1
+    prerequisites:
+    - mars_scan
+    mode: 0
+    count: 1
+    optional: 0
+    reward:
+      journal: Recovered a damaged mechanism from the Canyon Relay.
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+  - id: sensor
+    title: Recover the sensor module
+    factKey: artifact.recovered:artifact.mars_sensor_lattice
+    threshold: 1
+    prerequisites:
+    - mars_scan
+    mode: 0
+    count: 1
+    optional: 1
+    reward:
+      journal: Recovered a glass-threaded module beside the mechanism.
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+  - id: beyond_sol
+    title: Decode the navigation core
+    factKey: research:artifact.mars_navigation_core:TechnologyAnalysis
+    threshold: 1
+    prerequisites:
+    - nav_core
+    mode: 0
+    count: 1
+    optional: 0
+    reward:
+      journal: 'Navigation core decoded: coordinates of a star system beyond Sol.
+        Future expedition (needs a long-range drive).'
+      setFact: chain.moon_mars.extrasolar_coords
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+  - id: sensor_tech
+    title: Analyse the sensor module
+    factKey: research:artifact.mars_sensor_lattice:TechnologyAnalysis
+    threshold: 1
+    prerequisites:
+    - sensor
+    mode: 0
+    count: 1
+    optional: 1
+    reward:
+      journal: 'Sensor lattice adapted: scanner tier +1.'
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 1

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6770eddc2c30cc94bad8a50effb2e6aa, type: 3}
+  m_Name: Artifact_vael_effigy
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Artifacts.ArtifactDefinition
+  id: artifact.vael_effigy
+  displayName: Guardian Effigy
+  description: A figure fragment with inlaid glyphs.
+  icon: {fileID: 0}
+  category: 2
+  maxStack: 1
+  uniqueInstance: 1
+  mass: 0.5
+  baseValue: 2000
+  worldPrefab: {fileID: 0}
+  unidentifiedName: Figure fragment
+  researchedDescription: 
+  civilizationId: civ.vael
+  artifactCategory: 3
+  rarity: 4
+  material: Fused glass
+  ageEstimate: ~1.2 million years
+  fragility: 0.6
+  historicalSignificance: 0.95
+  technologicalSignificance: 0.1
+  buriedCondition: 0.85
+  researchOps: 000000000100000002000000030000000400000005000000
+  translation: []
+  shape: 5
+  tint: {r: 0.95, g: 0.66, b: 0.22, a: 1}
+  size: 0.3
