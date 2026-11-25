@@ -27,4 +27,5 @@ MonoBehaviour:
   archaeologicalPotential: 0.8
   seed: 21262
   mapColor: {r: 0.85, g: 0.42, b: 0.25, a: 1}
+  orbitSkybox: {fileID: 2100000, guid: 4aeb5b51beddfa54c9e46610b708b1f6, type: 2}
   description: Dust-buried structures predate every human mission.

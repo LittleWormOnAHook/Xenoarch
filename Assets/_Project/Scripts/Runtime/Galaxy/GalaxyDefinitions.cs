@@ -23,6 +23,8 @@ namespace DMI.Xenoarch.Galaxy
         [Min(0f)] public float fogDensity = 0.01f;
         [Tooltip("Optional URP Volume profile applied by a global volume while in this environment.")]
         public UnityEngine.Rendering.VolumeProfile volumeProfile;
+        [Tooltip("Optional sky for this environment's scenes (surfaces). Ship/orbit scenes use the body's orbit skybox instead.")]
+        public Material skybox;
     }
 
     /// <summary>A star, planet, moon, belt or station. Ids: body.&lt;system&gt;.&lt;name&gt;.</summary>
@@ -44,6 +46,8 @@ namespace DMI.Xenoarch.Galaxy
         [Range(0f, 1f)] public float archaeologicalPotential;
         public int seed;
         public Color mapColor = Color.white;
+        [Tooltip("Sky seen from the ship while parked in orbit of / docked at this body (empty = galaxy default deep space).")]
+        public Material orbitSkybox;
         [TextArea] public string description;
 
         public bool HasLanding => !string.IsNullOrEmpty(sceneName);

@@ -31,6 +31,25 @@ namespace DMI.Xenoarch.EditorTools
         public const string ShipPath = ShipFolder + "/Ship_ConstellationMk1.asset";
         public const string ScannerPath = ToolFolder + "/Scanner_HandheldMk1.asset";
         public const string ShipVolumePath = RenderingFolder + "/VP_Ship_Interior.asset";
+        public const string SkyboxFolder = XenoarchSetup.Root + "/Art/Skyboxes";
+        public const string CreepySkyboxes = "Assets/_Creepy_Cat/_3D Scifi Kit Vol 3/Textures/_Skyboxes";
+        /// <summary>Xenoarch skybox material -> Creepy Cat face-texture prefix ("*" = one texture on all faces).</summary>
+        public static readonly (string mat, string prefix)[] Skies =
+        {
+            ("Sky_DeepSpace", "Space_01"),
+            ("Sky_Starfield", "Space_02_AllFaces*"),
+            ("Sky_EarthOrbit", "Skybox_01"),
+            ("Sky_IcyOrbit", "Skybox_02"),
+            ("Sky_MarsOrbit", "Skybox_03"),
+            ("Sky_MoonOrbit", "Skybox_04"),
+        };
+        public const string DefaultSky = "Sky_DeepSpace";
+        public static readonly Dictionary<string, string> OrbitSkies = new Dictionary<string, string>
+        {
+            ["body.sol.earth"] = "Sky_EarthOrbit", [TradeHubId] = "Sky_EarthOrbit", ["body.sol.moon"] = "Sky_MoonOrbit",
+            ["body.sol.mars"] = "Sky_MarsOrbit", ["body.sol.europa"] = "Sky_IcyOrbit", ["body.sol.enceladus"] = "Sky_IcyOrbit",
+        };
+        public static string SkyPath(string mat) => $"{SkyboxFolder}/{mat}.mat";
         public const string CreepyShips = "Assets/_Creepy_Cat/_3D Scifi Kit Vol 3/Prefabs/Props/_Update 1.11-Spaceship Constellation_R1";
 
         public static readonly string[] SolBodyIds =
@@ -139,9 +158,17 @@ namespace DMI.Xenoarch.EditorTools
             }
             EditorUtility.SetDirty(scanner);
 
+            int skies = EnsureSkyboxes();
+            foreach (var kv in OrbitSkies)
+            {
+                var body = sol.FindBody(kv.Key);
+                if (body != null && body.orbitSkybox == null) { body.orbitSkybox = AssetDatabase.LoadAssetAtPath<Material>(SkyPath(kv.Value)); EditorUtility.SetDirty(body); }
+            }
+
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
             if (config != null)
             {
+                if (config.defaultSpaceSkybox == null) config.defaultSpaceSkybox = AssetDatabase.LoadAssetAtPath<Material>(SkyPath(DefaultSky));
                 if (config.galaxy == null) config.galaxy = galaxy;
                 if (config.starterShip == null) config.starterShip = ship;
                 if (config.siteRegistry == null) config.siteRegistry = reg;
@@ -153,6 +180,43 @@ namespace DMI.Xenoarch.EditorTools
 
             AssetDatabase.SaveAssets();
             Debug.Log($"[Xenoarch] 1B setup: {sol.bodies.Count} bodies in Sol, {reg.Entries.Count} sites, ship '{ship.displayName}' (exterior {(ship.exteriorPrefab ? ship.exteriorPrefab.name : "none")}, interior {(ship.interiorPrefab ? ship.interiorPrefab.name : "none")}), scanner range {scanner.range} m");
+        }
+
+        [MenuItem("Xenoarch/Setup/7b. Space Skyboxes (from Creepy Cat textures)", priority = 27)]
+        public static void SkyboxMenu() { int n = EnsureSkyboxes(); Debug.Log($"[Xenoarch] Skyboxes: {n} material(s) in {SkyboxFolder}"); }
+
+        /// <summary>Builds Skybox/6 Sided materials (built-in shader, URP-compatible) from the kit's face textures. The kit's own
+        /// .mat files point at a shader that isn't in this project, so they are not used. Returns materials present.</summary>
+        public static int EnsureSkyboxes()
+        {
+            XenoarchSetup.EnsureFolder(SkyboxFolder);
+            var shader = Shader.Find("Skybox/6 Sided");
+            if (shader == null) { Debug.LogError("[Xenoarch] Skyboxes: shader 'Skybox/6 Sided' not found"); return 0; }
+            int n = 0;
+            foreach (var (matName, prefixRaw) in Skies)
+            {
+                bool single = prefixRaw.EndsWith("*");
+                string prefix = prefixRaw.TrimEnd('*');
+                string path = SkyPath(matName);
+                var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (mat != null) { n++; continue; }
+                var faces = new Dictionary<string, Texture2D>();
+                foreach (var (prop, face) in new[] { ("_FrontTex", "Front"), ("_BackTex", "Back"), ("_LeftTex", "Left"), ("_RightTex", "Right"), ("_UpTex", "Top"), ("_DownTex", "Bottom") })
+                {
+                    var tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{CreepySkyboxes}/{(single ? prefix : prefix + "_" + face)}.png");
+                    if (tex == null) { faces = null; break; }
+                    faces[prop] = tex;
+                }
+                if (faces == null) { Debug.LogWarning($"[Xenoarch] Skyboxes: textures for {prefix} missing, {matName} skipped"); continue; }
+                mat = new Material(shader) { name = matName };
+                foreach (var kv in faces) mat.SetTexture(kv.Key, kv.Value);
+                mat.SetColor("_Tint", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+                mat.SetFloat("_Exposure", 1f);
+                AssetDatabase.CreateAsset(mat, path);
+                n++;
+            }
+            AssetDatabase.SaveAssets();
+            return n;
         }
 
         public static VolumeProfile EnsureShipVolumeProfile()
@@ -265,6 +329,10 @@ namespace DMI.Xenoarch.EditorTools
             check(ship.fuelCapacity > 0 && ship.interiorEnvironment != null && sol.FindBody(ship.startingBodyId) != null, "1B: starter ship has fuel, interior environment and a valid start body");
             check(ship.interiorEnvironment != null && ship.interiorEnvironment.volumeProfile != null && ship.interiorEnvironment.volumeProfile.Has<Bloom>(), "1B: ship interior URP Volume profile (Bloom/Tonemapping/Color/Vignette)");
             check(ship.exteriorPrefab != null && ship.interiorPrefab != null, $"1B: ship prefabs linked (exterior={(ship.exteriorPrefab ? ship.exteriorPrefab.name : "none")}, interior={(ship.interiorPrefab ? ship.interiorPrefab.name : "none")})");
+
+            var sky = config.defaultSpaceSkybox;
+            check(sky != null && sky.shader != null && sky.shader.name == "Skybox/6 Sided" && sky.GetTexture("_FrontTex") != null, $"1B sky: default deep-space skybox ({(sky ? sky.name : "none")})");
+            check(moon.orbitSkybox != null && mars.orbitSkybox != null && sol.FindBody("body.sol.earth")?.orbitSkybox != null, "1B sky: Earth/Moon/Mars orbit skyboxes assigned");
 
             // Rules (pure C#, in-memory save storage)
             var session = new GameSession(config, config.itemRegistry, new DMI.Xenoarch.Save.MemorySaveStorage());

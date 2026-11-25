@@ -25,6 +25,7 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Galaxy.SiteRegistry siteRegistry;
         public DMI.Xenoarch.Galaxy.SurfaceScannerDefinition surfaceScanner;
         [Tooltip("Environment for scenes not tied to a body (fallback).")] public DMI.Xenoarch.Galaxy.EnvironmentProfile defaultEnvironment;
+        [Tooltip("Deep-space sky used aboard the ship when the current body has no orbit skybox.")] public Material defaultSpaceSkybox;
 
         [Header("New game")]
         public string firstGameplayScene = SceneNames.ShipStarter;

@@ -27,4 +27,5 @@ MonoBehaviour:
   archaeologicalPotential: 0.25
   seed: 42775
   mapColor: {r: 0.95, g: 0.95, b: 1, a: 1}
+  orbitSkybox: {fileID: 2100000, guid: 69c914b44f4533d4ab264d51319c9aa2, type: 2}
   description: Cryovolcanic plumes.

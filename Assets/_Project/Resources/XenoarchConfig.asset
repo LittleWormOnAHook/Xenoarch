@@ -18,6 +18,7 @@ MonoBehaviour:
   siteRegistry: {fileID: 11400000, guid: 1b679ded134abbf49bfd0cce9772f8a2, type: 2}
   surfaceScanner: {fileID: 11400000, guid: b49a5fd836d440a4a875840d9c5826e6, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
+  defaultSpaceSkybox: {fileID: 2100000, guid: a01121a83277da848a2a5f4917888ed4, type: 2}
   firstGameplayScene: Ship_Starter
   firstSpawnId: default
   inventoryCapacity: 24

@@ -31,6 +31,28 @@ namespace DMI.Xenoarch.Galaxy
             return cfg.defaultEnvironment;
         }
 
+        /// <summary>Sky for a scene: aboard the ship = current body's orbit sky (else default deep space); elsewhere the environment's sky if set.</summary>
+        public static Material ResolveSky(GameSession session, string scene)
+        {
+            var cfg = session.Config;
+            if (scene == SceneNames.ShipStarter)
+            {
+                var body = session.Exploration?.CurrentBody;
+                if (body != null && body.orbitSkybox != null) return body.orbitSkybox;
+                return cfg.defaultSpaceSkybox;
+            }
+            var env = Resolve(cfg, scene);
+            return env != null ? env.skybox : null;
+        }
+
+        public static void ApplySky(GameSession session, string scene)
+        {
+            var sky = ResolveSky(session, scene);
+            if (sky == null || RenderSettings.skybox == sky) return;
+            RenderSettings.skybox = sky;
+            DynamicGI.UpdateEnvironment();
+        }
+
         public void Apply(string scene)
         {
             var session = XenoarchRuntime.Session;
@@ -39,6 +61,7 @@ namespace DMI.Xenoarch.Galaxy
             foreach (var f in FindObjectsByType<FirstPersonController>(FindObjectsSortMode.None))
                 if (f.GetComponent<Exploration.SurfaceScannerTool>() == null) f.gameObject.AddComponent<Exploration.SurfaceScannerTool>();
 
+            ApplySky(session, scene);
             var env = Resolve(session.Config, scene);
             Current = env;
             if (env == null) return;

@@ -27,5 +27,6 @@ MonoBehaviour:
   archaeologicalPotential: 0.55
   seed: 34618
   mapColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  orbitSkybox: {fileID: 2100000, guid: 70c66f8e662d2034abf88156c458b743, type: 2}
   description: Training ground for licensed xenoarchaeologists. Several old survey
     anomalies remain unexplained.

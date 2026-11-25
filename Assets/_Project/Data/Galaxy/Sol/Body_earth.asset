@@ -27,4 +27,5 @@ MonoBehaviour:
   archaeologicalPotential: 0
   seed: 17
   mapColor: {r: 0.3, g: 0.55, b: 0.95, a: 1}
+  orbitSkybox: {fileID: 2100000, guid: c79cc38f767fb054780575e8dae680e9, type: 2}
   description: Home. Surface excavation is restricted by the Heritage Authority.
