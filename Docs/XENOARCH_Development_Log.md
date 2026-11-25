@@ -42,3 +42,22 @@ Times are US Eastern (ET).
   - Missing textures in 16 materials (see Logs/xenoarch_material_conversion.txt).
   - Kit scripts compile; several use legacy `Input.*` (MouseLook, Rover*, *_Example_Keys, LaserShoot, TurretLookAt, Crate_Open_Close) and will throw if run with Input System only. Do not use those demo controllers.
 - PlanetPack02 (Genesis): **not imported**. Built-in render pipeline only (surface shaders + ForwardBase CG passes, render pink in URP), 572 MB of 8K textures, one trivial rotate script. If we want its planets for skyboxes, port one Shader Graph planet shader and downscale 1–2 texture sets.
+
+## 2026-11-25 (1:50 PM ET): Kade body, hands lowered/hand slots, ship prefab survey
+
+### Player (XA_Player prefab only; no scenes opened or saved)
+- **Kade full body** (`Body/Kade` under XA_Player). Copied read-only from Genesis `TripoModels/rugged_male_character_3d_model` (the same mesh and avatar `Player_Kade_v2` uses; Mixamo humanoid) into `Assets/_Project/Art/Characters/Kade`. No Invector components or scripts. The hair (.glb) and the Rebreather mask were not copied. The material was converted to URP/Lit (1/1 OK; report in `Logs/xenoarch_material_conversion_kade.txt`). The Genesis AO map was wired as occlusion. The unused HDRP height map is reported missing, which is harmless.
+- **Head/neck split**: at build time the mesh is split by skin weights into `Kade_Body_NoHead` (83,290 tris, rendered and casting shadows) and `Kade_HeadNeck` (10,088 tris, shadows only). The local camera never sees inside the head, and the shadow stays complete. `PlayerBody.SetFirstPersonView(false)` shows the head again for a future photo or cutscene camera.
+- The body is scaled to 0.913 so the head bone sits about 0.1 m under the eye camera. It is offset 0.14 m back, so looking down shows the chest and legs.
+- **Locomotion**: `XA_Body_Locomotion.controller` uses humanoid clips from Kevin Iglesias *Basic Motions* (Asset Store licence, no scripts), copied from Genesis into `Art/Characters/Animations/BasicMotions`. Its 2D freeform blend (MoveX/MoveZ in m/s) has 20 motions: idle, an 8-way walk at 1.5 m/s, an 8-way run at walk speed 3.2, and 5 sprint directions at 5.8. Jump start, mid-air, fall and land are separate states. A grounded grace period stops CharacterController flicker. There is no root motion.
+- **FP arms**: with empty hands, each arm swings down out of view. The renderers are then disabled and the Animator is culled, so you see the body's own arms at your sides. An arm raises only while that hand holds something (`FirstPersonArms.SetHeld(Hand.Left/Right, bool)`), or briefly on Interact.
+  - The arms controller now has `LeftHeld`, `RightHeld` and `ToolHeld` parameters.
+  - It also has `LeftHand` and `RightHand` override layers, masked to each arm. Each layer's weight follows its hand. The placeholder pose is PC watch idle, which tools can swap with an AnimatorOverrideController.
+  - `HandSlot_L` and `HandSlot_R` sit under `hand_l` and `hand_r` for tool models.
+- Menu: **Xenoarch/Setup/6. Build Player Body (Kade) + Hand Slots (prefab only)**. It edits the existing prefab in place, so the per-scene gravity overrides survive. Trigger file: `Temp/xenoarch_body.trigger`.
+- Smoke check: **53 pass / 0 fail**, including 8 new body/hands checks. The compile was clean (Tundra build success).
+
+### Ship prefab survey (read-only), see Reuse Audit Â§6
+- `P_Spaceship_Constellation_Mark_1_{Fake,FlyMode,StandMode}`: FlyMode and StandMode are the same ship. The only difference is the landing gear: up in FlyMode, down in StandMode. Fake is the exterior shell, with no interior lights and fewer interior pieces.
+- The doors (`DoorDoubleSlide`) are trigger-based, with no Input API. Station-to-room mapping for Phase 1B is in the audit.
+- Post-processing profiles are PPv1/PPv2, not URP. They need recreating as URP Volume profiles.

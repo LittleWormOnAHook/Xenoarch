@@ -67,3 +67,71 @@ Complexity: S (< 1 day), M (1–3 days), L (> 3 days) for a solo developer.
 - Adapted (rewritten, ASH as the source of the pattern/logic): interaction (`IASHUsable`/`ASHInteractor`), UI gating (`ASHUIState`), inventory add/remove rules (`ASHInventory`), item registry (`ASHItemRegistry`), save sections (`IASHSaveable`/`ASHSaveSystem`), scene flow (`ASHLoadingScreen`/`ASHSceneFlow`).
 - New: stable-id definition base and generic registry, versioned save envelope + migrations + storage abstraction, world persistence (consumed ids), player rig adapter, runtime composition root, setup/scene builder, smoke check, EditMode tests.
 - Vendor FPC pending: integrate via `IPlayerRig` (see System Architecture §5).
+
+## 6. Creepy Cat 3D Scifi Kit Vol 3 (copied to `Assets/_Creepy_Cat`), reusable content
+
+### 6.1 Constellation ships (`Prefabs/Props/_Update 1.11-Spaceship Constellation_R1`)
+These were read only; nothing was modified.
+
+| Prefab | GameObjects | Lights | Colliders | Scripts | Use in Xenoarch |
+|---|---|---|---|---|---|
+| `..._Mark_1_Fake` | 1,173 | 3 | 373 | Turn_Move ×4, ObjectFacingCamera ×3, DoorDoubleSlide ×1 | **Exterior** for space travel, docking and orbit shots |
+| `..._Mark_1_FlyMode` | 1,623 | 36 | 566 | + DoorDoubleSlide ×4 | Walkable interior, gear **up** (in flight) |
+| `..._Mark_1_StandMode` | 1,623 | 36 | 566 | + DoorDoubleSlide ×4 | Walkable interior, gear **down** (landed). **Recommended for Ship_Starter** |
+
+- **Fly vs Stand**: the hierarchy is identical. Only `Gear_01/02/03` differ (y 5.94 vs 3.35). Pick by context, or swap the gear transforms at runtime instead of keeping two prefabs.
+- **Orientation**: the bow faces **−Z** (cockpit at z ≈ −33.6, reactors at z ≈ +31.8). Decks: lower/cargo y ≈ −0.6 (`Interior_Bottom_01`), main y ≈ 5.4, upper/roof y ≈ 9.4.
+- **Lighting cost**: Stand and Fly have 36 realtime lights, 26 of them spotlights. The Editor log already shows "Reduced additional punctual light shadows…" atlas warnings. Before 1B, cut shadowed lights to a few, bake the rest, or raise the URP shadow atlas.
+- **Root groups**: `_Interior` (422 objects: floors, walls, corridors, roofs, the aft room and 4 sliding doors), `_Props` (1,176 objects: cockpit, holo table, consoles, crates, servers), `_Reactors` (4 afterburner particles), and `Spaceship_Constellation_Body_1` (hull, glass, gear, cockpit platform).
+
+**Doors and the Input API.** Interior doors are `P_Wall_Int_Door_Simple_02` ×4 at (−3,5.4,−18.5), (7,5.4,−10.5), (−5,5.4,−10.5) and (−3,5.4,7.5). They use `Common Scripts/DoorDoubleSlide.cs`:
+- It opens and closes in `OnTriggerEnter/Exit` on a trigger BoxCollider (3.85 × 3.46 × 2.94 m), sliding 1.6 m along Z.
+- It does **not** use the old Input API. Our CharacterController fires the triggers, so the doors work with XA_Player as they are.
+- Caveats: any collider opens them (thrown items, NPCs later); there is no lock or power state; it plays only the first AudioSource; `Pneumatic_Door_01` (lower deck) has no script.
+- For 1B, wrap or replace the door logic with a Xenoarch door component (player layer filter, locked/powered state, save state). Keep the meshes.
+
+**Other ship scripts**: `Turn_Move` spins antennas/radar and `ObjectFacingCamera` handles billboards (it uses `Camera.main`; our player camera is tagged MainCamera). Neither uses input.
+
+**Old Input API elsewhere in the kit.** The project runs **Input System only** (`activeInputHandler: 1`), so these scripts would throw if used: `MouseLook`, `PhysicAddForce`, `RoverControler_A`, `RoverPilotHead`, `RoverWheelDrive`, `Uween/CreepyCatTest`, `Infinity_Example_Keys_01`, `Infinity_Joystick_01`, `Container_Example_Keys_01`, `Crate_Open_Close`, `Walkyrie_Example_Keys_01`, `LaserShoot`, `TurretLookAt`. None of them are on the Constellation prefabs. Do not use them as they are; port them if needed.
+
+### 6.2 Station placeholder → ship room/equipment mapping (StandMode local coordinates; for re-parenting in Phase 1B)
+
+| Ship_Starter placeholder (current) | Constellation location / object | Notes |
+|---|---|---|
+| `Cockpit_Console` + **Navigation Terminal** (Phase 1B) | `_Props/P_Cockpit_Tech_02` (−0.1, 5.6, −33.6): steering wheels, button panels, handle; pilot chairs `P_Chair_07` ×2 at z −31 | Interactable on the console; also the travel menu (replaces the debug TradeHub/Mars travel pillars) |
+| **Orbital Scanning Terminal** (Phase 1B) | `_Props/P_Holo_Table_04` (0, 5.6, −26.7) on `P_Platerform_Base_01` behind the cockpit | The holo table fits planet/orbit scan UI. Side consoles `P_Cockpit_Tech_03_Rev_B` (±6, 5.6, −22.3) are spare slots (comms, ship status) |
+| **Research Laboratory** (Phase 1C) | Mid-ship: `P_Wall_Computer_01` (−3, 5.4, −16.5), `P_Display_Level_01` (−4.9, 6.2, −4.5), `P_Console_Small_01` (1.3, 5.4, 2.1), around `P_Thing_18` (0, 4.4, 4.5) | No dedicated lab room. Dress it with kit props (`P_Desktop_Complex_01`, `P_Tube_Pod_01/02`, `P_Health_Pod_01`) |
+| **Engineering / Upgrade Terminal** (Phase 1D) | Aft room `_Interior/P_Interior_Room_01` (3, 5.4, 21.5): `P_Reactor_ColdFusion_01`, `P_Computer_Server_02/04`, `P_Desktop_Part_01` | Natural engine room |
+| `ArtifactStorage_Racks` | Lower/cargo deck `Interior_Bottom_01` (y −0.6): `P_Crate_Simple_01/02` stack at (4.4, −0.7, −2) and (−1.5..0.7, −0.6, 8.7); `P_Console_Small_01` (−4, −0.6, −4.2) as a cargo manifest console | Artifact storage container + UI |
+| `EquipmentStorage_Lockers` | Main deck `P_Char_Crate_01` (2, 5.4, −13.4) and `P_Crate_Simple_02` (5.8, 5.4, −2.7) | Equipment locker/crate interactable |
+| **Airlock** (debug travel to Moon) | Lower deck `Interior_Bottom_01/Pneumatic_Door_01` (static mesh, no script) | Becomes the exit/landing-ramp interactable; animate it with our own door component |
+| Excavation Brush pickup | Any crate/table on the main deck (e.g. `P_Char_Crate_01`) | Keep it a `WorldObjectId` pickup |
+| Player spawn | Main deck corridor near the bridge, e.g. (0, 5.4, −10) facing −Z | Set when the ship goes into Ship_Starter |
+
+### 6.3 FX and particles (`Prefabs/Fx`, 24 prefabs; particle materials already converted to URP Particles/Unlit)
+- **Ship and space**: `Particle_Afterburner` (+ `_Small` and `_Big Variant`), `Particle_Dust_Space`, `Particle_StarsZone_01`, `Particle_Glow Zone_01`, `Particle_Attractor_01`, `Sprite_Sun`, `Sprite_Glow`, `Halfball_Glow`, `SpriteSheet_Lightning_01`.
+- **Planets/excavation**: `Particle_Dust_Storm` (Mars), `Particle_Cloud_Atmos_A/B/C`, `Particle_Smoke`, `Particle_Spark` (tool/drill contact), `Explosion_01`.
+- **Laser**: `LaserShoot_A/B`, `LaserImpact_A/B`, `LaserController_A/B`. The impact visuals are useful for a cutter tool. `LaserShoot` and `TurretLookAt` use the old Input API, so use the visuals only.
+- 16 kit materials have missing textures (see `Logs/xenoarch_material_conversion_creepycat.txt`). Check each FX before use.
+
+### 6.4 Other props worth using (`Prefabs/Props`, 508 prefabs; `Builds` 132)
+- **Machines & Computers (30)**: `P_Drilling_Machine_01..03` (excavation sites), `P_Computer_Server_01..04`, `P_Desktop_*`, `P_Console_*`, `P_Health_Pod_01`, `P_Oxygen_Tank_01`, `P_Tube_Pod_01/02`, `P_Big_Radar_01`, `P_Radar_Pylon_01`, `P_Electric_Tower_01`, `P_TV_Big_Screen_01`, `P_Stargate_01..04` (galaxy-travel set dressing).
+- **Panels (46)** and **Numbers & Words (41)**: signage and panels for the ship and TradeHub.
+- **Physics (7)**: crates and ropes (rope scripts not reviewed).
+- **Ships/stations**: Akorn, Walkyrie, Infinity R1–R3, Falabella & Magellan, Spaceships Kit 1.0, Station Ptolemy. Candidates for TradeHub docking traffic and later player ships.
+- **Terrain**: `_Update 1.14-New Moon Terrain` and `1.15-New Mars Terrain` (Moon/Mars surface reference meshes and terrain data). Compare with Digger-sculpted terrain before use.
+- `Things (For Alexy)` (20) and `Others` (2) are misc shapes, crystals and a free-look camera (the camera script was not reviewed).
+
+### 6.5 Post-processing profiles (`_3D Scifi Kit Vol 3/Post_Process`): **not URP**
+| Asset | Type | Effects |
+|---|---|---|
+| `Post-Processing Profile_A_2017.asset`, `..._B_2017.asset` | **Post Processing Stack v1** (`PostProcessingProfile`) | fog, antialiasing, ambient occlusion, SSR, bloom |
+| `Post-processing Profile_A_2018.asset` | **Post Processing Stack v2** (`PostProcessProfile`) | ambient occlusion, bloom |
+
+- Neither package is installed, and URP ignores both, so the assets are inert (missing script). They also appear only in the kit's example scenes.
+- **Recreate as URP Volume profiles** when lighting each scene:
+  - Global Volume: Bloom, Tonemapping (ACES), Color Adjustments, Vignette.
+  - Ambient occlusion → URP **SSAO renderer feature**.
+  - SSR → none in URP (use reflection probes).
+  - Fog → `RenderSettings` fog or a volumetric fog asset.
+- This was not converted now: it isn't a one-to-one asset conversion, and the values should be tuned per scene. Use the 2018 profile's bloom and AO values as the starting point.
