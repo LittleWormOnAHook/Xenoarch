@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 6f7798dee2c64a39a4fd3f1e23129145, type: 3}
   m_Name: Site_moon_ridge_vault
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:ArchaeologicalSiteDefinition
   id: site.moon.ridge_vault
@@ -26,6 +26,7 @@ MonoBehaviour:
   artifactTableId: loot.moon.ridge_vault
   description: Regular voids below a low ridge.
   cellSize: 0.25
+  style: {fileID: 11400000, guid: ffb25ef01128f1c48ba96237fe32df71, type: 2}
   artifacts:
   - artifactId: artifact.moon_seal_disc
     cell: {x: 14, y: 6, z: 16}

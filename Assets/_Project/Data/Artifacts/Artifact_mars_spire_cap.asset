@@ -37,4 +37,4 @@ MonoBehaviour:
   translation: []
   shape: 5
   tint: {r: 0.62, g: 0.64, b: 0.7, a: 1}
-  size: 0.4
+  size: 0.6

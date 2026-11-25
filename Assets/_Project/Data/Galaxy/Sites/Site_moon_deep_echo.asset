@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 6f7798dee2c64a39a4fd3f1e23129145, type: 3}
   m_Name: Site_moon_deep_echo
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:ArchaeologicalSiteDefinition
   id: site.moon.deep_echo
@@ -26,6 +26,7 @@ MonoBehaviour:
   artifactTableId: loot.moon.deep_echo
   description: Faint, deep return. Beyond Mk I scanner depth.
   cellSize: 0.25
+  style: {fileID: 11400000, guid: d108ad1e1fdf7ef46944c53edee0976a, type: 2}
   artifacts:
   - artifactId: artifact.moon_deep_cache
     cell: {x: 20, y: 17, z: 20}

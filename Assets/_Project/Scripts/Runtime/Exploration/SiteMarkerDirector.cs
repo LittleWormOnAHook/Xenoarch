@@ -7,8 +7,9 @@ using UnityEngine.SceneManagement;
 namespace DMI.Xenoarch.Exploration
 {
     /// <summary>
-    /// Places a beacon on every pinpointed archaeological site of the loaded scene (state from ExplorationService, so
-    /// marks survive scene reloads and saves). Placeholder visuals: an emissive pole snapped to the ground.
+    /// Marks pinpointed archaeological sites of the loaded scene (state from ExplorationService, so marks survive scene
+    /// reloads and saves) with a persistent square border around the dig site (ExcavationSite.ShowBorder). A scan that
+    /// pinpoints a site also shows a beacon pole + ring there for <see cref="PingSeconds"/> seconds.
     /// </summary>
     public sealed class SiteMarkerDirector : MonoBehaviour
     {
@@ -22,6 +23,8 @@ namespace DMI.Xenoarch.Exploration
         void Start() => Refresh();
         void OnLoaded(Scene s, LoadSceneMode m) { _markers.Clear(); Refresh(); }
 
+        public const float PingSeconds = 5f;
+
         public void Refresh()
         {
             var x = XenoarchRuntime.Session?.Exploration;
@@ -30,10 +33,26 @@ namespace DMI.Xenoarch.Exploration
             foreach (var site in x.SitesInScene(scene))
             {
                 if (x.Site(site.Id).revealLevel < (int)SiteRevealLevel.Pinpointed) continue;
-                if (_markers.TryGetValue(site.Id, out var go) && go != null) continue;
-                _markers[site.Id] = Spawn(site);
+                DMI.Xenoarch.Excavation.ExcavationSite.Find(site.Id)?.ShowBorder(true);
             }
         }
+
+        /// <summary>Temporary beacon at a site (removed after <see cref="PingSeconds"/>).</summary>
+        public void Ping(string siteId)
+        {
+            var x = XenoarchRuntime.Session?.Exploration;
+            if (x == null) return;
+            foreach (var site in x.SitesInScene(SceneManager.GetActiveScene().name))
+            {
+                if (site.Id != siteId) continue;
+                if (_markers.TryGetValue(site.Id, out var old) && old != null) Destroy(old);
+                var go = Spawn(site);
+                _markers[site.Id] = go;
+                Destroy(go, PingSeconds);
+            }
+        }
+
+        public bool HasPing(string siteId) => _markers.TryGetValue(siteId, out var go) && go != null;
 
         static GameObject Spawn(ArchaeologicalSiteDefinition site)
         {

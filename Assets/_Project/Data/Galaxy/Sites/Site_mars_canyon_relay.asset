@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 6f7798dee2c64a39a4fd3f1e23129145, type: 3}
   m_Name: Site_mars_canyon_relay
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:ArchaeologicalSiteDefinition
   id: site.mars.canyon_relay
@@ -26,6 +26,7 @@ MonoBehaviour:
   artifactTableId: loot.mars.canyon_relay
   description: Metallic signature with a periodic echo.
   cellSize: 0.25
+  style: {fileID: 11400000, guid: 0c4ee46dd559da84ca73710929fc4ce4, type: 2}
   artifacts:
   - artifactId: artifact.mars_navigation_core
     cell: {x: 15, y: 8, z: 15}

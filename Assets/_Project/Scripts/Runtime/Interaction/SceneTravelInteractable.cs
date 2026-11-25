@@ -21,7 +21,11 @@ namespace DMI.Xenoarch.Interaction
         public bool TryInteract(in InteractionContext c)
         {
             var rt = XenoarchRuntime.Instance;
-            return rt != null && rt.Travel(targetScene, targetSpawnId);
+            if (rt == null) return false;
+            // Going back to the ship from a planet/station always lands at the airlock (same path as ShipTravel).
+            if (targetScene == SceneNames.ShipStarter && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != SceneNames.ShipStarter)
+                return DMI.Xenoarch.Galaxy.ShipTravel.ReturnToShip();
+            return rt.Travel(targetScene, targetSpawnId);
         }
     }
 }

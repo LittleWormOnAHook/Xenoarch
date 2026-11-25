@@ -44,7 +44,7 @@ namespace DMI.Xenoarch.Ship
             var arts = Session.Artifacts;
             Status.text = arts.Busy ? "LAB BUSY" : "LAB IDLE";
 
-            var finds = Col(body);
+            var finds = ScrollCol(body, 0);
             Text(finds, "FINDS", "xa-term__h");
             int n = 0;
             foreach (var inst in Held())
@@ -55,13 +55,13 @@ namespace DMI.Xenoarch.Ship
             }
             if (n == 0) Text(finds, "No artifacts aboard. Recover finds at a dig site (tools: 2-5, hold LMB to dig, hold E to recover).");
 
-            var detail = Col(body, true);
+            var detail = ScrollCol(body, 1, true);
             var a = arts.Get(_selected);
             var d = arts.Definition(a);
             if (a == null || d == null) Text(detail, "Select a find.");
             else BuildDetail(detail, a, d);
 
-            var lab = Col(body);
+            var lab = ScrollCol(body, 2);
             Text(lab, "LAB", "xa-term__h");
             var job = arts.Job;
             if (job != null)

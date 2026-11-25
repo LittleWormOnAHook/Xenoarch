@@ -80,7 +80,7 @@ namespace DMI.Xenoarch.Excavation
             var cam = _rig?.ViewCamera != null ? _rig.ViewCamera : Camera.main;
             ExcavationSite site = null; RaycastHit hit = default;
             if (cam != null && Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, Reach, ~0, QueryTriggerInteraction.Ignore))
-                site = hit.collider.GetComponentInParent<ExcavationSite>();
+                site = hit.collider.GetComponentInParent<ExcavationSite>() ?? ExcavationSite.At(hit.point);
 
             bool held = !UIState.BlocksGameplay && ((mouse != null && mouse.leftButton.isPressed) || (gp != null && gp.rightTrigger.isPressed));
             if (held && site != null && Time.time >= _nextStroke)
@@ -92,12 +92,12 @@ namespace DMI.Xenoarch.Excavation
                     _audio.pitch = Random.Range(0.85f, 1.15f);
                     _audio.PlayOneShot(_scrape);
                     if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
-                    if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Use the precision tool or brush.");
+                    if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Switch to the precision tool (3) or brush (4).");
                 }
                 else if (r.refused)
                 {
                     _audio.PlayOneShot(_clunk);
-                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {Current.name.ToLowerInvariant()} ({Label(r.material)}). Try the drill.");
+                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {Current.name.ToLowerInvariant()} ({r.layer.label}). {(r.layer.hardness > 2f ? "Use the drill." : "Try the precision tool or drill.")}");
                 }
             }
             UpdateHud(site, hit);
@@ -105,7 +105,7 @@ namespace DMI.Xenoarch.Excavation
 
         void Flash(string text) { _flash = text; _flashUntil = Time.time + 2.5f; }
 
-        public static string Label(SoilMaterial m) => m switch { SoilMaterial.Dust => "surface dust", SoilMaterial.Loose => "loose regolith", SoilMaterial.Compacted => "compacted layer", _ => "bedrock" };
+        public static string Label(SoilMaterial m) => m switch { SoilMaterial.Dust => "surface dust", SoilMaterial.Loose => "loose regolith", SoilMaterial.Compacted => "compacted layer", SoilMaterial.Ice => "ice", SoilMaterial.Rock => "rock", _ => "bedrock" };
 
         void UpdateHud(ExcavationSite site, RaycastHit hit)
         {
@@ -118,8 +118,8 @@ namespace DMI.Xenoarch.Excavation
                 var l = site.transform.InverseTransformPoint(hit.point);
                 int x = Mathf.Clamp(Mathf.FloorToInt(l.x / site.Grid.cell), 0, site.Grid.nx - 1), z = Mathf.Clamp(Mathf.FloorToInt(l.z / site.Grid.cell), 0, site.Grid.nz - 1);
                 int top = site.Grid.TopLayer(x, z);
-                var mat = top >= site.Grid.ny ? SoilMaterial.Bedrock : site.Grid.MaterialAt(top);
-                l2 = $"{site.Definition.displayName}: {Label(mat)}, depth {site.Grid.TopDepth(x, z):0.00} m";
+                string band = top >= site.Grid.ny ? "bedrock" : site.Grid.LayerAt(top).label;
+                l2 = $"{site.Definition.displayName}: {band}, depth {site.Grid.TopDepth(x, z):0.00} m";
                 GridArtifact near = null; float best = 1.2f;
                 foreach (var a in site.Grid.artifacts)
                 {

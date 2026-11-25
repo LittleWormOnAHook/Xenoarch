@@ -101,7 +101,7 @@ namespace DMI.Xenoarch.UI
             var header = new VisualElement(); header.AddToClassList("xa-term__header"); win.Add(header);
             _title = new Label(); _title.AddToClassList("xa-term__title"); header.Add(_title);
             Status = new Label(); Status.AddToClassList("xa-term__status"); header.Add(Status);
-            Body = new VisualElement(); Body.AddToClassList("xa-term__body"); win.Add(Body);
+            Body = new VisualElement(); Body.AddToClassList("xa-term__body"); Body.style.minHeight = 0; Body.style.overflow = Overflow.Hidden; win.Add(Body);
             var footer = new VisualElement(); footer.AddToClassList("xa-term__footer"); win.Add(footer);
             Hint = new Label("Esc / Tab / B: close"); Hint.AddToClassList("xa-term__hint"); footer.Add(Hint);
             var close = Btn("Close", Close); close.AddToClassList("xa-term__btn--ghost"); close.style.width = 140; footer.Add(close);
@@ -113,6 +113,27 @@ namespace DMI.Xenoarch.UI
         {
             var c = new VisualElement(); c.AddToClassList("xa-term__col"); if (wide) c.AddToClassList("xa-term__col--wide");
             parent.Add(c); return c;
+        }
+
+        readonly System.Collections.Generic.Dictionary<int, ScrollView> _scrolls = new System.Collections.Generic.Dictionary<int, ScrollView>();
+
+        /// <summary>A column whose content scrolls vertically; keeps its scroll position across <see cref="Refresh"/>.</summary>
+        protected VisualElement ScrollCol(VisualElement parent, int slot, bool wide = false)
+        {
+            var col = Col(parent, wide);
+            col.style.minHeight = 0; col.style.overflow = Overflow.Hidden;
+            var sv = new ScrollView(ScrollViewMode.Vertical) { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
+            sv.style.flexGrow = 1; sv.style.minHeight = 0;
+            col.Add(sv);
+            if (_scrolls.TryGetValue(slot, out var old) && old != null && old.scrollOffset.y > 0.5f)
+            {
+                var off = old.scrollOffset;
+                EventCallback<GeometryChangedEvent> restore = null;
+                restore = _ => { sv.scrollOffset = off; sv.contentContainer.UnregisterCallback(restore); };
+                sv.contentContainer.RegisterCallback(restore);
+            }
+            _scrolls[slot] = sv;
+            return sv.contentContainer;
         }
 
         protected static Label Text(VisualElement parent, string text, string cls = "xa-term__text")

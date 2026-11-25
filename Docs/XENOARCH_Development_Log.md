@@ -92,3 +92,14 @@ Times are US Eastern (ET).
 - Digger PRO is not driving the visuals yet: no scene has Digger set up. The trench mesh is our own; strokes are forwarded to Digger automatically once a scene has `DiggerExcavationSurface`.
 - Verification: compile clean 17:21 ET (all Xenoarch assemblies OK, no `error CS`), smoke 114 pass / 0 fail (24 new 1C checks: content, dig rules, research, full chain, save/load). Not played by hand.
 
+
+## 2026-11-25 (6:05-6:25 PM ET): Phase 1C batch 2a/2b - Digger terrains, site styles, sized finds, scan border, lab scroll, airlock return
+- Terrain: Setup/10 now builds `Data/Terrain/<scene>_Terrain.asset` from the Creepy Cat sample terrains (vendor files read only), heightmap 2049, centred on the origin at height 0. The batch-1 flat terrain and its data were deleted; our placeholders (lander, beacon, spawn, board-lander, test ring) were snapped onto the new ground. Ran 18:15 ET.
+- Digger PRO: set up through its own "Tools/Digger/Setup for runtime" (shaders imported, `Assets/DiggerData/Scenes/<scene>`), `DiggerMaster.ResolutionMult` 4, plus `DiggerExcavationSurface` (buffer 512). The grid samples the terrain per column (`ExcavationGrid.surface`), carves each cut cell (sphere about one voxel, texture per soil band) and replays the saved grid on load instead of using Digger's own persistence. Digger reverts Play-mode edits when Play stops.
+- Data: `DigSiteStyle` (soil bands with label, hardness, colour, Digger texture; border colour). Four styles created and assigned to the six sites. `SoilMaterial` gained Ice and Rock.
+- Finds: footprint/height derived from the artifact size (max 3x3x2 cells); six chain/big artifacts enlarged. New damage rule (crude tool + already visible).
+- Scan: readings clear after 5 s; the beacon shows for 5 s on pinpoint; persistent square `LineRenderer` border around pinpointed sites.
+- Lab: `TerminalWindow.ScrollCol` (vertical ScrollView per column, scroll position kept across refreshes); used by the research lab.
+- Return to ship: `SceneTravelInteractable` targeting Ship_Starter from another scene now goes through `ShipTravel.ReturnToShip()` (airlock spawn).
+- Fix: the 1B galaxy ScriptableObjects shared one file (`GalaxyDefinitions.cs`), so their assets had no script reference (`m_Script: {fileID: 0}`). They only worked while the objects stayed in memory, and they came back empty after this batch's reload. Split into one file per class, re-linked 30 assets, and moved the old script GUID to `EnvironmentProfile.cs` (9 environment assets).
+- Verification: compile clean 18:23 ET (Runtime/Editor/Digger assemblies OK, no `error CS`), smoke 121 pass / 0 fail at 18:23 ET (new: sized footprints, styles, visible-only damage, precision safe, partial exposure, ice band, per-column surface). Ship_Starter had unsaved changes, so that pass was skipped (nothing in it changed). Not played by hand.

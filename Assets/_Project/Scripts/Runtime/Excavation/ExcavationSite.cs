@@ -25,25 +25,42 @@ namespace DMI.Xenoarch.Excavation
     }
 
     /// <summary>
-    /// Runtime dig site built from an <see cref="ArchaeologicalSiteDefinition"/>: owns the <see cref="ExcavationGrid"/>,
-    /// renders it as a stepped trench mesh (with collider) inside the terrain hole the editor cut for the site, places
-    /// the site's buried artifacts, applies tool strokes, saves to <see cref="ExcavationService"/>, and mirrors accepted
-    /// strokes to an <see cref="IExcavationSurface"/> (Digger PRO) when the scene has one.
+    /// Runtime dig site built from an <see cref="ArchaeologicalSiteDefinition"/>: owns the <see cref="ExcavationGrid"/>
+    /// (the source of truth: cells, hardness, artifact exposure/condition, saves), follows the terrain surface per column,
+    /// places the buried finds and applies tool strokes. When the scene has an <see cref="IExcavationSurface"/> (Digger
+    /// PRO) every cut cell is carved there and the dug state is replayed into it on load; otherwise a stepped trench mesh
+    /// (with collider) renders the grid. A square border marks the site once it is pinpointed.
     /// </summary>
     public sealed class ExcavationSite : MonoBehaviour
     {
         public ArchaeologicalSiteDefinition Definition { get; private set; }
         public ExcavationGrid Grid { get; private set; }
+        public bool MirrorsToSurface => _surface != null;
         readonly List<BuriedArtifact> _pieces = new List<BuriedArtifact>();
         Mesh _mesh;
         MeshCollider _collider;
         IExcavationSurface _surface;
+        LineRenderer _border;
+        Color _borderColor = new Color(1f, 0.62f, 0.15f, 0.9f);
         bool _dirty;
         float _saveAt;
 
         public static readonly List<ExcavationSite> Active = new List<ExcavationSite>();
         void OnEnable() => Active.Add(this);
         void OnDisable() { Active.Remove(this); Flush(); }
+
+        public static ExcavationSite Find(string siteId)
+        {
+            foreach (var s in Active) if (s != null && s.Definition != null && s.Definition.Id == siteId) return s;
+            return null;
+        }
+
+        /// <summary>The site whose footprint contains the world point (x/z), if any.</summary>
+        public static ExcavationSite At(Vector3 world)
+        {
+            foreach (var s in Active) if (s != null && s.Grid != null && s.Contains(world)) return s;
+            return null;
+        }
 
         public static ExcavationSite Create(ArchaeologicalSiteDefinition def, float surfaceY, UnityEngine.SceneManagement.Scene scene)
         {
@@ -54,47 +71,93 @@ namespace DMI.Xenoarch.Excavation
             return site;
         }
 
+        /// <summary>Terrain height at a world x/z (any active terrain), or null.</summary>
+        public static float? TerrainHeight(Vector3 p)
+        {
+            foreach (var t in Terrain.activeTerrains)
+            {
+                if (t == null || t.terrainData == null) continue;
+                var tp = t.transform.position; var size = t.terrainData.size;
+                if (p.x >= tp.x && p.z >= tp.z && p.x <= tp.x + size.x && p.z <= tp.z + size.z) return tp.y + t.SampleHeight(p);
+            }
+            return null;
+        }
+
+        /// <summary>Cells per side / layers an artifact occupies, from its size (parts of big finds show first).</summary>
+        public static Vector2Int FootprintFor(ArtifactDefinition def, float cell, int minFootprint)
+        {
+            var e = BuriedArtifact.Extents(def);
+            int f = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(e.x, e.z) * 0.9f / cell), Mathf.Max(1, minFootprint), 3);
+            int h = Mathf.Clamp(Mathf.CeilToInt(e.y * 0.9f / cell), 1, 2);
+            return new Vector2Int(f, h);
+        }
+
         void Init(ArchaeologicalSiteDefinition def, float surfaceY)
         {
             Definition = def;
-            Grid = ExcavationGrid.ForSite(def.radius, def.depth, def.cellSize > 0.05f ? def.cellSize : 0.25f);
-            transform.position = new Vector3(def.position.x - Grid.SizeX * 0.5f, surfaceY, def.position.z - Grid.SizeZ * 0.5f);
+            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+                if (mb is IExcavationSurface s && mb.gameObject.scene == gameObject.scene) { _surface = s; break; }
+
+            var style = def.style;
+            Grid = ExcavationGrid.ForSite(def.radius, def.depth, def.cellSize, style != null ? style.Profile() : null);
+            if (style == null) Grid.layers = SoilLayer.DefaultProfile(SoilPalette.Surface(def.bodyId));
+            else _borderColor = style.borderColor;
+            if (_surface != null) Grid.tolerance = 3f;
+            var corner = new Vector3(def.position.x - Grid.SizeX * 0.5f, surfaceY, def.position.z - Grid.SizeZ * 0.5f);
+            transform.position = corner;
+
+            // Per-column surface heights from the terrain (sites on uneven ground).
+            if (TerrainHeight(def.position).HasValue)
+            {
+                Grid.surface = new float[Grid.nx * Grid.nz];
+                for (int x = 0; x < Grid.nx; x++)
+                    for (int z = 0; z < Grid.nz; z++)
+                    {
+                        var w = corner + new Vector3((x + 0.5f) * Grid.cell, 0f, (z + 0.5f) * Grid.cell);
+                        Grid.surface[x + Grid.nx * z] = (TerrainHeight(w) ?? surfaceY) - surfaceY;
+                    }
+            }
 
             var arts = XenoarchRuntime.Session?.Artifacts;
             for (int i = 0; i < def.artifacts.Count; i++)
             {
                 var sp = def.artifacts[i];
-                var adef = arts?.Definition(sp.artifactId);
-                if (sp == null || adef == null) continue;
-                int y = Mathf.Clamp(sp.cell.y, 1, Grid.ny - 2);
+                var adef = sp != null ? arts?.Definition(sp.artifactId) : null;
+                if (adef == null) continue;
+                var fh = FootprintFor(adef, Grid.cell, sp.footprint);
+                int y = Mathf.Clamp(sp.cell.y, 1, Grid.ny - 1 - fh.y);
                 Grid.artifacts.Add(new GridArtifact
                 {
-                    index = i, x = Mathf.Clamp(sp.cell.x, 0, Grid.nx - 1), y = y, z = Mathf.Clamp(sp.cell.z, 0, Grid.nz - 1),
-                    footprint = Mathf.Max(1, sp.footprint), fragility = adef.fragility, condition = adef.buriedCondition,
+                    index = i, x = Mathf.Clamp(sp.cell.x, 0, Grid.nx - fh.x), y = y, z = Mathf.Clamp(sp.cell.z, 0, Grid.nz - fh.x),
+                    footprint = fh.x, height = fh.y, fragility = adef.fragility, condition = adef.buriedCondition,
                 });
             }
             var ex = XenoarchRuntime.Session?.Excavation;
             bool restored = ex != null && ex.Load(def.Id, Grid);
 
-            var mf = gameObject.AddComponent<MeshFilter>();
-            var mr = gameObject.AddComponent<MeshRenderer>();
-            mr.sharedMaterials = Materials(def.bodyId);
-            _mesh = new Mesh { name = $"Trench {def.Id}", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
-            _mesh.MarkDynamic();
-            mf.sharedMesh = _mesh;
-            _collider = gameObject.AddComponent<MeshCollider>();
-            Rebuild();
+            if (_surface == null)
+            {
+                var mf = gameObject.AddComponent<MeshFilter>();
+                var mr = gameObject.AddComponent<MeshRenderer>();
+                mr.sharedMaterials = Materials(def.Id, Grid);
+                _mesh = new Mesh { name = $"Trench {def.Id}", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+                _mesh.MarkDynamic();
+                mf.sharedMesh = _mesh;
+                _collider = gameObject.AddComponent<MeshCollider>();
+                Rebuild();
+            }
+            else if (restored) StartCoroutine(Replay());
 
             foreach (var a in Grid.artifacts)
                 if (!a.recovered) _pieces.Add(BuriedArtifact.Spawn(this, a, arts.Definition(def.artifacts[a.index].artifactId)));
 
-            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
-                if (mb is IExcavationSurface s) { _surface = s; break; }
-            Debug.Log($"[Xenoarch] Dig site {def.Id}: {Grid.nx}x{Grid.nz}x{Grid.ny} cells of {Grid.cell} m, {_pieces.Count} buried artifact(s){(restored ? ", restored from save" : "")}{(_surface != null ? ", mirroring to " + _surface.GetType().Name : "")}");
+            var xs = XenoarchRuntime.Session?.Exploration;
+            if (xs != null && xs.Site(def.Id).revealLevel >= (int)SiteRevealLevel.Pinpointed) ShowBorder(true);
+            Debug.Log($"[Xenoarch] Dig site {def.Id} ({(style != null ? style.displayName : "default soil")}): {Grid.nx}x{Grid.nz}x{Grid.ny} cells of {Grid.cell} m, {_pieces.Count} buried artifact(s){(restored ? ", restored from save" : "")}{(_surface != null ? ", carving " + _surface.GetType().Name : ", trench mesh")}");
         }
 
         public Vector3 CellCentre(int x, int y, int z, float depthFrac = 0.5f) =>
-            transform.TransformPoint(new Vector3((x + 0.5f) * Grid.cell, -(y + depthFrac) * Grid.cell, (z + 0.5f) * Grid.cell));
+            transform.TransformPoint(new Vector3((x + 0.5f) * Grid.cell, Grid.Surface(x, z) - (y + depthFrac) * Grid.cell, (z + 0.5f) * Grid.cell));
 
         public bool Contains(Vector3 world)
         {
@@ -106,17 +169,82 @@ namespace DMI.Xenoarch.Excavation
         public StrokeResult Stroke(Vector3 worldHit, DigToolSpec tool)
         {
             var l = transform.InverseTransformPoint(worldHit);
-            var r = Grid.Stroke(l.x, l.z, -l.y, tool);
+            var r = Grid.StrokeAt(l.x, l.z, l.y, tool);
             if (!r.accepted) return r;
-            Rebuild();
+            if (_mesh != null) Rebuild();
             foreach (var p in _pieces) if (p != null) p.Refresh();
             _dirty = true; _saveAt = Time.unscaledTime + 1f;
-            if (_surface != null && !_surface.IsBusy)
-                _surface.Apply(new ExcavationEdit { position = worldHit, radius = tool.radius, strength = Mathf.Clamp01(r.removed), stroke = tool.damage <= 0f ? ExcavationStroke.Smooth : ExcavationStroke.Remove, materialIndex = (int)r.material });
+            if (_surface != null && r.cut != null)
+                foreach (var c in r.cut) Carve(c.x, c.y, c.z, Grid.Fill(c.x, c.y, c.z) == 0 ? 1f : 0.6f);
             return r;
         }
 
+        bool Carve(int x, int y, int z, float strength)
+        {
+            float rad = Mathf.Max(Grid.cell * 0.72f, _surface.MinRadius);
+            return _surface.Apply(new ExcavationEdit
+            {
+                position = CellCentre(x, y, z), radius = rad, strength = strength,
+                stroke = ExcavationStroke.Remove, materialIndex = Grid.LayerAt(y).diggerTexture,
+            });
+        }
+
+        /// <summary>Re-carves the saved dug state into the Digger surface (Digger edits are not persisted separately).</summary>
+        System.Collections.IEnumerator Replay()
+        {
+            yield return null;
+            int ops = 0;
+            for (int x = 0; x < Grid.nx; x++)
+                for (int z = 0; z < Grid.nz; z++)
+                    for (int y = 0; y < Grid.ny; y++)
+                    {
+                        byte f = Grid.Fill(x, y, z);
+                        if (f == 255) break;
+                        while (!Carve(x, y, z, f == 0 ? 1f : 0.6f)) yield return null;
+                        ops++;
+                    }
+            Debug.Log($"[Xenoarch] Dig site {Definition.Id}: replayed {ops} carve op(s) into the terrain");
+        }
+
         public float Exposure(GridArtifact a) => Grid.Exposure(a);
+
+        // ------------------------------------------------------------------ border
+        /// <summary>Square outline around the site footprint, following the ground.</summary>
+        public void ShowBorder(bool on)
+        {
+            if (!on) { if (_border != null) _border.enabled = false; return; }
+            if (_border == null)
+            {
+                var go = new GameObject("Site Border");
+                go.transform.SetParent(transform, false);
+                _border = go.AddComponent<LineRenderer>();
+                _border.useWorldSpace = true; _border.loop = true;
+                _border.widthMultiplier = 0.06f; _border.numCornerVertices = 2;
+                _border.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; _border.receiveShadows = false;
+                var sh = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
+                var m = new Material(sh) { name = "Site Border (runtime)" };
+                m.SetColor("_BaseColor", _borderColor); m.color = _borderColor;
+                _border.sharedMaterial = m; _border.startColor = _border.endColor = _borderColor;
+                var pts = new List<Vector3>();
+                float sx = Grid.SizeX, sz = Grid.SizeZ, step = 0.5f;
+                void Edge(Vector3 a, Vector3 b)
+                {
+                    int n = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(a, b) / step));
+                    for (int i = 0; i < n; i++)
+                    {
+                        var w = transform.TransformPoint(Vector3.Lerp(a, b, i / (float)n));
+                        w.y = (TerrainHeight(w) ?? transform.position.y) + 0.05f;
+                        pts.Add(w);
+                    }
+                }
+                Edge(Vector3.zero, new Vector3(sx, 0, 0)); Edge(new Vector3(sx, 0, 0), new Vector3(sx, 0, sz));
+                Edge(new Vector3(sx, 0, sz), new Vector3(0, 0, sz)); Edge(new Vector3(0, 0, sz), Vector3.zero);
+                _border.positionCount = pts.Count; _border.SetPositions(pts.ToArray());
+            }
+            _border.enabled = true;
+        }
+
+        public bool BorderVisible => _border != null && _border.enabled;
 
         internal void OnRecovered(BuriedArtifact piece, string instanceId)
         {
@@ -137,17 +265,18 @@ namespace DMI.Xenoarch.Excavation
 
         // ------------------------------------------------------------------ mesh
         static readonly Dictionary<string, Material[]> MatCache = new Dictionary<string, Material[]>();
+        const int Kinds = 6;
 
-        static Material[] Materials(string bodyId)
+        static Material[] Materials(string key, ExcavationGrid g)
         {
-            string key = bodyId ?? "";
             if (MatCache.TryGetValue(key, out var m) && m != null && m[0] != null) return m;
             var sh = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            m = new Material[4];
-            for (int i = 0; i < 4; i++)
+            m = new Material[Kinds];
+            for (int i = 0; i < Kinds; i++)
             {
+                var c = SoilLayer.Bedrock.color;
+                foreach (var l in g.layers) if ((int)l.kind == i) { c = l.color; break; }
                 m[i] = new Material(sh) { name = $"Soil {(SoilMaterial)i} ({key})" };
-                var c = SoilPalette.For(bodyId, (SoilMaterial)i);
                 m[i].SetColor("_BaseColor", c); m[i].color = c;
                 m[i].SetFloat("_Smoothness", 0.08f);
             }
@@ -158,7 +287,7 @@ namespace DMI.Xenoarch.Excavation
         readonly List<Vector3> _v = new List<Vector3>();
         readonly List<Vector3> _n = new List<Vector3>();
         readonly List<Vector2> _uv = new List<Vector2>();
-        readonly List<int>[] _t = { new List<int>(), new List<int>(), new List<int>(), new List<int>() };
+        readonly List<int>[] _t = { new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>() };
 
         void Rebuild()
         {
@@ -170,7 +299,7 @@ namespace DMI.Xenoarch.Excavation
                     float d = g.TopDepth(x, z);
                     int top = g.TopLayer(x, z);
                     var mat = top >= g.ny ? SoilMaterial.Bedrock : g.MaterialAt(top);
-                    float x0 = x * c, x1 = x0 + c, z0 = z * c, z1 = z0 + c, y = -d;
+                    float x0 = x * c, x1 = x0 + c, z0 = z * c, z1 = z0 + c, y = g.Surface(x, z) - d;
                     Quad(new Vector3(x0, y, z0), new Vector3(x0, y, z1), new Vector3(x1, y, z1), new Vector3(x1, y, z0), Vector3.up, mat);
                     // Walls toward shallower neighbours (outside the grid counts as the untouched surface).
                     Wall(x, z, d, x + 1, z, new Vector3(x1, 0, z0), new Vector3(x1, 0, z1), Vector3.left);
@@ -179,9 +308,9 @@ namespace DMI.Xenoarch.Excavation
                     Wall(x, z, d, x, z - 1, new Vector3(x0, 0, z0), new Vector3(x1, 0, z0), Vector3.forward);
                 }
             _mesh.Clear();
-            _mesh.subMeshCount = 4;
+            _mesh.subMeshCount = Kinds;
             _mesh.SetVertices(_v); _mesh.SetNormals(_n); _mesh.SetUVs(0, _uv);
-            for (int i = 0; i < 4; i++) _mesh.SetTriangles(_t[i], i, false);
+            for (int i = 0; i < Kinds; i++) _mesh.SetTriangles(_t[i], i, false);
             _mesh.RecalculateBounds();
             _collider.sharedMesh = null;
             _collider.sharedMesh = _mesh;

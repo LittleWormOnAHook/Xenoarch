@@ -7,7 +7,8 @@ using UnityEngine;
 namespace DMI.Xenoarch.Excavation
 {
     /// <summary>
-    /// A buried find inside a dig site (placeholder primitive visual). Hidden by the trench mesh until dug out; once at
+    /// A buried find inside a dig site (placeholder primitive visual, sized to the cells it fills: big finds show parts
+    /// first). Hidden by the ground (Digger terrain or trench mesh) until dug out; once at
     /// least half exposed it can be recovered (hold E). Recovering before it is fully exposed pries it loose and costs
     /// condition. Recovery creates the artifact instance and adds it to the inventory; the site records it so it never
     /// respawns.
@@ -27,18 +28,30 @@ namespace DMI.Xenoarch.Excavation
             var go = Visual(def);
             go.name = $"Buried {def.Id}";
             go.transform.SetParent(site.transform, false);
-            float f = g.footprint;
-            go.transform.position = site.transform.TransformPoint(new Vector3((g.x + f * 0.5f) * site.Grid.cell, -(g.y + 0.7f) * site.Grid.cell, (g.z + f * 0.5f) * site.Grid.cell));
+            float f = g.footprint, c = site.Grid.cell;
+            int sx = Mathf.Min(site.Grid.nx - 1, g.x + g.footprint / 2), sz = Mathf.Min(site.Grid.nz - 1, g.z + g.footprint / 2);
+            go.transform.position = site.transform.TransformPoint(new Vector3((g.x + f * 0.5f) * c, site.Grid.Surface(sx, sz) - (g.y + Mathf.Max(1, g.height) * 0.5f) * c, (g.z + f * 0.5f) * c));
+            // Fit inside the cells it occupies.
+            var e = Extents(def);
+            float fit = Mathf.Min(1f, Mathf.Min(f * c * 0.98f / Mathf.Max(0.01f, Mathf.Max(e.x, e.z)), Mathf.Max(1, g.height) * c * 0.98f / Mathf.Max(0.01f, e.y)));
+            go.transform.localScale = Vector3.one * fit;
             go.transform.rotation = Quaternion.Euler(0f, (g.index * 47) % 360, 0f);
             var b = go.AddComponent<BuriedArtifact>();
             b.Site = site; b.Grid = g; b.Definition = def;
             return b;
         }
 
-        static GameObject Visual(ArtifactDefinition def)
+        /// <summary>Bounding size (m) of the placeholder visual: x, height, z.</summary>
+        public static Vector3 Extents(ArtifactDefinition def)
+        {
+            Shape(def, out var p, out var scale);
+            bool tall = p == PrimitiveType.Cylinder || p == PrimitiveType.Capsule;
+            return new Vector3(scale.x, tall ? scale.y * 2f : scale.y, scale.z);
+        }
+
+        static void Shape(ArtifactDefinition def, out PrimitiveType p, out Vector3 scale)
         {
             float s = def.size;
-            PrimitiveType p; Vector3 scale;
             switch (def.shape)
             {
                 case ArtifactShape.Tablet: p = PrimitiveType.Cube; scale = new Vector3(s, s * 0.12f, s * 0.7f); break;
@@ -50,6 +63,11 @@ namespace DMI.Xenoarch.Excavation
                 case ArtifactShape.Device: p = PrimitiveType.Capsule; scale = new Vector3(s * 0.5f, s * 0.35f, s * 0.5f); break;
                 default: p = PrimitiveType.Sphere; scale = new Vector3(s, s * 0.55f, s * 0.8f); break;
             }
+        }
+
+        static GameObject Visual(ArtifactDefinition def)
+        {
+            Shape(def, out var p, out var scale);
             var root = new GameObject();
             var vis = GameObject.CreatePrimitive(p);
             Object.Destroy(vis.GetComponent<Collider>());

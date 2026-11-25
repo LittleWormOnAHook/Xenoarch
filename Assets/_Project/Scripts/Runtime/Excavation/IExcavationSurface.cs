@@ -31,6 +31,8 @@ namespace DMI.Xenoarch.Excavation
     public interface IExcavationSurface
     {
         bool IsBusy { get; }
+        /// <summary>Smallest useful stroke radius (about one voxel); smaller strokes are enlarged to this.</summary>
+        float MinRadius { get; }
         /// <summary>Queues/applies a stroke. Returns false if the backend refused it (busy buffer, indestructible area).</summary>
         bool Apply(in ExcavationEdit edit);
         /// <summary>Writes the backend's own mesh/voxel data for the given save slot.</summary>

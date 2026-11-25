@@ -59,13 +59,14 @@ namespace DMI.Xenoarch.Exploration
             Equipped = on && HasItem;
             if (arms != null) arms.SetHeld(hand, Equipped);
             XenoarchUI.Show(_panel, Equipped);
-            if (Equipped && string.IsNullOrEmpty(LastReading)) SetText("Ready. Pulse to scan (LMB / RT).");
+            if (Equipped && string.IsNullOrEmpty(LastReading)) SetText("Ready. Pulse to scan (LMB / RT).", false);
         }
 
         void Update()
         {
             if (Equipped && !HasItem) SetEquipped(false);
             if (_pulseT >= 0f) AnimatePulse();
+            if (_clearAt > 0f && Time.time >= _clearAt) SetText("Ready. Pulse to scan (LMB / RT).", false);
             if (UIState.BlocksGameplay) return;
             var kb = Keyboard.current; var gp = Gamepad.current; var mouse = Mouse.current;
             if ((kb != null && kb.digit1Key.wasPressedThisFrame) || (gp != null && gp.dpad.up.wasPressedThisFrame))
@@ -116,7 +117,7 @@ namespace DMI.Xenoarch.Exploration
 
             bool pin = bestDist <= d.pinpointRadius + best.radius * 0.25f;
             x.Reveal(best.Id, pin ? (int)SiteRevealLevel.Pinpointed : (int)SiteRevealLevel.SurfaceSignal);
-            if (pin) SiteMarkerDirector.Instance?.Refresh();
+            if (pin) { SiteMarkerDirector.Instance?.Refresh(); SiteMarkerDirector.Instance?.Ping(best.Id); }
 
             SetText(pin
                 ? $"PINPOINTED: {best.displayName}\nDepth ~{depthShown:0.0} m. Site marked."
@@ -132,7 +133,15 @@ namespace DMI.Xenoarch.Exploration
             return (rel > 0 ? "right" : "left") + (a < 70f ? ", ahead" : a > 110f ? ", behind" : "");
         }
 
-        void SetText(string t) { LastReading = t; if (_text != null) _text.text = t; }
+        /// <summary>Scan readings clear after this many seconds (the pinpointed site keeps its square border).</summary>
+        public const float ReadingSeconds = 5f;
+        float _clearAt = -1f;
+
+        void SetText(string t, bool timed = true)
+        {
+            LastReading = t; if (_text != null) _text.text = t;
+            _clearAt = timed ? Time.time + ReadingSeconds : -1f;
+        }
 
         void Beep(float pitch, int count)
         {

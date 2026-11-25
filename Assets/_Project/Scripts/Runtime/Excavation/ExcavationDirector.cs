@@ -34,14 +34,6 @@ namespace DMI.Xenoarch.Excavation
             if (rig != null && made > 0 && rig.Root.GetComponent<DigTool>() == null) rig.Root.gameObject.AddComponent<DigTool>();
         }
 
-        static float SurfaceY(Vector3 p)
-        {
-            foreach (var t in Terrain.activeTerrains)
-            {
-                var tp = t.transform.position; var size = t.terrainData.size;
-                if (p.x >= tp.x && p.z >= tp.z && p.x <= tp.x + size.x && p.z <= tp.z + size.z) return tp.y + t.SampleHeight(p);
-            }
-            return p.y;
-        }
+        static float SurfaceY(Vector3 p) => ExcavationSite.TerrainHeight(p) ?? p.y;
     }
 }
