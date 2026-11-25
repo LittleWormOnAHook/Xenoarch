@@ -53,7 +53,8 @@ namespace DMI.Xenoarch.EditorTools
         public static void BuildAll()
         {
             BuildArmsController();
-            BuildPlayerPrefab();
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath) == null) BuildPlayerPrefab();
+            XenoarchBodyBuilder.BuildBodyAndHands();
             ReplacePlaceholderPlayers();
         }
 
@@ -94,6 +95,9 @@ namespace DMI.Xenoarch.EditorTools
             ac.AddParameter("Jump", AnimatorControllerParameterType.Trigger);
             ac.AddParameter("Interact", AnimatorControllerParameterType.Trigger);
             ac.AddParameter("UsingDevice", AnimatorControllerParameterType.Bool);
+            ac.AddParameter("LeftHeld", AnimatorControllerParameterType.Bool);
+            ac.AddParameter("RightHeld", AnimatorControllerParameterType.Bool);
+            ac.AddParameter("ToolHeld", AnimatorControllerParameterType.Bool);
             var sm = ac.layers[0].stateMachine;
 
             var loco = ac.CreateBlendTreeInController("Locomotion", out var tree, 0);
@@ -119,10 +123,52 @@ namespace DMI.Xenoarch.EditorTools
             T(devUp, devIdle, 0.1f, 0.95f);
             T(devIdle, devDown, 0.1f).AddCondition(AnimatorConditionMode.IfNot, 0, "UsingDevice");
             T(devDown, loco, 0.15f, 0.9f);
+
+            // Per-hand override layers (weight driven by FirstPersonArms from the hand's raise weight). The "Held" pose is
+            // a placeholder (PC watch idle) until tools bring their own clips via an AnimatorOverrideController.
+            AddHandLayer(ac, FirstPersonArms.LeftLayer, "LeftHeld", BuildArmMask("l"), c["DeviceIdle"]);
+            AddHandLayer(ac, FirstPersonArms.RightLayer, "RightHeld", BuildArmMask("r"), c["DeviceIdle"]);
             EditorUtility.SetDirty(ac);
             AssetDatabase.SaveAssets();
             Debug.Log($"[Xenoarch] Player: arms controller built ({c.Values.Count(x => x != null)}/{Clips.Count} clips)");
             return ac;
+        }
+
+        static void AddHandLayer(AnimatorController ac, string name, string heldParam, AvatarMask mask, Motion heldPose)
+        {
+            ac.AddLayer(name);
+            var layers = ac.layers;
+            var layer = layers[layers.Length - 1];
+            layer.avatarMask = mask;
+            layer.blendingMode = AnimatorLayerBlendingMode.Override;
+            layer.defaultWeight = 0f;
+            ac.layers = layers;
+            var lsm = layer.stateMachine;
+            var empty = lsm.AddState("Empty");
+            var held = lsm.AddState("Held"); held.motion = heldPose;
+            lsm.defaultState = empty;
+            T(empty, held, 0.15f).AddCondition(AnimatorConditionMode.If, 0, heldParam);
+            T(held, empty, 0.15f).AddCondition(AnimatorConditionMode.IfNot, 0, heldParam);
+        }
+
+        /// <summary>Generic-rig mask of one arm (clavicle_{side} and everything under it) on the vendor arms prefab.</summary>
+        static AvatarMask BuildArmMask(string side)
+        {
+            string path = $"{XenoarchSetup.Root}/Animation/XA_FP_Arm_{side.ToUpperInvariant()}.mask";
+            var arms = AssetDatabase.LoadAssetAtPath<GameObject>(ArmsPrefabPath);
+            var mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(path);
+            if (mask == null) { mask = new AvatarMask(); AssetDatabase.CreateAsset(mask, path); }
+            if (arms == null) return mask;
+            var all = arms.GetComponentsInChildren<Transform>(true).Where(t => t != arms.transform).ToList();
+            var clav = all.FirstOrDefault(t => t.name == "clavicle_" + side);
+            mask.transformCount = all.Count;
+            for (int i = 0; i < all.Count; i++)
+            {
+                mask.SetTransformPath(i, AnimationUtility.CalculateTransformPath(all[i], arms.transform));
+                mask.SetTransformActive(i, clav != null && (all[i] == clav || all[i].IsChildOf(clav)));
+            }
+            EditorUtility.SetDirty(mask);
+            return mask;
         }
 
         static AnimatorStateTransition T(AnimatorState from, AnimatorState to, float duration, float exitTime = -1f)

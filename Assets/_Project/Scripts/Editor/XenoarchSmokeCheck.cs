@@ -42,10 +42,12 @@ namespace DMI.Xenoarch.EditorTools
                 Check(Resources.Load<UnityEngine.UIElements.VisualTreeAsset>(u) != null, $"UXML {u} loads");
             var player = AssetDatabase.LoadAssetAtPath<GameObject>(XenoarchPlayerBuilder.PlayerPrefabPath);
             Check(player != null && player.GetComponent<DMI.Xenoarch.Player.IPlayerRig>() != null && player.GetComponent<CharacterController>() != null, "XA_Player prefab: CharacterController + IPlayerRig");
-            var armsAnim = player != null ? player.GetComponentInChildren<Animator>(true) : null;
+            var armsDrv = player != null ? player.GetComponentInChildren<DMI.Xenoarch.Player.FirstPersonArms>(true) : null;
+            var armsAnim = armsDrv != null ? armsDrv.GetComponentInChildren<Animator>(true) : null;
             Check(armsAnim != null && armsAnim.runtimeAnimatorController != null, "XA_Player arms Animator has controller");
             float cov = XenoarchPlayerBuilder.ArmsBindingCoverage(out var covDetail);
             Check(cov >= 0.9f, $"Arms clip bindings resolve on arms rig ({covDetail})");
+            XenoarchBodyBuilder.Validate(Check);
             string prefabGuid = AssetDatabase.AssetPathToGUID(XenoarchPlayerBuilder.PlayerPrefabPath);
             foreach (var n in new[] { SceneNames.ShipStarter, SceneNames.TradeHubSol, SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
             {

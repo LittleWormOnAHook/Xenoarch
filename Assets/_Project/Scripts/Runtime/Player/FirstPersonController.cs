@@ -42,6 +42,10 @@ namespace DMI.Xenoarch.Player
 
         /// <summary>Horizontal speed in m/s (arms animation, footsteps).</summary>
         public float PlanarSpeed => _planarVelocity.magnitude;
+        /// <summary>Horizontal velocity in world space (body locomotion blend).</summary>
+        public Vector3 PlanarVelocity => _planarVelocity;
+        /// <summary>Vertical velocity in m/s (positive = rising).</summary>
+        public float VerticalVelocity => _verticalVelocity;
         public float SprintSpeed => sprintSpeed;
         public bool IsGrounded => _cc != null && _cc.isGrounded;
         public bool IsSprinting { get; private set; }

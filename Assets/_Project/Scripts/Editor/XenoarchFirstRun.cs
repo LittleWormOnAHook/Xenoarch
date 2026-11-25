@@ -24,6 +24,9 @@ namespace DMI.Xenoarch.EditorTools
         /// <summary>Create this (empty) file to convert Assets/_Creepy_Cat materials to URP after the next reload.</summary>
         const string ConvertTrigger = "Temp/xenoarch_convert.trigger";
 
+        /// <summary>Create this (empty) file to add the Kade body + hand slots to XA_Player (prefab only, no scenes) after the next reload.</summary>
+        const string BodyTrigger = "Temp/xenoarch_body.trigger";
+
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
         static void TryRun()
@@ -42,6 +45,11 @@ namespace DMI.Xenoarch.EditorTools
             {
                 File.Delete(PlayerTrigger);
                 XenoarchPlayerBuilder.BuildAll();
+            }
+            if (File.Exists(BodyTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(BodyTrigger);
+                XenoarchBodyBuilder.BuildBodyAndHands();
             }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
