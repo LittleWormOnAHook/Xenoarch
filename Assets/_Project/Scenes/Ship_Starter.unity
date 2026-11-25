@@ -578,11 +578,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 146865940}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03ec231cc35125245b3b5798e4527308, type: 3}
+  m_Script: {fileID: 11500000, guid: 4546c1a14b82e9f47ab43f785f0216ee, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Interaction.StationPlaceholderInteractable
-  stationName: Navigation Terminal
-  plannedPhase: Phase 1B
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Ship.NavigationTerminal
+  terminalName: Navigation Terminal
+  interactionPoint: {fileID: 0}
 --- !u!1 &176830637
 GameObject:
   m_ObjectHideFlags: 0

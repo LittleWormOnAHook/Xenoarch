@@ -142,14 +142,19 @@ namespace DMI.Xenoarch.EditorTools
 
         static void SwapStation<T>(List<GameObject> all, string objectName, string terminalName, StringBuilder log) where T : DMI.Xenoarch.UI.TerminalWindow
         {
-            // Find by placeholder stationName first (Anthony may have renamed/moved it into his own prefab), then by name.
-            var go = all.Select(g => g.GetComponent<StationPlaceholderInteractable>()).Where(p => p != null && p.stationName == objectName).Select(p => p.gameObject).FirstOrDefault()
-                     ?? all.FirstOrDefault(g => g.GetComponent<T>() != null)
-                     ?? all.FirstOrDefault(g => g.name == objectName);
-            if (go == null) { log.AppendLine($"{objectName}: not found, skipped"); return; }
+            // Every placeholder with this stationName (Anthony places copies on ship props, e.g. the cockpit holo-table
+            // inside the Mark 1 instance), else an object with that name. Each is swapped in place.
+            var targets = all.Where(g => g.GetComponents<StationPlaceholderInteractable>().Any(p => p.stationName == objectName)).ToList();
+            if (targets.Count == 0) targets = all.Where(g => g.name == objectName && g.GetComponent<T>() == null).ToList();
+            if (targets.Count == 0) { log.AppendLine($"{objectName}: no placeholder left ({all.Count(g => g.GetComponent<T>() != null)} working)"); return; }
+            foreach (var t in targets) SwapOne<T>(t, objectName, terminalName, log);
+        }
+
+        static void SwapOne<T>(GameObject go, string objectName, string terminalName, StringBuilder log) where T : DMI.Xenoarch.UI.TerminalWindow
+        {
             if (go.GetComponent<T>() != null && go.GetComponent<StationPlaceholderInteractable>() == null) { log.AppendLine($"{objectName}: already {typeof(T).Name} at '{Path(go.transform)}'"); return; }
 
-            var placeholder = go.GetComponent<StationPlaceholderInteractable>();
+            var placeholder = go.GetComponents<StationPlaceholderInteractable>().FirstOrDefault(p => p.stationName == objectName) ?? go.GetComponent<StationPlaceholderInteractable>();
             if (placeholder != null && PrefabUtility.GetCorrespondingObjectFromSource(placeholder) != null)
             {
                 // Component lives in a prefab asset: swap it in the asset (component only; transforms untouched).
@@ -173,7 +178,7 @@ namespace DMI.Xenoarch.EditorTools
                 log.AppendLine($"{objectName}: {typeof(T).Name} swapped into prefab asset {assetPath} (instance '{Path(go.transform)}', position kept)");
                 return;
             }
-            if (placeholder != null) Undo.DestroyObjectImmediate(placeholder);
+            if (placeholder != null) Undo.DestroyObjectImmediate(placeholder); // scene object or added-component override
             var term = go.GetComponent<T>();
             if (term == null) term = Undo.AddComponent<T>(go);
             term.terminalName = terminalName;
@@ -209,6 +214,7 @@ namespace DMI.Xenoarch.EditorTools
             check(InScene<NavigationTerminal>(), "1B ship: Navigation Terminal working component in Ship_Starter");
             check(InScene<OrbitalScannerTerminal>(), "1B ship: Orbital Scanning Terminal working component in Ship_Starter");
             check(InScene<ShipAirlockInteractable>(), "1B ship: airlock component in Ship_Starter");
+            check(!System.Text.RegularExpressions.Regex.IsMatch(text, "stationName: (Navigation Terminal|Orbital Scanning Terminal)\\s"), "1B ship: no Navigation/Orbital placeholder left (all copies swapped)");
             check(text.Contains("spawnId: airlock"), "1B ship: airlock arrival spawn in Ship_Starter");
         }
     }

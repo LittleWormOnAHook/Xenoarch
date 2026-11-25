@@ -46,3 +46,17 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 | 19 | Earn notoriety | ☐ |
 | 20 | Discover extrasolar coordinates | ☐ |
 | 21 | Save/reload without loss or duplication | ◐ foundation (inventory, location, consumed world objects) |
+
+## Phase 1B: Exploration (2026-11-25)
+- ☑ Celestial bodies: all 18 Sol entries plus TradeHub Sol, with discovery state (smoke)
+- ☑ Star system / galaxy hierarchy, stable ids and seeds (smoke: ids unique/valid, parents resolve)
+- ☑ ShipData: fuel, FTL range, scanner, modules, slots; saved (smoke: ship and site state survive save/load)
+- ☑ Navigation terminal on the cockpit holo-table. Anthony checked in Play on 2026-11-25 that it opens.
+- ☑ Environment profiles and gravity (Moon 1.62 / Mars 3.71, applied on load)
+- ◐ Orbital scanner terminal, revealing sites over several scans (rules covered by the smoke check; UI not yet checked by hand)
+- ◐ Handheld surface scanner (press 1 / D-pad up to equip, LMB/RT to pulse, pinpoints a site, then places a marker). Not yet tested by hand.
+- ☑ 6 archaeological site definitions, saved and restored
+- ☑ Ship doors open and close. Static batching was freezing the door leaves; they are now non-static and run through XenoarchDoor. Anthony checked this in Play.
+- ☑ Space skyboxes: per-orbit sky plus deep space by default. Anthony checked this in Play.
+- ◐ Ship lights set to Mixed (4 with shadows), ship Volume added. Lighting bake still pending.
+- ☐ Cockpit FTL travel sequence, world labels replaced by a "Press E" popup, Creepy Cat post-processing recreated as URP Volume (polish batch)

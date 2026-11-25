@@ -73,3 +73,7 @@ Times are US Eastern (ET).
 - Ship_Starter: Anthony aligned the stations to the Mark 1 StandMode ship (committed 53ca720). The additive pass (Setup/8) only swaps placeholder components on his objects. It never moves anything and runs only on a saved, clean scene. It is pending while he keeps editing the scene.
 - Space skyboxes: the kit's .mat files reference a shader that isn't in this project, so new Skybox/6 Sided materials were built from the kit's face textures in `Art/Skyboxes`. The sky is applied at runtime per orbit (Earth/TradeHub, Moon, Mars, Europa/Enceladus; deep space by default), so the scene file isn't edited.
 - Travel plan (map, cockpit, FTL through the front window) is documented in the Roadmap. Not built yet.
+- 15:04–15:10 ET: ran the Ship_Starter pass (Setup/8).
+  - Doors did not open because the kit marks everything Static, so the leaves were static-batched. Static is cleared on the leaves in this scene only, and XenoarchDoor is added.
+  - The navigation terminal is swapped onto Anthony's holo-table (`P_Holo_Table_04/.../Holo_Globe_01`). Every placeholder copy is now swapped.
+  - Smoke check: 83/0. Anthony checked doors, nav and skybox in Play.
