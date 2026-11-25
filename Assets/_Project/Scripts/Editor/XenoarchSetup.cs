@@ -57,6 +57,8 @@ namespace DMI.Xenoarch.EditorTools
                 Item("item.test.unique_fragment", "Unidentified Fragment (test)", ItemCategory.Artifact, 1, true, 0.3f, 0, "Foundation test item: unique-instance handling. Real artifacts arrive in Phase 1C."),
             };
 
+            AssignPlaceholderIcons(items, false);
+
             var registry = LoadOrCreate<ItemRegistry>(RegistryPath);
             registry.SetEntries(items);
             EditorUtility.SetDirty(registry);
@@ -85,6 +87,47 @@ namespace DMI.Xenoarch.EditorTools
 
             AssetDatabase.SaveAssets();
             Debug.Log($"[Xenoarch] Setup: foundation assets ready ({items.Count} items, config at {ConfigPath})");
+        }
+
+        /// <summary>Item id -> placeholder icon copied from Genesis/ASH (see Art/Placeholder/SOURCES.md).</summary>
+        public static readonly Dictionary<string, string> PlaceholderIcons = new Dictionary<string, string>
+        {
+            { "item.tool.handheld_scanner", PlaceholderArt + "/Genesis/Items/Icon_HandheldScanner.png" },
+            { "item.tool.excavation_shovel", PlaceholderArt + "/Genesis/Items/Icon_ExcavationShovel.png" },
+            { "item.tool.precision_tool", PlaceholderArt + "/Genesis/Items/Icon_PrecisionTool.png" },
+            { "item.tool.brush", PlaceholderArt + "/Genesis/Items/Icon_Brush.png" },
+            { "item.tool.powered_drill", PlaceholderArt + "/Genesis/Items/Icon_PoweredDrill.png" },
+            { "item.consumable.sample_container", PlaceholderArt + "/Genesis/Items/Icon_SampleContainer.png" },
+            { "item.test.unique_fragment", PlaceholderArt + "/ASH/Items/Icon_UnidentifiedFragment.png" },
+        };
+        public const string PlaceholderArt = Root + "/Art/Placeholder";
+
+        [MenuItem("Xenoarch/Setup/4. Assign Placeholder Item Icons (overwrite)", priority = 24)]
+        public static void AssignPlaceholderIconsMenu()
+        {
+            var items = new List<ItemDefinition>();
+            foreach (var guid in AssetDatabase.FindAssets("t:ItemDefinition", new[] { ItemsFolder }))
+                items.Add(AssetDatabase.LoadAssetAtPath<ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid)));
+            AssignPlaceholderIcons(items, true);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>Sets ItemDefinition.icon from <see cref="PlaceholderIcons"/>. Keeps an existing icon unless overwrite.</summary>
+        public static int AssignPlaceholderIcons(IEnumerable<ItemDefinition> items, bool overwrite)
+        {
+            int n = 0;
+            foreach (var def in items)
+            {
+                if (def == null || !PlaceholderIcons.TryGetValue(def.Id, out var path)) continue;
+                if (def.icon != null && !overwrite) continue;
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) { Debug.LogWarning($"[Xenoarch] Setup: icon sprite missing for {def.Id} at {path}"); continue; }
+                def.icon = sprite;
+                EditorUtility.SetDirty(def);
+                n++;
+            }
+            if (n > 0) Debug.Log($"[Xenoarch] Setup: assigned {n} placeholder item icons");
+            return n;
         }
 
         [MenuItem("Xenoarch/Setup/2. Build Placeholder Scenes (keep existing)", priority = 21)]

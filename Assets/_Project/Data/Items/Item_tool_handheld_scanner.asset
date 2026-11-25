@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.tool.handheld_scanner
   displayName: Handheld Surface Scanner Mk I
   description: Basic handheld scanner for locating buried objects in a small area.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: be81bdd47f54d8448b4d4f63f81db4d9, type: 3}
   category: 0
   maxStack: 1
   uniqueInstance: 0

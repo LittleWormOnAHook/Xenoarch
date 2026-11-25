@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.tool.brush
   displayName: Excavation Brush
   description: Removes the last layer of dust without damaging surfaces.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ac0078c8f43968d469879df3ff3879c6, type: 3}
   category: 0
   maxStack: 1
   uniqueInstance: 0

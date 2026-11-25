@@ -15,10 +15,18 @@ namespace DMI.Xenoarch.EditorTools
         /// <summary>Create this (empty) file to have the smoke check run once after the next script reload (tooling/CI hook).</summary>
         const string SmokeTrigger = "Temp/xenoarch_smoke.trigger";
 
+        /// <summary>Create this (empty) file to re-run "Create Foundation Assets" (idempotent) after the next script reload.</summary>
+        const string AssetsTrigger = "Temp/xenoarch_assets.trigger";
+
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
         static void TryRun()
         {
+            if (File.Exists(AssetsTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(AssetsTrigger);
+                XenoarchSetup.CreateFoundationAssets();
+            }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 File.Delete(SmokeTrigger);

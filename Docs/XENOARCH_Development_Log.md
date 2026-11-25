@@ -26,3 +26,9 @@ Times are US Eastern (ET).
 - **Smoke check: result not captured.** `Editor.log` was truncated to 0 bytes at 12:40:42 PM ET (cause unknown, not by this work), losing the console lines. The smoke check now also writes `Logs/xenoarch_smoke.txt`; a re-run is queued via `Temp/xenoarch_smoke.trigger` and runs on the next script reload (Unity reloads when its window gets focus). Manual: `Xenoarch > Validate > Run Foundation Smoke Check`.
 - **EditMode tests (5): not run** (Test Runner needs the Editor UI).
 - **Play Mode: not run.**
+
+## 2026-11-25 (afternoon, ET) — Digger PRO check, placeholder art
+- Digger PRO installed by Anthony (`Assets/Digger`). Compiles cleanly on Unity 6000.4 / URP 17.4 (Burst, Collections, Mathematics, AI Navigation present). URP 17 shader package available; Digger auto-imports it on `Tools > Digger > Setup terrains`. Vendor files untouched.
+- Added `IExcavationSurface` (runtime) and `DiggerExcavationSurface` adapter (own asmdef `DMI.Xenoarch.Integrations.Digger`). Excavation design updated to the hybrid (cell grid = gameplay truth, Digger = surface/collision) and the Moon/Mars Digger sculpting workflow.
+- Placeholder art copied read-only from Genesis and ASH into `Assets/_Project/Art/Placeholder/{Genesis,ASH}` (29 PNGs, ~2.2 MB; sources in `SOURCES.md`). `PlaceholderArtImporter` imports them as sprites. Setup now wires icons into the 7 starter items (menu `Xenoarch/Setup/4`), smoke check verifies it.
+- FPS_Starter_Pack: art/animation only (no controller). Materials already URP/Lit. Animator controllers are demo playlists without parameters, so Xenoarch will build its own arms controller from the pack's clips (Hands_Empty, Hands_PC).

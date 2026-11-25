@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.consumable.sample_container
   displayName: Sample Container
   description: Sealed container for soil and material samples.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1ca5f1a46ccc6e2499e5ef5016fe7910, type: 3}
   category: 4
   maxStack: 20
   uniqueInstance: 0

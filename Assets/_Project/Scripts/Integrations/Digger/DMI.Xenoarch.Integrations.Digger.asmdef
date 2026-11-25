@@ -1,0 +1,19 @@
+{
+    "name": "DMI.Xenoarch.Integrations.Digger",
+    "rootNamespace": "DMI.Xenoarch.Integrations.Digger",
+    "references": [
+        "DMI.Xenoarch.Runtime",
+        "Digger.Core",
+        "Digger.Runtime",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

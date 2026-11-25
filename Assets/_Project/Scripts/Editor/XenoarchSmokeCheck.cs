@@ -36,6 +36,8 @@ namespace DMI.Xenoarch.EditorTools
             var problems = reg.Validate();
             Check(problems.Count == 0, "Item registry ids valid and unique" + (problems.Count > 0 ? ": " + string.Join("; ", problems) : ""));
             Check(reg.Entries.Count >= 7, $"Item registry has starter items ({reg.Entries.Count})");
+            int withIcon = 0; foreach (var e in reg.Entries) if (e != null && e.icon != null) withIcon++;
+            Check(withIcon >= XenoarchSetup.PlaceholderIcons.Count, $"Starter items have icons ({withIcon}/{reg.Entries.Count})");
 
             // ---- inventory
             var session = new GameSession(config, reg, new MemorySaveStorage());
