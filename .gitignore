@@ -59,3 +59,17 @@ Desktop.ini
 # exception per package only after confirming Dark Matter Interactive's licence covers it.
 /[Aa]ssets/_Vendor/
 /[Aa]ssets/_Vendor.meta
+
+# Vendor / third-party roots: imported locally, NOT in git (mirrors ASH)
+# Vendor: Creepy Cat 3D Scifi Kit Vol 3
+/Assets/_Creepy_Cat/
+/Assets/_Creepy_Cat.meta
+# Vendor: Digger PRO
+/Assets/Digger/
+/Assets/Digger.meta
+# Vendor: FPS Starter Pack
+/Assets/FPS_Starter_Pack/
+/Assets/FPS_Starter_Pack.meta
+# Vendor promo folder
+/Assets/!GET_MORE_ASSETS_FOR_FREE/
+/Assets/!GET_MORE_ASSETS_FOR_FREE.meta
