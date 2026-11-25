@@ -20,8 +20,9 @@ Times are US Eastern (ET).
 
 **Verification:** see "Verification results" below (updated as results come in).
 
-### Verification results
-- Compile in open Editor: _pending — Unity had not refreshed the new scripts at time of writing (Editor window not focused; Unity imports on focus)._
-- Smoke check: _pending (runs automatically after first compile)._
-- EditMode tests: _not run._
-- Play Mode: _not run._
+### Verification results (actual)
+- **Compile (open Editor, no batchmode): PASS.** Unity imported the scripts and built `Library/ScriptAssemblies/DMI.Xenoarch.Runtime.dll` (12:39:54 PM ET), `DMI.Xenoarch.Editor.dll` and `DMI.Xenoarch.Tests.EditMode.dll` (12:39:55 PM ET). Unity only writes these when the assembly compiles without errors.
+- **First-run setup: ran** (marker `Library/XenoarchFirstRun.done` at 12:40:02 PM ET). Verified on disk: 6 scenes in `Assets/_Project/Scenes` (Bootstrap 2 objects, MainMenu 3, Ship_Starter 34, TradeHub_Sol 19, Moon 14, Mars 14), Build Settings = exactly those 6 with Bootstrap first, 7 item definitions + ItemRegistry, `Resources/XenoarchConfig` (registry + 4 starting items), 7 URP/Lit placeholder materials, pickup `wo.ship_starter.pickup_brush` in Ship_Starter.
+- **Smoke check: result not captured.** `Editor.log` was truncated to 0 bytes at 12:40:42 PM ET (cause unknown, not by this work), losing the console lines. The smoke check now also writes `Logs/xenoarch_smoke.txt`; a re-run is queued via `Temp/xenoarch_smoke.trigger` and runs on the next script reload (Unity reloads when its window gets focus). Manual: `Xenoarch > Validate > Run Foundation Smoke Check`.
+- **EditMode tests (5): not run** (Test Runner needs the Editor UI).
+- **Play Mode: not run.**

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cbf3c4266628fa4497d48611cf6b903, type: 3}
+  m_Name: ItemRegistry
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Items.ItemRegistry
+  entries:
+  - {fileID: 11400000, guid: 320668b74695aef49a837cdbbf1f205d, type: 2}
+  - {fileID: 11400000, guid: cd8d04c148965634893676eaf6fe24cf, type: 2}
+  - {fileID: 11400000, guid: 33d16b1938ca7c247ae5cec18c6f8b1f, type: 2}
+  - {fileID: 11400000, guid: b5ce1c3ef2d47974ba110d9bae5aec98, type: 2}
+  - {fileID: 11400000, guid: 9abaa4235838bc34680a3e4368847c67, type: 2}
+  - {fileID: 11400000, guid: 4e71e72536b02ce4394934fa11c03ab1, type: 2}
+  - {fileID: 11400000, guid: 735329e6bcbd8d64b8e28483016187dc, type: 2}

@@ -17,11 +17,16 @@ namespace DMI.Xenoarch.EditorTools
     public static class XenoarchSmokeCheck
     {
         static int _pass, _fail;
+        static readonly System.Text.StringBuilder Report = new System.Text.StringBuilder();
+        /// <summary>Plain-text copy of the last run (Logs/ is not versioned).</summary>
+        public const string ReportPath = "Logs/xenoarch_smoke.txt";
 
         [MenuItem("Xenoarch/Validate/Run Foundation Smoke Check", priority = 100)]
         public static bool Run()
         {
             _pass = _fail = 0;
+            Report.Clear();
+            Report.AppendLine($"Xenoarch foundation smoke check {System.DateTime.Now:yyyy-MM-dd HH:mm:ss zzz}, Unity {Application.unityVersion}");
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
             Check(config != null, "XenoarchConfig exists in Resources");
             Check(config != null && config.itemRegistry != null, "Config references ItemRegistry");
@@ -117,12 +122,16 @@ namespace DMI.Xenoarch.EditorTools
         {
             if (ok) { _pass++; Debug.Log("[Xenoarch] SMOKE PASS " + what); }
             else { _fail++; Debug.LogError("[Xenoarch] SMOKE FAIL " + what); }
+            Report.AppendLine((ok ? "PASS " : "FAIL ") + what);
         }
 
         static bool Summary()
         {
             var msg = $"[Xenoarch] SMOKE SUMMARY {_pass} pass / {_fail} fail";
             if (_fail == 0) Debug.Log(msg); else Debug.LogError(msg);
+            Report.AppendLine(msg);
+            try { Directory.CreateDirectory("Logs"); File.WriteAllText(ReportPath, Report.ToString()); }
+            catch (System.Exception e) { Debug.LogWarning("[Xenoarch] Could not write smoke report: " + e.Message); }
             return _fail == 0;
         }
     }

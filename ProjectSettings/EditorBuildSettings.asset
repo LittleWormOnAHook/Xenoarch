@@ -6,7 +6,22 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/_Project/Scenes/Bootstrap.unity
+    guid: c1899c54777bdc14586baf92a18514ea
+  - enabled: 1
+    path: Assets/_Project/Scenes/MainMenu.unity
+    guid: b8219e610146e0f49b80bd3d5adf5cb1
+  - enabled: 1
+    path: Assets/_Project/Scenes/Ship_Starter.unity
+    guid: fc769572adf7e4b4087c0bf7877c0c2b
+  - enabled: 1
+    path: Assets/_Project/Scenes/TradeHub_Sol.unity
+    guid: 134d353d74d03fa409d6c84de5fa5a4c
+  - enabled: 1
+    path: Assets/_Project/Scenes/Moon_Excavation_01.unity
+    guid: b4c0eb46d0d796f449fe863bd6da3060
+  - enabled: 1
+    path: Assets/_Project/Scenes/Mars_Excavation_01.unity
+    guid: 4def4d5efeecc2b49bda136087c45870
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

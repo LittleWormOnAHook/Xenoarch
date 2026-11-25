@@ -12,11 +12,18 @@ namespace DMI.Xenoarch.EditorTools
     static class XenoarchFirstRun
     {
         const string Marker = "Library/XenoarchFirstRun.done";
+        /// <summary>Create this (empty) file to have the smoke check run once after the next script reload (tooling/CI hook).</summary>
+        const string SmokeTrigger = "Temp/xenoarch_smoke.trigger";
 
         static XenoarchFirstRun() => EditorApplication.delayCall += TryRun;
 
         static void TryRun()
         {
+            if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(SmokeTrigger);
+                XenoarchSmokeCheck.Run();
+            }
             if (File.Exists(Marker) || File.Exists(XenoarchSetup.ScenePath(Core.SceneNames.Bootstrap))) return;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
