@@ -24,7 +24,8 @@ namespace DMI.Xenoarch.Ship
         {
             var x = Session.Exploration;
             var sys = x.CurrentSystem;
-            Status.text = $"{ShipTravel.LocationText(x)}   |   Fuel {x.Ship.fuel:0.#} / {x.Ship.fuelCapacity:0}";
+            var course = x.PlottedBody;
+            Status.text = $"{ShipTravel.LocationText(x)}   |   Fuel {x.Ship.fuel:0.#} / {x.Ship.fuelCapacity:0}" + (course != null ? $"   |   Course: {course.displayName}" : "");
             if (sys == null) { Text(body, "No star system data (run Xenoarch > Setup > 7. Phase 1B assets).", "xa-term__warn"); return; }
 
             // --- left: list
@@ -77,7 +78,15 @@ namespace DMI.Xenoarch.Ship
                 bool can = x.CanTravel(sel, out var why);
                 Text(right, $"Distance {x.DistanceAU(x.CurrentBody, sel):0.###} AU   Fuel cost {cost:0.#}");
                 if (!can) Text(right, why, "xa-term__warn");
-                Btn(right, "Travel", () => { if (!ShipTravel.TravelTo(sel, out var r)) { _message = r; Refresh(); } else Close(); }, can);
+                bool plotted = x.Ship.plottedBodyId == sel.Id;
+                if (plotted) Text(right, "Course plotted. Engage the drive at the cockpit helm.", "xa-term__good");
+                Btn(right, plotted ? "Clear course" : "Plot course", () =>
+                {
+                    if (plotted) { x.ClearCourse(); _message = null; }
+                    else if (x.PlotCourse(sel, out var r)) _message = $"Course to {sel.displayName} plotted. Go to the cockpit helm.";
+                    else _message = r;
+                    Refresh();
+                }, can || plotted);
             }
             else if (sel.HasLanding)
             {

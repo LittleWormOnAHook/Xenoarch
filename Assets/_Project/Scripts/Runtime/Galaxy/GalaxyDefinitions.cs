@@ -139,6 +139,11 @@ namespace DMI.Xenoarch.Galaxy
         public EnvironmentProfile interiorEnvironment;
         [Tooltip("Exterior-only prefab (travel views, docking bay).")] public GameObject exteriorPrefab;
         [Tooltip("Walkable interior prefab used in Ship_Starter.")] public GameObject interiorPrefab;
+        [Header("FTL sequence")]
+        [Tooltip("Optional particle prefab shown through the cockpit window during the jump (Creepy Cat Particle_Dust_Space).")] public GameObject ftlDustPrefab;
+        [Tooltip("Optional engine glow prefab during spool-up (Creepy Cat Particle_Afterburner_Small).")] public GameObject ftlSpoolPrefab;
+        [Tooltip("Material for the star streaks (URP Particles). Empty = runtime additive material.")] public Material ftlStreakMaterial;
+        public AudioClip ftlAudio;
     }
 
     /// <summary>An archaeological site on a body. Position is in the landing scene's world space (y snapped to ground).</summary>

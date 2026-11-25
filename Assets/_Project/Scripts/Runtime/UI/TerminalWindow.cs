@@ -33,7 +33,7 @@ namespace DMI.Xenoarch.UI
         public virtual float GetPriority(in InteractionContext c) => IsOpen ? -1f : 1f;
         public virtual string GetPrompt(in InteractionContext c) => $"Use {terminalName}";
         public float GetHoldDuration(in InteractionContext c) => 0f;
-        public bool TryInteract(in InteractionContext c) { Open(); return IsOpen; }
+        public virtual bool TryInteract(in InteractionContext c) { Open(); return IsOpen; }
 
         public void Open()
         {

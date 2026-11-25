@@ -125,9 +125,9 @@ namespace DMI.Xenoarch.EditorTools
                 log.AppendLine("Added global Volume (VP_Ship_Interior)");
             }
 
-            // 6) Scene Lighting skybox = default deep space (runtime swaps it per orbit).
+            // 6) Scene Lighting skybox: the scene's own sky is the open-space sky (Anthony's call); only fill it if empty.
             var cfg = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
-            if (cfg != null && cfg.defaultSpaceSkybox != null && RenderSettings.skybox != cfg.defaultSpaceSkybox)
+            if (cfg != null && cfg.defaultSpaceSkybox != null && RenderSettings.skybox == null)
             {
                 RenderSettings.skybox = cfg.defaultSpaceSkybox;
                 DynamicGI.UpdateEnvironment();

@@ -27,5 +27,5 @@ MonoBehaviour:
   archaeologicalPotential: 0
   seed: 79050
   mapColor: {r: 0.95, g: 0.66, b: 0.22, a: 1}
-  orbitSkybox: {fileID: 2100000, guid: c79cc38f767fb054780575e8dae680e9, type: 2}
+  orbitSkybox: {fileID: 0}
   description: 'Orbital trade hub: artifact buyers, equipment, refuelling.'

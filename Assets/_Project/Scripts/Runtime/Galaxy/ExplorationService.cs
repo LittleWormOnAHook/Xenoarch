@@ -21,6 +21,7 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Body the ship is orbiting / landed on / docked at.")] public string currentBodyId;
         public bool landed;
         public bool docked;
+        [Tooltip("Course plotted on the navigation terminal, flown from the cockpit helm.")] public string plottedBodyId;
     }
 
     [Serializable]
@@ -179,10 +180,23 @@ namespace DMI.Xenoarch.Galaxy
             var sys = Galaxy != null ? Galaxy.SystemOf(to.Id) : null;
             if (sys != null) Ship.currentSystemId = sys.Id;
             Ship.landed = false; Ship.docked = false;
+            if (Ship.plottedBodyId == to.Id) Ship.plottedBodyId = "";
             var bd = Body(to.Id); bd.discovered = true; bd.visited = true;
             Changed?.Invoke();
             return true;
         }
+
+        public CelestialBodyDefinition PlottedBody => Galaxy != null && !string.IsNullOrEmpty(Ship.plottedBodyId) ? Galaxy.FindBody(Ship.plottedBodyId) : null;
+
+        public bool PlotCourse(CelestialBodyDefinition to, out string reason)
+        {
+            if (!CanTravel(to, out reason)) return false;
+            Ship.plottedBodyId = to.Id;
+            Changed?.Invoke();
+            return true;
+        }
+
+        public void ClearCourse() { Ship.plottedBodyId = ""; Changed?.Invoke(); }
 
         public void SetLanded(bool landed, bool docked)
         {

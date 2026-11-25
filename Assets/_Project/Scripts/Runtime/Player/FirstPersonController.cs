@@ -11,7 +11,7 @@ namespace DMI.Xenoarch.Player
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [DisallowMultipleComponent]
-    public sealed class FirstPersonController : MonoBehaviour, IPlayerRig
+    public sealed class FirstPersonController : MonoBehaviour, IPlayerRig, IPlayerSeat
     {
         [Header("References")]
         [SerializeField] private Camera viewCamera;
@@ -39,6 +39,15 @@ namespace DMI.Xenoarch.Player
         Vector3 _planarVelocity;
         float _verticalVelocity, _pitch;
 
+        // Seated (cockpit chairs): no locomotion/gravity, CharacterController off, look clamped around the seat facing.
+        bool _seatLook;
+        float _seatYaw, _seatYawRange, _seatPitchDown, _seatPitchUp, _yawOffset, _standEyeY;
+        public bool Seated { get; private set; }
+        public Vector3 SeatExitPosition { get; private set; }
+        public float Pitch => _pitch;
+        /// <summary>Camera height above the root while standing (prefab value).</summary>
+        public float StandingEyeHeight => _standEyeY;
+
         public Transform Root => transform;
         public Camera ViewCamera => viewCamera != null ? viewCamera : (viewCamera = GetComponentInChildren<Camera>());
         public bool InputEnabled { get; private set; } = true;
@@ -59,6 +68,7 @@ namespace DMI.Xenoarch.Player
         {
             _cc = GetComponent<CharacterController>();
             if (head == null && ViewCamera != null) head = ViewCamera.transform;
+            _standEyeY = head != null ? head.localPosition.y : 1.6f;
             _move = new InputAction("Move", InputActionType.Value);
             _move.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s").With("Left", "<Keyboard>/a").With("Right", "<Keyboard>/d");
             _move.AddBinding("<Gamepad>/leftStick");
@@ -87,6 +97,7 @@ namespace DMI.Xenoarch.Player
 
         public void Teleport(Vector3 position, Quaternion rotation)
         {
+            if (Seated) EndSeat(); // spawn/load always stands the player up
             _cc.enabled = false;
             transform.SetPositionAndRotation(position, Quaternion.Euler(0f, rotation.eulerAngles.y, 0f));
             _cc.enabled = true;
@@ -100,6 +111,12 @@ namespace DMI.Xenoarch.Player
         {
             bool canAct = InputEnabled && !UIState.BlocksGameplay;
             float dt = Time.deltaTime;
+            if (Seated)
+            {
+                _planarVelocity = Vector3.zero; _verticalVelocity = 0f; IsSprinting = false;
+                if (canAct && _seatLook) SeatedLook(dt);
+                return;
+            }
             if (canAct) Look(dt);
 
             Vector2 mv = canAct ? Vector2.ClampMagnitude(_move.ReadValue<Vector2>(), 1f) : Vector2.zero;
@@ -123,12 +140,68 @@ namespace DMI.Xenoarch.Player
             if ((flags & CollisionFlags.Above) != 0 && _verticalVelocity > 0f) _verticalVelocity = 0f;
         }
 
+        // ---------------------------------------------------------------- seat API (driven by Ship.CockpitSeat)
+        /// <summary>Enter the seated state: movement, gravity and the CharacterController stop. The caller animates the
+        /// pose with <see cref="SetSeatPose"/>, then calls <see cref="EnableSeatLook"/>.</summary>
+        public void BeginSeat(Vector3 exitPosition)
+        {
+            if (!Seated) SeatExitPosition = exitPosition;
+            Seated = true; _seatLook = false;
+            _planarVelocity = Vector3.zero; _verticalVelocity = 0f; IsSprinting = false;
+            _cc.enabled = false;
+        }
+
+        /// <summary>Hard-set root position, yaw, view pitch and camera height (seated transitions only).</summary>
+        public void SetSeatPose(Vector3 rootPosition, float yaw, float pitch, float eyeHeight)
+        {
+            if (!Seated) return;
+            transform.SetPositionAndRotation(rootPosition, Quaternion.Euler(0f, yaw, 0f));
+            _pitch = pitch;
+            if (head != null)
+            {
+                head.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+                var lp = head.localPosition; lp.y = eyeHeight; head.localPosition = lp;
+            }
+        }
+
+        /// <summary>Seated free-look, clamped to +-yawRange around seatYaw.</summary>
+        public void EnableSeatLook(float seatYaw, float yawRange, float pitchDown, float pitchUp)
+        {
+            if (!Seated) return;
+            _seatYaw = seatYaw; _seatYawRange = yawRange; _seatPitchDown = pitchDown; _seatPitchUp = pitchUp;
+            _yawOffset = Mathf.Clamp(Mathf.DeltaAngle(seatYaw, transform.eulerAngles.y), -yawRange, yawRange);
+            _seatLook = true;
+        }
+
+        /// <summary>Leave the seated state at the current pose (camera height restored, CharacterController back on).</summary>
+        public void EndSeat()
+        {
+            if (!Seated) return;
+            Seated = false; _seatLook = false;
+            if (head != null) { var lp = head.localPosition; lp.y = _standEyeY; head.localPosition = lp; }
+            _cc.enabled = true;
+            _planarVelocity = Vector3.zero; _verticalVelocity = 0f;
+        }
+
+        void SeatedLook(float dt)
+        {
+            var delta = LookDelta(dt);
+            _yawOffset = Mathf.Clamp(_yawOffset + delta.x, -_seatYawRange, _seatYawRange);
+            transform.rotation = Quaternion.Euler(0f, _seatYaw + _yawOffset, 0f);
+            _pitch = Mathf.Clamp(_pitch - delta.y, -_seatPitchUp, _seatPitchDown);
+            if (head != null) head.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
+        Vector2 LookDelta(float dt)
+        {
+            var stick = Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
+            if (stick.sqrMagnitude > 0.01f) return stick * (stickSensitivity * dt);
+            return (Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero) * mouseSensitivity;
+        }
+
         void Look(float dt)
         {
-            Vector2 delta;
-            var stick = Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
-            if (stick.sqrMagnitude > 0.01f) delta = stick * (stickSensitivity * dt);
-            else delta = (Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero) * mouseSensitivity;
+            Vector2 delta = LookDelta(dt);
             transform.Rotate(0f, delta.x, 0f, Space.Self);
             _pitch = Mathf.Clamp(_pitch - delta.y, -pitchLimit, pitchDownLimit); // +pitch = looking down
             if (head != null) head.localRotation = Quaternion.Euler(_pitch, 0f, 0f);

@@ -17,6 +17,10 @@ namespace DMI.Xenoarch.UI
         [SerializeField] private Interactor interactor;
         [SerializeField] private int maxStripSlots = 8;
 
+        /// <summary>Shown in the E popup when nothing is targeted (e.g. "Stand up" while seated). Null = hidden.</summary>
+        public static string IdlePrompt;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetStatics() => IdlePrompt = null;
+
         VisualElement _root, _crosshair, _prompt, _holdTrack, _holdFill, _strip;
         Label _promptText, _hints;
         InventoryModel _boundInventory;
@@ -55,11 +59,13 @@ namespace DMI.Xenoarch.UI
             XenoarchUI.Show(_root, !UIState.IsOpen(Panels.Loading));
 
             string prompt = interactor != null ? interactor.Prompt : null;
+            bool targeted = !string.IsNullOrEmpty(prompt);
+            if (!targeted && !UIState.BlocksGameplay) prompt = IdlePrompt;
             bool hasPrompt = !string.IsNullOrEmpty(prompt);
             XenoarchUI.Show(_prompt, hasPrompt);
-            _crosshair?.EnableInClassList("xa-crosshair--target", hasPrompt);
+            _crosshair?.EnableInClassList("xa-crosshair--target", targeted);
             if (hasPrompt && _promptText != null) _promptText.text = prompt;
-            float hold = hasPrompt ? interactor.HoldProgress01 : 0f;
+            float hold = targeted ? interactor.HoldProgress01 : 0f;
             XenoarchUI.Show(_holdTrack, hold > 0f);
             if (_holdFill != null) _holdFill.style.width = Length.Percent(hold * 100f);
 

@@ -112,7 +112,7 @@ namespace DMI.Xenoarch.Core
             var loc = _session.Location;
             loc.sceneName = SceneManager.GetActiveScene().name;
             loc.hasPose = true;
-            loc.position = rig.Root.position;
+            loc.position = rig is IPlayerSeat seat && seat.Seated ? seat.SeatExitPosition : rig.Root.position; // never save inside a chair
             loc.yaw = rig.Root.eulerAngles.y;
             bool ok = _session.Saves.Save(slot, _session.PlaySeconds);
             if (ok) Debug.Log($"[Xenoarch] Saved slot '{slot}' in {loc.sceneName}");

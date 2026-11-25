@@ -46,10 +46,14 @@ namespace DMI.Xenoarch.EditorTools
         public const string DefaultSky = "Sky_DeepSpace";
         public static readonly Dictionary<string, string> OrbitSkies = new Dictionary<string, string>
         {
-            ["body.sol.earth"] = "Sky_EarthOrbit", [TradeHubId] = "Sky_EarthOrbit", ["body.sol.moon"] = "Sky_MoonOrbit",
-            ["body.sol.mars"] = "Sky_MarsOrbit", ["body.sol.europa"] = "Sky_IcyOrbit", ["body.sol.enceladus"] = "Sky_IcyOrbit",
+            // Anthony: Earth, Moon, Mars get the kit's planet skies; everything else uses the ship scene's own (open space) sky.
+            ["body.sol.earth"] = "Sky_EarthOrbit", ["body.sol.moon"] = "Sky_MoonOrbit", ["body.sol.mars"] = "Sky_MarsOrbit",
         };
         public static string SkyPath(string mat) => $"{SkyboxFolder}/{mat}.mat";
+        public const string CreepyFx = "Assets/_Creepy_Cat/_3D Scifi Kit Vol 3/Prefabs/Fx";
+        public const string CcA2018Path = RenderingFolder + "/VP_CC_Profile_A_2018.asset";
+        public const string CcA2017Path = RenderingFolder + "/VP_CC_Profile_A_2017.asset";
+        public const string CcB2017Path = RenderingFolder + "/VP_CC_Profile_B_2017.asset";
         public const string CreepyShips = "Assets/_Creepy_Cat/_3D Scifi Kit Vol 3/Prefabs/Props/_Update 1.11-Spaceship Constellation_R1";
 
         public static readonly string[] SolBodyIds =
@@ -132,6 +136,15 @@ namespace DMI.Xenoarch.EditorTools
             if (ship.interiorEnvironment == null) ship.interiorEnvironment = env["ship"];
             if (ship.exteriorPrefab == null) ship.exteriorPrefab = FindPrefab(CreepyShips, "fake");
             if (ship.interiorPrefab == null) ship.interiorPrefab = FindPrefab(CreepyShips, "stand");
+            if (ship.ftlDustPrefab == null) ship.ftlDustPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CreepyFx + "/Particle_Dust_Space.prefab");
+            if (ship.ftlSpoolPrefab == null) ship.ftlSpoolPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CreepyFx + "/Particle_Afterburner_Small.prefab");
+            if (ship.ftlStreakMaterial == null)
+            {
+                var stars = AssetDatabase.LoadAssetAtPath<GameObject>(CreepyFx + "/Particle_StarsZone_01.prefab");
+                var psr = stars != null ? stars.GetComponentInChildren<ParticleSystemRenderer>(true) : null;
+                if (psr != null && psr.sharedMaterial != null && psr.sharedMaterial.shader != null && psr.sharedMaterial.shader.name.StartsWith("Universal Render Pipeline")) ship.ftlStreakMaterial = psr.sharedMaterial;
+            }
+            EnsureCreepyCatVolumes();
             EditorUtility.SetDirty(ship);
 
             var sites = new List<ArchaeologicalSiteDefinition>
@@ -159,10 +172,11 @@ namespace DMI.Xenoarch.EditorTools
             EditorUtility.SetDirty(scanner);
 
             int skies = EnsureSkyboxes();
-            foreach (var kv in OrbitSkies)
+            foreach (var body in sol.bodies)
             {
-                var body = sol.FindBody(kv.Key);
-                if (body != null && body.orbitSkybox == null) { body.orbitSkybox = AssetDatabase.LoadAssetAtPath<Material>(SkyPath(kv.Value)); EditorUtility.SetDirty(body); }
+                if (body == null) continue;
+                var want = OrbitSkies.TryGetValue(body.Id, out var mat) ? AssetDatabase.LoadAssetAtPath<Material>(SkyPath(mat)) : null;
+                if (body.orbitSkybox != want) { body.orbitSkybox = want; EditorUtility.SetDirty(body); }
             }
 
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
@@ -217,6 +231,49 @@ namespace DMI.Xenoarch.EditorTools
             }
             AssetDatabase.SaveAssets();
             return n;
+        }
+
+        /// <summary>
+        /// URP recreations of the kit's post-processing profiles (PPv2 "Profile_A_2018", PPv1 "Profile_A/B_2017"), values
+        /// read from the vendor assets. URP has no volume AO (SSAO is a renderer feature) and no eye adaptation, so those
+        /// are not carried over. PPv2/PPv1 bloom intensities are scaled down for URP's bloom. Vendor assets untouched.
+        /// </summary>
+        public static void EnsureCreepyCatVolumes()
+        {
+            // A_2018 (PPv2): AO 1.29, Bloom intensity 3 / threshold 0.8 / knee 0.5 / diffusion 7. ACES added (HDR bloom needs a tonemapper in URP).
+            MakeVp(CcA2018Path, vp =>
+            {
+                var b = vp.Add<Bloom>(true); b.intensity.Override(1.2f); b.threshold.Override(0.8f); b.scatter.Override(0.7f);
+                var t = vp.Add<Tonemapping>(true); t.mode.Override(TonemappingMode.ACES);
+            });
+            // A_2017 (PPv1): Bloom 0.2 / thr 1.1 / knee 0.47, ACES, CA 0.1, grain 0.5, vignette 0.45 / smooth 0.2.
+            MakeVp(CcA2017Path, vp =>
+            {
+                var b = vp.Add<Bloom>(true); b.intensity.Override(0.35f); b.threshold.Override(1.1f); b.scatter.Override(0.6f);
+                var t = vp.Add<Tonemapping>(true); t.mode.Override(TonemappingMode.ACES);
+                var c = vp.Add<ChromaticAberration>(true); c.intensity.Override(0.1f);
+                var g = vp.Add<FilmGrain>(true); g.intensity.Override(0.25f); g.type.Override(FilmGrainLookup.Thin1);
+                var v = vp.Add<Vignette>(true); v.intensity.Override(0.45f); v.smoothness.Override(0.2f);
+            });
+            // B_2017 (PPv1): as A with Bloom 0.5, AO 0.6, vignette roundness 1.
+            MakeVp(CcB2017Path, vp =>
+            {
+                var b = vp.Add<Bloom>(true); b.intensity.Override(0.7f); b.threshold.Override(1.1f); b.scatter.Override(0.6f);
+                var t = vp.Add<Tonemapping>(true); t.mode.Override(TonemappingMode.ACES);
+                var c = vp.Add<ChromaticAberration>(true); c.intensity.Override(0.1f);
+                var g = vp.Add<FilmGrain>(true); g.intensity.Override(0.25f); g.type.Override(FilmGrainLookup.Thin1);
+                var v = vp.Add<Vignette>(true); v.intensity.Override(0.45f); v.smoothness.Override(0.2f); v.rounded.Override(true);
+            });
+        }
+
+        static void MakeVp(string path, Action<VolumeProfile> fill)
+        {
+            if (AssetDatabase.LoadAssetAtPath<VolumeProfile>(path) != null) return;
+            var vp = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(vp, path);
+            fill(vp);
+            foreach (var c in vp.components) { c.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy; AssetDatabase.AddObjectToAsset(c, vp); }
+            EditorUtility.SetDirty(vp);
         }
 
         public static VolumeProfile EnsureShipVolumeProfile()
@@ -332,7 +389,19 @@ namespace DMI.Xenoarch.EditorTools
 
             var sky = config.defaultSpaceSkybox;
             check(sky != null && sky.shader != null && sky.shader.name == "Skybox/6 Sided" && sky.GetTexture("_FrontTex") != null, $"1B sky: default deep-space skybox ({(sky ? sky.name : "none")})");
-            check(moon.orbitSkybox != null && mars.orbitSkybox != null && sol.FindBody("body.sol.earth")?.orbitSkybox != null, "1B sky: Earth/Moon/Mars orbit skyboxes assigned");
+            var wrongSky = sol.bodies.Where(b => b != null && (OrbitSkies.TryGetValue(b.Id, out var m) ? (b.orbitSkybox == null || b.orbitSkybox.name != m) : b.orbitSkybox != null)).Select(b => b.Id).ToList();
+            check(wrongSky.Count == 0, $"1B sky: Earth=EarthOrbit, Moon=MoonOrbit, Mars=MarsOrbit, every other body = ship scene sky{(wrongSky.Count > 0 ? " (wrong: " + string.Join(", ", wrongSky) + ")" : "")}");
+            var sceneSky = AssetDatabase.LoadAssetAtPath<Material>(SkyPath(DefaultSky));
+            bool mapOk = EnvironmentDirector.ResolveShipSky(sol.FindBody("body.sol.earth"), sceneSky, null)?.name == "Sky_EarthOrbit"
+                && EnvironmentDirector.ResolveShipSky(moon, sceneSky, null)?.name == "Sky_MoonOrbit"
+                && EnvironmentDirector.ResolveShipSky(mars, sceneSky, null)?.name == "Sky_MarsOrbit"
+                && EnvironmentDirector.ResolveShipSky(sol.FindBody("body.sol.jupiter"), sceneSky, null) == sceneSky
+                && EnvironmentDirector.ResolveShipSky(sol.FindBody(TradeHubId), sceneSky, null) == sceneSky
+                && EnvironmentDirector.ResolveShipSky(null, sceneSky, null) == sceneSky;
+            check(mapOk, "1B sky: ship sky resolves Earth/Moon/Mars to their orbit skies, others (Jupiter, TradeHub, none) to the scene's sky");
+
+            check(new[] { CcA2018Path, CcA2017Path, CcB2017Path }.All(pth => AssetDatabase.LoadAssetAtPath<VolumeProfile>(pth) is VolumeProfile v && v.Has<Bloom>() && v.Has<Tonemapping>()), "1B polish: Creepy Cat PP profiles recreated as URP Volume profiles (A_2018, A_2017, B_2017)");
+            check(ship.ftlDustPrefab != null && ship.ftlSpoolPrefab != null, $"1B polish: FTL FX linked (dust={(ship.ftlDustPrefab ? ship.ftlDustPrefab.name : "none")}, spool={(ship.ftlSpoolPrefab ? ship.ftlSpoolPrefab.name : "none")}, streak mat={(ship.ftlStreakMaterial ? ship.ftlStreakMaterial.name : "runtime")})");
 
             // Rules (pure C#, in-memory save storage)
             var session = new GameSession(config, config.itemRegistry, new DMI.Xenoarch.Save.MemorySaveStorage());
@@ -354,6 +423,9 @@ namespace DMI.Xenoarch.EditorTools
             if (read) reloaded.Saves.Apply(file);
             check(read && reloaded.Exploration.Ship.currentBodyId == mars.Id && Mathf.Approximately(reloaded.Exploration.Ship.fuel, x.Ship.fuel) && reloaded.Exploration.Site(dune.Id).revealLevel == x.Site(dune.Id).revealLevel,
                 "1B rules: ship position, fuel and site reveal survive save/load");
+            check(read && EnvironmentDirector.ResolveShipSky(reloaded.Exploration.CurrentBody, sceneSky, null)?.name == "Sky_MarsOrbit", "1B sky: Mars orbit sky restored from the save (ship at Mars after load)");
+            var moonB = moon;
+            check(x.PlotCourse(moonB, out _) && x.Ship.plottedBodyId == moonB.Id && x.CommitTravel(moonB, out _) && string.IsNullOrEmpty(x.Ship.plottedBodyId), "1B rules: plot course -> helm travel clears the course");
         }
     }
 }

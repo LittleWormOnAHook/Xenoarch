@@ -21,6 +21,14 @@ namespace DMI.Xenoarch.Player
         void Teleport(Vector3 position, Quaternion rotation);
     }
 
+    /// <summary>Optional: a rig that can sit (cockpit chairs). Saves use <see cref="SeatExitPosition"/> while seated.</summary>
+    public interface IPlayerSeat
+    {
+        bool Seated { get; }
+        /// <summary>Where the player stands when getting up (also the saved position while seated).</summary>
+        Vector3 SeatExitPosition { get; }
+    }
+
     public static class PlayerRigLocator
     {
         /// <summary>Finds the first active IPlayerRig in the loaded scenes (one player per scene by design).</summary>

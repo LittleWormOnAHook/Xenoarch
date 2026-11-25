@@ -15,11 +15,31 @@ namespace DMI.Xenoarch.Galaxy
         public EnvironmentProfile Current { get; private set; }
         Volume _volume;
 
+        // The skybox authored in the loaded scene (its open-space / default sky), captured before we swap anything.
+        static string _defaultSkyScene;
+        static Material _sceneDefaultSky;
+        public static Material SceneDefaultSky => _sceneDefaultSky;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { _defaultSkyScene = null; _sceneDefaultSky = null; }
+
+        static void CaptureSceneSky(string scene, bool force)
+        {
+            if (!force && _defaultSkyScene == scene) return;
+            _defaultSkyScene = scene;
+            _sceneDefaultSky = RenderSettings.skybox;
+        }
+
         void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
         void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
-        void Start() => Apply(SceneManager.GetActiveScene().name);
+        void Start() { var n = SceneManager.GetActiveScene().name; CaptureSceneSky(n, false); Apply(n); }
 
-        void OnSceneLoaded(Scene s, LoadSceneMode mode) { if (mode == LoadSceneMode.Single) Apply(s.name); }
+        void OnSceneLoaded(Scene s, LoadSceneMode mode)
+        {
+            if (mode != LoadSceneMode.Single) return;
+            CaptureSceneSky(s.name, true); // fresh scene = its own authored sky
+            Apply(s.name);
+        }
 
         public static EnvironmentProfile Resolve(XenoarchConfig cfg, string scene)
         {
@@ -31,15 +51,22 @@ namespace DMI.Xenoarch.Galaxy
             return cfg.defaultEnvironment;
         }
 
-        /// <summary>Sky for a scene: aboard the ship = current body's orbit sky (else default deep space); elsewhere the environment's sky if set.</summary>
+        /// <summary>Aboard the ship: the orbited body's sky (Earth, Moon, Mars have one), anything else = the ship scene's
+        /// own skybox (open space). The body comes from the saved ship state, so the sky follows save/load.</summary>
+        public static Material ResolveShipSky(CelestialBodyDefinition body, Material sceneDefault, Material configFallback)
+        {
+            if (body != null && body.orbitSkybox != null) return body.orbitSkybox;
+            return sceneDefault != null ? sceneDefault : configFallback;
+        }
+
+        /// <summary>Sky for a scene: aboard the ship see <see cref="ResolveShipSky"/>; elsewhere the environment's sky if set.</summary>
         public static Material ResolveSky(GameSession session, string scene)
         {
             var cfg = session.Config;
             if (scene == SceneNames.ShipStarter)
             {
-                var body = session.Exploration?.CurrentBody;
-                if (body != null && body.orbitSkybox != null) return body.orbitSkybox;
-                return cfg.defaultSpaceSkybox;
+                CaptureSceneSky(scene, false);
+                return ResolveShipSky(session.Exploration?.CurrentBody, _sceneDefaultSky, cfg.defaultSpaceSkybox);
             }
             var env = Resolve(cfg, scene);
             return env != null ? env.skybox : null;

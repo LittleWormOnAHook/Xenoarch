@@ -354,6 +354,10 @@ namespace DMI.Xenoarch.EditorTools
 
         static void Label(Transform parent, string text, Vector3 worldPos, float yaw)
         {
+            // Floating world labels were removed in the 1B polish pass (Anthony: only the HUD "E" popup). Kept as a no-op
+            // so re-running scene setup never brings them back.
+            return;
+#pragma warning disable CS0162
             var go = new GameObject("Label", typeof(TextMesh));
             go.transform.SetParent(parent, true);
             go.transform.SetPositionAndRotation(worldPos, Quaternion.Euler(0, yaw, 0));
@@ -362,6 +366,7 @@ namespace DMI.Xenoarch.EditorTools
             tm.text = text; tm.fontSize = 48; tm.characterSize = 0.025f;
             tm.anchor = TextAnchor.MiddleCenter; tm.alignment = TextAlignment.Center;
             tm.color = new Color(0.85f, 0.92f, 1f);
+#pragma warning restore CS0162
         }
 
         static GameObject Box(string name, Vector3 pos, Vector3 scale, string mat, Transform parent)
