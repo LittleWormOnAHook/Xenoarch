@@ -301,3 +301,5 @@ namespace DMI.Xenoarch.EditorTools.Art
         }
     }
 }
+
+// reload marker
