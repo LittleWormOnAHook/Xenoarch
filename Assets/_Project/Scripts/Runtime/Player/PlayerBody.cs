@@ -31,9 +31,31 @@ namespace DMI.Xenoarch.Player
         [SerializeField] private float ungroundedGrace = 0.15f;
         [SerializeField] private bool firstPersonView = true;
 
-        float _airTime;
+        [Header("Centering")]
+        [Tooltip("Spine centreline bones (set by the builder). The camera is kept laterally centred between them.")]
+        [SerializeField] private Transform hips;
+        [SerializeField] private Transform neck;
+        [Tooltip("Keep the body's spine laterally under the camera at runtime (slow integrator; walk sway averages out).")]
+        [SerializeField] private bool autoCenter = true;
+        [SerializeField] private float centerTime = 1.0f;
+        [SerializeField] private float maxCenterCorrection = 0.2f;
+
+        float _airTime, _centerCorr, _baseX;
 
         public Animator Animator => animator;
+        public Transform Hips => hips;
+        public Transform Neck => neck;
+
+        /// <summary>Lateral offset (m, controller-root space) of the body's spine centreline from the camera. ~0 when centred.</summary>
+        public float LateralOffsetFromCamera()
+        {
+            if (controller == null || hips == null || neck == null) return 0f;
+            var root = controller.Root;
+            float spine = root.InverseTransformPoint((hips.position + neck.position) * 0.5f).x;
+            var cam = controller.ViewCamera;
+            float camX = cam != null ? root.InverseTransformPoint(cam.transform.position).x : 0f;
+            return spine - camX;
+        }
         public bool FirstPersonView => firstPersonView;
 
         /// <summary>First person hides the head from the camera (shadow kept); off = full body, e.g. photo/cutscene camera.</summary>
@@ -48,6 +70,12 @@ namespace DMI.Xenoarch.Player
             if (controller == null) controller = GetComponentInParent<FirstPersonController>();
             if (animator == null) animator = GetComponentInChildren<Animator>();
             if (animator != null) animator.applyRootMotion = false;
+            if (animator != null && animator.isHuman)
+            {
+                if (hips == null) hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                if (neck == null) neck = animator.GetBoneTransform(HumanBodyBones.Neck);
+            }
+            _baseX = transform.localPosition.x;
             SetFirstPersonView(firstPersonView);
         }
 
@@ -66,6 +94,15 @@ namespace DMI.Xenoarch.Player
             animator.SetFloat(VerticalSpeedId, controller.VerticalVelocity);
             _airTime = controller.IsGrounded ? 0f : _airTime + dt;
             animator.SetBool(GroundedId, _airTime < ungroundedGrace);
+        }
+
+        void LateUpdate()
+        {
+            // After animation: nudge the body sideways so its spine stays under the camera on average.
+            if (!autoCenter || hips == null || neck == null || controller == null) return;
+            float err = LateralOffsetFromCamera();
+            _centerCorr = Mathf.Clamp(_centerCorr - err * Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.05f, centerTime)), -maxCenterCorrection, maxCenterCorrection);
+            var lp = transform.localPosition; lp.x = _baseX + _centerCorr; transform.localPosition = lp;
         }
     }
 }

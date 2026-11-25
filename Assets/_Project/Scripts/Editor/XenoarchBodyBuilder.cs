@@ -285,6 +285,18 @@ namespace DMI.Xenoarch.EditorTools
             }
             else Debug.LogWarning("[Xenoarch] Body: Kade avatar is not humanoid / no head bone; scale left at 1");
 
+            // centre the spine (hips..neck midpoint) laterally under the camera
+            var hipsBone = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Hips) : null;
+            var neckBone = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Neck) : null;
+            if (hipsBone != null && neckBone != null)
+            {
+                var cam = fpc != null ? fpc.ViewCamera : root.GetComponentInChildren<Camera>(true);
+                float camX = cam != null ? root.transform.InverseTransformPoint(cam.transform.position).x : 0f;
+                float spineX = root.transform.InverseTransformPoint((hipsBone.position + neckBone.position) * 0.5f).x;
+                var bp = body.transform.localPosition; bp.x += camX - spineX; body.transform.localPosition = bp;
+                Debug.Log($"[Xenoarch] Body: spine centreline was {spineX - camX:+0.000;-0.000} m from camera laterally -> body x {bp.x:F3}");
+            }
+
             var smr = inst.GetComponentsInChildren<SkinnedMeshRenderer>(true).OrderByDescending(r => r.sharedMesh != null ? r.sharedMesh.vertexCount : 0).FirstOrDefault();
             SkinnedMeshRenderer headSmr = null;
             if (smr != null)
@@ -320,6 +332,8 @@ namespace DMI.Xenoarch.EditorTools
             so.FindProperty("animator").objectReferenceValue = animator;
             so.FindProperty("bodyRenderer").objectReferenceValue = smr;
             so.FindProperty("headRenderer").objectReferenceValue = headSmr;
+            so.FindProperty("hips").objectReferenceValue = hipsBone;
+            so.FindProperty("neck").objectReferenceValue = neckBone;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -359,6 +373,8 @@ namespace DMI.Xenoarch.EditorTools
             check(rends.Any(r => r.sharedMesh == noHead && r.shadowCastingMode == ShadowCastingMode.On) && rends.Any(r => r.sharedMesh == head && r.shadowCastingMode == ShadowCastingMode.ShadowsOnly), "Body casts shadows; head is shadows-only for the local camera");
             bool urp = rends.Length > 0 && rends.SelectMany(r => r.sharedMaterials).All(m => m != null && m.shader != null && m.shader.name.StartsWith("Universal Render Pipeline/"));
             check(urp, "Kade materials are URP");
+            float lateral = body != null ? body.LateralOffsetFromCamera() : 99f;
+            check(body != null && body.Hips != null && body.Neck != null && Mathf.Abs(lateral) < 0.01f, $"Camera laterally centred on body spine (offset {lateral * 100f:F1} cm)");
             var arms = player != null ? player.GetComponentInChildren<FirstPersonArms>(true) : null;
             check(arms != null && arms.LeftSlot != null && arms.RightSlot != null, "Arms have HandSlot_L / HandSlot_R");
             var armsAc = AssetDatabase.LoadAssetAtPath<AnimatorController>(XenoarchPlayerBuilder.ControllerPath);
