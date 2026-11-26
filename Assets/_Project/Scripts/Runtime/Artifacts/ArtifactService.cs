@@ -118,8 +118,24 @@ namespace DMI.Xenoarch.Artifacts
             State.instances.Add(a);
             if (def.rarity == ArtifactRarity.Unique && !State.uniquesFound.Contains(def.Id)) State.uniquesFound.Add(def.Id);
             _discovery?.Publish(Facts.Recovered(def.Id));
+            // Collections: distinct members found so far (facts keep the max, so duplicates never count twice).
+            if (!string.IsNullOrEmpty(def.setId)) _discovery?.Publish(Facts.SetProgress(def.setId), DistinctFound(d => d.setId == def.setId));
+            if (!string.IsNullOrEmpty(def.fragmentOf)) _discovery?.Publish(Facts.Fragments(def.fragmentOf), DistinctFound(d => d.fragmentOf == def.fragmentOf));
             Changed?.Invoke();
             return a;
+        }
+
+        /// <summary>Distinct artifact definitions recovered that match <paramref name="match"/>.</summary>
+        public int DistinctFound(Func<ArtifactDefinition, bool> match)
+        {
+            var seen = new HashSet<string>();
+            foreach (var i in State.instances)
+            {
+                if (i == null || seen.Contains(i.definitionId)) continue;
+                var d = Definition(i);
+                if (d != null && match(d)) seen.Add(i.definitionId);
+            }
+            return seen.Count;
         }
 
         // ------------------------------------------------------------------ research

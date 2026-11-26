@@ -136,6 +136,31 @@ namespace DMI.Xenoarch.Galaxy
             ("sys.epsilon_eridani", "Epsilon Eridani"),
         };
 
+        static readonly List<(string id, string name)> _extraNav = new List<(string, string)>();
+
+        /// <summary>DLC hook: add a Nav destination after the four core systems (or flag its asset navDestination).</summary>
+        public static void RegisterNavSystem(string id, string name)
+        {
+            if (string.IsNullOrEmpty(id) || IsCoreNavSystem(id)) return;
+            foreach (var e in _extraNav) if (e.id == id) return;
+            _extraNav.Add((id, name));
+        }
+
+        public static bool IsCoreNavSystem(string id) { foreach (var n in NavSystems) if (n.id == id) return true; return false; }
+
+        /// <summary>Nav dropdown / galaxy map destinations: the four core systems, then registered and flagged extras.</summary>
+        public List<(string id, string name)> NavDestinations()
+        {
+            var list = new List<(string, string)>(NavSystems);
+            foreach (var e in _extraNav) list.Add(e);
+            if (Galaxy != null)
+                foreach (var s in Galaxy.systems)
+                    if (s != null && s.navDestination && !list.Exists(l => l.Item1 == s.Id)) list.Add((s.Id, s.displayName));
+            return list;
+        }
+
+        public bool IsNavDestination(string id) => NavDestinations().Exists(n => n.id == id);
+
         /// <summary>Fact that unlocks a Nav dropdown system, e.g. "nav.system.proxima_centauri" (set by the discovery chain).</summary>
         public static string NavUnlockFact(string systemId) =>
             "nav.system." + (systemId != null && systemId.StartsWith("sys.") ? systemId.Substring(4) : systemId);

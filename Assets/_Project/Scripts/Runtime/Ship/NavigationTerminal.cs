@@ -217,7 +217,7 @@ namespace DMI.Xenoarch.Ship
             head.Add(hl); head.Add(arrow); col.Add(head);
             if (!_sysMenuOpen) return;
             var menu = new VisualElement(); menu.AddToClassList("xa-term__dropdown-menu"); col.Add(menu);
-            foreach (var (id, name) in ExplorationService.NavSystems)
+            foreach (var (id, name) in x.NavDestinations())
             {
                 bool open = x.IsNavSystemUnlocked(id);
                 bool shown = id == sys.Id;
@@ -316,7 +316,11 @@ namespace DMI.Xenoarch.Ship
         {
             var g = x.Galaxy;
             var known = new List<StarSystemDefinition>();
-            foreach (var s in g.systems) if (x.IsSystemKnown(s) || s == here) known.Add(s);
+            // Core destinations (Sol, Proxima Centauri, Barnard's Star, Epsilon Eridani + DLC extras); legacy charted systems
+            // (Alpha Centauri, Sirius) stay in the data for old saves but are not shown; a chain-revealed signal source
+            // (Tau Ceti) still appears as a marker once its fact is decoded.
+            foreach (var s in g.systems)
+                if (s == here || (x.IsSystemKnown(s) && (x.IsNavDestination(s.Id) || !string.IsNullOrEmpty(s.revealFact)))) known.Add(s);
             _selectedSystemId ??= here.Id;
 
             var left = Col(body); ListCol(left); left.style.overflow = Overflow.Hidden;
@@ -330,7 +334,9 @@ namespace DMI.Xenoarch.Ship
                 if (id == _selectedSystemId) row.AddToClassList("xa-term__row--sel");
                 if (s == here) row.AddToClassList("xa-term__row--here");
                 row.Add(new Label((s == here ? "> " : "") + s.displayName));
-                var tag = new Label($"{Vector3.Distance(here.galacticPosition, s.galacticPosition):0.0} ly"); tag.style.color = XenoarchPalette.SecondaryText; row.Add(tag);
+                bool dest = x.IsNavDestination(id);
+                string status = s == here ? "current" : !dest ? "signal" : x.IsNavSystemUnlocked(id) ? "open" : "LOCKED";
+                var tag = new Label($"{Vector3.Distance(here.galacticPosition, s.galacticPosition):0.0} ly  {status}"); tag.style.color = XenoarchPalette.SecondaryText; row.Add(tag);
                 list.Add(row);
             }
 

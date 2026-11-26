@@ -26,6 +26,11 @@ namespace DMI.Xenoarch.Artifacts
         [Range(0.05f, 1f)] [Tooltip("Condition while still buried (before tools touch it).")] public float buriedCondition = 0.85f;
         public List<ResearchOp> researchOps = new List<ResearchOp> { ResearchOp.Cleaning, ResearchOp.Identification, ResearchOp.MaterialAnalysis, ResearchOp.AgeEstimation, ResearchOp.CivilizationIdentification, ResearchOp.Restoration };
         public List<TranslationSegment> translation = new List<TranslationSegment>();
+        [Header("Collections (optional)")]
+        [Tooltip("Collectible set this find belongs to (e.g. \"set.vael_tools\"). Each distinct member recovered raises the fact artifact.set:<setId>.")]
+        public string setId;
+        [Tooltip("Fragment group (a broken object split into pieces, e.g. \"frag.star_map\"). Each distinct piece recovered raises artifact.fragments:<group>; a discovery-chain node with that threshold can reward the joined object, a site or a system.")]
+        public string fragmentOf;
         [Header("Placeholder visual")]
         public ArtifactShape shape = ArtifactShape.Shard;
         public Color tint = new Color(0.6f, 0.62f, 0.66f);

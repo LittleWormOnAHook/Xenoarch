@@ -17,6 +17,7 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Galaxy map note once revealed.")] [TextArea] public string revealNote;
         [Tooltip("FTL range (ly) needed to jump here from a neighbouring system.")] public float minFtlRangeLy;
         [Range(0f, 1f)] public float archaeologicalPotential;
+        [Tooltip("Extra Nav destination (DLC / expansion content). The four core systems are built in (ExplorationService.NavSystems).")] public bool navDestination;
         public List<CelestialBodyDefinition> bodies = new List<CelestialBodyDefinition>();
 
         public CelestialBodyDefinition FindBody(string id)

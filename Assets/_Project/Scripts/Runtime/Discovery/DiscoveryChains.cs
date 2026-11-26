@@ -37,6 +37,10 @@ namespace DMI.Xenoarch.Discovery
         public SiteRevealLevel revealLevel = SiteRevealLevel.OrbitalAnomaly;
         public string discoverBodyId;
         public int scannerLevelBonus;
+        [Tooltip("Optional: star system unlocked in the Nav dropdown, e.g. \"sys.proxima_centauri\" (publishes nav.system.<id>).")]
+        public string unlockSystemId;
+        [Tooltip("Optional: more dig sites revealed by decoded coordinates (same reveal level as above).")]
+        public List<string> revealSiteIds = new List<string>();
     }
 
     /// <summary>Fact key builders (one place, so producers and chain data agree).</summary>
@@ -48,6 +52,12 @@ namespace DMI.Xenoarch.Discovery
         public static string Civilization(string civId) => "civ.identified:" + civId;
         public static string Site(string siteId) => "site.revealed:" + siteId;
         public static string Visited(string bodyId) => "body.visited:" + bodyId;
+        /// <summary>Distinct members of a collectible artifact set recovered (value = count).</summary>
+        public static string SetProgress(string setId) => "artifact.set:" + setId;
+        /// <summary>Distinct pieces of a fragment group recovered (value = count).</summary>
+        public static string Fragments(string groupId) => "artifact.fragments:" + groupId;
+        /// <summary>Unlocks a star system in the Nav terminal's system dropdown (same key as ExplorationService.NavUnlockFact).</summary>
+        public static string NavSystem(string systemId) => ExplorationService.NavUnlockFact(systemId);
     }
 
     [Serializable] public sealed class FactEntry { public string key; public float value; }
@@ -179,7 +189,9 @@ namespace DMI.Xenoarch.Discovery
                 if (!string.IsNullOrEmpty(r.discoverBodyId)) _exploration.Body(r.discoverBodyId).discovered = true;
                 if (!string.IsNullOrEmpty(r.revealSiteId)) _exploration.Reveal(r.revealSiteId, (int)r.revealLevel);
                 if (r.scannerLevelBonus != 0) _exploration.Ship.scannerLevel += r.scannerLevelBonus;
+                if (r.revealSiteIds != null) foreach (var sid in r.revealSiteIds) if (!string.IsNullOrEmpty(sid)) _exploration.Reveal(sid, (int)r.revealLevel);
             }
+            if (!string.IsNullOrEmpty(r.unlockSystemId)) { string k = Facts.NavSystem(r.unlockSystemId); _facts[k] = Mathf.Max(Value(k), 1f); }
             if (!string.IsNullOrEmpty(r.journal))
             {
                 var e = new JournalEntry { time = Clock(), chainId = chain.Id, nodeId = n.id, text = r.journal };
