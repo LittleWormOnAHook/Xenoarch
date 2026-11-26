@@ -8,8 +8,9 @@ namespace DMI.Xenoarch.EditorTools
     /// <summary>
     /// Adapted from ASH "Play From Main Menu" (ASH/Editor/Systems/ASHPlayFromMainMenu.cs).
     /// Editor Play normally starts whatever scene is open. Menu Xenoarch/Play Mode:
-    ///  - "Quick Play (open scene)" (default): Play starts the open scene directly, e.g. Ship_Starter, for fast tests.
-    ///  - "Full Flow (from Bootstrap)": Play always starts Bootstrap -> MainMenu (New Game / Continue), like a build.
+    ///  - "Full Flow (from Bootstrap)" (default since t175u): Play always starts Bootstrap -> MainMenu (New Game / Continue),
+    ///    like a build, whatever scene is open.
+    ///  - "Quick Play (open scene)": dev bypass, Play starts the open scene directly, e.g. Ship_Starter, for fast tests.
     /// Uses EditorSceneManager.playModeStartScene; saved per machine in EditorPrefs. Changes no scene or build list.
     /// </summary>
     [InitializeOnLoad]
@@ -21,7 +22,7 @@ namespace DMI.Xenoarch.EditorTools
 
         static XenoarchPlayFromBootstrap() => EditorApplication.delayCall += Apply;
 
-        public static bool FromBootstrap => EditorPrefs.GetBool(Pref, false);
+        public static bool FromBootstrap => EditorPrefs.GetBool(Pref, true);
 
         [MenuItem(MenuFull, false, 1)] static void SetFull() { EditorPrefs.SetBool(Pref, true); Apply(); }
         [MenuItem(MenuFull, true)] static bool ValidateFull() { Menu.SetChecked(MenuFull, FromBootstrap); return true; }
