@@ -89,6 +89,7 @@ namespace DMI.Xenoarch.EditorTools
                 var all = s.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
                 var sb = new StringBuilder();
                 XenoarchShipSceneBuilder.SwapStation<ResearchTerminal>(all, LabName, LabName, sb);
+                XenoarchShipHookup.Run(all, sb); // his Refiner / Storage_* / lift / bay shuttle: scripts only
                 PlaceRefiner(all, sb);
                 foreach (var helm in all.Select(g => g.GetComponent<DMI.Xenoarch.Ship.CockpitHelm>()).Where(h => h != null))
                     if (helm.GetComponent<DMI.Xenoarch.Ship.ShipFtlSequence>() == null)
@@ -711,6 +712,7 @@ namespace DMI.Xenoarch.EditorTools
             XenoarchShuttleSetup.Validate(check);
             XenoarchMapsSetup.Validate(check);
             XenoarchValuablesSetup.Validate(check);
+            XenoarchShipHookup.Validate(check);
             check(DMI.Xenoarch.Scenes.SceneLoader.ReadyGates != null, "3A loading screen: ready gates available (shader compile, Digger replay)");
             ValidateDigging(check);
 

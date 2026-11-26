@@ -68,8 +68,8 @@ namespace DMI.Xenoarch.Ship
             right.Add(map);
             var sel = string.IsNullOrEmpty(_selected) || x.Sites == null ? null : x.Sites.Get(_selected);
             Text(right, sel == null ? "Destination: base landing zone" : $"Destination: semi-flat ground near the selected signature");
-            Text(right, "The shuttle sets down on the flattest clear ground close to the site. Board it again (E) to return to the ship's airlock bay.", "xa-term__dim");
-            Btn(right, $"Launch shuttle to {b.displayName}", () =>
+            Text(right, "The shuttle sets down on the flattest clear ground close to the site. You step out beside it. Board it again (E) to return to the ship.", "xa-term__dim");
+            Btn(right, $"Take Shuttle to {b.displayName}", () =>
             {
                 if (!ShipTravel.TakeShuttle(_selected, out var why)) { _message = why; Refresh(); return; }
                 Close();

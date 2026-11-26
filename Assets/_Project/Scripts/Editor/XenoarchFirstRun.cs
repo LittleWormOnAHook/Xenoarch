@@ -77,6 +77,11 @@ namespace DMI.Xenoarch.EditorTools
                 File.Delete(Phase1CTrigger);
                 XenoarchPhase1CSetup.CreateAll();
             }
+            if (File.Exists(XenoarchProbe.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(XenoarchProbe.Trigger);
+                XenoarchProbe.Run();
+            }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 File.Delete(SmokeTrigger);

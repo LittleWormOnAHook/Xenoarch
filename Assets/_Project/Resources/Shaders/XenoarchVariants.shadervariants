@@ -25,6 +25,8 @@ ShaderVariantCollection:
         passType: 13
       - keywords: _DETAIL_MULX2 _METALLICSPECGLOSSMAP _NORMALMAP _OCCLUSIONMAP
         passType: 13
+      - keywords: _DETAIL_MULX2 _METALLICSPECGLOSSMAP _NORMALMAP _OCCLUSIONMAP _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+        passType: 13
       - keywords: _EMISSION
         passType: 13
       - keywords: _EMISSION _METALLICSPECGLOSSMAP _NORMALMAP _OCCLUSIONMAP

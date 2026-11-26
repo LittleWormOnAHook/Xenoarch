@@ -19,6 +19,11 @@ MonoBehaviour:
   minimumHopFuel: 1
   ftlRangeLy: 0
   scannerLevel: 1
+  orbitalScanRadiusByLevel:
+  - 400
+  - 700
+  - 1000
+  - 1500
   moduleSlots: 4
   cargoSlots: 12
   startingModules:
@@ -38,6 +43,12 @@ MonoBehaviour:
   shuttlePrefab: {fileID: 374756466884460148, guid: a82e2fcd0b717284cbf3e14ab9fae8de, type: 3}
   shuttleFootprint: 12.5
   shuttleYawOffset: 0
+  shuttleScale: 0.6957008
+  shuttleGearNames:
+  - Gear_Left
+  - Gear_Right
+  - Gear_Behind
+  holdSlotsByLevel: 18000000240000003000000048000000
   landingRules:
     maxSlope: 14
     maxStep: 1.2

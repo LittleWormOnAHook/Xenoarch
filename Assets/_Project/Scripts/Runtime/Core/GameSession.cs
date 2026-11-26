@@ -29,6 +29,10 @@ namespace DMI.Xenoarch.Core
         public XenoarchConfig Config { get; }
         public IItemLookup Items { get; }
         public InventoryModel Inventory { get; }
+        /// <summary>Ship storage, one inventory per crate role (Artifacts / Equipment / General). Slots grow with
+        /// <c>ShipState.holdLevel</c>. Crates with the same role share an inventory.</summary>
+        public readonly System.Collections.Generic.Dictionary<DMI.Xenoarch.Ship.StorageRole, InventoryModel> Holds = new System.Collections.Generic.Dictionary<DMI.Xenoarch.Ship.StorageRole, InventoryModel>();
+        public InventoryModel Hold(DMI.Xenoarch.Ship.StorageRole role) => Holds[role];
         public WorldPersistence World { get; }
         public SaveService Saves { get; }
         public ExplorationService Exploration { get; }
@@ -62,6 +66,12 @@ namespace DMI.Xenoarch.Core
             Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
             Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
             Valuables = new DMI.Xenoarch.Valuables.ValuableService(Saves);
+            foreach (DMI.Xenoarch.Ship.StorageRole role in System.Enum.GetValues(typeof(DMI.Xenoarch.Ship.StorageRole)))
+            {
+                var hold = new InventoryModel(items, DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, 0));
+                Holds[role] = hold;
+                Saves.Register(new DMI.Xenoarch.Ship.ShipHold.Section(role, hold, () => DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, Exploration.Ship.holdLevel)));
+            }
             Artifacts.HasReagents = n => Materials.ReagentUnits() >= n;
             Artifacts.PayReagents = n => Materials.PayReagents(n);
             Exploration.Gate = key => Discovery.Has(key);

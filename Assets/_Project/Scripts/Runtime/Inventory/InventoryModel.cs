@@ -34,6 +34,16 @@ namespace DMI.Xenoarch.Inventory
             for (int i = 0; i < Mathf.Max(1, capacity); i++) _slots.Add(new ItemStack());
         }
 
+        /// <summary>Grow (or shrink, dropping only trailing empty slots) to <paramref name="capacity"/> slots. Used by
+        /// upgradable containers (ship hold). Never discards items.</summary>
+        public void SetCapacity(int capacity)
+        {
+            capacity = Mathf.Max(1, capacity);
+            while (_slots.Count < capacity) _slots.Add(new ItemStack());
+            while (_slots.Count > capacity && _slots[_slots.Count - 1].IsEmpty) _slots.RemoveAt(_slots.Count - 1);
+            Changed?.Invoke();
+        }
+
         public int FreeSlots { get { int n = 0; foreach (var s in _slots) if (s.IsEmpty) n++; return n; } }
 
         public int Count(string itemId)

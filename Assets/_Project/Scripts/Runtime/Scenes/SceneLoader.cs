@@ -18,7 +18,8 @@ namespace DMI.Xenoarch.Scenes
     {
         public float fadeDuration = 0.35f;
         [Tooltip("Longest the loading screen waits for shaders / terrain after the scene loads (s).")] public float maxHoldSeconds = 30f;
-        [Tooltip("Frames to keep the loading screen up after everything reports ready (lets the first frames render).")] public int settleFrames = 6;
+        [Tooltip("Frames to keep the loading screen up after everything reports ready (lets the first frames render).")] public int settleFrames = 30;
+        [Tooltip("Shortest time the loading screen stays up after the scene loads (s), so late materials finish too.")] public float minHoldSeconds = 2.5f;
 
         /// <summary>Loading-screen gates: each returns a status line while its system is still busy, or null when ready
         /// (shader compile, Digger replay, landing-zone pick...). The loading screen stays up until all return null.</summary>
@@ -99,10 +100,13 @@ namespace DMI.Xenoarch.Scenes
                 if (_warm != null) { _view?.SetStatus("Warming shaders"); yield return null; _warm.WarmUp(); }
             }
             float held = 0f; int quiet = 0;
+#if UNITY_EDITOR
+            CompileArrivalShaders(); // player + landed shuttle: compile now, not the first frame they're seen
+#endif
             while (held < maxHoldSeconds)
             {
                 string busy = BusyStatus();
-                if (busy == null) { if (++quiet >= settleFrames) break; }
+                if (busy == null) { if (++quiet >= settleFrames && held >= minHoldSeconds) break; }
                 else { quiet = 0; _view?.SetStatus(busy); }
                 held += Time.unscaledDeltaTime;
                 yield return null;
@@ -149,10 +153,32 @@ namespace DMI.Xenoarch.Scenes
 
         void Update() { if (IsLoading) _view?.Tick(Time.unscaledDeltaTime); }
 
+#if UNITY_EDITOR
+        /// <summary>Editor (async shader compilation): force-compile every pass of the player's and the landed
+        /// shuttle's materials while the loading screen is up, so they never show the cyan placeholder.</summary>
+        static void CompileArrivalShaders()
+        {
+            var roots = new System.Collections.Generic.List<Transform>();
+            var rig = PlayerRigLocator.Find(); if (rig != null) roots.Add(rig.Root);
+            var sh = DMI.Xenoarch.Exploration.ShuttleDirector.Instance != null ? DMI.Xenoarch.Exploration.ShuttleDirector.Instance.Shuttle : null;
+            if (sh != null) roots.Add(sh.transform);
+            var seen = new System.Collections.Generic.HashSet<Material>();
+            int passes = 0;
+            foreach (var root in roots)
+                foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+                    foreach (var m in r.sharedMaterials)
+                    {
+                        if (m == null || m.shader == null || !seen.Add(m)) continue;
+                        for (int i = 0; i < m.passCount; i++) { UnityEditor.ShaderUtil.CompilePass(m, i, true); passes++; }
+                    }
+            if (passes > 0) Debug.Log($"[Xenoarch] Loading screen: compiled {passes} shader passes for {seen.Count} player/shuttle materials");
+        }
+#endif
+
         static string BusyStatus()
         {
 #if UNITY_EDITOR
-            if (UnityEditor.ShaderUtil.anythingCompiling) return "Compiling shaders";
+            if (UnityEditor.ShaderUtil.anythingCompiling) return "Preparing";
 #endif
             foreach (var g in ReadyGates)
             {

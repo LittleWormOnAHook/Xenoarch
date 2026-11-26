@@ -68,7 +68,17 @@ namespace DMI.Xenoarch.Exploration
                 // hull" warnings); a static craft doesn't need convex colliders. The prefab asset is untouched.
                 foreach (var mc in inst.GetComponentsInChildren<MeshCollider>(true)) if (mc.convex && mc.GetComponentInParent<Rigidbody>(true) == null) mc.convex = false;
                 foreach (var rb in inst.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
-                local = LandingZonePicker.LocalBounds(inst.transform);
+                if (def.shuttleScale > 0.01f) inst.transform.localScale = Vector3.one * def.shuttleScale; // match the bay shuttle
+                _gears.Clear();
+                if (def.shuttleGearNames != null)
+                    foreach (var gn in def.shuttleGearNames)
+                    {
+                        var g = FindDeep(inst.transform, gn);
+                        if (g != null) { g.gameObject.SetActive(true); _gears.Add(g); }
+                        else Debug.LogWarning($"[Xenoarch] Shuttle: landing gear '{gn}' not found on {inst.name}");
+                    }
+                local = LandingZonePicker.LocalBounds(holder.transform);
+                _groundOffset = -GearMinY(holder.transform, local);
             }
             else Debug.LogWarning("[Xenoarch] Shuttle: ShipDefinition.shuttlePrefab not set (run Setup 10); placing the arrival point only");
 
@@ -106,8 +116,8 @@ namespace DMI.Xenoarch.Exploration
             if (holder != null)
             {
                 holder.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f));
-                // Rest the lowest part (landing gear) on the ground.
-                if (local.size.y > 0.1f && Mathf.Abs(local.min.y) < 5f) holder.transform.position += Vector3.up * -local.min.y;
+                // Rest the landing gear (lowest parts) on the ground.
+                GroundOnGear(holder.transform, height);
                 holder.AddComponent<ShuttleInteractable>();
                 holder.SetActive(true);
                 Shuttle = holder;
@@ -124,24 +134,54 @@ namespace DMI.Xenoarch.Exploration
             spawnGo.transform.SetPositionAndRotation(sp, face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face) : Quaternion.identity);
             spawnGo.AddComponent<PlayerSpawnPoint>().spawnId = ShipTravel.ShuttleSpawn;
 
-            LastPick = $"{scene.name}: shuttle near {(site != null ? site.Id : "base zone")} via {how}";
+            LastPick = $"{scene.name}: shuttle near {(site != null ? site.Id : "base zone")} via {how}, gear {_gears.Count} down{(def != null && def.shuttleScale > 0.01f ? $", scale {def.shuttleScale:0.###}" : "")}";
             Debug.Log($"[Xenoarch] {LastPick}");
             // Direct play in the Editor: nothing teleports the player (they stay where you placed them).
-            StartCoroutine(Settle(holder, local));
+            StartCoroutine(Settle(holder, height));
         }
 
-        IEnumerator Settle(GameObject holder, Bounds local)
+        readonly List<Transform> _gears = new List<Transform>();
+        float _groundOffset;
+
+        static Transform FindDeep(Transform t, string name)
+        {
+            if (t.name == name) return t;
+            for (int i = 0; i < t.childCount; i++) { var r = FindDeep(t.GetChild(i), name); if (r != null) return r; }
+            return null;
+        }
+
+        /// <summary>Lowest point of the gear renderers in holder space (whole model if no gear).</summary>
+        float GearMinY(Transform holder, Bounds whole)
+        {
+            float min = float.PositiveInfinity;
+            var toLocal = holder.worldToLocalMatrix;
+            foreach (var g in _gears)
+                foreach (var mf in g.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (mf.sharedMesh == null) continue;
+                    var mb = mf.sharedMesh.bounds; var m = toLocal * mf.transform.localToWorldMatrix;
+                    for (int i = 0; i < 8; i++)
+                        min = Mathf.Min(min, m.MultiplyPoint3x4(mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1))).y);
+                }
+            return float.IsInfinity(min) ? whole.min.y : min;
+        }
+
+        /// <summary>Put the gear feet on the highest ground under any gear (so none sinks in).</summary>
+        void GroundOnGear(Transform holder, LandingZonePicker.HeightFn height)
+        {
+            var p = holder.position; float ground = float.NegativeInfinity;
+            if (height(p.x, p.z, out float gy, out _)) ground = gy;
+            foreach (var g in _gears) { var gp = g.position; if (height(gp.x, gp.z, out float y, out _)) ground = Mathf.Max(ground, y); }
+            if (!float.IsInfinity(ground)) holder.position = new Vector3(p.x, ground + _groundOffset, p.z);
+        }
+
+        IEnumerator Settle(GameObject holder, LandingZonePicker.HeightFn height)
         {
             // Wait for Digger to finish replaying saved digs (terrain can change), then re-ground the shuttle once.
             float t = 0f;
             yield return null;
             while (ExcavationSite.BusyStatus() != null && t < 20f) { t += Time.unscaledDeltaTime; yield return null; }
-            if (holder != null)
-            {
-                var p = holder.transform.position - Vector3.up * -local.min.y;
-                var y = ExcavationSite.TerrainHeight(p);
-                if (y.HasValue && Mathf.Abs(y.Value - p.y) > 0.05f) holder.transform.position += Vector3.up * (y.Value - p.y);
-            }
+            if (holder != null) GroundOnGear(holder.transform, height);
             _busy = false;
         }
 

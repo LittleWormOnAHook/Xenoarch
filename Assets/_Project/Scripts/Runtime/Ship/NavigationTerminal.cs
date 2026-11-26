@@ -58,7 +58,8 @@ namespace DMI.Xenoarch.Ship
             MapHeader(mid, x, false);
             var map = new MapView3D(_sysView); mid.Add(map);
             FillSystemMap(map, sys, x);
-            map.Clicked += id => { _selectedId = id; _message = null; Refresh(); };
+            map.Clicked += id => { _selectedId = id; _message = null; _infoCard = true; Refresh(); };
+            if (_infoCard) { var b0 = sys.FindBody(_selectedId); if (b0 != null) InfoCard(map, BodyInfo(x, sys, b0)); }
 
             // --- right: details + actions
             var right = Col(body);
@@ -109,6 +110,67 @@ namespace DMI.Xenoarch.Ship
             }
             else Text(right, "In orbit. No surveyed landing zone here yet.", "xa-term__dim");
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__good");
+        }
+
+        bool _infoCard;
+
+        /// <summary>Small info popup over the map for the clicked body / system (close with x).</summary>
+        void InfoCard(VisualElement map, (string title, List<string> lines, string desc) info)
+        {
+            var card = new VisualElement();
+            card.style.position = Position.Absolute; card.style.left = 10; card.style.top = 10; card.style.width = 300;
+            card.style.backgroundColor = new Color(0.03f, 0.05f, 0.07f, 0.92f);
+            card.style.borderTopWidth = card.style.borderBottomWidth = card.style.borderLeftWidth = card.style.borderRightWidth = 1;
+            card.style.borderTopColor = card.style.borderBottomColor = card.style.borderLeftColor = card.style.borderRightColor = new Color(0.95f, 0.66f, 0.22f, 0.6f);
+            card.style.paddingLeft = card.style.paddingRight = 10; card.style.paddingTop = card.style.paddingBottom = 8;
+            var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.justifyContent = Justify.SpaceBetween; card.Add(head);
+            var t = new Label(info.title); t.AddToClassList("xa-term__h"); t.style.marginBottom = 4; head.Add(t);
+            var x = new Button(() => { _infoCard = false; Refresh(); }) { text = "x" }; x.style.width = 26; x.style.height = 22; head.Add(x);
+            foreach (var l in info.lines) { var lb = new Label(l); lb.AddToClassList("xa-term__text"); lb.style.whiteSpace = WhiteSpace.Normal; card.Add(lb); }
+            if (!string.IsNullOrEmpty(info.desc)) { var d = new Label(info.desc); d.AddToClassList("xa-term__dim"); d.style.whiteSpace = WhiteSpace.Normal; d.style.marginTop = 4; card.Add(d); }
+            card.RegisterCallback<PointerDownEvent>(e => e.StopPropagation()); // don't pan the map through the card
+            card.RegisterCallback<PointerUpEvent>(e => e.StopPropagation());
+            card.RegisterCallback<WheelEvent>(e => e.StopPropagation());
+            map.Add(card);
+            map.RegisterCallback<GeometryChangedEvent>(_ => card.BringToFront()); // stay above the map's labels
+            map.schedule.Execute(() => card.BringToFront());
+        }
+
+        static (string, List<string>, string) BodyInfo(ExplorationService x, StarSystemDefinition sys, CelestialBodyDefinition b)
+        {
+            var lines = new List<string>();
+            bool known = x.IsDiscovered(b.Id);
+            if (!known) return ("UNKNOWN OBJECT", new List<string> { "Not yet identified. Fly closer or scan the system." }, null);
+            var parent = string.IsNullOrEmpty(b.parentId) ? null : sys.FindBody(b.parentId);
+            lines.Add($"Type: {b.kind}{(parent != null ? $" of {parent.displayName}" : "")}");
+            if (b.kind != CelestialKind.Station && b.kind != CelestialKind.Belt && b.radiusKm > 0f) lines.Add($"Radius {b.radiusKm:N0} km   Gravity {b.gravityG:0.##} g");
+            if (b.kind != CelestialKind.Star)
+            {
+                lines.Add($"From the star: {(parent != null ? parent.orbitAU : b.orbitAU):0.###} AU{(b.orbitPeriodDays > 0f ? $"   Orbit {b.orbitPeriodDays:0.#} days" : "")}");
+                if (x.CurrentBody != null && x.CurrentBody != b) lines.Add($"From the ship: {x.DistanceAU(x.CurrentBody, b):0.###} AU");
+                else if (x.CurrentBody == b) lines.Add("The ship is here.");
+            }
+            int total = 0, revealed = 0, pinned = 0;
+            foreach (var s in x.SitesOnBody(b.Id)) { total++; var st = x.Site(s.Id); if (st.revealLevel > 0) revealed++; if (st.revealLevel >= 3) pinned++; }
+            var bd = x.Body(b.Id);
+            if (b.HasLanding && b.kind != CelestialKind.Station)
+                lines.Add(bd.orbitalScanPasses == 0 ? "Sites: not scanned yet (orbital scanner)" : $"Sites: {revealed} signature(s) found, {pinned} pinpointed ({bd.orbitalScanPasses} scan pass{(bd.orbitalScanPasses == 1 ? "" : "es")})");
+            lines.Add($"Archaeological potential: {Potential(b.archaeologicalPotential)}");
+            lines.Add($"Status: {(bd.visited ? "visited" : "not visited")}{(b.HasLanding ? (b.kind == CelestialKind.Station ? ", docking available" : ", landing zone surveyed") : ", orbit only")}");
+            return (b.displayName.ToUpperInvariant(), lines, b.description);
+        }
+
+        static (string, List<string>, string) SystemInfo(ExplorationService x, StarSystemDefinition here, StarSystemDefinition s)
+        {
+            var lines = new List<string>
+            {
+                $"Star class {s.stellarClass}",
+                s == here ? "Current system" : $"Distance {Vector3.Distance(here.galacticPosition, s.galacticPosition):0.0} ly",
+                $"Known bodies: {(s.bodies != null ? s.bodies.Count : 0)}",
+                $"Archaeological potential: {Potential(s.archaeologicalPotential)}",
+                $"Status: {(s == here ? "explored" : !string.IsNullOrEmpty(s.revealFact) ? "located from decoded Vael data" : "charted")}",
+            };
+            return (s.displayName.ToUpperInvariant(), lines, s.revealNote);
         }
 
         static string Tag(ExplorationService x, CelestialBodyDefinition b)
@@ -227,7 +289,8 @@ namespace DMI.Xenoarch.Ship
                     size = s == here ? 12f : signal ? 11f : 8f, selected = s.Id == _selectedSystemId, here = s == here,
                 });
             }
-            map.Clicked += id => { _selectedSystemId = id; Refresh(); };
+            map.Clicked += id => { _selectedSystemId = id; _infoCard = true; Refresh(); };
+            if (_infoCard) { var s0 = g.FindSystem(_selectedSystemId); if (s0 != null) InfoCard(map, SystemInfo(x, here, s0)); }
 
             var right = Col(body);
             var sel = g.FindSystem(_selectedSystemId) ?? here;

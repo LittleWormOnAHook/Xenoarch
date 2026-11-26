@@ -34,6 +34,9 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Landed craft placed on planets (Creepy Cat Mark_2 Shuttle). Instantiated at runtime; the prefab itself is never edited.")] public GameObject shuttlePrefab;
         [Tooltip("Shuttle footprint radius (m), measured from the prefab by setup. 0 = measure at runtime.")] public float shuttleFootprint;
         [Tooltip("Added to the shuttle heading (deg) so its hatch faces the dig site.")] public float shuttleYawOffset;
+        [Tooltip("Uniform scale of the landed shuttle (copied from the shuttle in Ship_Starter's bay by the ship hookup pass; 0 = prefab scale).")] public float shuttleScale;
+        [Tooltip("Landing-gear children switched on when the shuttle lands; the lowest of them rests on the ground.")] public string[] shuttleGearNames = { "Gear_Left", "Gear_Right", "Gear_Behind" };
+        [Tooltip("Ship hold (Storage) slots per hold upgrade level (0 = base).")] public int[] holdSlotsByLevel = { 24, 36, 48, 72 };
         [Tooltip("Landing-zone auto-pick rules (used for sites without a hand-placed LandingZone marker).")]
         public DMI.Xenoarch.Exploration.LandingZonePicker.Rules landingRules = DMI.Xenoarch.Exploration.LandingZonePicker.Rules.Default;
     }

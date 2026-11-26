@@ -25,6 +25,7 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Dig site the shuttle was sent to (empty = base landing zone).")] public string shuttleSiteId = "";
         [Tooltip("Upgrade level of the orbital scan radius (index into ShipDefinition.orbitalScanRadiusByLevel).")] public int orbitalRangeLevel;
         [Tooltip("Upgrade level of the handheld scanner radius (index into SurfaceScannerDefinition.rangeByLevel).")] public int handheldScannerLevel;
+        [Tooltip("Upgrade level of the ship hold (index into ShipDefinition.holdSlotsByLevel).")] public int holdLevel;
     }
 
     [Serializable]
