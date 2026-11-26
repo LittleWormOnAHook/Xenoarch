@@ -81,6 +81,7 @@ namespace DMI.Xenoarch.EditorTools
 
             foreach (var scene in new[] { SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
                 WithScene(scene, log, s => TerrainPass(s, config.siteRegistry, log));
+            XenoarchShuttleSetup.Run(log);
             WithScene(SceneNames.ShipStarter, log, s =>
             {
                 var all = s.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
@@ -98,7 +99,7 @@ namespace DMI.Xenoarch.EditorTools
         }
 
         // ------------------------------------------------------------------ scenes
-        static void WithScene(string name, StringBuilder log, System.Func<Scene, bool> work)
+        internal static void WithScene(string name, StringBuilder log, System.Func<Scene, bool> work)
         {
             string path = XenoarchSetup.ScenePath(name);
             if (!File.Exists(path)) { log.AppendLine($"{name}: scene missing"); return; }
@@ -705,6 +706,7 @@ namespace DMI.Xenoarch.EditorTools
             ValidateFtl(check);
             XenoarchDigRingSetup.Validate(check);
             XenoarchShaderWarmup.Validate(check);
+            XenoarchShuttleSetup.Validate(check);
             check(DMI.Xenoarch.Scenes.SceneLoader.ReadyGates != null, "3A loading screen: ready gates available (shader compile, Digger replay)");
             ValidateDigging(check);
 

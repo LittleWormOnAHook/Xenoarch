@@ -12,6 +12,30 @@ namespace DMI.Xenoarch.Galaxy
         public const string ShipScene = SceneNames.ShipStarter;
         public const string ShipSpawnBridge = PlayerSpawnIds.Default;
         public const string ShipSpawnAirlock = "airlock";
+        /// <summary>Planet arrival spawn created beside the landed shuttle (ShuttleDirector).</summary>
+        public const string ShuttleSpawn = "shuttle";
+
+        /// <summary>Planets/moons are reached by shuttle from the airlock (the ship stays where it is); stations dock.</summary>
+        public static bool UsesShuttle(CelestialBodyDefinition b) => b != null && b.HasLanding && b.kind != CelestialKind.Station;
+
+        /// <summary>Take the shuttle down to the current body, landing near <paramref name="siteId"/> (empty = base zone).</summary>
+        public static bool TakeShuttle(string siteId, out string reason)
+        {
+            reason = null;
+            var x = X; var rt = XenoarchRuntime.Instance;
+            if (x == null || rt == null) { reason = "No session"; return false; }
+            var body = x.CurrentBody;
+            if (!UsesShuttle(body)) { reason = body == null ? "Nothing in range" : "No surveyed landing zone"; return false; }
+            x.Ship.shuttleSiteId = siteId ?? "";
+            x.Body(body.Id).visited = true;
+            var site = string.IsNullOrEmpty(siteId) || x.Sites == null ? null : x.Sites.Get(siteId);
+            var st = site != null ? x.Site(site.Id) : null;
+            string where = site == null ? "base landing zone" : st != null && st.revealLevel >= (int)SiteRevealLevel.Pinpointed ? site.displayName : "orbital signature";
+            Scenes.SceneLoader.NextTitle = $"Shuttle descent: {body.displayName}";
+            Scenes.SceneLoader.NextSubtitle = $"Landing near the {where}";
+            Debug.Log($"[Xenoarch] Shuttle to {body.displayName} ({(site != null ? site.Id : "base zone")})");
+            return rt.Travel(body.sceneName, ShuttleSpawn);
+        }
 
         static ExplorationService X => XenoarchRuntime.Session?.Exploration;
 
@@ -44,7 +68,9 @@ namespace DMI.Xenoarch.Galaxy
         public static bool ReturnToShip()
         {
             var rt = XenoarchRuntime.Instance;
-            return rt != null && rt.Travel(ShipScene, ShipSpawnAirlock);
+            if (rt == null) return false;
+            Scenes.SceneLoader.NextTitle = "Returning to the ship";
+            return rt.Travel(ShipScene, ShipSpawnAirlock);
         }
 
         public static string LocationText(ExplorationService x)

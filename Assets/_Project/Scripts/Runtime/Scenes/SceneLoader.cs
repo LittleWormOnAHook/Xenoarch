@@ -26,6 +26,10 @@ namespace DMI.Xenoarch.Scenes
 
         /// <summary>Optional title for the next load (else derived: "Returning to the ship" / "Landing: body").</summary>
         public static string NextTitle;
+        /// <summary>Optional second line for the next load (e.g. the chosen landing zone).</summary>
+        public static string NextSubtitle;
+        /// <summary>Arrival of the load in progress / last load (directors use it to place the player at runtime spawns).</summary>
+        public static Arrival CurrentArrival { get; private set; }
         LoadingScreenView _view;
         static ShaderVariantCollection _warm;
         static bool _warmed;
@@ -70,7 +74,7 @@ namespace DMI.Xenoarch.Scenes
             IsLoading = true;
             if (_fade == null) BuildOverlay();
             if (_fade != null) { _alpha = 1f; _fade.style.opacity = 1f; _fade.pickingMode = PickingMode.Position; }
-            _view?.SetTitle(TitleFor(SceneManager.GetActiveScene().name)); _view?.SetStatus("Loading"); _view?.SetVisible(true);
+            _view?.SetTitle(TitleFor(SceneManager.GetActiveScene().name)); _view?.SetSubtitle(null); _view?.SetStatus("Loading"); _view?.SetVisible(true);
             UIState.SetOpen(Panels.Loading, true);
             PlayerRigLocator.Find()?.SetInputEnabled(false);
             yield return null;
@@ -107,6 +111,7 @@ namespace DMI.Xenoarch.Scenes
         IEnumerator LoadRoutine(string sceneName, Arrival arrival, Action onLoaded)
         {
             IsLoading = true;
+            CurrentArrival = arrival;
             UIState.SetOpen(Panels.Loading, true);
             LoadStarted?.Invoke(sceneName);
             PlayerRigLocator.Find()?.SetInputEnabled(false);
@@ -114,6 +119,7 @@ namespace DMI.Xenoarch.Scenes
             if (_view != null)
             {
                 _view.SetTitle(TitleFor(sceneName)); NextTitle = null;
+                _view.SetSubtitle(NextSubtitle); NextSubtitle = null;
                 _view.SetStatus("Loading"); _view.SetVisible(true);
             }
             yield return Fade(1f);

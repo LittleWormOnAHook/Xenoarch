@@ -10,7 +10,7 @@ namespace DMI.Xenoarch.UI
     public sealed class LoadingScreenView
     {
         readonly VisualElement _root, _spinner;
-        readonly Label _title, _status;
+        readonly Label _title, _subtitle, _status;
         float _angle;
 
         public LoadingScreenView(VisualElement parent)
@@ -33,6 +33,9 @@ namespace DMI.Xenoarch.UI
             _title.style.fontSize = 34; _title.style.color = new Color(0.82f, 0.93f, 1f); _title.style.unityFontStyleAndWeight = FontStyle.Bold;
             _title.style.letterSpacing = 3;
             _root.Add(_title);
+            _subtitle = new Label { pickingMode = PickingMode.Ignore };
+            _subtitle.style.fontSize = 18; _subtitle.style.color = new Color(0.62f, 0.75f, 0.86f); _subtitle.style.marginTop = 4;
+            _root.Add(_subtitle);
             _status = new Label { pickingMode = PickingMode.Ignore };
             _status.style.fontSize = 17; _status.style.color = new Color(0.95f, 0.72f, 0.35f); _status.style.marginTop = 8;
             _root.Add(_status);
@@ -40,6 +43,7 @@ namespace DMI.Xenoarch.UI
         }
 
         public void SetTitle(string t) => _title.text = t ?? "";
+        public void SetSubtitle(string t) { _subtitle.text = t ?? ""; _subtitle.style.display = string.IsNullOrEmpty(t) ? DisplayStyle.None : DisplayStyle.Flex; }
         public void SetStatus(string s) => _status.text = s ?? "";
         public void SetVisible(bool on) => _root.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
 

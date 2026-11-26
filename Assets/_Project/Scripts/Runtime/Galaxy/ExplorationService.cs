@@ -22,6 +22,7 @@ namespace DMI.Xenoarch.Galaxy
         public bool landed;
         public bool docked;
         [Tooltip("Course plotted on the navigation terminal, flown from the cockpit helm.")] public string plottedBodyId;
+        [Tooltip("Dig site the shuttle was sent to (empty = base landing zone).")] public string shuttleSiteId = "";
     }
 
     [Serializable]

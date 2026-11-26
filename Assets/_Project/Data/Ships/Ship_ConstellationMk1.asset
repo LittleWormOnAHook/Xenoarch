@@ -35,3 +35,14 @@ MonoBehaviour:
   ftlAudio: {fileID: 0}
   landingSeconds: 8
   takeoffSeconds: 5
+  shuttlePrefab: {fileID: 374756466884460148, guid: a82e2fcd0b717284cbf3e14ab9fae8de, type: 3}
+  shuttleFootprint: 12.5
+  shuttleYawOffset: 0
+  landingRules:
+    maxSlope: 14
+    maxStep: 1.2
+    footprint: 8
+    gridClearance: 4
+    maxDistance: 90
+    ringStep: 3
+    angles: 20

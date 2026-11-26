@@ -29,5 +29,11 @@ namespace DMI.Xenoarch.Galaxy
         public AudioClip ftlAudio;
         [Tooltip("Seconds for the descent from orbit to the landing zone (and docking). Shown as a timer bar with beeps and a touchdown chime.")] public float landingSeconds = 8f;
         [Tooltip("Seconds to lift off / undock back to orbit.")] public float takeoffSeconds = 5f;
+        [Header("Shuttle (planet landings)")]
+        [Tooltip("Landed craft placed on planets (Creepy Cat Mark_2 Shuttle). Instantiated at runtime; the prefab itself is never edited.")] public GameObject shuttlePrefab;
+        [Tooltip("Shuttle footprint radius (m), measured from the prefab by setup. 0 = measure at runtime.")] public float shuttleFootprint;
+        [Tooltip("Added to the shuttle heading (deg) so its hatch faces the dig site.")] public float shuttleYawOffset;
+        [Tooltip("Landing-zone auto-pick rules (used for sites without a hand-placed LandingZone marker).")]
+        public DMI.Xenoarch.Exploration.LandingZonePicker.Rules landingRules = DMI.Xenoarch.Exploration.LandingZonePicker.Rules.Default;
     }
 }

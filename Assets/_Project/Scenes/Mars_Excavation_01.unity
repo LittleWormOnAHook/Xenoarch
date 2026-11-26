@@ -570,6 +570,110 @@ TerrainCollider:
   serializedVersion: 2
   m_TerrainData: {fileID: 15600000, guid: edec89e17ec966a449cf9d68a2d2a698, type: 2}
   m_EnableTreeColliders: 1
+--- !u!1 &599182574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 599182575}
+  - component: {fileID: 599182576}
+  m_Layer: 0
+  m_Name: LandingZone - Dune Shrine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &599182575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 599182574}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.99691737, z: -0, w: 0.07845909}
+  m_LocalPosition: {x: -14.980154, y: -24.54377, z: 104.58104}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1845274947}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &599182576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 599182574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.mars.dune_shrine
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 10}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -14.980154, y: -24.54377, z: 104.58104}
+  hasSiteHint: 1
+--- !u!1 &721999476
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 721999477}
+  - component: {fileID: 721999478}
+  m_Layer: 0
+  m_Name: LandingZone - Canyon Relay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &721999477
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721999476}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.9723699, z: -0, w: 0.23344542}
+  m_LocalPosition: {x: -16.329088, y: -24.584938, z: 105.895935}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1845274947}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &721999478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721999476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.mars.canyon_relay
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: -55, y: 0, z: 30}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -16.329088, y: -24.584938, z: 105.895935}
+  hasSiteHint: 1
 --- !u!1 &988331438
 GameObject:
   m_ObjectHideFlags: 0
@@ -743,6 +847,58 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1036829683}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1135689918
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1135689919}
+  - component: {fileID: 1135689920}
+  m_Layer: 0
+  m_Name: LandingZone - Buried Spire
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1135689919
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135689918}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.9510566, z: -0, w: 0.30901673}
+  m_LocalPosition: {x: 17.07994, y: -25.913559, z: 129.07445}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1845274947}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1135689920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135689918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.mars.buried_spire
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 60, y: 0, z: 70}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 17.07994, y: -25.913559, z: 129.07445}
+  hasSiteHint: 1
 --- !u!1 &1252990663
 GameObject:
   m_ObjectHideFlags: 0
@@ -1137,6 +1293,93 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1815251673
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1815251674}
+  - component: {fileID: 1815251675}
+  m_Layer: 0
+  m_Name: LandingZone - Base
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1815251674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815251673}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.99691737, z: -0, w: 0.07845909}
+  m_LocalPosition: {x: -16.190956, y: -24.436295, z: 102.225746}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1845274947}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1815251675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815251673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: 
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -16.190956, y: -24.436295, z: 102.225746}
+  hasSiteHint: 0
+--- !u!1 &1845274946
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1845274947}
+  m_Layer: 0
+  m_Name: LandingZones
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1845274947
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845274946}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 599182575}
+  - {fileID: 721999477}
+  - {fileID: 1135689919}
+  - {fileID: 1815251674}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1970339424
 GameObject:
   m_ObjectHideFlags: 0
@@ -1293,3 +1536,4 @@ SceneRoots:
   - {fileID: 1395353170}
   - {fileID: 1252990665}
   - {fileID: 1599444410}
+  - {fileID: 1845274947}

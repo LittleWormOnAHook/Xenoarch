@@ -119,6 +119,93 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &28231424
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 28231425}
+  - component: {fileID: 28231426}
+  m_Layer: 0
+  m_Name: LandingZone - Ridge Vault
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &28231425
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28231424}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.38268346, z: -0, w: 0.9238795}
+  m_LocalPosition: {x: 67.04759, y: 11.170113, z: -60.04759}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 119791748}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &28231426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28231424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.moon.ridge_vault
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 45, y: 0, z: -38}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 67.04759, y: 11.170113, z: -60.04759}
+  hasSiteHint: 1
+--- !u!1 &119791747
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 119791748}
+  m_Layer: 0
+  m_Name: LandingZones
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &119791748
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119791747}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 428935247}
+  - {fileID: 28231425}
+  - {fileID: 2025629771}
+  - {fileID: 915615321}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &176830637
 GameObject:
   m_ObjectHideFlags: 0
@@ -393,6 +480,58 @@ Transform:
   - {fileID: 898444917}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &428935246
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 428935247}
+  - component: {fileID: 428935248}
+  m_Layer: 0
+  m_Name: LandingZone - Tranquility Cache
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &428935247
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428935246}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.809017, z: -0, w: 0.5877853}
+  m_LocalPosition: {x: 19.743935, y: 0.49495697, z: 16.415192}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 119791748}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &428935248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428935246}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.moon.tranquility_cache
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 10}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 19.743935, y: 0.49495697, z: 16.415192}
+  hasSiteHint: 1
 --- !u!1 &868134394
 GameObject:
   m_ObjectHideFlags: 0
@@ -570,6 +709,58 @@ TerrainCollider:
   serializedVersion: 2
   m_TerrainData: {fileID: 15600000, guid: 772d96a9513ec974f8dfa824d07b89e1, type: 2}
   m_EnableTreeColliders: 1
+--- !u!1 &915615320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 915615321}
+  - component: {fileID: 915615322}
+  m_Layer: 0
+  m_Name: LandingZone - Base
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &915615321
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 915615320}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.58778524, z: -0, w: 0.809017}
+  m_LocalPosition: {x: -21.398771, y: -0.3940735, z: -6.9528847}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 119791748}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &915615322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 915615320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: 
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -21.398771, y: -0.3940735, z: -6.9528847}
+  hasSiteHint: 0
 --- !u!1 &988331438
 GameObject:
   m_ObjectHideFlags: 0
@@ -1249,6 +1440,58 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1970339424}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2025629770
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2025629771}
+  - component: {fileID: 2025629772}
+  m_Layer: 0
+  m_Name: LandingZone - Deep Echo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2025629771
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025629770}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.52249867, z: -0, w: 0.8526401}
+  m_LocalPosition: {x: -93.700775, y: -1.6785736, z: 47.92386}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 119791748}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2025629772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025629770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.moon.deep_echo
+  footprint: 12.5
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: -70, y: 0, z: 60}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -93.700775, y: -1.6785736, z: 47.92386}
+  hasSiteHint: 1
 --- !u!1 &2088260434
 GameObject:
   m_ObjectHideFlags: 0
@@ -1293,3 +1536,4 @@ SceneRoots:
   - {fileID: 1395353170}
   - {fileID: 1545379113}
   - {fileID: 1774220444}
+  - {fileID: 119791748}
