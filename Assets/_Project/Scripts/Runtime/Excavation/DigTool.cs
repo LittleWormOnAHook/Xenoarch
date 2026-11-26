@@ -115,6 +115,7 @@ namespace DMI.Xenoarch.Excavation
                     _audio.PlayOneShot(_scrape);
                     if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
                     StrataFinds(site, r);
+                    DigSiteFlags.Instance?.OnStroke(site, hit.point);
                     if (r.emerged != null)
                     {
                         Toast.Show("Something is emerging from the soil! Switch to the precision tool (3) or brush (4).", 4f);

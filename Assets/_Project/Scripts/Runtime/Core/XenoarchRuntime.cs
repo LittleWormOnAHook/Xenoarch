@@ -65,6 +65,8 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.InventoryWindow>();
             gameObject.AddComponent<DMI.Xenoarch.Materials.MaterialsDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.PauseMenu>();
+            gameObject.AddComponent<DMI.Xenoarch.Excavation.DigSiteFlags>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.DigSiteMapWindow>();
             gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");

@@ -66,9 +66,10 @@ namespace DMI.Xenoarch.Exploration
         public void SetEquipped(bool on)
         {
             Equipped = on && HasItem;
+            if (!Equipped) Refined = false;
             if (arms != null) arms.SetHeld(hand, Equipped);
             XenoarchUI.Show(_panel, Equipped);
-            if (Equipped && string.IsNullOrEmpty(LastReading)) SetText("Ready. Pulse to scan (LMB / RT).", false);
+            if (Equipped && string.IsNullOrEmpty(LastReading)) SetText(ReadyText, false);
         }
 
         void Update()
@@ -76,17 +77,85 @@ namespace DMI.Xenoarch.Exploration
             if (Equipped && !HasItem) SetEquipped(false);
             UpdateIndicator();
             if (_pulseT >= 0f) AnimatePulse();
-            if (_clearAt > 0f && Time.time >= _clearAt) SetText("Ready. Pulse to scan (LMB / RT).", false);
-            if (UIState.BlocksGameplay) return;
+            if (_clearAt > 0f && Time.time >= _clearAt) SetText(ReadyText, false);
+            if (UIState.BlocksGameplay) { _keyDownAt = -1f; return; }
             var kb = Keyboard.current; var gp = Gamepad.current; var mouse = Mouse.current;
-            if ((kb != null && kb.digit1Key.wasPressedThisFrame) || (gp != null && gp.dpad.up.wasPressedThisFrame))
+            // Tap 1 = equip / holster (on release). Hold 1 = toggle the refined scanner at a fenced dig site (ZEN-9B).
+            if ((kb != null && kb.digit1Key.wasPressedThisFrame) || (gp != null && gp.dpad.up.wasPressedThisFrame)) { _keyDownAt = Time.time; _holdHandled = false; }
+            bool keyHeld = (kb != null && kb.digit1Key.isPressed) || (gp != null && gp.dpad.up.isPressed);
+            if (_keyDownAt >= 0f && keyHeld && !_holdHandled && Time.time - _keyDownAt >= RefineHoldSeconds) { _holdHandled = true; ToggleRefined(); }
+            if (_keyDownAt >= 0f && !keyHeld)
             {
-                if (!HasItem && !Equipped) Debug.Log("[Xenoarch] No handheld scanner in inventory");
-                SetEquipped(!Equipped);
+                if (!_holdHandled)
+                {
+                    if (!HasItem && !Equipped) Debug.Log("[Xenoarch] No handheld scanner in inventory");
+                    SetEquipped(!Equipped);
+                    if (!Equipped) Refined = false;
+                }
+                _keyDownAt = -1f;
             }
             if (!Equipped) return;
             bool fire = (mouse != null && mouse.leftButton.wasPressedThisFrame) || (gp != null && gp.rightTrigger.wasPressedThisFrame);
             if (fire && Time.time >= _cooldownUntil) Pulse();
+        }
+
+        // ------------------------------------------------------------------ refined scanner (ZEN-9B)
+        public const float RefineHoldSeconds = 0.6f;
+        [Tooltip("Refined scan reach (m, horizontal) for pinpointing buried finds inside a fenced dig site.")] public float refinedRange = 8f;
+        /// <summary>Refined mode: pulses pinpoint individual finds of the fenced site you stand in and flag them.</summary>
+        public bool Refined { get; private set; }
+        float _keyDownAt = -1f; bool _holdHandled;
+        string ReadyText => Refined ? "REFINED SCAN ready. Pulse to pinpoint finds (LMB / RT). Hold 1 for normal scan." : "Ready. Pulse to scan (LMB / RT). Hold 1 at a fenced site: refined scan.";
+
+        /// <summary>The fenced (marked) major dig site the player stands in or next to (6 m), if any.</summary>
+        DMI.Xenoarch.Excavation.ExcavationSite RefinedSite()
+        {
+            Vector3 me = transform.position;
+            DMI.Xenoarch.Excavation.ExcavationSite best = null; float bd = 6f;
+            foreach (var site in DMI.Xenoarch.Excavation.ExcavationSite.Active)
+            {
+                if (site == null || site.IsCache || !site.BorderVisible) continue;
+                var l = site.transform.InverseTransformPoint(me);
+                float dx = Mathf.Max(0f, -l.x, l.x - site.Grid.SizeX), dz = Mathf.Max(0f, -l.z, l.z - site.Grid.SizeZ);
+                float d = Mathf.Sqrt(dx * dx + dz * dz);
+                if (d <= bd) { bd = d; best = site; }
+            }
+            return best;
+        }
+
+        void ToggleRefined()
+        {
+            if (Refined) { Refined = false; SetText(ReadyText, false); Beep(0.8f, 1); return; }
+            if (!HasItem) { Debug.Log("[Xenoarch] No handheld scanner in inventory"); return; }
+            var site = RefinedSite();
+            if (!Equipped) SetEquipped(true);
+            if (site == null) { SetText("Refined scan needs a marked, fenced dig site. Scan to pinpoint a site, then stand inside its fence."); Beep(0.5f, 1); return; }
+            Refined = true;
+            var map = XenoarchRuntime.Session.DigMaps.Find(site.Definition.Id);
+            SetText($"REFINED SCAN: {(map != null ? map.Code + " " : "")}{site.Definition.displayName}\nPulse to pinpoint buried finds within {refinedRange:0} m; each gets a red flag and a spot code.", false);
+            Beep(1.6f, 2);
+        }
+
+        void RefinedPulse()
+        {
+            var site = RefinedSite();
+            if (site == null) { Refined = false; SetText("Left the fenced site: back to normal scanning."); Beep(0.5f, 1); return; }
+            var flags = DMI.Xenoarch.Excavation.DigSiteFlags.Instance;
+            if (flags != null && flags.TryPinpoint(site, transform.position, refinedRange, out var map, out var spot, out var find))
+            {
+                var c = site.CellCentre(find.x, find.y, find.z);
+                float ground = DMI.Xenoarch.Excavation.ExcavationSite.TerrainHeight(c) ?? site.transform.position.y;
+                var to = c - transform.position; to.y = 0f;
+                float rel = Mathf.DeltaAngle(ViewYaw(), Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg);
+                SetText($"FIND PINPOINTED: {map.SpotCode(spot)}\n~{to.magnitude:0.0} m {Direction(rel)}, about {Mathf.Max(0f, ground - c.y):0.0} m down. Red flag placed; marked on the dig site map (N).");
+                if (_audio != null) { _audio.pitch = 1.2f; _audio.PlayOneShot(_lock ??= MakeLock(), 0.9f); }
+                return;
+            }
+            int left = 0;
+            var m = XenoarchRuntime.Session.DigMaps.Find(site.Definition.Id);
+            foreach (var a in site.Grid.artifacts) if (!a.recovered && (m == null || m.SpotFor(a.index) == null)) left++;
+            SetText(left == 0 ? $"No unflagged finds left in {(m != null ? m.Code : "this site")}." : $"No unflagged find within {refinedRange:0} m. {left} more buried in this site: move around and pulse again.");
+            Beep(0.7f, 1);
         }
 
         public void Pulse()
@@ -96,6 +165,7 @@ namespace DMI.Xenoarch.Exploration
             _cooldownUntil = Time.time + d.cooldown;
             _pulseT = 0f; _pulseCount++;
             if (arms != null) arms.RaiseTemporarily(hand, 0.5f);
+            if (Refined) { RefinedPulse(); return; }
 
             var x = s.Exploration;
             string scene = SceneManager.GetActiveScene().name;

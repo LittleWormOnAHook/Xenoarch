@@ -43,6 +43,8 @@ namespace DMI.Xenoarch.Core
         /// <summary>Fragment puzzles (e.g. the Vael star map that reveals Proxima Centauri).</summary>
         public DMI.Xenoarch.Artifacts.ArtifactPuzzleService Puzzles { get; }
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
+        /// <summary>Dig site maps: fenced site codes (Ma1), refined-scan spots (Ma11) and their dig state.</summary>
+        public DMI.Xenoarch.Excavation.DigSiteMapsService DigMaps { get; }
         public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
         /// <summary>Backpack + the three ship crates as one stock (refiner and crafting take from it, backpack first).</summary>
         public ItemPool Stock { get; }
@@ -71,6 +73,7 @@ namespace DMI.Xenoarch.Core
             Artifacts = new DMI.Xenoarch.Artifacts.ArtifactService(items, config.civilizations, Discovery, Saves) { Clock = () => PlaySeconds, TranslationCap = config.labTranslationCap };
             Puzzles = new DMI.Xenoarch.Artifacts.ArtifactPuzzleService(Artifacts, Discovery, Saves) { Clock = () => PlaySeconds };
             Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
+            DigMaps = new DMI.Xenoarch.Excavation.DigSiteMapsService(Saves);
             Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
             Valuables = new DMI.Xenoarch.Valuables.ValuableService(Saves);
             foreach (DMI.Xenoarch.Ship.StorageRole role in System.Enum.GetValues(typeof(DMI.Xenoarch.Ship.StorageRole)))

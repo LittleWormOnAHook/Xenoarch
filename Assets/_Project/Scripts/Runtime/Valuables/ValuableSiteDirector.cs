@@ -87,6 +87,7 @@ namespace DMI.Xenoarch.Valuables
             def.name = v.id; def.displayName = "Valuable cache"; def.bodyId = _body.Id; def.sceneName = _scene.name;
             def.position = v.position; def.radius = 0.9f; def.depth = v.depth + 0.5f; def.cellSize = 0.25f; def.seed = v.seed;
             var dig = ExcavationSite.Create(def, ExcavationSite.TerrainHeight(v.position) ?? v.position.y, _scene);
+            dig.IsCache = true;
             bool collected = XenoarchRuntime.Session.Valuables.IsCollected(v.id);
             dig.ShowBorder(!collected);
             _digs[v.id] = dig;

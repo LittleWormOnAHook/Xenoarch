@@ -36,6 +36,8 @@ namespace DMI.Xenoarch.Excavation
         public ArchaeologicalSiteDefinition Definition { get; private set; }
         public ExcavationGrid Grid { get; private set; }
         public bool MirrorsToSurface => _surface != null;
+        /// <summary>Random valuable cache (small gold-bordered dig), not a major dig site: no fence, circle or dig map.</summary>
+        public bool IsCache { get; set; }
         readonly List<BuriedArtifact> _pieces = new List<BuriedArtifact>();
         Mesh _mesh;
         MeshCollider _collider;
@@ -312,8 +314,10 @@ namespace DMI.Xenoarch.Excavation
                 _border.positionCount = pts.Count; _border.SetPositions(pts.ToArray());
             }
             _border.enabled = true;
+            if (IsCache) return;
             if (_fence == null) BuildFence();
             _fence.SetActive(true);
+            DigSiteFlags.Instance?.SiteFenced(this);
         }
 
         public static readonly Color FencePostColor = new Color(0.86f, 0.8f, 0.68f, 1f);
@@ -409,6 +413,7 @@ namespace DMI.Xenoarch.Excavation
         {
             BorderMaterial(new Color(1f, 0.62f, 0.15f, 0.9f));
             BorderMaterial(FencePostColor); BorderMaterial(FenceRopeColor); BorderMaterial(SiteCircleColor);
+            DigSiteFlags.Prewarm();
             DMI.Xenoarch.Exploration.SiteMarkerDirector.MarkerMaterial();
         }
 
