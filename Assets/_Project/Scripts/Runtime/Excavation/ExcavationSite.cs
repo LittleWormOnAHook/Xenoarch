@@ -41,6 +41,7 @@ namespace DMI.Xenoarch.Excavation
         MeshCollider _collider;
         IExcavationSurface _surface;
         LineRenderer _border;
+        GameObject _fence;   // posts + rope + ground circle (built once, toggled with the border)
         Color _borderColor = new Color(1f, 0.62f, 0.15f, 0.9f);
         bool _dirty;
         float _saveAt;
@@ -177,32 +178,55 @@ namespace DMI.Xenoarch.Excavation
             if (_mesh != null) Rebuild();
             foreach (var p in _pieces) if (p != null) p.Refresh();
             _dirty = true; _saveAt = Time.unscaledTime + 1f;
-            if (_surface != null && r.cut != null)
-                foreach (var c in r.cut)
-                {
-                    // Digger's async buffer refuses edits while it is full. Dropped carves used to be lost, so the
-                    // visible hole fell behind the grid until every aim landed "above the floor" and strokes stopped
-                    // (the shallow "barrier"). Queue them and retry each frame instead.
-                    float st = Grid.Fill(c.x, c.y, c.z) == 0 ? 1f : 0.6f;
-                    if (_pendingCarves.Count > 0 || !Carve(c.x, c.y, c.z, st)) _pendingCarves.Enqueue((c, st));
-                }
+            if (_surface != null && r.cut != null && r.cut.Count > 0) CarveStroke(r.cut, tool.radius);
             return r;
         }
 
         /// <summary>Radius of one Digger carve (never below Digger's voxel size).</summary>
         public float CarveRadius => _surface != null ? Mathf.Max(Grid.cell * 0.8f, _surface.MinRadius * 1.25f) : Grid.cell * 0.72f;
 
-        bool Carve(int x, int y, int z, float strength)
+        /// <summary>
+        /// One Digger edit per stroke (ZEN-8): a full-strength sphere centred over the cut columns whose bottom sits just
+        /// below the deepest new floor. The old path queued one partial-strength sphere per cut cell (dozens per stroke,
+        /// often shallower than a Digger voxel), which flooded Digger's async buffer (lag, the hole showing up late) and
+        /// mostly just repainted the texture instead of visibly carving.
+        /// </summary>
+        void CarveStroke(List<Vector3Int> cut, float strokeRadius)
+        {
+            float minFloor = float.MaxValue, sx = 0f, sz = 0f; int deepest = 0;
+            foreach (var c in cut)
+            {
+                minFloor = Mathf.Min(minFloor, Grid.FloorY(c.x, c.z));
+                sx += (c.x + 0.5f) * Grid.cell; sz += (c.z + 0.5f) * Grid.cell;
+                deepest = Mathf.Max(deepest, c.y);
+            }
+            float rad = Mathf.Max(CarveRadius, strokeRadius);
+            var centre = transform.TransformPoint(new Vector3(sx / cut.Count, minFloor, sz / cut.Count)) + transform.up * (rad * 0.9f);
+            QueueCarve(centre, rad, Grid.LayerAt(deepest).diggerTexture);
+        }
+
+        /// <summary>One carve for a whole column down to its current floor (load replay).</summary>
+        bool CarveColumn(int x, int z)
         {
             float rad = CarveRadius;
-            // Sphere sits so its bottom is the bottom of the removed cell: the visual depth then matches the grid depth
-            // instead of a sphere centred mid-cell digging half a radius too deep.
-            var pos = CellCentre(x, y, z, 1f) + transform.up * (rad * 0.92f);
-            return _surface.Apply(new ExcavationEdit
-            {
-                position = pos, radius = rad, strength = strength,
-                stroke = ExcavationStroke.Remove, materialIndex = Grid.LayerAt(y).diggerTexture,
-            });
+            var pos = transform.TransformPoint(new Vector3((x + 0.5f) * Grid.cell, Grid.FloorY(x, z), (z + 0.5f) * Grid.cell)) + transform.up * (rad * 0.92f);
+            int top = Mathf.Min(Grid.TopLayer(x, z), Grid.ny - 1);
+            return Carve(pos, rad, Grid.LayerAt(top).diggerTexture);
+        }
+
+        bool Carve(Vector3 pos, float rad, int texture) => _surface.Apply(new ExcavationEdit
+        {
+            position = pos, radius = rad, strength = 1f, stroke = ExcavationStroke.Remove, materialIndex = texture,
+        });
+
+        const int MaxPendingCarves = 24;
+        void QueueCarve(Vector3 pos, float rad, int texture)
+        {
+            // Digger refuses edits while its buffer is full: keep them and retry (a deeper carve later in the queue
+            // covers older ones, so the oldest are dropped first if the player out-digs Digger for a long time).
+            if (_pendingCarves.Count == 0 && Carve(pos, rad, texture)) return;
+            if (_pendingCarves.Count >= MaxPendingCarves) _pendingCarves.Dequeue();
+            _pendingCarves.Enqueue((pos, rad, texture));
         }
 
         /// <summary>Re-carves the saved dug state into the Digger surface (Digger edits are not persisted separately).</summary>
@@ -246,13 +270,11 @@ namespace DMI.Xenoarch.Excavation
             int ops = 0;
             for (int x = 0; x < Grid.nx; x++)
                 for (int z = 0; z < Grid.nz; z++, _replayDone++)
-                    for (int y = 0; y < Grid.ny; y++)
-                    {
-                        byte f = Grid.Fill(x, y, z);
-                        if (f == 255) break;
-                        while (!Carve(x, y, z, f == 0 ? 1f : 0.6f)) yield return null;
-                        ops++;
-                    }
+                {
+                    if (Grid.TopDepth(x, z) < 0.01f) continue;   // untouched column
+                    while (!CarveColumn(x, z)) yield return null;
+                    ops++;
+                }
             _replaying = false;
             Debug.Log($"[Xenoarch] Dig site {Definition.Id}: replayed {ops} carve op(s) into the terrain");
         }
@@ -263,7 +285,7 @@ namespace DMI.Xenoarch.Excavation
         /// <summary>Square outline around the site footprint, following the ground.</summary>
         public void ShowBorder(bool on)
         {
-            if (!on) { if (_border != null) _border.enabled = false; return; }
+            if (!on) { if (_border != null) _border.enabled = false; if (_fence != null) _fence.SetActive(false); return; }
             if (_border == null)
             {
                 var go = new GameObject("Site Border");
@@ -290,6 +312,81 @@ namespace DMI.Xenoarch.Excavation
                 _border.positionCount = pts.Count; _border.SetPositions(pts.ToArray());
             }
             _border.enabled = true;
+            if (_fence == null) BuildFence();
+            _fence.SetActive(true);
+        }
+
+        public static readonly Color FencePostColor = new Color(0.86f, 0.8f, 0.68f, 1f);
+        public static readonly Color FenceRopeColor = new Color(1f, 0.45f, 0.1f, 1f);
+        public static readonly Color SiteCircleColor = new Color(1f, 0.78f, 0.3f, 0.75f);
+        static Mesh _postMesh;
+
+        /// <summary>
+        /// Survey fence around a marked site (ZEN-8): stakes every ~2.5 m along the grid border with an orange rope at
+        /// waist height, plus a large ground circle around the whole site. Rebuilt from the reveal level on every scene load,
+        /// so it persists with the save. No colliders (purely visual), shared prewarmed materials.
+        /// </summary>
+        void BuildFence()
+        {
+            _fence = new GameObject("Site Fence");
+            _fence.transform.SetParent(transform, false);
+            float sx = Grid.SizeX, sz = Grid.SizeZ;
+            var corners = new[] { Vector3.zero, new Vector3(sx, 0, 0), new Vector3(sx, 0, sz), new Vector3(0, 0, sz) };
+            var rope = new List<Vector3>();
+            if (_postMesh == null)
+            {
+                var tmp = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                _postMesh = tmp.GetComponent<MeshFilter>().sharedMesh;
+                Destroy(tmp);
+            }
+            var postMat = BorderMaterial(FencePostColor);
+            const float spacing = 2.5f, postH = 1.1f, ropeH = 0.9f;
+            for (int e = 0; e < 4; e++)
+            {
+                Vector3 a = corners[e], b = corners[(e + 1) % 4];
+                int n = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(a, b) / spacing));
+                for (int i = 0; i < n; i++)
+                {
+                    var w = transform.TransformPoint(Vector3.Lerp(a, b, i / (float)n));
+                    float gy = TerrainHeight(w) ?? transform.position.y;
+                    var post = new GameObject("Stake");
+                    post.transform.SetParent(_fence.transform, true);
+                    post.transform.position = new Vector3(w.x, gy + postH * 0.5f - 0.1f, w.z);
+                    post.transform.localScale = new Vector3(0.07f, postH * 0.5f, 0.07f);   // unit cylinder is 2 m tall
+                    post.AddComponent<MeshFilter>().sharedMesh = _postMesh;
+                    var mr = post.AddComponent<MeshRenderer>();
+                    mr.sharedMaterial = postMat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    rope.Add(new Vector3(w.x, gy + ropeH, w.z));
+                }
+            }
+            var ropeLr = NewLine("Fence Rope", FenceRopeColor, 0.035f);
+            ropeLr.loop = true; ropeLr.positionCount = rope.Count; ropeLr.SetPositions(rope.ToArray());
+
+            // Large ground circle around the whole site.
+            var centre = transform.TransformPoint(new Vector3(sx * 0.5f, 0f, sz * 0.5f));
+            float r = Mathf.Sqrt(sx * sx + sz * sz) * 0.5f + 1.5f;
+            int seg = Mathf.Clamp(Mathf.CeilToInt(2f * Mathf.PI * r / 1f), 24, 256);
+            var ring = new Vector3[seg];
+            for (int i = 0; i < seg; i++)
+            {
+                float t = i / (float)seg * Mathf.PI * 2f;
+                var w = centre + new Vector3(Mathf.Cos(t) * r, 0f, Mathf.Sin(t) * r);
+                w.y = (TerrainHeight(w) ?? centre.y) + 0.06f;
+                ring[i] = w;
+            }
+            var circle = NewLine("Site Circle", SiteCircleColor, 0.18f);
+            circle.loop = true; circle.positionCount = seg; circle.SetPositions(ring);
+        }
+
+        LineRenderer NewLine(string name, Color c, float width)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_fence.transform, false);
+            var lr = go.AddComponent<LineRenderer>();
+            lr.useWorldSpace = true; lr.widthMultiplier = width; lr.numCornerVertices = 2;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; lr.receiveShadows = false;
+            lr.sharedMaterial = BorderMaterial(c); lr.startColor = lr.endColor = c;
+            return lr;
         }
 
         public bool BorderVisible => _border != null && _border.enabled;
@@ -311,6 +408,7 @@ namespace DMI.Xenoarch.Excavation
         public static void PrewarmRuntimeMaterials()
         {
             BorderMaterial(new Color(1f, 0.62f, 0.15f, 0.9f));
+            BorderMaterial(FencePostColor); BorderMaterial(FenceRopeColor); BorderMaterial(SiteCircleColor);
             DMI.Xenoarch.Exploration.SiteMarkerDirector.MarkerMaterial();
         }
 
@@ -322,17 +420,17 @@ namespace DMI.Xenoarch.Excavation
             _dirty = false;
         }
 
-        readonly Queue<(Vector3Int cell, float strength)> _pendingCarves = new Queue<(Vector3Int, float)>();
+        readonly Queue<(Vector3 pos, float rad, int tex)> _pendingCarves = new Queue<(Vector3, float, int)>();
         /// <summary>Carves waiting for Digger's buffer (the hole is still catching up with the grid).</summary>
         public int PendingCarves => _pendingCarves.Count;
 
         void Update()
         {
             if (_dirty && Time.unscaledTime >= _saveAt) Flush();
-            for (int n = 0; n < 16 && _pendingCarves.Count > 0 && !_replaying; n++)
+            for (int n = 0; n < 4 && _pendingCarves.Count > 0 && !_replaying; n++)   // capped per frame
             {
-                var (c, st) = _pendingCarves.Peek();
-                if (!Carve(c.x, c.y, c.z, st)) break;
+                var (pos, rad, tex) = _pendingCarves.Peek();
+                if (!Carve(pos, rad, tex)) break;
                 _pendingCarves.Dequeue();
             }
         }

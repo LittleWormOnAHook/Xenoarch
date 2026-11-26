@@ -13,7 +13,7 @@ namespace DMI.Xenoarch.Excavation
         public string label;
         public SoilMaterial kind;
         [Tooltip("Band thickness (m). Ignored for the last band.")] public float thickness;
-        [Tooltip("Shovel/precision dig up to 2, brush up to 1, drill up to 4.")] public float hardness;
+        [Tooltip("How hard the band is (dust 0.5, loose 1, compacted 2, rock/ice 3). Every tool can cut it; tools rated below it are slower.")] public float hardness;
         public Color color;
         [Tooltip("Digger texture (terrain layer) index painted by strokes in this band.")] public int diggerTexture;
 
@@ -30,27 +30,58 @@ namespace DMI.Xenoarch.Excavation
         };
     }
 
-    /// <summary>Dig tool stats (Phase 1: fixed per tool item; see <see cref="DigTools"/>).</summary>
+    /// <summary>Dig tool stats. Authored as <see cref="DigToolDefinition"/> assets (Resources/Excavation/DigTools); the
+    /// values in <see cref="DigTools"/> are the built-in fallbacks. No tool has a depth cap: every tool digs down to the
+    /// site floor (bedrock); tiers differ in chunk size, speed, hardness rating and artifact risk.</summary>
     [Serializable]
     public struct DigToolSpec
     {
         public string itemId, name;
+        [Tooltip("Short HUD name (e.g. shovel).")] public string shortName;
         [Tooltip("Horizontal radius (m) of one stroke.")] public float radius;
-        [Tooltip("Cell fraction removed per stroke from soft soil (divided by hardness).")] public float removal;
-        public float maxHardness;
-        [Tooltip("Condition loss factor when the stroke cuts a visible artifact's cell (x fragility x removed fraction). Only crude tools damage.")] public float damage;
-        [Tooltip("Crude tools (shovel, drill) damage finds once they are visible; fine tools never do.")] public bool crude;
+        [Tooltip("Chunk size: cell fraction removed per stroke from soft soil (divided by hardness). Crude tools take big chunks, fine tools small bites.")] public float removal;
+        [Tooltip("Hardness this tool cuts at full speed. Harder bands are still dug, just more slowly (squared falloff). Only bedrock stops every tool.")] public float maxHardness;
+        [Tooltip("Artifact-damage risk: condition loss factor when a crude stroke cuts a visible find (x fragility x removed fraction).")] public float damage;
+        [Tooltip("Crude tools (shovel, drill) can jar or damage finds; fine tools never do.")] public bool crude;
         [Tooltip("Strokes per second while the button is held.")] public float rate;
-        [Tooltip("Most cells one stroke can cut down through per column (0 = 1). Leftover removal carries into the next cell.")] public int cells;
+        [Tooltip("Optional cap on cells cut per column per stroke (0 = no cap: the chunk size decides).")] public int cells;
     }
 
     public static class DigTools
     {
-        public static readonly DigToolSpec Shovel = new DigToolSpec { itemId = "item.tool.excavation_shovel", name = "Excavation shovel", radius = 0.35f, removal = 0.5f, maxHardness = 2f, damage = 0.6f, rate = 2.5f, crude = true };
-        public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Precision tool", radius = 0.14f, removal = 0.25f, maxHardness = 2f, damage = 0f, rate = 4f };
-        public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Brush", radius = 0.18f, removal = 0.15f, maxHardness = 1f, damage = 0f, rate = 5f };
-        public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Powered drill", radius = 0.2f, removal = 0.6f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
-        public static readonly DigToolSpec[] All = { Shovel, Precision, Brush, Drill };
+        // Built-in fallbacks (also used by the editor checks). Shovel: 3x the old effective dig speed (ZEN-8 / t104u).
+        public static readonly DigToolSpec Shovel = new DigToolSpec { itemId = "item.tool.excavation_shovel", name = "Excavation shovel", shortName = "shovel", radius = 0.45f, removal = 2f, maxHardness = 2f, damage = 0.6f, rate = 5.6f, crude = true };
+        public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Precision tool", shortName = "precision", radius = 0.14f, removal = 0.375f, maxHardness = 2f, damage = 0f, rate = 4f };
+        public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Brush", shortName = "brush", radius = 0.18f, removal = 0.2f, maxHardness = 1f, damage = 0f, rate = 5f };
+        public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Powered drill", shortName = "drill", radius = 0.25f, removal = 1.8f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
+        public static readonly DigToolSpec[] Defaults = { Shovel, Precision, Brush, Drill };
+
+        public const string ResourceFolder = "Excavation/DigTools";
+        static DigToolSpec[] _all;
+        /// <summary>Tool tiers in slot order (keys 2, 3, 4...): the DigToolDefinition assets, or the defaults if none.</summary>
+        public static DigToolSpec[] All
+        {
+            get
+            {
+                if (_all != null) return _all;
+                var defs = Resources.LoadAll<DigToolDefinition>(ResourceFolder);
+                if (defs == null || defs.Length == 0) return _all = Defaults;
+                Array.Sort(defs, (a, b) => a.slotOrder != b.slotOrder ? a.slotOrder.CompareTo(b.slotOrder) : string.CompareOrdinal(a.name, b.name));
+                var list = new List<DigToolSpec>();
+                foreach (var d in defs) if (d != null && d.enabledInGame && list.Count < 8) list.Add(d.spec);
+                return _all = list.Count > 0 ? list.ToArray() : Defaults;
+            }
+        }
+        /// <summary>Drop the cached list (editor tooling after assets change).</summary>
+        public static void Reload() => _all = null;
+
+        /// <summary>Divisor for removal in a band of this hardness: the band's hardness, squared-slower past the tool rating.</summary>
+        public static float Resistance(float hardness, float rated)
+        {
+            float d = Mathf.Max(0.25f, hardness);
+            if (rated > 0f && hardness > rated) { float k = hardness / rated; d *= k * k; }
+            return d;
+        }
     }
 
     /// <summary>An artifact embedded in the grid: top cell (x, y, z), footprint = cells per side, height = layers.
@@ -67,6 +98,7 @@ namespace DMI.Xenoarch.Excavation
     public struct StrokeResult
     {
         public bool accepted, refused;
+        public bool slowed;             // a cut band is harder than the tool rating (dug slowly)
         public float removed;          // total cell fraction removed
         public SoilMaterial material;   // material at the stroke centre
         public SoilLayer layer;
@@ -185,13 +217,15 @@ namespace DMI.Xenoarch.Excavation
         public StrokeResult Stroke(float lx, float lz, float hitDepth, DigToolSpec tool) => StrokeAt(lx, lz, -hitDepth, tool);
 
         /// <summary>Same as <see cref="Stroke"/> but aimed at a local height (works with per-column surfaces).</summary>
+        [NonSerialized] readonly List<GridArtifact> _visibleScratch = new List<GridArtifact>();
+
         public StrokeResult StrokeAt(float lx, float lz, float hitY, DigToolSpec tool)
         {
             var r = new StrokeResult();
             int cx = Mathf.FloorToInt(lx / cell), cz = Mathf.FloorToInt(lz / cell);
             int span = Mathf.CeilToInt(tool.radius / cell) + 1;
             bool centreSet = false;
-            var visibleBefore = new List<GridArtifact>();
+            var visibleBefore = _visibleScratch; visibleBefore.Clear();   // reused: no per-stroke allocation
             foreach (var a in artifacts) if (!a.recovered && Exposure(a) > 0.001f) visibleBefore.Add(a);
             for (int x = cx - span; x <= cx + span; x++)
                 for (int z = cz - span; z <= cz + span; z++)
@@ -209,18 +243,19 @@ namespace DMI.Xenoarch.Excavation
                     float off = hitY - FloorY(x, z);
                     if (off > cell * tolerance || off < -Mathf.Max(belowSlack, cell * tolerance)) continue;
                     float amount = tool.removal * (1f - 0.5f * Mathf.Clamp01(dist / Mathf.Max(0.01f, tool.radius)));
-                    int maxCells = Mathf.Max(1, tool.cells);
+                    int maxCells = tool.cells > 0 ? tool.cells : ny;   // no per-tool depth cap
                     for (int c = 0; c < maxCells && y < ny && amount > 0.001f; c++, y++)
                     {
                         var layer = LayerAt(y);
                         if (centre || !centreSet) { r.material = layer.kind; r.layer = layer; centreSet |= centre; }
-                        float hard = layer.hardness;
-                        if (hard > tool.maxHardness) { if (c == 0) r.refused = true; break; }
+                        if (layer.kind == SoilMaterial.Bedrock) { if (c == 0) r.refused = true; break; }   // the site floor
+                        float res = DigTools.Resistance(layer.hardness, tool.maxHardness);
+                        if (layer.hardness > tool.maxHardness) r.slowed = true;
                         int i = Index(x, y, z);
                         float before = fill[i] / 255f;
-                        float take = Mathf.Min(before, amount / Mathf.Max(0.25f, hard));
+                        float take = Mathf.Min(before, amount / res);
                         if (take <= 0f) continue;
-                        amount -= take * Mathf.Max(0.25f, hard);
+                        amount -= take * res;
                         fill[i] = (byte)Mathf.Clamp(Mathf.RoundToInt((before - take) * 255f), 0, 255);
                         if (fill[i] <= 2) fill[i] = 0;
                         r.removed += take; r.accepted = true;

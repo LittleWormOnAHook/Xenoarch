@@ -18,10 +18,8 @@ namespace DMI.Xenoarch.Excavation
         public const float Reach = 3f;
         public int Equipped { get; private set; } = -1;
 
-        [Header("Dig strength (tunable)")]
-        [Tooltip("Removal multiplier for the crude tools (shovel, drill): >1 digs deeper per stroke.")] [Range(0.5f, 6f)] public float crudeStrength = 3f;
-        [Tooltip("Most cells (0.25 m each) one crude stroke can cut down through per column.")] [Range(1, 6)] public int crudeCellsPerStroke = 3;
-        [Tooltip("Removal multiplier for the fine tools (precision tool, brush).")] [Range(0.5f, 4f)] public float fineStrength = 1.5f;
+        [Header("Dig strength (tool tiers are DigToolDefinition assets; this scales them all)")]
+        [Tooltip("Global chunk-size multiplier for every tool (1 = as authored).")] [Range(0.25f, 4f)] public float strengthScale = 1f;
         [Tooltip("Show the projected aim ring on the ground while a dig tool is out.")] public bool aimRing = true;
 
         /// <summary>The equipped tool with the tunable strength applied.</summary>
@@ -31,8 +29,7 @@ namespace DMI.Xenoarch.Excavation
             {
                 if (Equipped < 0) return default;
                 var t = DigTools.All[Equipped];
-                if (t.crude) { t.removal *= crudeStrength; t.cells = Mathf.Max(t.cells, crudeCellsPerStroke); }
-                else { t.removal *= fineStrength; t.cells = Mathf.Max(t.cells, 1); }
+                t.removal *= strengthScale;
                 return t;
             }
         }
@@ -84,16 +81,17 @@ namespace DMI.Xenoarch.Excavation
             if (_ring != null) _ring.Hide();
         }
 
+        static readonly Key[] SlotKeys = { Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
+
         void Update()
         {
             if (XenoarchRuntime.Session == null) return;
             var kb = Keyboard.current; var gp = Gamepad.current; var mouse = Mouse.current;
             if (!UIState.BlocksGameplay && kb != null)
             {
-                if (kb.digit2Key.wasPressedThisFrame) Equip(Equipped == 0 ? -1 : 0);
-                if (kb.digit3Key.wasPressedThisFrame) Equip(Equipped == 1 ? -1 : 1);
-                if (kb.digit4Key.wasPressedThisFrame) Equip(Equipped == 2 ? -1 : 2);
-                if (kb.digit5Key.wasPressedThisFrame) Equip(Equipped == 3 ? -1 : 3);
+                int n = Mathf.Min(DigTools.All.Length, SlotKeys.Length);
+                for (int i = 0; i < n; i++)
+                    if (kb[SlotKeys[i]].wasPressedThisFrame) Equip(Equipped == i ? -1 : i);
             }
             if (Equipped < 0) return;
             if (!Has(Current.itemId) || (_scanner != null && _scanner.Equipped)) { Holster(); return; }
@@ -130,7 +128,7 @@ namespace DMI.Xenoarch.Excavation
                 {
                     refusedHere = true;
                     _audio.PlayOneShot(_clunk);
-                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {tool.name.ToLowerInvariant()} ({r.layer.label}, hardness {r.layer.hardness:0.#}). {ToolsFor(r.layer.hardness)}");
+                    Flash("Bedrock: the site floor. Nothing below.");
                 }
             }
             if (_ring != null)
@@ -195,18 +193,20 @@ namespace DMI.Xenoarch.Excavation
         }
 
         /// <summary>Which tools can cut this hardness, split into owned and not yet owned (crafting hint).</summary>
+        /// <summary>Faster tools for a hard band (owned ones with their key, else what to craft).</summary>
         static string ToolsFor(float hardness)
         {
             string owned = null, missing = null;
-            for (int i = 0; i < DigTools.All.Length; i++)
+            var all = DigTools.All;
+            for (int i = 0; i < all.Length; i++)
             {
-                var t = DigTools.All[i];
+                var t = all[i];
                 if (t.maxHardness < hardness) continue;
                 string n = $"{t.name.ToLowerInvariant()} ({i + 2})";
                 if (Has(t.itemId)) owned = owned == null ? n : owned + " or " + n; else missing = missing == null ? t.name.ToLowerInvariant() : missing + ", " + t.name.ToLowerInvariant();
             }
-            if (owned != null) return $"Use the {owned}.";
-            return missing != null ? $"Needs the {missing} (craft it from the inventory, I)." : "No tool can cut this.";
+            if (owned != null) return $"The {owned} cuts it faster.";
+            return missing != null ? $"The {missing} cuts it faster (craft it from the inventory, I)." : "";
         }
 
         void Flash(string text) { _flash = text; _flashUntil = Time.time + 2.5f; }
@@ -226,6 +226,14 @@ namespace DMI.Xenoarch.Excavation
                 int top = site.Grid.TopLayer(x, z);
                 string band = top >= site.Grid.ny ? "bedrock" : site.Grid.LayerAt(top).label;
                 l2 = $"{site.Definition.displayName}: {band}, depth {site.Grid.TopDepth(x, z):0.00} m";
+                if (top < site.Grid.ny)
+                {
+                    var lay = site.Grid.LayerAt(top);
+                    var cur = Current;
+                    if (lay.kind == SoilMaterial.Bedrock) l2 += "   |   BEDROCK: site floor reached";
+                    else if (lay.hardness > cur.maxHardness)
+                        l2 += $"   |   HARD {lay.label} (hardness {lay.hardness:0.#}): slow going with the {cur.shortName ?? cur.name}. {ToolsFor(lay.hardness)}";
+                }
                 GridArtifact near = null; float best = 1.2f;
                 foreach (var a in site.Grid.artifacts)
                 {
@@ -250,9 +258,9 @@ namespace DMI.Xenoarch.Excavation
         static string ToolKeys()
         {
             var sb = new System.Text.StringBuilder();
-            string[] shortNames = { "shovel", "precision", "brush", "drill" };
-            for (int i = 0; i < DigTools.All.Length; i++)
-                sb.Append($"{i + 2} {shortNames[Mathf.Min(i, shortNames.Length - 1)]}{(Has(DigTools.All[i].itemId) ? "" : " (none)")}  ");
+            var all = DigTools.All;
+            for (int i = 0; i < all.Length && i < SlotKeys.Length; i++)
+                sb.Append($"{i + 2} {(string.IsNullOrEmpty(all[i].shortName) ? all[i].name : all[i].shortName)}{(Has(all[i].itemId) ? "" : " (none)")}  ");
             return sb.ToString().TrimEnd();
         }
 

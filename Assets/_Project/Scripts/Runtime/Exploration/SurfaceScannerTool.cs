@@ -108,9 +108,12 @@ namespace DMI.Xenoarch.Exploration
             {
                 Vector3 flat = site.position - me; flat.y = 0f;
                 float dist = flat.magnitude;
-                if (dist > range + site.radius || site.depth > maxDepth) continue;
+                // Standing on a site always gives a (weak) reading, even past the scanner's depth rating: deep sites
+                // used to read "No signal" right on top of them, so they never got marked or fenced (ZEN-8).
+                bool onSite = dist <= site.radius;
+                if (dist > range + site.radius || (site.depth > maxDepth && !onSite)) continue;
                 if (!string.IsNullOrEmpty(site.gateFact) && x.Gate != null && !x.Gate(site.gateFact)) continue; // chain-gated sites stay hidden
-                float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (range + site.radius))) * (1f - 0.5f * site.depth / Mathf.Max(0.1f, maxDepth));
+                float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (range + site.radius))) * Mathf.Max(0.15f, 1f - 0.5f * site.depth / Mathf.Max(0.1f, maxDepth));
                 if (score > bestScore) { best = site; bestScore = score; bestDist = dist; }
             }
 

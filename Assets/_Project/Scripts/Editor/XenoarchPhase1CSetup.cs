@@ -729,7 +729,7 @@ namespace DMI.Xenoarch.EditorTools
             var brushOnly = ExcavationGrid.ForSite(1f, 1.2f, 0.25f);
             for (int i = 0; i < 150; i++) brushOnly.Stroke(1f, 1f, brushOnly.TopDepth(4, 4), DigTools.Brush);
             var rb = brushOnly.Stroke(1f, 1f, brushOnly.TopDepth(4, 4), DigTools.Brush);
-            check(rb.refused && brushOnly.MaterialAt(brushOnly.TopLayer(4, 4)) == SoilMaterial.Compacted, "1C dig: brush stops at the compacted layer (too hard), precision/drill needed");
+            check(!rb.refused && rb.slowed && brushOnly.MaterialAt(brushOnly.TopLayer(4, 4)) == SoilMaterial.Compacted, "1C dig: brush still cuts the compacted layer, slowly (no per-tool depth cap)");
             for (int i = 0; i < 12; i++) grid.Stroke(lx, lz, grid.TopDepth(10, 10), DigTools.Precision);
             float condPrecision = art.condition;
             float exp = grid.Exposure(art);
@@ -763,7 +763,7 @@ namespace DMI.Xenoarch.EditorTools
             for (int i = 0; i < 6; i++) g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Shovel);
             var r5 = g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Shovel);
             var r5d = g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Drill);
-            check(r5.refused && r5.material == SoilMaterial.Ice && r5d.accepted, "1C dig: dig site style bands drive hardness (ice band refuses the shovel, the drill cuts it)");
+            check(r5.accepted && r5.slowed && r5.material == SoilMaterial.Ice && r5d.accepted && r5d.removed > r5.removed, "1C dig: style bands drive hardness (shovel cuts ice slowly, the drill faster)");
             // Uneven ground: per-column surface heights
             var g6 = ExcavationGrid.ForSite(1f, 1.2f, 0.25f);
             g6.surface = new float[g6.nx * g6.nz];
