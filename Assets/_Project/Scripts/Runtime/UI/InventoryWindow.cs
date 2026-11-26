@@ -126,7 +126,7 @@ namespace DMI.Xenoarch.UI
                 var row = new Button(() => { _selRecipe = id; Refresh(); }) { text = "" };
                 row.AddToClassList("xa-term__row");
                 if (id == _selRecipe) row.AddToClassList("xa-term__row--sel");
-                row.Add(new Label((why == null ? "" : "  ") + r.Title) { style = { color = why == null ? new Color(0.55f, 1f, 0.65f) : new Color(0.8f, 0.85f, 0.9f, 0.75f) } });
+                row.Add(new Label((why == null ? "" : "  ") + r.Title) { style = { color = why == null ? XenoarchPalette.Highlight : XenoarchPalette.SecondaryText } });
                 right.Add(row);
                 if (id != _selRecipe) continue;
                 if (!string.IsNullOrEmpty(r.description)) Text(right, r.description, "xa-term__dim");
@@ -146,10 +146,10 @@ namespace DMI.Xenoarch.UI
             var t = new Button(() => { if (!st.IsEmpty) { _selItem = st.itemId; Refresh(); } }) { text = "" };
             t.style.width = 64; t.style.height = 64; t.style.marginRight = 4; t.style.marginBottom = 4;
             t.style.paddingLeft = t.style.paddingRight = t.style.paddingTop = t.style.paddingBottom = 4;
-            t.style.backgroundColor = new Color(0.08f, 0.11f, 0.14f, 0.9f);
+            t.style.backgroundColor = XenoarchPalette.PanelDark;
             bool sel = !st.IsEmpty && st.itemId == _selItem;
             t.style.borderTopWidth = t.style.borderBottomWidth = t.style.borderLeftWidth = t.style.borderRightWidth = 1;
-            var bc = sel ? new Color(0.95f, 0.66f, 0.22f) : new Color(0.67f, 0.8f, 0.94f, 0.2f);
+            var bc = sel ? XenoarchPalette.Highlight : XenoarchPalette.A(XenoarchPalette.Secondary, 0.4f);
             t.style.borderTopColor = t.style.borderBottomColor = t.style.borderLeftColor = t.style.borderRightColor = bc;
             if (st.IsEmpty) return t;
             var d = Def(st.itemId);

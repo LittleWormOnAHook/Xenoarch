@@ -27,15 +27,15 @@ namespace DMI.Xenoarch.UI
         public event Action<string> Clicked;
         readonly List<Label> _labels = new List<Label>();
 
-        public static readonly Color SiteRed = new Color(0.95f, 0.2f, 0.15f), LandingGreen = new Color(0.35f, 1f, 0.55f), Amber = new Color(0.95f, 0.66f, 0.22f);
+        public static readonly Color SiteRed = new Color(0.95f, 0.2f, 0.15f), LandingGreen = new Color(0.35f, 1f, 0.55f), Amber = XenoarchPalette.Primary;
 
         public SurfaceMapView(Texture2D map, Rect worldRect)
         {
             WorldRect = worldRect.width > 1f ? worldRect : new Rect(-150f, -150f, 300f, 300f);
-            style.backgroundColor = new Color(0.03f, 0.04f, 0.05f, 0.9f);
+            style.backgroundColor = XenoarchPalette.PanelDeep;
             if (map != null) { style.backgroundImage = map; style.unityBackgroundScaleMode = ScaleMode.StretchToFill; }
             style.borderTopWidth = style.borderBottomWidth = style.borderLeftWidth = style.borderRightWidth = 1;
-            style.borderTopColor = style.borderBottomColor = style.borderLeftColor = style.borderRightColor = new Color(0.67f, 0.8f, 0.94f, 0.2f);
+            style.borderTopColor = style.borderBottomColor = style.borderLeftColor = style.borderRightColor = XenoarchPalette.A(XenoarchPalette.Secondary, 0.5f);
             style.marginBottom = 8; style.overflow = Overflow.Hidden; style.flexShrink = 0;
             generateVisualContent += Draw;
             RegisterCallback<GeometryChangedEvent>(e =>
@@ -65,7 +65,7 @@ namespace DMI.Xenoarch.UI
                 if (li >= _labels.Count) { var l = new Label { pickingMode = PickingMode.Ignore }; l.AddToClassList("xa-map-label"); _labels.Add(l); Add(l); }
                 var lbl = _labels[li++]; var p = ToPx(m.world);
                 lbl.text = m.label; lbl.style.left = p.x + 9f; lbl.style.top = p.y - 18f;
-                lbl.style.color = m.selected ? Amber : m.kind == Kind.Site ? new Color(1f, 0.65f, 0.6f) : new Color(0.85f, 0.95f, 0.9f);
+                lbl.style.color = m.selected ? Amber : m.kind == Kind.Site ? new Color(1f, 0.65f, 0.6f) : XenoarchPalette.Text;
                 lbl.style.display = DisplayStyle.Flex;
             }
             for (int i = li; i < _labels.Count; i++) _labels[i].style.display = DisplayStyle.None;
@@ -76,7 +76,7 @@ namespace DMI.Xenoarch.UI
             var p = ctx.painter2D; var r = contentRect;
             if (r.width < 4f) return;
             // grid every 50 m
-            p.lineWidth = 1f; p.strokeColor = new Color(0.7f, 0.85f, 1f, 0.08f);
+            p.lineWidth = 1f; p.strokeColor = XenoarchPalette.A(XenoarchPalette.Secondary, 0.15f);
             float step = 50f * MetresToPx;
             if (step > 6f)
             {
@@ -90,16 +90,16 @@ namespace DMI.Xenoarch.UI
                 float x = Mathf.Clamp01(Sweep) * r.width;
                 for (int i = 0; i < 12; i++)
                 {
-                    p.strokeColor = new Color(0.4f, 0.9f, 1f, 0.5f * (1f - i / 12f)); p.lineWidth = 2f;
+                    p.strokeColor = XenoarchPalette.A(XenoarchPalette.Highlight, 0.5f * (1f - i / 12f)); p.lineWidth = 2f;
                     p.BeginPath(); p.MoveTo(new Vector2(x - i * 3f, 0)); p.LineTo(new Vector2(x - i * 3f, r.height)); p.Stroke();
                 }
                 p.lineWidth = 1f;
             }
             if (ScanRadius > 0.5f)
             {
-                p.strokeColor = new Color(0.4f, 0.9f, 1f, 0.55f); p.lineWidth = 1.5f;
+                p.strokeColor = XenoarchPalette.A(XenoarchPalette.Highlight, 0.55f); p.lineWidth = 1.5f;
                 p.BeginPath(); p.Arc(ToPx(ScanCentre), ScanRadius * MetresToPx, 0f, 360f); p.Stroke();
-                p.fillColor = new Color(0.4f, 0.9f, 1f, 0.06f); p.BeginPath(); p.Arc(ToPx(ScanCentre), ScanRadius * MetresToPx, 0f, 360f); p.Fill();
+                p.fillColor = XenoarchPalette.A(XenoarchPalette.Highlight, 0.06f); p.BeginPath(); p.Arc(ToPx(ScanCentre), ScanRadius * MetresToPx, 0f, 360f); p.Fill();
             }
             foreach (var m in Markers)
             {

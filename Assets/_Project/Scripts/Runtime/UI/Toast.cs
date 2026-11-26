@@ -43,8 +43,8 @@ namespace DMI.Xenoarch.UI
             _label = new Label { pickingMode = PickingMode.Ignore };
             var s = _label.style;
             s.marginTop = 70; s.paddingLeft = 18; s.paddingRight = 18; s.paddingTop = 8; s.paddingBottom = 8;
-            s.backgroundColor = new Color(0.05f, 0.07f, 0.09f, 0.82f);
-            s.color = new Color(0.95f, 0.85f, 0.6f);
+            s.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.9f);
+            s.color = XenoarchPalette.Text;
             s.fontSize = 20; s.maxWidth = 900; s.whiteSpace = WhiteSpace.Normal;
             s.borderTopLeftRadius = 6; s.borderTopRightRadius = 6; s.borderBottomLeftRadius = 6; s.borderBottomRightRadius = 6;
             root.Add(_label);

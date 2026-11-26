@@ -231,9 +231,9 @@ namespace DMI.Xenoarch.Excavation
             root.style.justifyContent = Justify.FlexEnd; root.style.alignItems = Align.Center;
             _panel = new VisualElement { pickingMode = PickingMode.Ignore };
             _panel.style.marginBottom = 150; _panel.style.paddingLeft = 14; _panel.style.paddingRight = 14; _panel.style.paddingTop = 6; _panel.style.paddingBottom = 6;
-            _panel.style.backgroundColor = new Color(0.04f, 0.06f, 0.08f, 0.7f);
-            _line1 = new Label { pickingMode = PickingMode.Ignore }; _line1.style.color = new Color(0.95f, 0.66f, 0.22f); _line1.style.fontSize = 17;
-            _line2 = new Label { pickingMode = PickingMode.Ignore }; _line2.style.color = new Color(0.85f, 0.9f, 0.95f); _line2.style.fontSize = 17;
+            _panel.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.85f);
+            _line1 = new Label { pickingMode = PickingMode.Ignore }; _line1.style.color = XenoarchPalette.Primary; _line1.style.fontSize = 17;
+            _line2 = new Label { pickingMode = PickingMode.Ignore }; _line2.style.color = XenoarchPalette.Text; _line2.style.fontSize = 17;
             _panel.Add(_line1); _panel.Add(_line2);
             root.Add(_panel);
             XenoarchUI.Show(_panel, Equipped >= 0);

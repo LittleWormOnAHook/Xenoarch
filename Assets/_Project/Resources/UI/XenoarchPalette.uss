@@ -1,0 +1,22 @@
+/* Xenoarch UI palette (t85u). The single theme file: every UITK colour comes from these variables.
+   C# drawn UI (maps, loading screen, HUD bits) mirrors them in DMI.Xenoarch.UI.XenoarchPalette. */
+:root {
+    --xa-panel: rgb(43, 78, 94);            /* #2B4E5E panel background */
+    --xa-panel-a: rgba(43, 78, 94, 0.96);
+    --xa-panel-dark: rgb(26, 48, 58);       /* darker shade: lists, inset areas */
+    --xa-panel-deep: rgb(14, 27, 33);       /* darkest: page backdrop, maps, menu */
+    --xa-backdrop: rgba(10, 20, 25, 0.62);  /* dims the game behind terminals */
+    --xa-primary: rgb(255, 169, 103);       /* #FFA967 primary buttons, headings */
+    --xa-primary-hover: rgb(255, 196, 150);
+    --xa-on-primary: rgb(30, 20, 14);       /* dark text on primary */
+    --xa-highlight: rgb(104, 223, 214);     /* #68DFD6 highlights, selection, scanner, info */
+    --xa-highlight-soft: rgba(104, 223, 214, 0.16);
+    --xa-secondary: rgb(92, 167, 168);      /* #5CA7A8 borders, inactive tabs */
+    --xa-secondary-text: rgb(139, 201, 201);/* #5CA7A8 lifted for readable secondary text on the panel */
+    --xa-secondary-soft: rgba(92, 167, 168, 0.35);
+    --xa-warn: rgb(176, 59, 59);            /* #B03B3B warnings, damage, errors (fills / borders) */
+    --xa-warn-text: rgb(232, 120, 120);     /* #B03B3B lifted for readable warning text */
+    --xa-frame: rgb(118, 28, 39);           /* #761C27 frames, accent borders, danger */
+    --xa-text: rgb(228, 240, 241);
+    --xa-graphite: rgba(26, 48, 58, 0.88);  /* HUD panels */
+}

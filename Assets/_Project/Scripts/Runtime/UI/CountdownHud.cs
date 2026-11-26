@@ -54,16 +54,16 @@ namespace DMI.Xenoarch.UI
                 wrap.style.alignItems = Align.Center;
                 _panel = new VisualElement { pickingMode = PickingMode.Ignore };
                 _panel.style.width = 460; _panel.style.paddingLeft = 14; _panel.style.paddingRight = 14; _panel.style.paddingTop = 8; _panel.style.paddingBottom = 10;
-                _panel.style.backgroundColor = new Color(0.03f, 0.06f, 0.09f, 0.82f);
-                SetBorder(_panel, new Color(0.3f, 0.75f, 0.95f, 0.8f));
+                _panel.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.9f);
+                SetBorder(_panel, XenoarchPalette.Frame);
                 var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.justifyContent = Justify.SpaceBetween;
-                _titleL = new Label(title); _titleL.style.color = new Color(0.75f, 0.92f, 1f); _titleL.style.fontSize = 16; _titleL.style.unityFontStyleAndWeight = FontStyle.Bold;
-                _timeL = new Label(""); _timeL.style.color = new Color(1f, 0.85f, 0.5f); _timeL.style.fontSize = 16;
+                _titleL = new Label(title); _titleL.style.color = XenoarchPalette.Primary; _titleL.style.fontSize = 16; _titleL.style.unityFontStyleAndWeight = FontStyle.Bold;
+                _timeL = new Label(""); _timeL.style.color = XenoarchPalette.Text; _timeL.style.fontSize = 16;
                 row.Add(_titleL); row.Add(_timeL); _panel.Add(row);
                 var track = new VisualElement(); track.style.height = 10; track.style.marginTop = 6;
-                track.style.backgroundColor = new Color(0.1f, 0.16f, 0.22f, 1f);
+                track.style.backgroundColor = XenoarchPalette.PanelDeep;
                 _fill = new VisualElement(); _fill.style.height = Length.Percent(100); _fill.style.width = Length.Percent(0);
-                _fill.style.backgroundColor = new Color(0.3f, 0.8f, 1f);
+                _fill.style.backgroundColor = XenoarchPalette.Highlight;
                 track.Add(_fill); _panel.Add(track);
                 wrap.Add(_panel); root.Add(wrap);
             }
@@ -112,7 +112,7 @@ namespace DMI.Xenoarch.UI
             _finished = true;
             if (_titleL != null && !string.IsNullOrEmpty(doneText)) _titleL.text = doneText;
             if (_timeL != null) _timeL.text = "";
-            if (_fill != null) _fill.style.backgroundColor = new Color(0.45f, 1f, 0.6f);
+            if (_fill != null) _fill.style.backgroundColor = XenoarchPalette.Primary;
             if (_humSrc != null) _humSrc.Stop();
             if (chime) { _sfx.pitch = 1f; _sfx.PlayOneShot(ChimeClip(), 0.7f); }
             if (Current == this) Current = null;

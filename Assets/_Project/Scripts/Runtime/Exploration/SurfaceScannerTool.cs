@@ -225,7 +225,7 @@ namespace DMI.Xenoarch.Exploration
             _dirLabel = new Label { pickingMode = PickingMode.Ignore };
             _dirLabel.style.position = Position.Absolute; _dirLabel.style.left = Length.Percent(50); _dirLabel.style.top = Length.Percent(50);
             _dirLabel.style.marginLeft = -80; _dirLabel.style.width = 160; _dirLabel.style.marginTop = indicatorRadius + 18;
-            _dirLabel.style.unityTextAlign = TextAnchor.MiddleCenter; _dirLabel.style.fontSize = 14; _dirLabel.style.color = new Color(0.95f, 0.68f, 0.24f);
+            _dirLabel.style.unityTextAlign = TextAnchor.MiddleCenter; _dirLabel.style.fontSize = 14; _dirLabel.style.color = XenoarchPalette.Highlight;
             fill.Add(_dirLabel);
             XenoarchUI.Show(_dirPivot, false); XenoarchUI.Show(_dirLabel, false);
         }
@@ -233,7 +233,7 @@ namespace DMI.Xenoarch.Exploration
         static void DrawChevron(MeshGenerationContext ctx)
         {
             var p = ctx.painter2D; var r = ctx.visualElement.contentRect;
-            p.strokeColor = new Color(0.98f, 0.7f, 0.2f); p.lineWidth = 4f; p.lineJoin = LineJoin.Round; p.lineCap = LineCap.Round;
+            p.strokeColor = XenoarchPalette.Highlight; p.lineWidth = 4f; p.lineJoin = LineJoin.Round; p.lineCap = LineCap.Round;
             p.BeginPath();
             p.MoveTo(new Vector2(3f, r.height - 3f)); p.LineTo(new Vector2(r.width * 0.5f, 3f)); p.LineTo(new Vector2(r.width - 3f, r.height - 3f));
             p.Stroke();

@@ -48,7 +48,7 @@ namespace DMI.Xenoarch.Ship
                 if (b.Id == x.Ship.currentBodyId) row.AddToClassList("xa-term__row--here");
                 if (!known) row.AddToClassList("xa-term__row--locked");
                 var name = new Label((b.Id == x.Ship.currentBodyId ? "> " : "") + (known ? b.displayName : "Unknown object"));
-                var tag = new Label(known ? Tag(x, b) : "?"); tag.style.color = new Color(0.67f, 0.8f, 0.94f, 0.7f);
+                var tag = new Label(known ? Tag(x, b) : "?"); tag.style.color = XenoarchPalette.SecondaryText;
                 row.Add(name); row.Add(tag);
                 list.Add(row);
             }
@@ -197,7 +197,7 @@ namespace DMI.Xenoarch.Ship
                 if (!child)
                 {
                     float r = R(b.orbitAU);
-                    if (r > 0f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = r, color = new Color(0.67f, 0.8f, 0.94f, 0.16f) });
+                    if (r > 0f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = r, color = XenoarchPalette.A(XenoarchPalette.Secondary, 0.16f*2f) });
                     float ang = (Mathf.Abs(b.seed) % 360) * Mathf.Deg2Rad;
                     p = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * r;
                 }
@@ -207,14 +207,14 @@ namespace DMI.Xenoarch.Ship
                     int idx = 0; foreach (var s in sys.bodies) { if (s == b) break; if (s != null && s.parentId == b.parentId) idx++; }
                     float ang = idx * 2.1f + 0.6f, rr = 0.035f + idx * 0.012f;
                     p = pp + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * rr;
-                    map.Rings.Add(new MapView3D.Ring { centre = pp, radius = rr, color = new Color(0.67f, 0.8f, 0.94f, 0.08f) });
+                    map.Rings.Add(new MapView3D.Ring { centre = pp, radius = rr, color = XenoarchPalette.A(XenoarchPalette.Secondary, 0.08f*2f) });
                 }
                 placed[b.Id] = p;
                 bool known = x.IsDiscovered(b.Id);
                 map.Items.Add(new MapView3D.Item
                 {
                     id = b.Id, pos = p, label = known ? b.displayName : "?",
-                    color = known ? b.mapColor : new Color(0.4f, 0.4f, 0.45f),
+                    color = known ? b.mapColor : XenoarchPalette.Secondary,
                     size = b.kind == CelestialKind.Star ? 22f : child ? 6f : b.kind == CelestialKind.Belt ? 5f : 10f,
                     selected = b.Id == _selectedId, here = b.Id == x.Ship.currentBodyId, dim = !known, alwaysLabel = !child,
                 });
@@ -240,7 +240,7 @@ namespace DMI.Xenoarch.Ship
                 if (id == _selectedSystemId) row.AddToClassList("xa-term__row--sel");
                 if (s == here) row.AddToClassList("xa-term__row--here");
                 row.Add(new Label((s == here ? "> " : "") + s.displayName));
-                var tag = new Label($"{Vector3.Distance(here.galacticPosition, s.galacticPosition):0.0} ly"); tag.style.color = new Color(0.67f, 0.8f, 0.94f, 0.7f); row.Add(tag);
+                var tag = new Label($"{Vector3.Distance(here.galacticPosition, s.galacticPosition):0.0} ly"); tag.style.color = XenoarchPalette.SecondaryText; row.Add(tag);
                 list.Add(row);
             }
 
@@ -250,17 +250,17 @@ namespace DMI.Xenoarch.Ship
             float ext = 2f;
             foreach (var s in known) ext = Mathf.Max(ext, (s.galacticPosition - here.galacticPosition).magnitude);
             map.Extent = ext * 1.1f;
-            for (float r = 5f; r <= ext + 0.01f; r += 5f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = r, color = new Color(0.67f, 0.8f, 0.94f, 0.12f) });
-            if (x.Ship.ftlRangeLy > 0f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = x.Ship.ftlRangeLy, color = new Color(0.4f, 1f, 0.6f, 0.35f) });
+            for (float r = 5f; r <= ext + 0.01f; r += 5f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = r, color = XenoarchPalette.A(XenoarchPalette.Secondary, 0.12f*2f) });
+            if (x.Ship.ftlRangeLy > 0f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = x.Ship.ftlRangeLy, color = XenoarchPalette.A(XenoarchPalette.Highlight, 0.45f) });
             foreach (var s in known)
             {
                 var p = s.galacticPosition - here.galacticPosition;
-                map.Lines.Add(new MapView3D.Line { a = p, b = new Vector3(p.x, 0f, p.z), color = new Color(0.67f, 0.8f, 0.94f, 0.18f) });
+                map.Lines.Add(new MapView3D.Line { a = p, b = new Vector3(p.x, 0f, p.z), color = XenoarchPalette.A(XenoarchPalette.Secondary, 0.18f*2f) });
                 bool signal = !string.IsNullOrEmpty(s.revealFact);
                 map.Items.Add(new MapView3D.Item
                 {
                     id = s.Id, pos = p, label = s.displayName + (signal ? "  [Vael signal]" : ""), alwaysLabel = true,
-                    color = signal ? new Color(0.95f, 0.66f, 0.22f) : StarColor(s.stellarClass),
+                    color = signal ? XenoarchPalette.Primary : StarColor(s.stellarClass),
                     size = s == here ? 12f : signal ? 11f : 8f, selected = s.Id == _selectedSystemId, here = s == here,
                 });
             }

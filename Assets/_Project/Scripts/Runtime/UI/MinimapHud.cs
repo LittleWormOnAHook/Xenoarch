@@ -53,10 +53,10 @@ namespace DMI.Xenoarch.UI
 
             _frame = new VisualElement { pickingMode = PickingMode.Ignore };
             _frame.style.position = Position.Absolute; _frame.style.right = 18; _frame.style.top = 18;
-            _frame.style.backgroundColor = new Color(0.02f, 0.03f, 0.04f, 0.75f);
+            _frame.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDeep, 0.8f);
             _frame.style.paddingLeft = _frame.style.paddingRight = _frame.style.paddingTop = _frame.style.paddingBottom = 4;
             _title = new Label { pickingMode = PickingMode.Ignore };
-            _title.style.color = new Color(0.67f, 0.8f, 0.94f, 0.85f); _title.style.fontSize = 11; _title.style.marginBottom = 3;
+            _title.style.color = XenoarchPalette.Highlight; _title.style.fontSize = 11; _title.style.marginBottom = 3;
             _frame.Add(_title);
             _map = new SurfaceMapView(_body.surfaceMap, _body.surfaceMapRect) { AutoSquare = false, pickingMode = PickingMode.Ignore };
             _map.style.marginBottom = 0;

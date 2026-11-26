@@ -30,19 +30,19 @@ namespace DMI.Xenoarch.UI
             _root.Add(_spinner);
 
             _title = new Label { pickingMode = PickingMode.Ignore };
-            _title.style.fontSize = 34; _title.style.color = new Color(0.82f, 0.93f, 1f); _title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _title.style.fontSize = 34; _title.style.color = XenoarchPalette.Text; _title.style.unityFontStyleAndWeight = FontStyle.Bold;
             _title.style.letterSpacing = 3;
             _root.Add(_title);
             _subtitle = new Label { pickingMode = PickingMode.Ignore };
-            _subtitle.style.fontSize = 18; _subtitle.style.color = new Color(0.62f, 0.75f, 0.86f); _subtitle.style.marginTop = 4;
+            _subtitle.style.fontSize = 18; _subtitle.style.color = XenoarchPalette.SecondaryText; _subtitle.style.marginTop = 4;
             _root.Add(_subtitle);
             _status = new Label { pickingMode = PickingMode.Ignore };
-            _status.style.fontSize = 17; _status.style.color = new Color(0.95f, 0.72f, 0.35f); _status.style.marginTop = 8;
+            _status.style.fontSize = 17; _status.style.color = XenoarchPalette.Primary; _status.style.marginTop = 8;
             _root.Add(_status);
             var bar = new VisualElement { pickingMode = PickingMode.Ignore };
-            bar.style.width = 420; bar.style.height = 6; bar.style.marginTop = 12; bar.style.backgroundColor = new Color(1f, 1f, 1f, 0.12f);
+            bar.style.width = 420; bar.style.height = 6; bar.style.marginTop = 12; bar.style.backgroundColor = XenoarchPalette.Panel;
             _barFill = new VisualElement { pickingMode = PickingMode.Ignore };
-            _barFill.style.height = Length.Percent(100); _barFill.style.width = Length.Percent(0); _barFill.style.backgroundColor = new Color(0.95f, 0.72f, 0.35f);
+            _barFill.style.height = Length.Percent(100); _barFill.style.width = Length.Percent(0); _barFill.style.backgroundColor = XenoarchPalette.Highlight;
             bar.Add(_barFill); _root.Add(bar);
             parent.Add(_root);
         }
@@ -66,11 +66,11 @@ namespace DMI.Xenoarch.UI
             var r = ctx.visualElement.contentRect;
             var c = r.center; float rad = Mathf.Min(r.width, r.height) * 0.42f;
             p.lineWidth = 5f; p.lineCap = LineCap.Round;
-            p.strokeColor = new Color(0.3f, 0.75f, 0.95f, 0.18f);
+            p.strokeColor = XenoarchPalette.A(XenoarchPalette.Secondary, 0.25f);
             p.BeginPath(); p.Arc(c, rad, 0f, 360f); p.Stroke();
-            p.strokeColor = new Color(0.35f, 0.85f, 1f, 0.95f);
+            p.strokeColor = XenoarchPalette.Highlight;
             p.BeginPath(); p.Arc(c, rad, -90f, 150f); p.Stroke();
-            p.strokeColor = new Color(1f, 0.72f, 0.3f, 0.9f);
+            p.strokeColor = XenoarchPalette.Primary;
             p.BeginPath(); p.Arc(c, rad * 0.62f, 90f, 250f); p.Stroke();
         }
 
@@ -84,7 +84,7 @@ namespace DMI.Xenoarch.UI
             {
                 float x = (float)rng.NextDouble() * r.width, y = (float)rng.NextDouble() * r.height;
                 float s = 0.6f + (float)rng.NextDouble() * 1.4f, a = 0.25f + (float)rng.NextDouble() * 0.6f;
-                p.fillColor = new Color(0.85f, 0.9f, 1f, a);
+                p.fillColor = XenoarchPalette.A(XenoarchPalette.Text, a);
                 p.BeginPath(); p.Arc(new Vector2(x, y), s, 0f, 360f); p.Fill();
             }
             // planet rim glow along the bottom
@@ -93,7 +93,7 @@ namespace DMI.Xenoarch.UI
             for (int k = 0; k < 6; k++)
             {
                 p.lineWidth = 2f + k * 5f;
-                p.strokeColor = new Color(0.95f, 0.55f, 0.25f, 0.10f - k * 0.014f);
+                p.strokeColor = XenoarchPalette.A(XenoarchPalette.Primary, 0.10f - k * 0.014f);
                 p.BeginPath(); p.Arc(centre, pr + k * 2f, 225f, 315f); p.Stroke();
             }
         }

@@ -108,7 +108,7 @@ namespace DMI.Xenoarch.UI
                 var p = ToScreen(it.pos, out _);
                 lbl.text = (it.here ? "> " : "") + it.label;
                 lbl.style.left = p.x + it.size * 0.5f + 3f; lbl.style.top = p.y - 8f;
-                lbl.style.color = it.here ? new Color(0.95f, 0.66f, 0.22f) : it.selected ? new Color(1f, 0.85f, 0.55f) : new Color(0.84f, 0.9f, 0.95f, it.dim ? 0.45f : 0.85f);
+                lbl.style.color = it.here ? XenoarchPalette.Primary : it.selected ? XenoarchPalette.Highlight : XenoarchPalette.A(XenoarchPalette.Text, it.dim ? 0.45f : 0.85f);
                 lbl.style.display = contentRect.Contains(p) ? DisplayStyle.Flex : DisplayStyle.None;
             }
             for (int i = li; i < _labels.Count; i++) _labels[i].style.display = DisplayStyle.None;
@@ -147,7 +147,7 @@ namespace DMI.Xenoarch.UI
                 p2.BeginPath(); p2.Arc(s, rad, 0f, 360f); p2.Fill();
                 if (it.selected || it.here)
                 {
-                    p2.lineWidth = 2f; p2.strokeColor = it.selected ? new Color(0.95f, 0.66f, 0.22f) : new Color(0.55f, 0.85f, 1f);
+                    p2.lineWidth = 2f; p2.strokeColor = it.selected ? XenoarchPalette.Highlight : XenoarchPalette.Primary;
                     p2.BeginPath(); p2.Arc(s, rad + 4f, 0f, 360f); p2.Stroke(); p2.lineWidth = 1f;
                 }
             }

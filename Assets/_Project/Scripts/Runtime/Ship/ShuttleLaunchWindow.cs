@@ -82,7 +82,7 @@ namespace DMI.Xenoarch.Ship
             bool on = (_selected ?? "") == id;
             var btn = Btn(parent, $"{(on ? "> " : "")}{title}\n{detail}", () => { _selected = id; Refresh(); });
             btn.style.unityTextAlign = TextAnchor.MiddleLeft;
-            if (on) { btn.style.borderLeftWidth = 4; btn.style.borderLeftColor = new Color(0.95f, 0.66f, 0.22f); }
+            if (on) { btn.style.borderLeftWidth = 4; btn.style.borderLeftColor = XenoarchPalette.Highlight; }
         }
     }
 }
