@@ -125,7 +125,7 @@ namespace DMI.Xenoarch.UI
                     bool isDone = done.Contains(n.id);
                     bool open = isDone || PrereqsMet(n, done);
                     string tag = n.optional ? "  (optional)" : "";
-                    if (isDone) StateRow(chains, "checkmark", "done", $"{n.title}{tag}", "xa-term__text");
+                    if (isDone) StateRow(chains, "ui-complete", "done", $"{n.title}{tag}", "xa-term__text");
                     else if (open) StateRow(chains, "arrowRight", "open", $"{n.title}{tag}", "xa-term__text");
                     else StateRow(chains, "locked", "locked", $"???{tag}", "xa-term__dim");
                 }

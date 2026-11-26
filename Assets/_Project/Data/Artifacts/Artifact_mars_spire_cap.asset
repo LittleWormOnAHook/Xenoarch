@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.mars_spire_cap
   displayName: Spire Capstone
   description: The tip of a tall buried structure.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: e89b041f90437f14402e67d0ff78701f, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

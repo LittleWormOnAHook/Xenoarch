@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.moon_data_crystal
   displayName: Data Crystal
   description: A crystal with a faint inner light.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: ecdcfdad511f0c98f8489c9e0e412d81, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

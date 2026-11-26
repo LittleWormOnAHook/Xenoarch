@@ -15,7 +15,7 @@ MonoBehaviour:
   id: material.alloy_ingot
   displayName: Alloy Ingot
   description: Smelted alloy for ship and tool upgrades (Phase 1D).
-  icon: {fileID: 21300000, guid: aee26f8a19d9cd246a5f19237be856f7, type: 3}
+  icon: {fileID: 21300000, guid: 7ab80f3e4c0e5009e43adbf1121182eb, type: 3}
   category: 3
   maxStack: 50
   uniqueInstance: 0

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: material.iron_ore
   displayName: Iron Ore
   description: Iron-rich rock. Smelt into alloy ingots (upgrades, Phase 1D).
-  icon: {fileID: 21300000, guid: 1c01f896722a87d4db3876c74a47bed3, type: 3}
+  icon: {fileID: 21300000, guid: 273cc3cf4124158ac238d9de5c1e70fd, type: 3}
   category: 3
   maxStack: 50
   uniqueInstance: 0

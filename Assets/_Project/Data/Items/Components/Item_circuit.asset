@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.component.circuit
   displayName: Circuit Board
   description: Gold-contact control board.
-  icon: {fileID: 21300000, guid: 7eda9d5b358e99f4db788462326cfe01, type: 3}
+  icon: {fileID: 21300000, guid: da907983ac2c083808af691802db9e99, type: 3}
   category: 7
   maxStack: 20
   uniqueInstance: 0

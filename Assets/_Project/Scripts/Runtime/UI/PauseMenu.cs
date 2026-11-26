@@ -80,7 +80,7 @@ namespace DMI.Xenoarch.UI
             MenuScreens.GlyphButton(p, "Resume", "arrowRight", Close);
             MenuScreens.GlyphButton(p, "Save game", "save", () => Swap(MenuScreens.Slots(true, ShowMain, null)));
             MenuScreens.GlyphButton(p, "Load game", "import", () => Swap(MenuScreens.Slots(false, ShowMain, Close)));
-            MenuScreens.GlyphButton(p, "Settings", "gear", () => Swap(MenuScreens.Settings(ShowMain)));
+            MenuScreens.GlyphButton(p, "Settings", "ui-settings", () => Swap(MenuScreens.Settings(ShowMain)));
             MenuScreens.GlyphButton(p, "Main menu", "home", () => MenuScreens.Confirm(p, "Return to the main menu? Unsaved progress since the last save is lost.", () => { Close(); XenoarchRuntime.Instance?.ReturnToMainMenu(); }));
             MenuScreens.GlyphButton(p, "Quit", "exit", () => MenuScreens.Confirm(p, "Quit the game? Unsaved progress since the last save is lost.", MenuScreens.Quit));
             Swap(p);

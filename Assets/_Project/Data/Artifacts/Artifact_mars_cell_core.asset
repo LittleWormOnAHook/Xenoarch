@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.mars_cell_core
   displayName: Lattice Cell
   description: A faceted energy cell.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: 12a93fda7f9b964afa70533ccc1cdef3, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

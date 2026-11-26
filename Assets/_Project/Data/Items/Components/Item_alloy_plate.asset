@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.component.alloy_plate
   displayName: Alloy Plate
   description: Pressed alloy and nickel plate. Hull, hold and tool frames.
-  icon: {fileID: 21300000, guid: 54b45d2557d3fc14282ac2a5347a4f78, type: 3}
+  icon: {fileID: 21300000, guid: 0ad05d10afd5eb1b6e6f918847fc5662, type: 3}
   category: 7
   maxStack: 20
   uniqueInstance: 0

@@ -1,20 +1,28 @@
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Items;
+using ArtifactDefinition = DMI.Xenoarch.Artifacts.ArtifactDefinition;
+using ArtifactRarity = DMI.Xenoarch.Artifacts.ArtifactRarity;
 using MaterialDefinition = DMI.Xenoarch.Materials.MaterialDefinition;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace DMI.Xenoarch.UI
 {
+    /// <summary>Corner accent colour of an item slot (ZEN-22). Derived from the item's category and, for artifacts,
+    /// its rarity; both stay separate fields on the definitions (ItemDefinition.category, ArtifactDefinition.rarity).</summary>
+    public enum ItemAccent { Common, Materials, Tech, Organic, Rare, Exceptional }
+
     /// <summary>
-    /// The one icon style (t151u-t155u, approved mockups in Docs/XENOARCH_UI_Icons.md):
-    /// items are flat white silhouettes (Art/Icons, glyph padded to 78% of a square canvas) tinted by category;
-    /// menus, map markers and journal states use Kenney Game Icons (White 2x). Images, sizes and tints live in
-    /// Resources/UI/Xenoarch.uss (classes .xa-icon / .xa-item-icon / .xa-map-icon / .xa-journal-icon) and
-    /// XenoarchPalette.uss (--xa-icon-* variables); this class only adds the classes.
+    /// Icon style (ZEN-22, replaces the t155u flat-tint rule): items use the full-colour Xenoarch icon library
+    /// (Assets/Xenoarch/UI/Icons, see Docs/XENOARCH_UI_Icons.md), shown untinted. Each item icon gets a separate
+    /// corner-accent layer on top (Icons/Slot/slot_corner_accent.png: lower-left, max 28% alpha, smooth fade), tinted per
+    /// <see cref="ItemAccent"/>. Slot layers: slot background, icon, accent, then the slot's own selection/hover border.
+    /// Menus, map markers and journal states use .xa-icon--{name} classes (library icons where matched, Kenney otherwise).
+    /// Images, sizes and colours live in Resources/UI/Xenoarch.uss and XenoarchPalette.uss; this class only adds classes.
     /// </summary>
     public static class XenoarchIcons
     {
+        public const string AccentName = "xa-item-accent";
         static StyleSheet _uss;
         static StyleSheet Uss => _uss != null ? _uss : (_uss = Resources.Load<StyleSheet>("UI/Xenoarch"));
 
@@ -25,29 +33,46 @@ namespace DMI.Xenoarch.UI
             if (e != null && uss != null && !e.styleSheets.Contains(uss)) e.styleSheets.Add(uss);
         }
 
-        /// <summary>Category modifier: tools/other bone white, artifacts orange, parts teal, materials light material colour.</summary>
-        public static string CategoryClass(ItemDefinition d)
+        /// <summary>Accent for an item: artifacts by rarity (Rare purple, Exceptional and up gold, else gray), materials and
+        /// valuables blue, tools / equipment / parts / ship modules / data teal, everything else gray.</summary>
+        public static ItemAccent AccentFor(ItemDefinition d)
         {
-            if (d is MaterialDefinition) return "xa-item-icon--material";
-            if (d == null) return "xa-item-icon--tool";
+            if (d == null) return ItemAccent.Common;
+            if (d is ArtifactDefinition a)
+                return a.rarity >= ArtifactRarity.Exceptional ? ItemAccent.Exceptional : a.rarity == ArtifactRarity.Rare ? ItemAccent.Rare : ItemAccent.Common;
+            if (d is MaterialDefinition) return ItemAccent.Materials;
             switch (d.category)
             {
-                case ItemCategory.Artifact: return "xa-item-icon--artifact";
-                case ItemCategory.Misc: return "xa-item-icon--part";
-                default: return "xa-item-icon--tool";
+                case ItemCategory.Resource:
+                case ItemCategory.Valuable: return ItemAccent.Materials;
+                case ItemCategory.Tool:
+                case ItemCategory.Equipment:
+                case ItemCategory.ShipModule:
+                case ItemCategory.DataRecord:
+                case ItemCategory.Misc: return ItemAccent.Tech;
+                default: return ItemAccent.Common;
             }
         }
 
-        /// <summary>Show <paramref name="d"/>'s icon on <paramref name="img"/> in the shared item style.</summary>
+        public static string AccentClass(ItemAccent a) => "xa-item-accent--" + a.ToString().ToLowerInvariant();
+
+        /// <summary>Show <paramref name="d"/>'s icon on <paramref name="img"/> (untinted) with its corner accent layer.</summary>
         public static void ApplyItem(VisualElement img, ItemDefinition d)
         {
             if (img == null || d == null || d.icon == null) return;
             EnsureStyles(img);
             img.style.backgroundImage = new StyleBackground(d.icon);
+            img.style.unityBackgroundImageTintColor = StyleKeyword.Null;
             img.AddToClassList("xa-item-icon");
-            img.AddToClassList(CategoryClass(d));
-            // Material tint is per item (its own colour), so it is the one inline value: light material colour over bone white.
-            if (d is MaterialDefinition m) img.style.unityBackgroundImageTintColor = Color.Lerp(XenoarchPalette.Text, m.tint, 0.35f);
+            var accent = img.Q<VisualElement>(AccentName);
+            if (accent == null)
+            {
+                accent = new VisualElement { name = AccentName, pickingMode = PickingMode.Ignore };
+                img.Add(accent);
+            }
+            accent.ClearClassList();
+            accent.AddToClassList("xa-item-accent");
+            accent.AddToClassList(AccentClass(AccentFor(d)));
         }
 
         public static void ApplyItem(VisualElement img, string itemId)
@@ -56,15 +81,19 @@ namespace DMI.Xenoarch.UI
             if (s != null && !string.IsNullOrEmpty(itemId) && s.Items.TryGetItem(itemId, out var d)) ApplyItem(img, d);
         }
 
-        /// <summary>A Kenney glyph element: classes xa-icon xa-icon--{name} plus any extra classes.</summary>
+        /// <summary>A glyph element: classes xa-icon xa-icon--{name} plus any extra classes. Library icons (names starting
+        /// "ui-", "nav-", "ship-", "research-") are full colour and also get xa-icon--pack, which turns the tint off.</summary>
         public static VisualElement Glyph(string name, params string[] classes)
         {
             var g = new VisualElement { pickingMode = PickingMode.Ignore };
             EnsureStyles(g);
             g.AddToClassList("xa-icon");
             g.AddToClassList("xa-icon--" + name);
+            if (IsPack(name)) g.AddToClassList("xa-icon--pack");
             foreach (var c in classes) g.AddToClassList(c);
             return g;
         }
+
+        public static bool IsPack(string name) => name != null && (name.StartsWith("ui-") || name.StartsWith("nav-") || name.StartsWith("ship-") || name.StartsWith("research-"));
     }
 }

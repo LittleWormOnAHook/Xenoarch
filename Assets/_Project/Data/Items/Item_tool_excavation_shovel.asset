@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.tool.excavation_shovel
   displayName: Excavation Shovel
   description: Moves loose material quickly. Too coarse near fragile objects.
-  icon: {fileID: 21300000, guid: 5b636cb797a848ef902e8c810c174df7, type: 3}
+  icon: {fileID: 21300000, guid: 9f1f757a2f8025fe9bc775f17a252b39, type: 3}
   category: 0
   maxStack: 1
   uniqueInstance: 0

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.moon_power_cell
   displayName: Depleted Power Cell
   description: A heavy cylinder with a faint glow at one end.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: 1dc55af5b0b217239178afa1351e232b, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

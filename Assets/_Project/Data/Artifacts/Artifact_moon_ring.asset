@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.moon_ring
   displayName: Spiral Band
   description: A band engraved inside and out.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: be9853c006d8883cbde9b08f35f382e3, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

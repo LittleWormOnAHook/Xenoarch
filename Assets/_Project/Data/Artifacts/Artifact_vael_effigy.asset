@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.vael_effigy
   displayName: Guardian Effigy
   description: A figure fragment with inlaid glyphs.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: 14332b879f7be3ac8973d0732ef372ad, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

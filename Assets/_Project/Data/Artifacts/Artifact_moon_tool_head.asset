@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.moon_tool_head
   displayName: Cutting Head
   description: A worn cutting edge.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: 8faf81af809a04a9ec501259a00b3e01, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

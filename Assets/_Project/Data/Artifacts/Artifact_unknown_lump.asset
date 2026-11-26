@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.unknown_lump
   displayName: Fused Lump
   description: Probably debris. Probably.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: ac191dd411a93a4740dfd9a7cda9bed0, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.moon_seal_disc
   displayName: Waystation Seal
   description: A disc stamped with a spiral of glyphs.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: fe5813bd5d60eb600253ff85ac03b064, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

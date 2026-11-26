@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Auriferous Quartz
   description: Quartz veined with gold, found deep down. Leach it with water for
     gold.
-  icon: {fileID: 21300000, guid: 912d3d5969247294183353fcaf4120c4, type: 3}
+  icon: {fileID: 21300000, guid: 6dc4b07de743c063853ad744100ef217, type: 3}
   category: 3
   maxStack: 50
   uniqueInstance: 0

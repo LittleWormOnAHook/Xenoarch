@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.component.sensor_array
   displayName: Sensor Array
   description: Platinum sensor head for scanners.
-  icon: {fileID: 21300000, guid: 7b2a0bae199b3c544ad4156d1092d5bc, type: 3}
+  icon: {fileID: 21300000, guid: 4e2a9368efaad1705dc53dcd0fc86ef9, type: 3}
   category: 7
   maxStack: 20
   uniqueInstance: 0

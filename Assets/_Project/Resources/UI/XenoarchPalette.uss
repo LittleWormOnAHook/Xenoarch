@@ -25,6 +25,12 @@
     --xa-icon-tool: rgb(232, 226, 208);     /* items: tools, consumables, valuables (bone white) */
     --xa-icon-artifact: rgb(255, 169, 103); /* items: artifacts (heading orange) */
     --xa-icon-part: rgb(104, 223, 214);     /* items: parts / components (teal) */
+    --xa-accent-common: rgb(158, 164, 176);     /* slot corner accents (ZEN-22) */
+    --xa-accent-materials: rgb(84, 150, 255);
+    --xa-accent-tech: rgb(104, 223, 214);
+    --xa-accent-organic: rgb(112, 212, 120);
+    --xa-accent-rare: rgb(178, 120, 255);
+    --xa-accent-exceptional: rgb(255, 200, 80);
     --xa-icon-done: rgb(104, 223, 214);     /* journal: completed */
     --xa-icon-open: rgb(255, 169, 103);     /* journal: available */
     --xa-map-site: rgb(242, 51, 38);        /* map: dig site (same red as before) */

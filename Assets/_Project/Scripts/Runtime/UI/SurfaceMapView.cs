@@ -86,7 +86,7 @@ namespace DMI.Xenoarch.UI
                 var halo = _halos[ii]; var icon = _icons[ii]; ii++;
                 var p = ToPx(m.world);
                 halo.ClearClassList(); halo.AddToClassList("xa-icon"); halo.AddToClassList("xa-icon--" + glyph); halo.AddToClassList("xa-map-icon"); halo.AddToClassList("xa-map-icon__halo");
-                icon.ClearClassList(); icon.AddToClassList("xa-icon"); icon.AddToClassList("xa-icon--" + glyph); icon.AddToClassList("xa-map-icon"); icon.AddToClassList("xa-map-icon--" + m.kind.ToString().ToLowerInvariant());
+                icon.ClearClassList(); icon.AddToClassList("xa-icon"); icon.AddToClassList("xa-icon--" + glyph); icon.AddToClassList("xa-map-icon"); icon.AddToClassList("xa-map-icon--" + m.kind.ToString().ToLowerInvariant()); if (XenoarchIcons.IsPack(glyph)) icon.AddToClassList("xa-icon--pack");
                 halo.style.left = p.x - 11f; halo.style.top = p.y - 11f;
                 icon.style.left = p.x - 9f; icon.style.top = p.y - 9f;
                 halo.style.display = icon.style.display = DisplayStyle.Flex;
@@ -95,7 +95,8 @@ namespace DMI.Xenoarch.UI
             _iconSig = IconSignature();
         }
 
-        static string Glyph(Kind k) => k == Kind.Site ? "target" : k == Kind.Cache ? "star" : k == Kind.Base ? "home" : k == Kind.Landing ? "arrowDown" : null;
+        // ZEN-22: icon library where matched (dig site = anomaly, base = outpost, landing zone); cache has no library icon yet.
+        static string Glyph(Kind k) => k == Kind.Site ? "nav-anomaly" : k == Kind.Cache ? "star" : k == Kind.Base ? "nav-base" : k == Kind.Landing ? "nav-landing" : null;
 
         int IconSignature()
         {

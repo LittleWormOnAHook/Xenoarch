@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Vael Navigation Core
   description: A cracked housing around a lattice of glass threads. It still hums
     faintly.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: 9d2a50fb29d4eea16b6e0f2c01cebadf, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

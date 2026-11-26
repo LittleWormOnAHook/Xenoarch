@@ -140,7 +140,7 @@
 .xa-term__dropdown-item:disabled { opacity: 0.55; }
 
 /* ---------- Icons (t155u, approved mockups: Docs/XENOARCH_UI_Icons.md) ----------
-   One style: items = flat white silhouettes (Art/Icons, glyph 78% of a square canvas) tinted by category;
+   ZEN-22: items = full-colour Xenoarch icon library (Assets/Xenoarch/UI/Icons), untinted, with a corner-accent layer;
    menus, map markers and journal states = Kenney Game Icons (CC0, cropped copies in Art/Icons/UI). */
 .xa-icon { -unity-background-scale-mode: scale-to-fit; flex-shrink: 0; }
 .xa-icon--target { background-image: url("/Assets/_Project/Art/Icons/UI/target.png"); }
@@ -155,10 +155,23 @@
 .xa-icon--checkmark { background-image: url("/Assets/_Project/Art/Icons/UI/checkmark.png"); }
 .xa-icon--locked { background-image: url("/Assets/_Project/Art/Icons/UI/locked.png"); }
 .xa-item-icon { -unity-background-scale-mode: scale-to-fit; }
-.xa-item-icon--tool { -unity-background-image-tint-color: var(--xa-icon-tool); }
-.xa-item-icon--artifact { -unity-background-image-tint-color: var(--xa-icon-artifact); }
-.xa-item-icon--part { -unity-background-image-tint-color: var(--xa-icon-part); }
-/* .xa-item-icon--material: tint is the item's own colour, set from code (light material colour over bone white). */
+/* ZEN-22: item icons are the full-colour library art, untinted. Category/rarity show as a separate corner-accent layer
+   (child .xa-item-accent added by XenoarchIcons.ApplyItem): lower-left soft fade, max 28% alpha baked into the asset. */
+.xa-item-accent { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-image: url("/Assets/Xenoarch/UI/Icons/Slot/slot_corner_accent.png"); -unity-background-scale-mode: stretch-to-fill; }
+.xa-item-accent--common { -unity-background-image-tint-color: var(--xa-accent-common); }
+.xa-item-accent--materials { -unity-background-image-tint-color: var(--xa-accent-materials); }
+.xa-item-accent--tech { -unity-background-image-tint-color: var(--xa-accent-tech); }
+.xa-item-accent--organic { -unity-background-image-tint-color: var(--xa-accent-organic); }
+.xa-item-accent--rare { -unity-background-image-tint-color: var(--xa-accent-rare); }
+.xa-item-accent--exceptional { -unity-background-image-tint-color: var(--xa-accent-exceptional); }
+/* Library icons used as glyphs (menus, map, journal): full colour, never tinted (beats the state/hover tints). */
+.xa-icon--ui-settings { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_settings.png"); }
+.xa-icon--ui-complete { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_complete.png"); }
+.xa-icon--nav-anomaly { background-image: url("/Assets/Xenoarch/UI/Icons/Navigation/icon_nav_anomaly.png"); }
+.xa-icon--nav-base { background-image: url("/Assets/Xenoarch/UI/Icons/Navigation/icon_nav_base_outpost.png"); }
+.xa-icon--nav-landing { background-image: url("/Assets/Xenoarch/UI/Icons/Navigation/icon_nav_landing_zone.png"); }
+.xa-icon.xa-icon--pack { -unity-background-image-tint-color: rgb(255, 255, 255); }
+.xa-button > .xa-glyph.xa-icon--pack, .xa-button:hover > .xa-glyph.xa-icon--pack { -unity-background-image-tint-color: rgb(255, 255, 255); }
 .xa-map-icon { position: absolute; width: var(--xa-icon-map); height: var(--xa-icon-map); }
 .xa-map-icon__halo { width: var(--xa-icon-map-halo); height: var(--xa-icon-map-halo); -unity-background-image-tint-color: var(--xa-map-halo); }
 .xa-map-icon--site { -unity-background-image-tint-color: var(--xa-map-site); }

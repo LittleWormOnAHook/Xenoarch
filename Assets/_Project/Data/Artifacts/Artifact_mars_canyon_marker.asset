@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.mars_canyon_marker
   displayName: Canyon Marker
   description: A shaped basalt block with a spiral glyph.
-  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
+  icon: {fileID: 21300000, guid: 343f00eedaf00afdc750419d906cdd43, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

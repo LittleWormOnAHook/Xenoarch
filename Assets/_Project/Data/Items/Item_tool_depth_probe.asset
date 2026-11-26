@@ -17,7 +17,7 @@ MonoBehaviour:
   description: 'Point it at the floor of a pit and pulse (LMB) or hold LMB: shows
     roughly how far below the nearest buried object lies and which way it is offset,
     never what it is. Upgrades track up to 3 objects, deeper and more precisely.'
-  icon: {fileID: 21300000, guid: 7b2a0bae199b3c544ad4156d1092d5bc, type: 3}
+  icon: {fileID: 21300000, guid: bab10189a9b1cd383f61352b0985581e, type: 3}
   category: 0
   maxStack: 1
   uniqueInstance: 0
