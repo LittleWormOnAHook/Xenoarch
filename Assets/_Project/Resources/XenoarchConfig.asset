@@ -100,7 +100,7 @@ MonoBehaviour:
     count: 8
   - item: {fileID: 11400000, guid: eff4e5e168cd61844a9f346199508bbb, type: 2}
     count: 2
-  devTestingLoadout: 1
+  devTestingLoadout: 0
   mainMenuScene: MainMenu
   fadeDuration: 0.35
   saveFolderName: Saves
