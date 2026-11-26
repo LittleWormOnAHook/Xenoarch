@@ -13,12 +13,13 @@ namespace DMI.Xenoarch.UI
     public enum ItemAccent { Common, Materials, Tech, Organic, Rare, Exceptional }
 
     /// <summary>
-    /// Icon style (ZEN-22, replaces the t155u flat-tint rule): items use the full-colour Xenoarch icon library
+    /// Icon style (ZEN-22, t180u): items use the full-colour Xenoarch icon library
     /// (Assets/Xenoarch/UI/Icons, see Docs/XENOARCH_UI_Icons.md), shown untinted. Each item icon gets a separate
-    /// corner-accent layer on top (Icons/Slot/slot_corner_accent.png: lower-left, max 28% alpha, smooth fade), tinted per
-    /// <see cref="ItemAccent"/>. Slot layers: slot background, icon, accent, then the slot's own selection/hover border.
-    /// Menus, map markers and journal states use .xa-icon--{name} classes (library icons where matched, Kenney otherwise).
-    /// Images, sizes and colours live in Resources/UI/Xenoarch.uss and XenoarchPalette.uss; this class only adds classes.
+    /// corner-accent layer (Icons/Slot/slot_corner_accent.png: thin lower-left L, flush to the slot corner, max 20% alpha,
+    /// soft falloff, stretched along the bottom and left edges), tinted per <see cref="ItemAccent"/>. Slot layers: slot
+    /// background, icon, accent, then the slot's own selection/hover border. On .xa-slot / .xa-item-slot hosts the accent
+    /// is parented to the slot so it sits flush in the frame. Menus, map markers and journal states use .xa-icon--{name}
+    /// classes. Images, sizes and colours live in Resources/UI/Xenoarch.uss and XenoarchPalette.uss; this class only adds classes.
     /// </summary>
     public static class XenoarchIcons
     {
@@ -69,10 +70,32 @@ namespace DMI.Xenoarch.UI
             {
                 accent = new VisualElement { name = AccentName, pickingMode = PickingMode.Ignore };
                 img.Add(accent);
+                img.RegisterCallback<AttachToPanelEvent>(_ =>
+                {
+                    var a = img.Q<VisualElement>(AccentName);
+                    if (a != null) PlaceAccent(img, a);
+                });
             }
             accent.ClearClassList();
             accent.AddToClassList("xa-item-accent");
             accent.AddToClassList(AccentClass(AccentFor(d)));
+            PlaceAccent(img, accent);
+        }
+
+        /// <summary>Park the accent on the slot frame (.xa-slot / .xa-item-slot) so the L sits flush in the lower-left
+        /// corner. Fallback is the icon itself (detail previews, drag ghosts, puzzle pieces).</summary>
+        static void PlaceAccent(VisualElement img, VisualElement accent)
+        {
+            if (img == null || accent == null) return;
+            var host = img.parent;
+            bool slot = host != null && (host.ClassListContains("xa-slot") || host.ClassListContains("xa-item-slot"));
+            if (!slot) host = img;
+            if (accent.parent == host) return;
+            accent.RemoveFromHierarchy();
+            if (host == img) { img.Add(accent); return; }
+            int i = host.IndexOf(img);
+            if (i >= 0) host.Insert(i + 1, accent);
+            else host.Add(accent);
         }
 
         public static void ApplyItem(VisualElement img, string itemId)

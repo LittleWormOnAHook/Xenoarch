@@ -36,13 +36,15 @@
 }
 .xa-strip { flex-direction: row; align-items: flex-end; margin-bottom: 6px; }
 .xa-slot {
-    width: 84px; height: 96px; margin-right: 8px; align-items: center; justify-content: flex-start; padding-top: 6px;
+    /* t180u: larger icons, no padding so the corner accent can sit flush in the frame. */
+    width: 88px; height: 104px; margin-right: 8px; align-items: center; justify-content: flex-start; padding: 0;
     background-image: url("/Assets/_Project/Art/Placeholder/Genesis/Frames/Slot_Background.png");
-    border-width: 1px; border-color: var(--xa-secondary-soft);
+    border-width: 1px; border-color: var(--xa-secondary-soft); overflow: hidden;
 }
-.xa-slot__icon { width: 56px; height: 56px; -unity-background-scale-mode: scale-to-fit; }
+.xa-slot__icon { width: 80px; height: 80px; -unity-background-scale-mode: scale-to-fit; }
 .xa-slot__count { position: absolute; right: 4px; top: 2px; font-size: 13px; color: var(--xa-heading); -unity-font-style: bold; }
-.xa-slot__name { font-size: 10px; color: var(--xa-text); white-space: normal; -unity-text-align: upper-center; width: 80px; overflow: hidden; height: 28px; }
+.xa-slot__name { font-size: 10px; color: var(--xa-text); white-space: normal; -unity-text-align: upper-center; width: 86px; overflow: hidden; height: 24px; }
+.xa-item-slot { overflow: hidden; }
 .xa-hint, .xa-hints { font-size: 13px; color: var(--xa-secondary-text); }
 
 /* ---------- Main menu ---------- */
@@ -155,8 +157,9 @@
 .xa-icon--checkmark { background-image: url("/Assets/_Project/Art/Icons/UI/checkmark.png"); }
 .xa-icon--locked { background-image: url("/Assets/_Project/Art/Icons/UI/locked.png"); }
 .xa-item-icon { -unity-background-scale-mode: scale-to-fit; }
-/* ZEN-22: item icons are the full-colour library art, untinted. Category/rarity show as a separate corner-accent layer
-   (child .xa-item-accent added by XenoarchIcons.ApplyItem): lower-left soft fade, max 28% alpha baked into the asset. */
+/* ZEN-22 / t180u: item icons are the full-colour library art, untinted. Category/rarity show as a separate
+   corner-accent layer (XenoarchIcons.ApplyItem): a thin lower-left L, flush to the slot corner, max 20% alpha,
+   soft falloff, stretched along the bottom and left edges. Tints stay on the --xa-accent-* classes. */
 .xa-item-accent { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-image: url("/Assets/Xenoarch/UI/Icons/Slot/slot_corner_accent.png"); -unity-background-scale-mode: stretch-to-fill; }
 .xa-item-accent--common { -unity-background-image-tint-color: var(--xa-accent-common); }
 .xa-item-accent--materials { -unity-background-image-tint-color: var(--xa-accent-materials); }

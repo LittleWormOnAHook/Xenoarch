@@ -224,14 +224,14 @@ namespace DMI.Xenoarch.UI
                 cell.style.width = g.slot;
                 cell.style.height = g.showNames ? g.slot + Mathf.Round(g.slot * 0.40f) : g.slot;
                 cell.style.marginRight = k == 3 || k == 7 ? 0 : g.gap;
-                cell.style.paddingTop = 4;
-                cell.style.paddingBottom = 2;
-                cell.style.paddingLeft = cell.style.paddingRight = 2;
+                cell.style.paddingTop = cell.style.paddingBottom = 0;
+                cell.style.paddingLeft = cell.style.paddingRight = 0;
             }
             var icon = new VisualElement(); icon.AddToClassList("xa-slot__icon");
             if (helmet)
             {
-                float iconPx = Mathf.Max(24f, g.slot - 16f);
+                // Fill almost the whole fitted slot (t180u). A 6 px inset leaves a hair for the key and stack count.
+                float iconPx = Mathf.Max(24f, g.slot - 6f);
                 icon.style.width = iconPx; icon.style.height = iconPx;
             }
             string name = id;

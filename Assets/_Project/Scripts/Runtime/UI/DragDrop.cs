@@ -56,7 +56,7 @@ namespace DMI.Xenoarch.UI
                 if (((Vector2)e.position - _start).sqrMagnitude < 64f) return;
                 _dragging = true;
                 _ghost = new VisualElement { pickingMode = PickingMode.Ignore };
-                _ghost.style.position = Position.Absolute; _ghost.style.width = 56; _ghost.style.height = 56;
+                _ghost.style.position = Position.Absolute; _ghost.style.width = 80; _ghost.style.height = 80;
                 _ghost.style.opacity = 0.85f;
                 _ghost.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.8f);
                 if (_pending.icon != null) { _ghost.style.backgroundImage = new StyleBackground(_pending.icon); XenoarchIcons.ApplyItem(_ghost, _pending.itemId); }

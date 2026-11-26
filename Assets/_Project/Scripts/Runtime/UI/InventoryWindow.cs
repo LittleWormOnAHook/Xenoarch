@@ -110,7 +110,7 @@ namespace DMI.Xenoarch.UI
             if (d == null) Text(mid, "Select an item.", "xa-term__dim");
             else
             {
-                if (d.icon != null) { var big = new VisualElement(); big.style.width = 96; big.style.height = 96; XenoarchIcons.ApplyItem(big, d); big.style.marginBottom = 6; mid.Add(big); }
+                if (d.icon != null) { var big = new VisualElement(); big.style.width = 120; big.style.height = 120; XenoarchIcons.ApplyItem(big, d); big.style.marginBottom = 6; mid.Add(big); }
                 Text(mid, d.DisplayNameOrId.ToUpperInvariant(), "xa-term__h");
                 Text(mid, $"{d.category}   |   value {d.baseValue}   |   mass {d.mass:0.##}");
                 if (!string.IsNullOrEmpty(d.description)) Text(mid, d.description, "xa-term__dim");
@@ -278,8 +278,9 @@ namespace DMI.Xenoarch.UI
         {
             var bar = Session.Hotbar; string id = bar.At(k);
             var d = Def(id);
-            var t = new VisualElement();
-            t.style.width = 56; t.style.height = 56; t.style.marginRight = 4; t.style.marginBottom = 4;
+            var t = new VisualElement(); t.AddToClassList("xa-item-slot");
+            t.style.width = 80; t.style.height = 80; t.style.marginRight = 4; t.style.marginBottom = 4;
+            t.style.paddingLeft = t.style.paddingRight = t.style.paddingTop = t.style.paddingBottom = 0;
             t.style.backgroundColor = XenoarchPalette.PanelDark;
             t.style.borderTopWidth = t.style.borderBottomWidth = t.style.borderLeftWidth = t.style.borderRightWidth = 1;
             var bc = k == 0 ? XenoarchPalette.A(XenoarchPalette.Secondary, 0.25f) : XenoarchPalette.A(XenoarchPalette.Primary, 0.6f);
@@ -321,8 +322,9 @@ namespace DMI.Xenoarch.UI
                 else TakeOffHotbar(p.index);
                 Refresh();
             });
-            t.style.width = 64; t.style.height = 64; t.style.marginRight = 4; t.style.marginBottom = 4;
-            t.style.paddingLeft = t.style.paddingRight = t.style.paddingTop = t.style.paddingBottom = 4;
+            t.AddToClassList("xa-item-slot");
+            t.style.width = 80; t.style.height = 80; t.style.marginRight = 4; t.style.marginBottom = 4;
+            t.style.paddingLeft = t.style.paddingRight = t.style.paddingTop = t.style.paddingBottom = 0;
             t.style.backgroundColor = XenoarchPalette.PanelDark;
             bool sel = !st.IsEmpty && st.itemId == _selItem;
             t.style.borderTopWidth = t.style.borderBottomWidth = t.style.borderLeftWidth = t.style.borderRightWidth = 1;
