@@ -1,8 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Interaction;
 using DMI.Xenoarch.Player;
+using DMI.Xenoarch.Ship;
 using DMI.Xenoarch.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -10,184 +11,224 @@ using UnityEngine.InputSystem;
 namespace DMI.Xenoarch.Vehicles
 {
     /// <summary>
-    /// t187u-t190u: drivable rover built at runtime on the Grasshopper prefab. Nothing in the prefab is moved or saved:
-    /// wheel colliders go at the P_Wheel_Big_* wheels, the rear door (Door_Back) swings 60 degrees on its own pivot
-    /// (closed = its authored rotation), and the player enters through the back: E opens the door, E again ("Enter Rover")
-    /// glides the player in to the driver's place behind the steering wheel. W/S drive and brake/reverse, A/D steer,
-    /// Space handbrake, E (looking at nothing usable) gets out the same way, door opening and closing behind you.
-    /// Parked: kinematic, the prefab's own mesh colliders (walkable). Driving: dynamic rigidbody with a box chassis and
-    /// four wheel colliders (concave mesh colliders off), gravity from the surface environment.
+    /// The Grasshopper rover (t187u-t195u). Set up once in the editor (Xenoarch setup bakes it onto the scene instance and
+    /// applies it to the prefab): a "[Rover Rig]" child, unscaled in world terms, holds the wheel colliders, the driving
+    /// chassis box, the rear entry zone and editable markers (Seat, DoorInside, DoorOutside, COM). Nothing of the model is
+    /// moved. Only a rover deployed from the inventory is live; copies placed in scenes stay inert.
+    /// Entry: look at the rover, E opens Door_Back (60 degrees on its own pivot), E "Enter Rover" walks you round to the
+    /// back and in to the driver-side P_Chair_05. Seated, the hand reaches out to P_Cockpit_Tech_01, which powers on like
+    /// the ship's console; driving is enabled after power-on. W/S drive and brake/reverse, A/D steer, Space handbrake,
+    /// V switches 3rd person (behind and above) / 1st person (the seat), remembered; E (looking at nothing usable) gets out.
+    /// Parked: kinematic, the model's own mesh colliders. Driving: dynamic, chassis box + wheel colliders.
     /// </summary>
+    [DisallowMultipleComponent]
     public sealed class RoverVehicle : MonoBehaviour
     {
+        [Serializable] public sealed class WheelSlot { public WheelCollider collider; public Transform visual; public bool front; }
+
         [Header("Drive")]
-        public float mass = 2800f;
-        public float motorTorque = 2600f;
-        public float brakeTorque = 7000f;
-        [Tooltip("Top speed forward (m/s); reverse is a third of it.")] public float maxSpeed = 14f;
-        public float maxSteer = 28f;
-        public float highSpeedSteer = 10f;
-        public float suspension = 0.35f;
+        public float mass = 900f;
+        [Tooltip("Drive acceleration on flat ground (m/s^2); wheel torque comes from it, the mass and the wheel radius.")] public float acceleration = 3.2f;
+        [Tooltip("Braking deceleration (m/s^2).")] public float brakeDecel = 8f;
+        [Tooltip("Top speed forward (m/s); reverse is a third of it.")] public float maxSpeed = 11f;
+        public float maxSteer = 30f;
+        public float highSpeedSteer = 11f;
+        public float suspension = 0.2f;
         [Header("Door / seat")]
-        public string doorName = "Door_Back";
         public float doorOpenDegrees = 60f;
         public float doorSeconds = 0.9f;
         public float glideSeconds = 0.75f;
-        public float seatedEyeHeight = 1.2f;
-        [Tooltip("Driver position behind the steering wheel (m).")] public float seatBehindWheel = 0.75f;
+        public float seatedEyeHeight = 1.15f;
         [Tooltip("Max speed (m/s) at which you can get out.")] public float exitSpeed = 1.5f;
+        [Header("Cameras (V toggles)")]
+        public Key cameraKey = Key.V;
+        public float chaseDistance = 7.5f;
+        public float chaseHeight = 3.2f;
+        public float chaseSmooth = 0.18f;
+
+        [Header("Baked setup (Xenoarch > rover setup; markers can be moved)")]
+        public bool baked;
+        public Transform door, driverChair, console, rig, seat, doorInside, doorOutside, com;
+        public Quaternion doorClosed = Quaternion.identity, doorOpen = Quaternion.identity;
+        public BoxCollider chassis;
+        public List<WheelSlot> wheels = new List<WheelSlot>();
+
+        /// <summary>Set by <see cref="RoverDirector"/> around Instantiate: only deployed rovers are live.</summary>
+        internal static bool SpawningDeployed;
+        public bool Live { get; private set; }
 
         enum State { Parked, Entering, Driving, Exiting }
         State _state;
         public bool Occupied => _state != State.Parked;
+        bool _powered;
 
         Rigidbody _rb;
-        BoxCollider _chassis;
+        float _motorTorque, _brakeTorque;
         readonly List<MeshCollider> _concave = new List<MeshCollider>();
-        readonly List<(WheelCollider wc, Transform visual, bool front)> _wheels = new List<(WheelCollider, Transform, bool)>();
-        Transform _door; Quaternion _doorClosed, _doorOpen; float _door01, _doorTarget; float _doorOpenedAt;
-        Vector3 _fwdLocal = Vector3.forward, _seatLocal, _insideLocal, _outsideLocal, _doorLocal;
-        float _floorLocalY, _lowestWheelLocalY;
-        bool _inited;
+        float _door01, _doorTarget, _doorOpenedAt;
+        ConsolePower _power;
 
         FirstPersonController _player; Interactor _interactor; IInteractionInput _input;
         readonly List<(Renderer r, bool on)> _hidden = new List<(Renderer, bool)>();
         float _seatedAt;
 
+        const string CamPref = "xenoarch.rover.camera3rd";
+        static bool ThirdPerson { get => PlayerPrefs.GetInt(CamPref, 1) == 1; set { PlayerPrefs.SetInt(CamPref, value ? 1 : 0); PlayerPrefs.Save(); } }
+        Transform _cam; Vector3 _camLocalPos; Quaternion _camLocalRot; bool _camSaved; Vector3 _camVel; bool _chaseInit;
+
         public bool DoorOpen => _doorTarget > 0.5f;
-        Vector3 Fwd => transform.TransformDirection(_fwdLocal);
+        Vector3 Fwd { get { var f = rig != null ? rig.forward : transform.forward; f.y = 0f; return f.sqrMagnitude > 1e-4f ? f.normalized : Vector3.forward; } }
 
-        void Awake() { if (!_inited) Init(); }
-
-        /// <summary>Measures the prefab (in its authored, unrotated pose) and adds the runtime parts. Idempotent.</summary>
-        public void Init()
+        void Awake()
         {
-            if (_inited) return;
-            _inited = true;
-            var rot = transform.rotation;
-            transform.rotation = Quaternion.identity;
-            try { Measure(); }
-            finally { transform.rotation = rot; }
-
-            _rb = GetComponent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
+            Live = SpawningDeployed;
+            _rb = GetComponent<Rigidbody>();
+            if (!Live) { if (_rb != null) _rb.isKinematic = true; return; }   // a copy placed in a scene: inert
+            if (!baked) Bake();
+            _rb = GetComponent<Rigidbody>(); if (_rb == null) _rb = gameObject.AddComponent<Rigidbody>();
             _rb.mass = mass; _rb.useGravity = false; _rb.interpolation = RigidbodyInterpolation.Interpolate;
             _rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            _rb.linearDamping = 0.05f; _rb.angularDamping = 0.6f;
+            _rb.linearDamping = 0.05f; _rb.angularDamping = 0.6f; _rb.maxAngularVelocity = 4f;
             _rb.isKinematic = true;
+            foreach (var mc in GetComponentsInChildren<MeshCollider>(true)) if (!mc.convex) _concave.Add(mc);
+            float r = 0f; int n = 0;
+            foreach (var w in wheels) if (w.collider != null) { r += w.collider.radius; n++; }
+            r = n > 0 ? r / n : 0.4f; n = Mathf.Max(1, n);
+            _motorTorque = mass * acceleration * r / n;
+            _brakeTorque = mass * brakeDecel * r / n;
+            if (console != null) _power = ConsolePower.Attach(console.gameObject, null);   // starts dark
             SetDynamic(false);
         }
 
-        void Measure()
+        // ================================================================== bake (editor setup, or runtime fallback)
+
+        /// <summary>Measures the model and builds the rig. Model transforms are only read (the root rotation and the door
+        /// are turned for the measurement and restored exactly).</summary>
+        public void Bake()
         {
-            Vector3 L(Vector3 world) => transform.InverseTransformPoint(world);
-            var all = GetComponentsInChildren<Renderer>(true);
-            var body = Bounds(all);
-            Vector3 bodyMin = L(body.min), bodyMax = L(body.max);
+            var rot = transform.rotation;
+            transform.rotation = Quaternion.identity;
+            try { BakeInner(); }
+            finally { transform.rotation = rot; }
+            baked = true;
+        }
 
-            _door = FindDeep(transform, doorName);
-            var steer = new List<Vector3>();
-            foreach (var t in GetComponentsInChildren<Transform>(true))
-                if (t.name.StartsWith("P_Steering_Wheel")) steer.Add(L(Bounds(t.GetComponentsInChildren<Renderer>(true)).center));
-            Vector3 doorC = _door != null ? L(Bounds(_door.GetComponentsInChildren<Renderer>(true)).center) : new Vector3(0f, 0f, bodyMin.z);
-            Vector3 steerC = Vector3.zero; foreach (var s in steer) steerC += s; steerC = steer.Count > 0 ? steerC / steer.Count : new Vector3(0f, 0f, bodyMax.z);
-            var f = steerC - doorC; f.y = 0f;
-            _fwdLocal = f.sqrMagnitude > 0.01f ? f.normalized : Vector3.forward;
-            var right = Vector3.Cross(Vector3.up, _fwdLocal);
+        void BakeInner()
+        {
+            var old = transform.Find("[Rover Rig]");
+            if (old != null) DestroyImmediate(old.gameObject);
+            wheels.Clear();
 
-            // Floor of the cabin.
-            var floor = FindDeep(transform, "Floor");
-            _floorLocalY = floor != null && floor.GetComponentInChildren<Renderer>() != null ? L(Bounds(floor.GetComponentsInChildren<Renderer>(true)).max).y
-                : (steer.Count > 0 ? steerC.y - 0.85f : bodyMin.y + 1f);
+            var renderers = new List<Renderer>(GetComponentsInChildren<Renderer>(true));
+            var body = Bounds(renderers.ToArray());
+            door = FindDeep(transform, "Door_Back");
+            console = FindDeep(transform, "P_Cockpit_Tech_01");
+            Vector3 doorC = door != null ? Bounds(door.GetComponentsInChildren<Renderer>(true)).center : new Vector3(body.center.x, body.center.y, body.min.z);
+            Vector3 consC = console != null ? Bounds(console.GetComponentsInChildren<Renderer>(true)).center : new Vector3(body.center.x, body.center.y, body.max.z);
+            var fwd = consC - doorC; fwd.y = 0f; fwd = fwd.sqrMagnitude > 0.01f ? fwd.normalized : Vector3.forward;
+            var right = Vector3.Cross(Vector3.up, fwd);
 
-            // Driver place: behind the left-hand steering wheel.
-            Vector3 wheel = steerC; float best = float.MaxValue;
-            foreach (var s in steer) { float d = Vector3.Dot(s, right); if (d < best) { best = d; wheel = s; } }
-            _seatLocal = wheel - _fwdLocal * seatBehindWheel; _seatLocal.y = _floorLocalY;
-
-            // Door: inside / outside points and the open rotation (the swing that moves the door out, away from the cabin).
-            _doorLocal = doorC;
-            _insideLocal = doorC + _fwdLocal * 1.6f; _insideLocal.y = _floorLocalY;
-            if (_door != null)
+            // Rig: world-unit child (undoes the root scale), facing the rover's forward.
+            var rigGo = new GameObject("[Rover Rig]");
+            rig = rigGo.transform;
+            rig.SetParent(transform, false);
+            var ls = transform.lossyScale;
+            rig.localScale = new Vector3(1f / Mathf.Max(1e-4f, ls.x), 1f / Mathf.Max(1e-4f, ls.y), 1f / Mathf.Max(1e-4f, ls.z));
+            rig.position = body.center;
+            rig.rotation = Quaternion.LookRotation(fwd, Vector3.up);
+            Transform Marker(string name, Vector3 pos, Vector3 face)
             {
-                _doorClosed = _door.localRotation;
-                var plus = _doorClosed * Quaternion.Euler(doorOpenDegrees, 0f, 0f);
-                var minus = _doorClosed * Quaternion.Euler(-doorOpenDegrees, 0f, 0f);
-                _door.localRotation = plus; float aP = Vector3.Dot(L(Bounds(_door.GetComponentsInChildren<Renderer>(true)).center), _fwdLocal);
-                _door.localRotation = minus; float aM = Vector3.Dot(L(Bounds(_door.GetComponentsInChildren<Renderer>(true)).center), _fwdLocal);
-                _doorOpen = aP < aM ? plus : minus;
-                _door.localRotation = _doorOpen;
-                var openB = Bounds(_door.GetComponentsInChildren<Renderer>(true));
-                float reach = Mathf.Max(0f, Vector3.Dot(doorC - L(openB.center), _fwdLocal)) * 2f;
-                _door.localRotation = _doorClosed;
-                _outsideLocal = doorC - _fwdLocal * (reach + 1.6f);
-
-                // Interaction trigger fitted to the door (rotates with it).
-                var dr = _door.GetComponentsInChildren<Renderer>(true);
-                if (dr.Length > 0)
-                {
-                    var db = Bounds(dr);
-                    var box = _door.gameObject.AddComponent<BoxCollider>();
-                    box.isTrigger = true;
-                    box.center = _door.InverseTransformPoint(db.center);
-                    var sz = _door.InverseTransformVector(db.size);
-                    box.size = new Vector3(Mathf.Abs(sz.x), Mathf.Abs(sz.y), Mathf.Abs(sz.z)) + Vector3.one * 0.4f;
-                }
-                _door.gameObject.AddComponent<RoverDoor>().rover = this;
+                var t = new GameObject(name).transform; t.SetParent(rig, false);
+                t.position = pos; t.rotation = Quaternion.LookRotation(face, Vector3.up); return t;
             }
-            else _outsideLocal = doorC - _fwdLocal * 3f;
-            _outsideLocal.y = bodyMin.y;
 
-            // Wheels.
-            _lowestWheelLocalY = float.MaxValue;
-            var wheels = new List<(Transform t, Vector3 c, float r)>();
+            // Driver seat: the P_Chair_05 nearest the console, driver (left) side on a tie.
+            driverChair = null; float best = float.MaxValue;
             foreach (var t in GetComponentsInChildren<Transform>(true))
-                if (t.name.StartsWith("P_Wheel_Big"))
-                {
-                    var rs = t.GetComponentsInChildren<Renderer>(true);
-                    if (rs.Length == 0) continue;
-                    var b = Bounds(rs);
-                    float r = Mathf.Max(0.2f, b.extents.y);
-                    var c = L(b.center);
-                    wheels.Add((rs[0].transform, c, r));
-                    _lowestWheelLocalY = Mathf.Min(_lowestWheelLocalY, c.y - r);
-                }
-            if (wheels.Count == 0) _lowestWheelLocalY = bodyMin.y;
-            float midF = 0f; foreach (var w in wheels) midF += Vector3.Dot(w.c, _fwdLocal); midF = wheels.Count > 0 ? midF / wheels.Count : 0f;
-            float wheelY = 0f;
-            var springRoot = new GameObject("[Rover Wheels]").transform;
-            springRoot.SetParent(transform, false);
-            springRoot.localRotation = Quaternion.LookRotation(_fwdLocal, Vector3.up);
-            foreach (var w in wheels)
             {
-                var go = new GameObject("WheelCollider " + w.t.name);
-                go.transform.SetParent(springRoot, false);
-                go.transform.position = transform.TransformPoint(w.c + Vector3.up * suspension * 0.5f);
+                if (!t.name.Equals("P_Chair_05", StringComparison.OrdinalIgnoreCase)) continue;
+                var cb = Bounds(t.GetComponentsInChildren<Renderer>(true));
+                float score = Vector3.Distance(cb.center, consC) + Vector3.Dot(cb.center - body.center, right) * 0.05f;
+                if (score < best) { best = score; driverChair = t; }
+            }
+            Bounds chairB = driverChair != null ? Bounds(driverChair.GetComponentsInChildren<Renderer>(true)) : new Bounds(consC - fwd * 0.8f, Vector3.one * 0.5f);
+            float floorY = chairB.min.y;
+            var seatFace = consC - chairB.center; seatFace.y = 0f; if (seatFace.sqrMagnitude < 1e-4f) seatFace = fwd;
+            seat = Marker("Seat", new Vector3(chairB.center.x, floorY, chairB.center.z) - seatFace.normalized * 0.05f, seatFace.normalized);
+            seatedEyeHeight = Mathf.Clamp(Mathf.Min(1.15f, (body.max.y - floorY) * 0.75f), 0.6f, 1.15f);
+
+            // Door: open rotation = the 60 degree swing that moves the door out, away from the cabin.
+            doorInside = Marker("DoorInside", new Vector3(doorC.x, floorY, doorC.z) + fwd * 0.8f, fwd);
+            float reach = 0f;
+            if (door != null)
+            {
+                doorClosed = door.localRotation;
+                var plus = doorClosed * Quaternion.Euler(doorOpenDegrees, 0f, 0f);
+                var minus = doorClosed * Quaternion.Euler(-doorOpenDegrees, 0f, 0f);
+                door.localRotation = plus; var cP = Bounds(door.GetComponentsInChildren<Renderer>(true)).center;
+                door.localRotation = minus; var cM = Bounds(door.GetComponentsInChildren<Renderer>(true)).center;
+                door.localRotation = doorClosed;
+                bool usePlus = Vector3.Dot(cP, fwd) < Vector3.Dot(cM, fwd);
+                doorOpen = usePlus ? plus : minus;
+                reach = Mathf.Max(0f, Vector3.Dot(doorC - (usePlus ? cP : cM), fwd)) * 2f;
+            }
+            doorOutside = Marker("DoorOutside", new Vector3(doorC.x, body.min.y, doorC.z) - fwd * (reach + 1.1f), fwd);
+
+            // Wheels: colliders at the P_Wheel_Big_* wheels, radius from the wheel mesh (world metres).
+            float wheelY = 0f, midF = 0f;
+            var found = new List<(Transform vis, Vector3 c, float r)>();
+            foreach (var t in GetComponentsInChildren<Transform>(true))
+            {
+                if (!t.name.StartsWith("P_Wheel_Big")) continue;
+                var rs = t.GetComponentsInChildren<Renderer>(true);
+                if (rs.Length == 0) continue;
+                var b = Bounds(rs);
+                found.Add((rs[0].transform, b.center, Mathf.Max(0.1f, b.extents.y)));
+                midF += Vector3.Dot(b.center, fwd); wheelY += b.center.y;
+            }
+            if (found.Count > 0) { midF /= found.Count; wheelY /= found.Count; } else wheelY = body.min.y;
+            var wroot = new GameObject("Wheels").transform; wroot.SetParent(rig, false);
+            float sprung = mass / Mathf.Max(1, found.Count);
+            foreach (var w in found)
+            {
+                var go = new GameObject("WC " + w.vis.parent.name);
+                go.transform.SetParent(wroot, false);
+                go.transform.position = w.c + Vector3.up * suspension * 0.5f;
                 var wc = go.AddComponent<WheelCollider>();
-                wc.radius = w.r; wc.mass = 60f; wc.suspensionDistance = suspension; wc.forceAppPointDistance = 0.2f;
-                float sprung = mass / Mathf.Max(1, wheels.Count);
-                wc.suspensionSpring = new JointSpring { spring = sprung * 90f, damper = 0.6f * Mathf.Sqrt(sprung * 90f * sprung), targetPosition = 0.5f };
+                wc.radius = w.r; wc.mass = 25f; wc.suspensionDistance = suspension; wc.forceAppPointDistance = 0.1f;
+                float k = sprung * 90f;
+                wc.suspensionSpring = new JointSpring { spring = k, damper = 0.6f * Mathf.Sqrt(k * sprung), targetPosition = 0.5f };
                 var side = wc.sidewaysFriction; side.stiffness = 1.3f; wc.sidewaysFriction = side;
                 var fw = wc.forwardFriction; fw.stiffness = 1.2f; wc.forwardFriction = fw;
-                _wheels.Add((wc, w.t, Vector3.Dot(w.c, _fwdLocal) > midF));
-                wheelY += w.c.y;
+                wheels.Add(new WheelSlot { collider = wc, visual = w.vis, front = Vector3.Dot(w.c, fwd) > midF });
             }
-            wheelY = wheels.Count > 0 ? wheelY / wheels.Count : bodyMin.y;
 
-            // Chassis box (driving only): the body above the wheel centres.
-            _chassis = gameObject.AddComponent<BoxCollider>();
-            float bottom = Mathf.Max(bodyMin.y, wheelY + 0.15f);
-            var bc = (bodyMin + bodyMax) * 0.5f;
-            _chassis.center = new Vector3(bc.x, (bottom + bodyMax.y) * 0.5f, bc.z);
-            _chassis.size = new Vector3(bodyMax.x - bodyMin.x, Mathf.Max(0.5f, bodyMax.y - bottom), bodyMax.z - bodyMin.z);
+            // Driving chassis (off while parked): the body above the wheel centres.
+            var chGo = new GameObject("Chassis"); chGo.transform.SetParent(rig, false);
+            chGo.transform.position = body.center; chGo.transform.rotation = Quaternion.identity;
+            chassis = chGo.AddComponent<BoxCollider>();
+            float bottom = Mathf.Max(body.min.y, wheelY + 0.1f);
+            chassis.center = chGo.transform.InverseTransformPoint(new Vector3(body.center.x, (bottom + body.max.y) * 0.5f, body.center.z));
+            chassis.size = new Vector3(body.size.x, Mathf.Max(0.4f, body.max.y - bottom), body.size.z);
+            chassis.enabled = false;
 
-            foreach (var mc in GetComponentsInChildren<MeshCollider>(true)) if (!mc.convex) _concave.Add(mc);
-            _comLocal = new Vector3(bc.x, wheelY, bc.z);
+            // Wide entry zone behind the door (looking at the ground / door area there also gets the prompt).
+            var zone = Marker("RearEntryZone", new Vector3(doorC.x, body.center.y, doorC.z) - fwd * 1.25f, fwd);
+            var zc = zone.gameObject.AddComponent<BoxCollider>();
+            zc.isTrigger = true;
+            zc.size = new Vector3(Mathf.Max(2.5f, Mathf.Abs(Vector3.Dot(body.size, right)) + 1f), Mathf.Max(2.5f, body.size.y + 1f), 2.5f);
+
+            com = Marker("COM", new Vector3(body.center.x, wheelY, body.center.z), fwd);
+
+            if (GetComponent<RoverDoor>() == null) gameObject.AddComponent<RoverDoor>().rover = this;
+            else GetComponent<RoverDoor>().rover = this;
+            var rb = GetComponent<Rigidbody>(); if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = true; rb.useGravity = false; rb.mass = mass;
         }
-        Vector3 _comLocal;
 
         static Transform FindDeep(Transform t, string name)
         {
-            foreach (var c in t.GetComponentsInChildren<Transform>(true)) if (c.name == name) return c;
+            foreach (var c in t.GetComponentsInChildren<Transform>(true)) if (c.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return c;
             return null;
         }
 
@@ -202,20 +243,31 @@ namespace DMI.Xenoarch.Vehicles
             return any ? b : new Bounds(rs.Length > 0 ? rs[0].transform.position : Vector3.zero, Vector3.one * 0.5f);
         }
 
+        /// <summary>Lowest wheel contact below the root (current pose).</summary>
+        float LowestWheelBelowRoot()
+        {
+            float low = float.MaxValue;
+            foreach (var w in wheels) if (w.collider != null) low = Mathf.Min(low, w.collider.transform.position.y - suspension * 0.5f - w.collider.radius);
+            return low == float.MaxValue ? 0f : transform.position.y - low;
+        }
+
         /// <summary>Sets the rover down on flat ground in front of the player, rear door toward the player.</summary>
         public bool PlaceNear(Transform player, float distance)
         {
-            var fwd = player.forward; fwd.y = 0f; if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward; fwd.Normalize();
+            var pf = player.forward; pf.y = 0f; if (pf.sqrMagnitude < 0.01f) pf = Vector3.forward; pf.Normalize();
             for (int i = 0; i < 12; i++)
             {
                 float ang = (i % 2 == 0 ? 1 : -1) * ((i + 1) / 2) * 30f;
-                var dir = Quaternion.Euler(0f, ang, 0f) * fwd;
+                var dir = Quaternion.Euler(0f, ang, 0f) * pf;
                 var p = player.position + dir * distance;
                 if (!Ground(p, player, out var hit) || hit.normal.y < 0.88f) continue;
-                // the vehicle faces away from the player, so the rear door is toward them
-                transform.rotation = Quaternion.LookRotation(dir, Vector3.up) * Quaternion.Inverse(Quaternion.LookRotation(_fwdLocal, Vector3.up));
-                var off = transform.rotation * new Vector3(_comLocal.x, 0f, _comLocal.z);   // body centre over the picked spot
-                transform.position = hit.point - off - Vector3.up * (_lowestWheelLocalY - 0.03f);
+                transform.rotation = Quaternion.FromToRotation(Fwd, dir) * transform.rotation;   // facing away: door toward the player
+                var e = transform.eulerAngles; transform.rotation = Quaternion.Euler(0f, e.y, 0f);
+                var c = com != null ? com.position : transform.position;
+                var off = c - transform.position; off.y = 0f;
+                transform.position = new Vector3(p.x, transform.position.y, p.z) - off;
+                Physics.SyncTransforms();
+                transform.position = new Vector3(transform.position.x, hit.point.y + LowestWheelBelowRoot() + 0.03f, transform.position.z);
                 Physics.SyncTransforms();
                 return true;
             }
@@ -224,15 +276,15 @@ namespace DMI.Xenoarch.Vehicles
 
         bool Ground(Vector3 p, Transform ignore, out RaycastHit best)
         {
-            best = default; bool found = false;
+            best = default;
             var hits = Physics.RaycastAll(p + Vector3.up * 60f, Vector3.down, 200f, ~0, QueryTriggerInteraction.Ignore);
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
             foreach (var h in hits)
             {
                 if (h.collider.transform.IsChildOf(transform) || (ignore != null && h.collider.transform.IsChildOf(ignore))) continue;
-                best = h; found = true; break;
+                best = h; return true;
             }
-            return found;
+            return false;
         }
 
         void SetDynamic(bool dynamic)
@@ -241,39 +293,46 @@ namespace DMI.Xenoarch.Vehicles
             if (dynamic)
             {
                 foreach (var mc in _concave) if (mc != null) mc.enabled = false;
-                if (_chassis != null) _chassis.enabled = true;
+                if (chassis != null) chassis.enabled = true;
                 _rb.isKinematic = false;
-                _rb.centerOfMass = _comLocal;
+                if (com != null) _rb.centerOfMass = transform.InverseTransformPoint(com.position);
                 _rb.WakeUp();
             }
             else
             {
                 if (!_rb.isKinematic) { _rb.linearVelocity = Vector3.zero; _rb.angularVelocity = Vector3.zero; }
                 _rb.isKinematic = true;
-                if (_chassis != null) _chassis.enabled = false;
+                if (chassis != null) chassis.enabled = false;
                 foreach (var mc in _concave) if (mc != null) mc.enabled = true;
             }
-            foreach (var w in _wheels) { w.wc.motorTorque = 0f; w.wc.brakeTorque = dynamic ? 0f : brakeTorque; w.wc.steerAngle = 0f; }
+            foreach (var w in wheels) if (w.collider != null) { w.collider.motorTorque = 0f; w.collider.brakeTorque = dynamic ? 0f : _brakeTorque; w.collider.steerAngle = 0f; }
         }
 
-        // ------------------------------------------------------------------ door
+        // ================================================================== door
 
         public void SetDoor(bool open) { _doorTarget = open ? 1f : 0f; if (open) _doorOpenedAt = Time.time; }
 
         void Update()
         {
-            if (_door != null && !Mathf.Approximately(_door01, _doorTarget))
+            if (!Live) return;
+            if (door != null && !Mathf.Approximately(_door01, _doorTarget))
             {
                 _door01 = Mathf.MoveTowards(_door01, _doorTarget, Time.deltaTime / Mathf.Max(0.05f, doorSeconds));
-                _door.localRotation = Quaternion.Slerp(_doorClosed, _doorOpen, Mathf.SmoothStep(0f, 1f, _door01));
+                door.localRotation = Quaternion.Slerp(doorClosed, doorOpen, Mathf.SmoothStep(0f, 1f, _door01));
             }
-            // an open door with nobody coming in closes by itself
             if (_state == State.Parked && DoorOpen && Time.time - _doorOpenedAt > 12f) SetDoor(false);
 
             if (_state == State.Driving)
             {
-                if (_player == null || !_player.Seated) { Release(); return; } // stood up by a teleport / load
+                if (_player == null || !_player.Seated) { Release(); return; }   // stood up by a teleport / load
                 if (!_player.InputEnabled || UIState.BlocksGameplay || Time.unscaledTime - _seatedAt < 0.4f) return;
+                var kbd = Keyboard.current;
+                if ((kbd != null && kbd[cameraKey].wasPressedThisFrame) || (Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame))
+                {
+                    ThirdPerson = !ThirdPerson;
+                    if (!ThirdPerson) RestoreCamera();
+                    _chaseInit = false;
+                }
                 bool e = _input != null && _input.InteractPressed && (_interactor == null || _interactor.Target == null);
                 if (e)
                 {
@@ -283,9 +342,9 @@ namespace DMI.Xenoarch.Vehicles
             }
         }
 
-        // ------------------------------------------------------------------ enter / exit
+        // ================================================================== enter / exit
 
-        public bool CanEnter(FirstPersonController p) => p != null && !p.Seated && _state == State.Parked;
+        public bool CanEnter(FirstPersonController p) => Live && p != null && !p.Seated && _state == State.Parked;
 
         public bool Enter(FirstPersonController p)
         {
@@ -304,34 +363,88 @@ namespace DMI.Xenoarch.Vehicles
             Vector3 start = p.transform.position;
             float yaw0 = p.transform.eulerAngles.y, pitch0 = p.Pitch, eye0 = p.StandingEyeHeight;
             p.BeginSeat(start);
+            if (!DoorOpen) SetDoor(true);
+            float fwdYaw = Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y, backYaw = fwdYaw + 180f;
+            var outside = doorOutside != null ? doorOutside.position : transform.position - Fwd * 4f;
+            if (Ground(outside, p.transform, out var gh)) outside = gh.point;
+            // from the front half: along the side first (never through the hull)
+            var centre = com != null ? com.position : transform.position;
+            if (Vector3.Dot(start - centre, Fwd) > 0f)
+            {
+                var right = Vector3.Cross(Vector3.up, Fwd);
+                float side = Vector3.Dot(start - centre, right) >= 0f ? 1f : -1f;
+                float halfW = chassis != null ? Mathf.Abs(Vector3.Dot(chassis.transform.TransformVector(chassis.size), right)) * 0.5f : 1.5f;
+                var via = centre + right * side * (halfW + 1f);
+                if (Ground(via, p.transform, out var vh)) via = vh.point; else via.y = start.y;
+                var d0 = via - start; d0.y = 0f;
+                yield return Glide(p, start, via, yaw0, backYaw, pitch0, 0f, eye0, eye0, Mathf.Clamp(d0.magnitude / 3.5f, 0.3f, 2f));
+                start = via; yaw0 = backYaw; pitch0 = 0f;
+            }
+            var flat = start - outside; flat.y = 0f;
+            if (flat.magnitude > 1.2f)
+            {
+                yield return Glide(p, start, outside, yaw0, fwdYaw, pitch0, 0f, eye0, eye0, Mathf.Clamp(flat.magnitude / 3.5f, 0.4f, 2f));
+                start = outside; yaw0 = fwdYaw; pitch0 = 0f;
+            }
+            while (door != null && _door01 < 0.8f) yield return null;
             HideBody(p, true);
-            if (!DoorOpen) { SetDoor(true); yield return new WaitForSeconds(doorSeconds * 0.8f); }
-            float fwdYaw = Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y;
-            yield return Glide(p, start, W(_insideLocal), yaw0, fwdYaw, pitch0, 0f, eye0, eye0);
+            var inside = doorInside != null ? doorInside.position : centre;
+            yield return Glide(p, start, inside, yaw0, fwdYaw, pitch0, 0f, eye0, eye0);
             SetDoor(false);
-            yield return Glide(p, W(_insideLocal), W(_seatLocal), fwdYaw, fwdYaw, 0f, 8f, eye0, seatedEyeHeight);
-            p.EnableSeatLook(fwdYaw, 110f, 55f, 50f);
-            SetDynamic(true);
+            float seatYaw = seat != null ? Quaternion.LookRotation(seat.forward, Vector3.up).eulerAngles.y : fwdYaw;
+            yield return Glide(p, inside, seat != null ? seat.position : inside, fwdYaw, seatYaw, 0f, 8f, eye0, seatedEyeHeight);
+            p.EnableSeatLook(seatYaw, 80f, 55f, 60f);
             _state = State.Driving;
             _seatedAt = Time.unscaledTime;
             InteractionPromptHud.IdlePrompt = "Exit Rover";
-            Toast.Show("W/S drive, A/D steer, Space brake. E to get out.", 5f);
+            PowerUp();
+        }
+
+        /// <summary>Seated: the hand reaches out to the console and presses; the displays blink on (ship console sequence),
+        /// then the drive is live.</summary>
+        void PowerUp()
+        {
+            _powered = false;
+            void On()
+            {
+                if (_state != State.Driving) return;
+                if (_power != null) _power.PowerOn();
+                _powered = true;
+                SetDynamic(true);
+                Toast.Show("Rover powered. W/S drive, A/D steer, Space brake, V camera. E to get out.", 5f);
+            }
+            var arms = _player != null ? _player.GetComponentInChildren<FirstPersonArms>() : null;
+            var eye = _player != null && _player.ViewCamera != null ? _player.ViewCamera.transform.position : transform.position;
+            if (arms != null) arms.Reach(PressPoint(eye), On); else On();
+        }
+
+        Vector3 PressPoint(Vector3 eye)
+        {
+            if (console == null) return eye + Fwd;
+            var b = Bounds(console.GetComponentsInChildren<Renderer>());
+            var aim = b.ClosestPoint(eye) * 0.5f + b.center * 0.5f;
+            if (Physics.Raycast(eye, aim - eye, out var hit, 3f, ~0, QueryTriggerInteraction.Ignore) && hit.collider.transform.IsChildOf(transform))
+                return hit.point;
+            return b.ClosestPoint(eye);
         }
 
         IEnumerator ExitRoutine()
         {
             _state = State.Exiting;
             InteractionPromptHud.IdlePrompt = null;
+            RestoreCamera();
             SetDynamic(false);
+            _powered = false;
+            if (_power != null) _power.PowerOff();
             var p = _player;
             float fwdYaw = Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y, backYaw = fwdYaw + 180f;
-            float pitch = p.Pitch;
-            yield return Glide(p, p.transform.position, W(_insideLocal), p.transform.eulerAngles.y, backYaw, pitch, 0f, seatedEyeHeight, p.StandingEyeHeight);
+            var inside = doorInside != null ? doorInside.position : transform.position;
+            yield return Glide(p, p.transform.position, inside, p.transform.eulerAngles.y, backYaw, p.Pitch, 0f, seatedEyeHeight, p.StandingEyeHeight);
             SetDoor(true);
-            yield return new WaitForSeconds(doorSeconds);
-            var outside = W(_outsideLocal);
+            while (door != null && _door01 < 0.95f) yield return null;
+            var outside = doorOutside != null ? doorOutside.position : transform.position - Fwd * 4f;
             if (Ground(outside, p.transform, out var hit)) outside = hit.point;
-            yield return Glide(p, W(_insideLocal), outside, backYaw, backYaw, 0f, 0f, p.StandingEyeHeight, p.StandingEyeHeight);
+            yield return Glide(p, inside, outside, backYaw, backYaw, 0f, 0f, p.StandingEyeHeight, p.StandingEyeHeight);
             p.SetSeatPose(outside, backYaw, 0f, p.StandingEyeHeight);
             p.EndSeat();
             HideBody(p, false);
@@ -341,30 +454,32 @@ namespace DMI.Xenoarch.Vehicles
             if (_state == State.Parked) SetDoor(false);
         }
 
-        IEnumerator Glide(FirstPersonController p, Vector3 from, Vector3 to, float yawA, float yawB, float pitchA, float pitchB, float eyeA, float eyeB)
+        IEnumerator Glide(FirstPersonController p, Vector3 from, Vector3 to, float yawA, float yawB, float pitchA, float pitchB, float eyeA, float eyeB, float seconds = -1f)
         {
-            for (float t = 0f; t < glideSeconds; t += Time.deltaTime)
+            float dur = seconds > 0f ? seconds : glideSeconds;
+            for (float t = 0f; t < dur; t += Time.deltaTime)
             {
                 if (p == null || !p.Seated) yield break;
-                float k = Mathf.SmoothStep(0f, 1f, t / glideSeconds);
+                float k = Mathf.SmoothStep(0f, 1f, t / dur);
                 p.SetSeatPose(Vector3.Lerp(from, to, k), Mathf.LerpAngle(yawA, yawB, k), Mathf.Lerp(pitchA, pitchB, k), Mathf.Lerp(eyeA, eyeB, k));
                 yield return null;
             }
             if (p != null && p.Seated) p.SetSeatPose(to, yawB, pitchB, eyeB);
         }
 
-        Vector3 W(Vector3 local) => transform.TransformPoint(local);
-
         void Release()
         {
+            RestoreCamera();
             SetDynamic(false);
+            _powered = false;
+            if (_power != null) _power.PowerOff();
             HideBody(_player, false);
             InteractionPromptHud.IdlePrompt = null;
             _player = null;
             _state = State.Parked;
         }
 
-        void OnDisable() { if (_state != State.Parked && _player != null) { if (_player.Seated) _player.EndSeat(); Release(); } }
+        void OnDisable() { if (Live && _state != State.Parked && _player != null) { if (_player.Seated) _player.EndSeat(); Release(); } }
 
         void HideBody(FirstPersonController p, bool hide)
         {
@@ -382,16 +497,16 @@ namespace DMI.Xenoarch.Vehicles
             }
         }
 
-        // ------------------------------------------------------------------ driving
+        // ================================================================== driving
 
         void FixedUpdate()
         {
-            if (_rb == null || _rb.isKinematic) return;
+            if (!Live || _rb == null || _rb.isKinematic) return;
             float g = _player != null ? _player.gravity : 9.81f;
             _rb.AddForce(Vector3.down * g, ForceMode.Acceleration);
 
             float throttle = 0f, steer = 0f; bool hand = false;
-            if (_state == State.Driving && _player != null && _player.InputEnabled && !UIState.BlocksGameplay)
+            if (_state == State.Driving && _powered && _player != null && _player.InputEnabled && !UIState.BlocksGameplay)
             {
                 var kb = Keyboard.current; var gp = Gamepad.current;
                 if (kb != null)
@@ -410,36 +525,67 @@ namespace DMI.Xenoarch.Vehicles
             }
 
             float v = Vector3.Dot(_rb.linearVelocity, Fwd);
-            bool braking = Mathf.Abs(throttle) > 0.05f && Mathf.Abs(v) > 0.5f && Mathf.Sign(throttle) != Mathf.Sign(v);
+            bool reversing = Mathf.Abs(throttle) > 0.05f && Mathf.Abs(v) > 0.5f && Mathf.Sign(throttle) != Mathf.Sign(v);
             float limit = throttle >= 0f ? maxSpeed : maxSpeed / 3f;
-            float motor = braking || Mathf.Abs(v) > limit ? 0f : throttle * motorTorque;
-            float brake = hand ? brakeTorque * 1.3f : braking ? brakeTorque * Mathf.Abs(throttle) : Mathf.Abs(throttle) < 0.05f ? 250f : 0f;
+            float motor = reversing || Mathf.Abs(v) > limit ? 0f : throttle * _motorTorque;
+            float brake = hand ? _brakeTorque * 1.3f : reversing ? _brakeTorque * Mathf.Abs(throttle) : Mathf.Abs(throttle) < 0.05f ? _brakeTorque * 0.05f : 0f;
             float steerDeg = steer * Mathf.Lerp(maxSteer, highSpeedSteer, Mathf.Clamp01(Mathf.Abs(v) / maxSpeed));
-            foreach (var w in _wheels)
+            foreach (var w in wheels)
             {
-                w.wc.motorTorque = motor;
-                w.wc.brakeTorque = brake;
-                if (w.front) w.wc.steerAngle = steerDeg;
+                if (w.collider == null) continue;
+                w.collider.motorTorque = motor;
+                w.collider.brakeTorque = brake;
+                if (w.front) w.collider.steerAngle = steerDeg;
             }
         }
 
         void LateUpdate()
         {
-            // wheels roll with the ground speed (visual only)
+            if (!Live) return;
             if (_rb != null && !_rb.isKinematic)
             {
-                var right = transform.TransformDirection(Vector3.Cross(Vector3.up, _fwdLocal));
-                foreach (var w in _wheels)
+                var right = Vector3.Cross(Vector3.up, Fwd);
+                foreach (var w in wheels)
                 {
-                    if (w.visual == null) continue;
+                    if (w.visual == null || w.collider == null) continue;
                     var r = w.visual.GetComponent<Renderer>();
                     var c = r != null ? r.bounds.center : w.visual.position;
-                    w.visual.RotateAround(c, right, w.wc.rpm * 6f * Time.deltaTime);
+                    w.visual.RotateAround(c, right, w.collider.rpm * 6f * Time.deltaTime);
                 }
             }
-            // the driver rides along (look stays free within the seat range)
-            if (_state == State.Driving && _player != null && _player.Seated)
-                _player.SetSeatFrame(W(_seatLocal), Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y);
+            if (_state == State.Driving && _player != null && _player.Seated && seat != null)
+            {
+                _player.SetSeatFrame(seat.position, Quaternion.LookRotation(seat.forward, Vector3.up).eulerAngles.y);
+                if (ThirdPerson && _powered) ChaseCamera();
+            }
+        }
+
+        /// <summary>3rd person: behind and above the rover, smoothed; the seat's free look orbits it.</summary>
+        void ChaseCamera()
+        {
+            var cam = _player.ViewCamera;
+            if (cam == null) return;
+            if (!_camSaved || _cam != cam.transform) { _cam = cam.transform; _camLocalPos = _cam.localPosition; _camLocalRot = _cam.localRotation; _camSaved = true; _chaseInit = false; }
+            float roverYaw = Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y;
+            float seatYaw = Quaternion.LookRotation(seat.forward, Vector3.up).eulerAngles.y;
+            float orbit = Mathf.DeltaAngle(seatYaw, _player.transform.eulerAngles.y);
+            var dir = Quaternion.Euler(0f, roverYaw + orbit, 0f) * Vector3.forward;
+            var centre = (com != null ? com.position : transform.position) + Vector3.up * 1.2f;
+            float lift = Mathf.Clamp(_player.Pitch, -30f, 50f) / 50f;
+            var want = centre - dir * chaseDistance + Vector3.up * (chaseHeight + lift * 2.5f);
+            var to = want - centre;
+            foreach (var h in Physics.SphereCastAll(centre, 0.3f, to.normalized, to.magnitude, ~0, QueryTriggerInteraction.Ignore))
+                if (!h.collider.transform.IsChildOf(transform) && !h.collider.transform.IsChildOf(_player.transform) && h.distance < to.magnitude)
+                    want = centre + to.normalized * Mathf.Max(1.5f, h.distance - 0.2f);
+            if (!_chaseInit) { _cam.position = want; _camVel = Vector3.zero; _chaseInit = true; }
+            else _cam.position = Vector3.SmoothDamp(_cam.position, want, ref _camVel, chaseSmooth);
+            _cam.rotation = Quaternion.LookRotation(centre + dir * 2f - _cam.position, Vector3.up);
+        }
+
+        void RestoreCamera()
+        {
+            if (_camSaved && _cam != null) { _cam.localPosition = _camLocalPos; _cam.localRotation = _camLocalRot; }
+            _camSaved = false; _chaseInit = false;
         }
     }
 }

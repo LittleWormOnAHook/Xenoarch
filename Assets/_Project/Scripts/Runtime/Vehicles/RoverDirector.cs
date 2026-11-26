@@ -55,11 +55,19 @@ namespace DMI.Xenoarch.Vehicles
             if (!CanDeploy(item, out why)) return false;
             var vd = (VehicleItemDefinition)item;
             var p = FindAnyObjectByType<FirstPersonController>();
-            var go = Instantiate(vd.vehiclePrefab);
+            GameObject go;
+            RoverVehicle.SpawningDeployed = true;
+            try { go = Instantiate(vd.vehiclePrefab); }
+            finally { RoverVehicle.SpawningDeployed = false; }
             go.name = vd.vehiclePrefab.name.Trim() + " (deployed)";
             SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
-            var rover = go.GetComponent<RoverVehicle>() ?? go.AddComponent<RoverVehicle>();
-            rover.Init();
+            var rover = go.GetComponent<RoverVehicle>();
+            if (rover == null)
+            {   // prefab not set up yet: build the rig at runtime
+                RoverVehicle.SpawningDeployed = true;
+                try { rover = go.AddComponent<RoverVehicle>(); }
+                finally { RoverVehicle.SpawningDeployed = false; }
+            }
             if (!rover.PlaceNear(p.transform, vd.deployDistance)) { Destroy(go); why = "No flat ground in front of you."; return false; }
             _rover = rover; _itemId = vd.Id;
             Debug.Log($"[Xenoarch] Rover: deployed {vd.Id} at {go.transform.position}");

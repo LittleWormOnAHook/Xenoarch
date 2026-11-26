@@ -22,6 +22,7 @@ namespace DMI.Xenoarch.EditorTools
     {
         const string Trigger = "Temp/xeno_phase1e.trig";
         const string RoverTrigger = "Temp/xeno_rover.trig";
+        const string RoverBakeTrigger = "Temp/xeno_rover_bake.trig";
         const string RoverItemPath = "Assets/_Project/Data/Items/Item_vehicle_grasshopper.asset";
         const string GrasshopperGuid = "73a3d6dceb2a6f747b43ee02c5144d36"; // Assets/_Project/Prefabs/Vehicles and Ships/Grasshoper .prefab
         const string LogFile = "Logs/xeno_phase1e.txt";
@@ -37,6 +38,7 @@ namespace DMI.Xenoarch.EditorTools
             _next = EditorApplication.timeSinceStartup + 1.0;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling) return;
             if (File.Exists(Trigger)) { File.Delete(Trigger); Run(); }
+            if (File.Exists(RoverBakeTrigger)) { File.Delete(RoverBakeTrigger); BakeSceneRover(); }
             if (File.Exists(RoverTrigger)) { File.Delete(RoverTrigger); try { RoverItem(); AssetDatabase.SaveAssets(); Log("rover done"); } catch (Exception e) { Log("FAILED " + e); } }
         }
 
@@ -133,6 +135,47 @@ namespace DMI.Xenoarch.EditorTools
                 if (!entries.Any(e => e.Id == item.Id)) { entries.Add(item); reg.SetEntries(entries); EditorUtility.SetDirty(reg); }
             }
             Log($"rover item {(created ? "created" : "updated")} ({RoverItemPath}), prefab {(prefab != null ? AssetDatabase.GetAssetPath(prefab) : "NOT FOUND (guid " + GrasshopperGuid + ")")}, registry {(reg != null ? reg.name : "missing")}");
+        }
+
+        /// <summary>t195u: set up the Grasshopper instance in the open scene (his half-size edit kept) and apply it to the
+        /// prefab: rover component, rigidbody, wheel colliders, chassis, entry zone, seat / door / COM markers. The scene
+        /// itself is not saved.</summary>
+        [MenuItem("Xenoarch/Setup/Rover: Set Up Scene Grasshopper + Apply To Prefab", priority = 61)]
+        public static void BakeSceneRover()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("rover bake: exit Play Mode first"); return; }
+            try
+            {
+                string prefabPath = AssetDatabase.GUIDToAssetPath(GrasshopperGuid);
+                GameObject inst = null; int count = 0;
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    var sc = SceneManager.GetSceneAt(i);
+                    if (!sc.isLoaded) continue;
+                    foreach (var root in sc.GetRootGameObjects())
+                        foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                        {
+                            if (!PrefabUtility.IsAnyPrefabInstanceRoot(t.gameObject)) continue;
+                            if (PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(t.gameObject) != prefabPath) continue;
+                            count++; if (inst == null) inst = t.gameObject;
+                        }
+                }
+                if (inst == null) { Log($"rover bake: no instance of {prefabPath} in the open scene(s)"); return; }
+                var tr = inst.transform;
+                Log($"rover bake: instance '{inst.name}' in {inst.scene.name} ({count} found) pos {tr.position} rot {tr.eulerAngles} scale {tr.localScale} lossy {tr.lossyScale}; overrides {PrefabUtility.GetObjectOverrides(inst).Count}, added objects {PrefabUtility.GetAddedGameObjects(inst).Count}, scene dirty {inst.scene.isDirty}");
+                var rover = inst.GetComponent<DMI.Xenoarch.Vehicles.RoverVehicle>();
+                if (rover == null) rover = Undo.AddComponent<DMI.Xenoarch.Vehicles.RoverVehicle>(inst);
+                Undo.RegisterFullObjectHierarchyUndo(inst, "Rover setup");
+                rover.Bake();
+                EditorUtility.SetDirty(rover);
+                var w0 = rover.wheels.Count > 0 && rover.wheels[0].collider != null ? rover.wheels[0].collider.radius : 0f;
+                Log($"rover bake: door {(rover.door ? rover.door.name : "MISSING")} open {rover.doorOpen.eulerAngles}, chair {(rover.driverChair ? rover.driverChair.name + " @" + rover.driverChair.position : "MISSING")}, console {(rover.console ? rover.console.name : "MISSING")}, wheels {rover.wheels.Count} (r {w0:0.###} m, front {rover.wheels.FindAll(w => w.front).Count}), seat {rover.seat.position} eye {rover.seatedEyeHeight:0.##}, chassis {rover.chassis.size}");
+                PrefabUtility.ApplyPrefabInstance(inst, InteractionMode.AutomatedAction);
+                AssetDatabase.SaveAssets();
+                var asset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                Log($"rover bake: applied to {prefabPath} (prefab root scale {asset.transform.localScale}, RoverVehicle {(asset.GetComponent<DMI.Xenoarch.Vehicles.RoverVehicle>() != null)}); scene NOT saved");
+            }
+            catch (Exception e) { Log("rover bake FAILED " + e); }
         }
 
         static void NavDrive()

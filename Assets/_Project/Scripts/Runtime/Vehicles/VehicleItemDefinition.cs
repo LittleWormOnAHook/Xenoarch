@@ -12,6 +12,6 @@ namespace DMI.Xenoarch.Vehicles
     public sealed class VehicleItemDefinition : ItemDefinition
     {
         [Tooltip("Vehicle prefab (Assets/_Project/Prefabs/Vehicles and Ships).")] public GameObject vehiclePrefab;
-        [Tooltip("How far in front of the player the vehicle is set down (m).")] public float deployDistance = 14f;
+        [Tooltip("How far in front of the player the vehicle is set down (m).")] public float deployDistance = 9f;
     }
 }
