@@ -163,6 +163,13 @@ namespace DMI.Xenoarch.EditorTools
             var c = MapView3D.Project(new Vector3(0, 1, 0), 0f, 0f, out _); var r = MapView3D.Project(new Vector3(1, 0, 0), 90f, 90f, out _);
             check(Near(a, new Vector2(1, 0)) && Near(b, new Vector2(0, -1)) && Near(c, new Vector2(0, -1)) && Near(r.normalized, new Vector2(0, 1)),
                 "3C maps: 3D map projection (top-down, edge-on, rotated)");
+            // Free rotation: tumble past the top to view from underneath (no clamp), quaternion stays unit after many drags.
+            var cam = MapView3D.DefaultCam(0f, 90f);
+            for (int i = 0; i < 1000; i++) cam = cam * Quaternion.AngleAxis(0.18f, Vector3.right) * Quaternion.AngleAxis(0.05f, Vector3.up);
+            float len = Mathf.Sqrt(cam.x * cam.x + cam.y * cam.y + cam.z * cam.z + cam.w * cam.w);
+            var under = MapView3D.DefaultCam(0f, 90f) * Quaternion.AngleAxis(180f, Vector3.right);
+            MapView3D.Project(new Vector3(0, 1, 0), MapView3D.DefaultCam(0f, 90f), out float dTop); MapView3D.Project(new Vector3(0, 1, 0), under, out float dUnder);
+            check(Mathf.Abs(len - 1f) < 0.01f && dTop > 0.99f && dUnder < -0.99f, $"3C maps: free 3D rotation (view from below works, rotation stays unit: {len:0.0000})");
             var m = SurfaceMapView.ToMap01(new Rect(-100, -100, 200, 200), new Vector2(100, 100));
             check(Near(m, new Vector2(1, 0)), "3C maps: surface map world -> map coordinates");
 

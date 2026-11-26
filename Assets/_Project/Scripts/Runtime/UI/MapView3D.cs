@@ -6,18 +6,31 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.UI
 {
     /// <summary>
-    /// Interactive 2.5D map (system and galaxy maps): orthographic view of points on/around a plane.
-    /// LMB/MMB drag pans, RMB drag rotates (yaw) and tilts (pitch), wheel zooms at the cursor, click selects.
-    /// View state lives in <see cref="ViewState"/> so it survives terminal rebuilds.
+    /// Interactive 3D map (system and galaxy maps): orthographic view that orbits a focus point, free in all directions.
+    /// RMB drag (or Alt+LMB) rotates trackball-style about the view's own axes (no clamps, no gimbal flip: you can go
+    /// over the top and underneath); Shift+RMB drag or Q/E rolls. LMB/MMB drag pans in screen space along the rotated
+    /// view (any direction); Ctrl+LMB drag moves the focus in depth. Wheel zooms smoothly toward the cursor over a wide
+    /// range; double-click a body to fly the focus to it and orbit around it; click selects. View state lives in
+    /// <see cref="ViewState"/> so it survives terminal rebuilds.
     /// </summary>
     public sealed class MapView3D : VisualElement
     {
         public sealed class ViewState
         {
-            public float yaw, pitch = 60f, zoom = 1f;
-            public Vector2 pan;
-            public void Reset() { yaw = 0f; pitch = 60f; zoom = 1f; pan = Vector2.zero; }
+            [Tooltip("Tilt used by Reset (90 = top-down).")] public float pitch = 60f;
+            public float yaw;
+            public float zoom = 1f;
+            /// <summary>World point at the view centre (the orbit pivot).</summary>
+            public Vector3 focus;
+            Quaternion _cam; bool _hasCam;
+            /// <summary>Camera orientation (view looks along its forward; up is screen up).</summary>
+            public Quaternion Cam { get { if (!_hasCam) { _cam = DefaultCam(yaw, pitch); _hasCam = true; } return _cam; } set { _cam = Normalize(value); _hasCam = true; } }
+            internal float targetZoom = -1f; internal Vector2 zoomAnchor; internal bool focusAnim; internal Vector3 focusTarget;
+            public void Reset() { zoom = 1f; targetZoom = -1f; focus = Vector3.zero; focusAnim = false; _hasCam = false; }
         }
+
+        public static Quaternion DefaultCam(float yaw, float pitch) => Quaternion.Euler(pitch, -yaw, 0f);
+        static Quaternion Normalize(Quaternion q) { float m = Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w); return m < 1e-6f ? Quaternion.identity : new Quaternion(q.x / m, q.y / m, q.z / m, q.w / m); }
 
         public struct Item { public string id, label; public Vector3 pos; public Color color; public float size; public bool selected, here, dim, alwaysLabel; }
         public struct Ring { public Vector3 centre; public float radius; public Color color; }
@@ -29,11 +42,15 @@ namespace DMI.Xenoarch.UI
         public float Extent = 1f;
         public ViewState State;
         public event Action<string> Clicked;
+        /// <summary>Raised after a double-click focused a body.</summary>
+        public event Action<string> Focused;
 
         readonly List<Label> _labels = new List<Label>();
-        Vector2 _downPos, _lastPos; int _button = -1; bool _dragged;
+        Vector2 _downPos, _lastPos; int _button = -1; bool _dragged; bool _shift, _ctrl, _alt;
+        // Static: the terminal rebuilds the map on the first click, so a per-instance record would miss the second one.
+        static string _lastClickId; static float _lastClickTime;
 
-        public const float MinPitch = 5f, MaxPitch = 90f, MinZoom = 0.4f, MaxZoom = 40f;
+        public const float MinZoom = 0.05f, MaxZoom = 400f;
 
         public MapView3D(ViewState state)
         {
@@ -41,28 +58,40 @@ namespace DMI.Xenoarch.UI
             AddToClassList("xa-term__map");
             style.overflow = Overflow.Hidden;
             pickingMode = PickingMode.Position;
+            focusable = true;
             generateVisualContent += Draw;
             RegisterCallback<GeometryChangedEvent>(_ => Relayout());
             RegisterCallback<PointerDownEvent>(OnDown);
             RegisterCallback<PointerMoveEvent>(OnMove);
             RegisterCallback<PointerUpEvent>(OnUp);
             RegisterCallback<WheelEvent>(OnWheel);
+            RegisterCallback<KeyDownEvent>(OnKey);
             RegisterCallback<ContextClickEvent>(e => e.StopPropagation());
+            schedule.Execute(Animate).Every(16);
         }
 
-        /// <summary>Orthographic projection: yaw about Y, then elevation (90 = top-down, 0 = edge-on). Returns UI offset
+        /// <summary>Orthographic projection for a camera at (yaw, pitch) (90 = top-down, 0 = edge-on). Returns the UI offset
         /// from the view centre in map units (y down) and a depth (larger = nearer the viewer).</summary>
-        public static Vector2 Project(Vector3 p, float yaw, float pitch, out float depth)
+        public static Vector2 Project(Vector3 p, float yaw, float pitch, out float depth) => Project(p, DefaultCam(yaw, pitch), out depth);
+
+        public static Vector2 Project(Vector3 p, Quaternion cam, out float depth)
         {
-            var r = Quaternion.Euler(0f, yaw, 0f) * p;
-            float e = pitch * Mathf.Deg2Rad, s = Mathf.Sin(e), c = Mathf.Cos(e);
-            depth = r.y * s - r.z * c;
-            return new Vector2(r.x, -(r.z * s + r.y * c));
+            var v = Quaternion.Inverse(cam) * p;
+            depth = -v.z;
+            return new Vector2(v.x, -v.y);
         }
 
-        float Scale => Mathf.Min(contentRect.width, contentRect.height) * 0.46f / Mathf.Max(0.0001f, Extent) * State.zoom;
-        Vector2 Centre => contentRect.center + State.pan;
-        public Vector2 ToScreen(Vector3 p, out float depth) => Centre + Project(p, State.yaw, State.pitch, out depth) * Scale;
+        float ScaleFor(float zoom) => Mathf.Min(contentRect.width, contentRect.height) * 0.46f / Mathf.Max(0.0001f, Extent) * zoom;
+        float Scale => ScaleFor(State.zoom);
+        Vector2 Centre => contentRect.center;
+        public Vector2 ToScreen(Vector3 p, out float depth) => Centre + Project(p - State.focus, State.Cam, out depth) * Scale;
+
+        /// <summary>World point under a UI position, on the plane through the focus facing the viewer.</summary>
+        Vector3 ScreenToWorld(Vector2 local, float zoom)
+        {
+            var m = (local - Centre) / Mathf.Max(1e-6f, ScaleFor(zoom));
+            return State.focus + State.Cam * new Vector3(m.x, -m.y, 0f);
+        }
 
         public void Rebuild() { Relayout(); MarkDirtyRepaint(); }
 
@@ -127,7 +156,9 @@ namespace DMI.Xenoarch.UI
         void OnDown(PointerDownEvent e)
         {
             _button = e.button; _downPos = _lastPos = (Vector2)e.localPosition; _dragged = false;
+            _shift = e.shiftKey; _ctrl = e.ctrlKey || e.commandKey; _alt = e.altKey;
             this.CapturePointer(e.pointerId);
+            Focus();
             e.StopPropagation();
         }
 
@@ -137,12 +168,15 @@ namespace DMI.Xenoarch.UI
             var pos = (Vector2)e.localPosition; var d = pos - _lastPos; _lastPos = pos;
             if ((pos - _downPos).sqrMagnitude > 16f) _dragged = true;
             if (!_dragged) return;
-            if (_button == 1 || (_button == 0 && e.altKey))
-            {
-                State.yaw -= d.x * 0.4f;
-                State.pitch = Mathf.Clamp(State.pitch - d.y * 0.3f, MinPitch, MaxPitch);
-            }
-            else State.pan += d;
+            var cam = State.Cam;
+            if (_button == 1 && (_shift || e.shiftKey))
+                State.Cam = cam * Quaternion.AngleAxis(-d.x * 0.4f, Vector3.forward);               // roll
+            else if (_button == 1 || (_button == 0 && _alt))
+                State.Cam = cam * Quaternion.AngleAxis(d.x * 0.4f, Vector3.up) * Quaternion.AngleAxis(-d.y * 0.4f, Vector3.right); // trackball: own axes, unclamped
+            else if (_button == 0 && _ctrl)
+                { State.focus += cam * Vector3.forward * (-d.y / Mathf.Max(1e-6f, Scale)); State.focusAnim = false; } // depth
+            else
+                { State.focus -= cam * new Vector3(d.x, -d.y, 0f) / Mathf.Max(1e-6f, Scale); State.focusAnim = false; } // screen-space pan
             Rebuild();
         }
 
@@ -153,25 +187,72 @@ namespace DMI.Xenoarch.UI
             _button = -1;
             if (!click) return;
             var pos = (Vector2)e.localPosition;
-            string best = null; float bestD = float.MaxValue;
+            string best = null; float bestD = float.MaxValue; Vector3 bestPos = default;
             foreach (var it in Items)
             {
                 var s = ToScreen(it.pos, out _);
                 float d = (s - pos).magnitude, hit = Mathf.Max(10f, it.size * 0.5f + 5f);
-                if (d <= hit && d < bestD) { bestD = d; best = it.id; }
+                if (d <= hit && d < bestD) { bestD = d; best = it.id; bestPos = it.pos; }
             }
-            if (best != null) Clicked?.Invoke(best);
+            if (best == null) return;
+            bool dbl = best == _lastClickId && Time.unscaledTime - _lastClickTime < 0.4f;
+            _lastClickId = best; _lastClickTime = Time.unscaledTime;
+            if (dbl) { FocusOn(bestPos); Focused?.Invoke(best); _lastClickId = null; }
+            else Clicked?.Invoke(best);
+        }
+
+        /// <summary>Fly the orbit pivot to a world point (rotation then orbits around it); zooms in a little if far out.</summary>
+        public void FocusOn(Vector3 world)
+        {
+            State.focusTarget = world; State.focusAnim = true;
+            if (State.zoom < 2f) { State.targetZoom = 2f; State.zoomAnchor = Centre; }
         }
 
         void OnWheel(WheelEvent e)
         {
-            float old = State.zoom;
-            State.zoom = Mathf.Clamp(State.zoom * Mathf.Pow(1.15f, -Mathf.Sign(e.delta.y)), MinZoom, MaxZoom);
-            // Zoom toward the cursor.
-            var m = (Vector2)e.localMousePosition - contentRect.center;
-            State.pan = m - (m - State.pan) * (State.zoom / old);
-            Rebuild();
+            float from = State.targetZoom > 0f ? State.targetZoom : State.zoom;
+            if (Mathf.Abs(e.delta.y) < 1e-4f) return;
+            float step = e.delta.y > 0f ? 1f / 1.2f : 1.2f;
+            State.targetZoom = Mathf.Clamp(from * step, MinZoom, MaxZoom);
+            State.zoomAnchor = (Vector2)e.localMousePosition;
             e.StopPropagation();
+        }
+
+        void OnKey(KeyDownEvent e)
+        {
+            if (e.keyCode == KeyCode.Q || e.keyCode == KeyCode.E)
+            {
+                State.Cam = State.Cam * Quaternion.AngleAxis(e.keyCode == KeyCode.Q ? 5f : -5f, Vector3.forward);
+                Rebuild(); e.StopPropagation();
+            }
+            else if (e.keyCode == KeyCode.R) { State.Reset(); Rebuild(); e.StopPropagation(); }
+        }
+
+        /// <summary>Smooth zoom toward the cursor (the world point under it stays put) and focus flights.</summary>
+        void Animate()
+        {
+            bool dirty = false;
+            if (State.targetZoom > 0f)
+            {
+                float z = State.zoom;
+                float next = Mathf.Exp(Mathf.Lerp(Mathf.Log(z), Mathf.Log(State.targetZoom), 0.25f));
+                if (Mathf.Abs(Mathf.Log(next / State.targetZoom)) < 0.002f) { next = State.targetZoom; State.targetZoom = -1f; }
+                var anchorWorld = ScreenToWorld(State.zoomAnchor, z);
+                State.zoom = next;
+                if (!State.focusAnim)
+                {
+                    var after = ScreenToWorld(State.zoomAnchor, next);
+                    State.focus += anchorWorld - after;
+                }
+                dirty = true;
+            }
+            if (State.focusAnim)
+            {
+                State.focus = Vector3.Lerp(State.focus, State.focusTarget, 0.2f);
+                if ((State.focus - State.focusTarget).sqrMagnitude < 1e-8f * Mathf.Max(1f, Extent * Extent)) { State.focus = State.focusTarget; State.focusAnim = false; }
+                dirty = true;
+            }
+            if (dirty) Rebuild();
         }
     }
 }

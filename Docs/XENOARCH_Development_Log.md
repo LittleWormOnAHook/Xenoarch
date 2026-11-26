@@ -168,3 +168,9 @@ Times are US Eastern (ET).
 - **Crafting (`Crafting/CraftRecipe`, `CraftingService`, ASH pattern reimplemented; ASH only read):** recipes by category, have/need per ingredient, timed craft, ingredients re-checked and consumed at the end, upgrades in order. Components: Alloy Plate, Wiring Bundle, Circuit Board, Sensor Array; Sample Containers; Powered Drill; upgrades: Storage Expansion I-III (crate slots), Handheld Scanner Range I-III, Orbital Scanner Range I-III. Most need the ship's workshop (craft while aboard).
 - **Icons:** 22 white icons from game-icons.net (CC BY 3.0) in `Art/Icons/GameIcons`, attribution in its `SOURCES.md`; assigned to every material, component and valuable that had no icon (existing icons untouched).
 - Verification: compile clean 20:58 ET, smoke 165 pass / 0 fail (new: strata yields, crate-fed refiner and crafting, ordered upgrades raising crate slots, icons + SOURCES.md; 1B cockpit check relaxed to allow Anthony's second helm console and extra seat). Not played by hand: the inventory window, crafting UI, digging yields, lift audio and the bay return spawn are untested in Play.
+
+
+## 2026-11-25 - Maps: free 3D view + info in side panel
+- MapView3D: quaternion trackball (RMB / Alt+LMB, unclamped, view from below), roll (Shift+RMB, Q/E), screen-space pan (LMB/MMB), Ctrl+LMB depth pan, smooth zoom-to-cursor 0.05-400x, double-click to focus/orbit a body, R / Reset view.
+- NavigationTerminal: floating info card removed; its info merged into the right panel (scrolls) above fuel/course/land actions, system and galaxy maps.
+- Smoke: new free-rotation check. SurfaceMapView (shuttle/orbit-scan map) stays 2D.
