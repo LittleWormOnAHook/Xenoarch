@@ -42,6 +42,8 @@ namespace DMI.Xenoarch.Interaction
             foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude))
             {
                 if (!(mb is IInteractable usable) || !mb.isActiveAndEnabled) continue;
+                if (mb.gameObject.scene.buildIndex < 0 && mb.gameObject.scene.name == "DontDestroyOnLoad") continue; // runtime UI (e.g. InventoryWindow), not a placed device
+                if ((mb.gameObject.hideFlags & HideFlags.DontSave) != 0) continue;                                      // runtime-only helpers (e.g. the helm's built-in orbital scanner)
                 if (HasOwnCollider(mb, usable)) continue;
                 if (Fit(mb, usable)) { added++; names.Add($"{mb.GetType().Name} on '{mb.name}'"); }
             }

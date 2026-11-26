@@ -101,7 +101,7 @@ namespace DMI.Xenoarch.UI
         void OnDisable()
         {
             SceneManager.sceneLoaded -= OnLoaded;
-            if (_hooked && XenoarchRuntime.Session != null) XenoarchRuntime.Session.Discovery.JournalAdded -= OnJournal;
+            if (_hooked && XenoarchRuntime.Session != null) { XenoarchRuntime.Session.Discovery.JournalAdded -= OnJournal; XenoarchRuntime.Session.Exploration.SiteRevealed -= OnSiteRevealed; }
         }
 
         void OnLoaded(Scene s, LoadSceneMode m)
@@ -111,6 +111,8 @@ namespace DMI.Xenoarch.UI
         }
 
         void OnJournal(DMI.Xenoarch.Discovery.JournalEntry e) { if (GameSettings.AutosaveOnDiscovery) Request(2f); }
+        // t182u: an orbital pass or handheld scan that reveals a site is saved without waiting for the next travel.
+        void OnSiteRevealed(string siteId, int level) { if (GameSettings.AutosaveOnDiscovery) Request(2f); }
 
         /// <summary>Ask for an autosave after <paramref name="delay"/> seconds (coalesces requests).</summary>
         public void Request(float delay)
@@ -122,7 +124,7 @@ namespace DMI.Xenoarch.UI
         void Update()
         {
             var rt = XenoarchRuntime.Instance;
-            if (!_hooked && XenoarchRuntime.Session != null) { XenoarchRuntime.Session.Discovery.JournalAdded += OnJournal; _hooked = true; }
+            if (!_hooked && XenoarchRuntime.Session != null) { XenoarchRuntime.Session.Discovery.JournalAdded += OnJournal; XenoarchRuntime.Session.Exploration.SiteRevealed += OnSiteRevealed; _hooked = true; }
             if (rt == null || !rt.SessionActive) { _nextTimed = -1f; return; }
             int minutes = GameSettings.AutosaveMinutes;
             if (minutes > 0)

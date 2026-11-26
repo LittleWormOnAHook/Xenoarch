@@ -92,9 +92,9 @@ namespace DMI.Xenoarch.Ship
             }
             Btn(helm, "Navigation map", () => SwitchTo<NavigationTerminal>("navigation terminal"));
             // Same scanner as the standalone Orbital Scanning terminal (which stays aboard); this is just another route to it.
-            bool hasScanner = FindAnyObjectByType<OrbitalScannerTerminal>() != null;
-            Btn(helm, "Orbital scanner", () => SwitchTo<OrbitalScannerTerminal>("orbital scanner"), hasScanner);
-            if (!hasScanner) Text(helm, "No orbital scanner terminal aboard.", "xa-term__dim");
+            // t182u: when no active Orbital Scanning terminal is placed aboard, the helm opens its own (same script, same
+            // saved ExplorationService state), so scanning works whichever object the terminal script ends up on.
+            Btn(helm, "Orbital scanner", () => { var t = OrbitalScanner(); if (t != null) Press(t.Open); });
 
             // --- ship status
             var stat = ScrollCol(body, 1);
@@ -116,6 +116,23 @@ namespace DMI.Xenoarch.Ship
             Text(crew, CockpitSeat.Occupied != null ? "Seated at the helm." : "Standing.", "xa-term__dim");
             if (CockpitSeat.Occupied != null) Btn(crew, "Stand up", () => { Close(); CockpitSeat.Occupied?.Stand(); }).AddToClassList("xa-term__btn--ghost");
             if (!string.IsNullOrEmpty(_message)) Text(crew, _message, "xa-term__good");
+        }
+
+        OrbitalScannerTerminal _builtInScanner;
+
+        /// <summary>The active Orbital Scanning terminal in the scene, else a helm-owned one (child object, no collider).</summary>
+        OrbitalScannerTerminal OrbitalScanner()
+        {
+            var t = FindAnyObjectByType<OrbitalScannerTerminal>();
+            if (t != null) return t;
+            if (_builtInScanner == null)
+            {
+                var go = new GameObject("Orbital Scanner (helm)") { hideFlags = HideFlags.DontSave };   // runtime only, never written into the scene
+                go.transform.SetParent(transform, false);
+                _builtInScanner = go.AddComponent<OrbitalScannerTerminal>();
+                _builtInScanner.terminalName = "Orbital Scanning Terminal";
+            }
+            return _builtInScanner;
         }
 
         void SwitchTo<T>(string label) where T : TerminalWindow

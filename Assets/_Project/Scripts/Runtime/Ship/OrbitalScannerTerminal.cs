@@ -85,7 +85,8 @@ namespace DMI.Xenoarch.Ship
                 if (st.revealLevel <= 0) { hidden++; continue; }
                 shown++;
                 var est = site.position + ExplorationService.EstimateOffset(site, st.revealLevel);
-                string what = st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : $"Unresolved anomaly {shown}";
+                string what = (st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : $"Unresolved anomaly {shown}")
+                    + (KnownSites.IsCleared(x, site) ? " (cleared)" : "");
                 string where = st.revealLevel >= 3 ? $"marked at ({site.position.x:0}, {site.position.z:0})" : $"near ({est.x:0}, {est.z:0}) +/- {ExplorationService.Uncertainty(st.revealLevel):0} m";
                 bool isSel = site.Id == _selectedSite;
                 if (isSel) sel = site;

@@ -54,7 +54,8 @@ namespace DMI.Xenoarch.Ship
                     continue;
                 }
                 n++;
-                string what = st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : $"Unresolved anomaly {n}";
+                string what = (st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : $"Unresolved anomaly {n}")
+                    + (KnownSites.IsCleared(x, site) ? " (cleared)" : "");
                 string where = st.revealLevel >= 3 ? "pinpointed" : $"+/- {ExplorationService.Uncertainty(st.revealLevel):0} m";
                 Zone(left, site.Id, $"Near: {what}", $"Signature {where}");
             }

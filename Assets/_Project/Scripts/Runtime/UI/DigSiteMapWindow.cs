@@ -100,14 +100,11 @@ namespace DMI.Xenoarch.UI
             if (body == null || body.surfaceMapRect.width < 10f) { Note(_body, "No surface map here. Land on a body to see its landing region; the Dig Sites tab works anywhere."); return; }
             var map = new SurfaceMapView(body.surfaceMap, body.surfaceMapRect) { AutoSquare = false };
             map.style.width = 660; map.style.height = 660; map.ShowLabels = true;
-            foreach (var site in x.SitesOnBody(body.Id))
+            foreach (var k in KnownSites.OnBody(x, body.Id))   // t182u: orbital + handheld reveals, shared with the minimap
             {
-                var st = x.Site(site.Id);
-                if (st.revealLevel <= 0) continue;
-                var est = site.position + ExplorationService.EstimateOffset(site, st.revealLevel);
-                var dm = s.DigMaps.Find(site.Id);
-                map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Site, world = new Vector2(est.x, est.z), uncertainty = ExplorationService.Uncertainty(st.revealLevel),
-                    label = dm != null ? $"{dm.Code} {site.displayName}" : st.revealLevel >= 3 ? site.displayName : "Signature" });
+                var dm = s.DigMaps.Find(k.Def.Id);
+                map.Markers.Add(new SurfaceMapView.Marker { id = k.Def.Id, kind = SurfaceMapView.Kind.Site, world = k.Map, uncertainty = k.Uncertainty,
+                    label = dm != null ? $"{dm.Code} {k.Def.displayName}" + (k.Cleared ? " (cleared)" : "") : k.Label() });
             }
             var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
             if (vdir != null)

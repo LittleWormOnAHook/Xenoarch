@@ -99,14 +99,9 @@ namespace DMI.Xenoarch.UI
             if (session == null || _map == null) return;
             var x = session.Exploration;
             _map.Markers.Clear();
-            foreach (var site in x.SitesOnBody(_body.Id))
-            {
-                var st = x.Site(site.Id);
-                if (st.revealLevel <= 0) continue;
-                var est = site.position + ExplorationService.EstimateOffset(site, st.revealLevel);
-                _map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Site, world = new Vector2(est.x, est.z),
-                    uncertainty = ExplorationService.Uncertainty(st.revealLevel), label = st.revealLevel >= 3 ? site.displayName : "Signature" });
-            }
+            foreach (var k in KnownSites.OnBody(x, _body.Id))   // t182u: orbital + handheld reveals, shared with the M map
+                _map.Markers.Add(new SurfaceMapView.Marker { id = k.Def.Id, kind = SurfaceMapView.Kind.Site, world = k.Map,
+                    uncertainty = k.Uncertainty, label = k.Label() });
             var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
             if (vdir != null)
                 foreach (var v in vdir.Sites)
