@@ -119,6 +119,11 @@ namespace DMI.Xenoarch.EditorTools
                 File.Delete(XenoarchEconomySetup.Trigger);
                 XenoarchEconomySetup.RunFromTrigger();
             }
+            if (File.Exists(XenoarchRockSetup.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(XenoarchRockSetup.Trigger);
+                XenoarchRockSetup.RunFromTrigger();
+            }
             if (File.Exists(XenoarchDepthProbeSetup.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 File.Delete(XenoarchDepthProbeSetup.Trigger);

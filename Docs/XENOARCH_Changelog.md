@@ -1,5 +1,14 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (morning) - Decorative rocks on planets (t151u, UNTESTED)
+
+- Poly Haven CC0 rocks from `Assets/Xenoarch_Free` are now prefabs in `Resources/World/Rocks` (moon_rock_01/03/05/07 and boulder_01). They use URP Lit materials in `Art/Rocks`, convex colliders, a bottom-centre pivot normalised to 1 m, and a cull-only LODGroup.
+- `RockScatterDirector` places them at runtime on every surface body: Moon 180, Mars 160, and future planets 140 tinted from their map colour. Placement is seeded and repeatable. Rocks are mostly small with some clusters, sunk 20% into the ground, kept to slopes of 30-32 degrees or less, and tinted per planet (Mars red-orange, Moon grey).
+- Rocks keep clear of dig sites, landing zones, the base zone (30 m), the walking corridors from the base to each site zone, valuable caches, resource nodes, player spawns and any existing collider. No scene was edited or saved, and nothing placed was moved.
+- Boulder_01 is 124k triangles, so it is rare (weight 0.1). Rocks cull below 2% of screen height.
+- Data: `Resources/World/RockScatterProfile`. Rebuild: Tools/Xenoarch/World/Build Rock Prefabs + Scatter Profile (`Temp/xenoarch_rocks.trigger`).
+- The ambientCG terrain textures stay unused for now. The UI icon swap is on hold until Anthony picks from the mockups.
+
 ## 2026-11-26 (morning) - Xenoarch_Free asset pack moved and added to git
 
 - Anthony moved the CC0 pack to `Assets/Xenoarch_Free/` and deleted the old `Assets/!GET_MORE_ASSETS_FOR_FREE` promo folder. Planet Forge is cleared for use (Anthony, t147u).

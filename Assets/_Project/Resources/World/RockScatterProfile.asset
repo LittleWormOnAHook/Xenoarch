@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 276410d1583c4e01af3642bf3a55bdb3, type: 3}
+  m_Name: RockScatterProfile
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.World.RockScatterProfile
+  rocks:
+  - prefab: {fileID: 5230315179006870318, guid: ce22481a1606bf34fb1a8189abffb677, type: 3}
+    weight: 1
+    size: {x: 0.35, y: 2}
+  - prefab: {fileID: 8064884412861654083, guid: c1d838e844fdc914298f65814cba77e2, type: 3}
+    weight: 1
+    size: {x: 0.35, y: 2}
+  - prefab: {fileID: 388687877161976484, guid: a111fdcb8e1e4c842b60994592257193, type: 3}
+    weight: 1
+    size: {x: 0.35, y: 2}
+  - prefab: {fileID: 8582926878848350182, guid: 5056777b5fcb14d4491980b6f506602d, type: 3}
+    weight: 1
+    size: {x: 0.35, y: 2}
+  - prefab: {fileID: 8941310798929041186, guid: d833d779d18d3a843be3fe445facbb36, type: 3}
+    weight: 0.1
+    size: {x: 1.4, y: 3.6}
+  bodies:
+  - bodyId: body.sol.moon
+    count: 180
+    clusterShare: 0.4
+    tint: {r: 0.86, g: 0.86, b: 0.88, a: 1}
+    sizeMultiplier: 1
+    maxSlope: 32
+  - bodyId: body.sol.mars
+    count: 160
+    clusterShare: 0.35
+    tint: {r: 1, g: 0.6, b: 0.43, a: 1}
+    sizeMultiplier: 1
+    maxSlope: 30
+  fallback:
+    bodyId: '*'
+    count: 140
+    clusterShare: 0.35
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    sizeMultiplier: 1
+    maxSlope: 30
+  fallbackTintFromMap: 0.5
+  siteClearance: 8
+  zoneClearance: 12
+  baseClearance: 30
+  cacheClearance: 5
+  nodeClearance: 4
+  pathHalfWidth: 6
+  rockSpacing: 3
+  sink: 0.2
+  cullScreenSize: 0.02
