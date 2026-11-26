@@ -30,7 +30,12 @@ namespace DMI.Xenoarch.UI
         void EnsureDoc()
         {
             if (_doc != null) return;
-            _doc = gameObject.AddComponent<UIDocument>();
+            // Own child object (t135u): a UIDocument on the runtime object made every other runtime UIDocument (inventory,
+            // maps, pause, helmet, journal reader - children of that object) a nested child of the minimap's panel, and
+            // Bind's root.Clear() on each scene load wiped them (inventory / M map opened invisibly and blocked input).
+            var host = new GameObject("[Minimap HUD]");
+            host.transform.SetParent(transform, false);
+            _doc = host.AddComponent<UIDocument>();
             _doc.panelSettings = XenoarchUI.LoadPanelSettings();
             _doc.sortingOrder = 40;
         }

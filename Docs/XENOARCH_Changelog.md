@@ -1,5 +1,13 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (night) - t135-t136 (ZEN-13): M map hid the minimap, hotbar shift, no inventory on the Moon; minimap to the corner (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- Cause: `MinimapHud` put its UIDocument on the XenoarchRuntime object itself. Every other runtime UI (inventory, M/N maps, pause menu, helmet HUD, journal reader) builds its UIDocument on a child of that object, and Unity nests a child object's UIDocument inside the parent object's UIDocument. So all of them lived inside the minimap's panel, and the minimap cleared its panel (`root.Clear()`) on every scene load. After landing on the Moon, the inventory and the maps window still "opened" (cursor freed, input blocked, minimap and helmet hidden, so the hotbar dropped to the no-helmet position) but had nothing to draw, so nothing appeared.
+- Fix: the minimap now has its own child object (`[Minimap HUD]`), so no UI is nested in it and a scene load only clears the minimap. Closing the map restores the HUD exactly (minimap, helmet pods and hotbar inset come back as before).
+- Minimap: 20 px from the top and right edges (was 100 px). With the helmet visor up it sits just under the top-right ENVIRONMENT/CO2 pod. The scanner panel still stacks under it.
+
 ## 2026-11-26 (night) - t126-t127 (ZEN-14): spread dig sites and landing zones, more caches and resource nodes, dig yield x0.4 (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Everything compiles in the open Editor with no `_Project` CS errors.
