@@ -43,12 +43,13 @@ namespace DMI.Xenoarch.Excavation
         static Material Load(string res, Color tint)
         {
             var m = Resources.Load<Material>(res);
-            if (m != null) return m;
+            if (m != null) { DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(m); return m; }
             var sh = Shader.Find("Shader Graphs/Decal");
             if (sh == null) return null;
             m = new Material(sh) { name = res + " (runtime)" };
             m.SetTexture("Base_Map", RingTexture(tint));
             m.enableInstancing = true;
+            DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(m);
             return m;
         }
 

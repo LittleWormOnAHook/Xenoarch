@@ -126,7 +126,7 @@ namespace DMI.Xenoarch.Valuables
             var names = new List<string>();
             foreach (var (id, n) in loot)
             {
-                int added = session.Inventory.Add(id, n);
+                int added = n - session.Inventory.Add(id, n); // Add returns what did NOT fit
                 string label = session.Items != null && session.Items.TryGetItem(id, out var def) && def != null ? def.DisplayNameOrId : id;
                 names.Add($"{label} x{added}");
             }

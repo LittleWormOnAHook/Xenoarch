@@ -178,7 +178,14 @@ namespace DMI.Xenoarch.Excavation
             foreach (var p in _pieces) if (p != null) p.Refresh();
             _dirty = true; _saveAt = Time.unscaledTime + 1f;
             if (_surface != null && r.cut != null)
-                foreach (var c in r.cut) Carve(c.x, c.y, c.z, Grid.Fill(c.x, c.y, c.z) == 0 ? 1f : 0.6f);
+                foreach (var c in r.cut)
+                {
+                    // Digger's async buffer refuses edits while it is full. Dropped carves used to be lost, so the
+                    // visible hole fell behind the grid until every aim landed "above the floor" and strokes stopped
+                    // (the shallow "barrier"). Queue them and retry each frame instead.
+                    float st = Grid.Fill(c.x, c.y, c.z) == 0 ? 1f : 0.6f;
+                    if (_pendingCarves.Count > 0 || !Carve(c.x, c.y, c.z, st)) _pendingCarves.Enqueue((c, st));
+                }
             return r;
         }
 
@@ -265,10 +272,7 @@ namespace DMI.Xenoarch.Excavation
                 _border.useWorldSpace = true; _border.loop = true;
                 _border.widthMultiplier = 0.06f; _border.numCornerVertices = 2;
                 _border.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; _border.receiveShadows = false;
-                var sh = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
-                var m = new Material(sh) { name = "Site Border (runtime)" };
-                m.SetColor("_BaseColor", _borderColor); m.color = _borderColor;
-                _border.sharedMaterial = m; _border.startColor = _border.endColor = _borderColor;
+                _border.sharedMaterial = BorderMaterial(_borderColor); _border.startColor = _border.endColor = _borderColor;
                 var pts = new List<Vector3>();
                 float sx = Grid.SizeX, sz = Grid.SizeZ, step = 0.5f;
                 void Edge(Vector3 a, Vector3 b)
@@ -290,6 +294,26 @@ namespace DMI.Xenoarch.Excavation
 
         public bool BorderVisible => _border != null && _border.enabled;
 
+        static readonly Dictionary<Color, Material> _borderMats = new Dictionary<Color, Material>();
+        /// <summary>Shared unlit border material per colour (prewarmed, so the first scan reveal never draws it cyan).</summary>
+        public static Material BorderMaterial(Color c)
+        {
+            if (_borderMats.TryGetValue(c, out var m) && m != null) return m;
+            var sh = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
+            m = new Material(sh) { name = "Site Border (runtime)" };
+            m.SetColor("_BaseColor", c); m.color = c;
+            _borderMats[c] = m;
+            DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(m);
+            return m;
+        }
+
+        /// <summary>Builds the code-made materials a scan or dig can show (border, beacon) before the player needs them.</summary>
+        public static void PrewarmRuntimeMaterials()
+        {
+            BorderMaterial(new Color(1f, 0.62f, 0.15f, 0.9f));
+            DMI.Xenoarch.Exploration.SiteMarkerDirector.MarkerMaterial();
+        }
+
         internal void OnRecovered(BuriedArtifact piece, string instanceId)
         {
             piece.Grid.recovered = true;
@@ -298,7 +322,20 @@ namespace DMI.Xenoarch.Excavation
             _dirty = false;
         }
 
-        void Update() { if (_dirty && Time.unscaledTime >= _saveAt) Flush(); }
+        readonly Queue<(Vector3Int cell, float strength)> _pendingCarves = new Queue<(Vector3Int, float)>();
+        /// <summary>Carves waiting for Digger's buffer (the hole is still catching up with the grid).</summary>
+        public int PendingCarves => _pendingCarves.Count;
+
+        void Update()
+        {
+            if (_dirty && Time.unscaledTime >= _saveAt) Flush();
+            for (int n = 0; n < 16 && _pendingCarves.Count > 0 && !_replaying; n++)
+            {
+                var (c, st) = _pendingCarves.Peek();
+                if (!Carve(c.x, c.y, c.z, st)) break;
+                _pendingCarves.Dequeue();
+            }
+        }
 
         public void Flush()
         {

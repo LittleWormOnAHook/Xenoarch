@@ -130,7 +130,8 @@ namespace DMI.Xenoarch.Exploration
             float distShown = Mathf.Max(0f, bestDist + distErr * ((float)rng.NextDouble() * 2f - 1f));
             Vector3 to = best.position - me; to.y = 0f;
             float bearing = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + err * ((float)rng.NextDouble() * 2f - 1f) * 40f;
-            float rel = Mathf.DeltaAngle(transform.eulerAngles.y, bearing);
+            float rel = Mathf.DeltaAngle(ViewYaw(), bearing);
+            _lastTargetId = best.Id; _lastTargetUntil = Time.time + 90f;
             float depthErr = best.depth * err * 0.4f;
             float depthShown = best.depth + depthErr * ((float)rng.NextDouble() * 2f - 1f);
 
@@ -160,7 +161,7 @@ namespace DMI.Xenoarch.Exploration
             bool isNew = !XenoarchRuntime.Session.Valuables.IsRevealed(v.id);
             dir.Reveal(v);
             var to = v.position - me; to.y = 0f;
-            float rel = Mathf.DeltaAngle(transform.eulerAngles.y, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg);
+            float rel = Mathf.DeltaAngle(ViewYaw(), Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg);
             return $"VALUABLE SIGNATURE ~{dist:0} m {Direction(rel)}{(isNew ? ". Marked." : "")}";
         }
 
@@ -253,6 +254,40 @@ namespace DMI.Xenoarch.Exploration
             p.Stroke();
         }
 
+        string _lastTargetId; float _lastTargetUntil = -1f; Camera _viewCam;
+
+        /// <summary>Heading (deg) the player is looking, from the view camera's flattened forward. Uses the camera's up
+        /// vector when looking almost straight down (scanning the ground), where Euler yaw is unreliable.</summary>
+        float ViewYaw()
+        {
+            if (_viewCam == null || !_viewCam.isActiveAndEnabled)
+            {
+                var rig = DMI.Xenoarch.Player.PlayerRigLocator.Find();
+                _viewCam = rig != null && rig.ViewCamera != null ? rig.ViewCamera : Camera.main;
+            }
+            var cam = _viewCam;
+            var t = cam != null ? cam.transform : transform;
+            var f = t.forward; f.y = 0f;
+            if (f.sqrMagnitude < 0.04f) { f = t.up; f.y = 0f; }
+            if (f.sqrMagnitude < 1e-6f) return transform.eulerAngles.y;
+            return Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+        }
+
+        static ArchaeologicalSiteDefinition SiteInScene(string id, Vector3 from, float maxDist, out float dist)
+        {
+            dist = 0f;
+            var x = XenoarchRuntime.Session?.Exploration;
+            if (x == null || string.IsNullOrEmpty(id)) return null;
+            foreach (var site in x.SitesInScene(SceneManager.GetActiveScene().name))
+            {
+                if (site.Id != id) continue;
+                var f = site.position - from; f.y = 0f;
+                dist = f.magnitude;
+                return dist <= maxDist ? site : null;
+            }
+            return null;
+        }
+
         /// <summary>Nearest revealable dig site in this scene (gated chain sites stay hidden), with its flat distance.</summary>
         public static ArchaeologicalSiteDefinition NearestSite(Vector3 from, float maxDist, out float dist)
         {
@@ -280,7 +315,14 @@ namespace DMI.Xenoarch.Exploration
             var d = Def;
             bool show = directionIndicator && Equipped && d != null && !UIState.BlocksGameplay;
             ArchaeologicalSiteDefinition site = null; float dist = 0f;
-            if (show) site = NearestSite(transform.position, ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), out dist);
+            if (show)
+            {
+                // Point at the site the last pulse read out (so the chevron and the "ahead/left/behind" text agree);
+                // otherwise the nearest one.
+                float lim = ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult);
+                site = Time.time < _lastTargetUntil ? SiteInScene(_lastTargetId, transform.position, lim, out dist) : null;
+                if (site == null) site = NearestSite(transform.position, lim, out dist);
+            }
             bool cache = false; Vector3 targetPos = site != null ? site.position : Vector3.zero; float targetRadius = site != null ? site.radius : 0f; int targetSeed = site != null ? site.seed : 0;
             var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
             if (show && vdir != null && vdir.Nearest(transform.position, site != null ? dist : ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), true, out var cv, out float cd))
@@ -289,7 +331,7 @@ namespace DMI.Xenoarch.Exploration
             bool onSite = dist <= targetRadius;
             XenoarchUI.Show(_dirPivot, !onSite); XenoarchUI.Show(_dirLabel, true);
 
-            var cam = Camera.main; float yaw = cam != null ? cam.transform.eulerAngles.y : transform.eulerAngles.y;
+            float yaw = ViewYaw();
             var to = targetPos - transform.position;
             float err = (1f - ScannerStats.HandheldAccuracy()) * (cache ? 1f : ScanTriangulation.ErrorScale(ScanTriangulation.Quality(site.Id)));
             float wobble = (Mathf.PerlinNoise(Time.time * 0.6f, targetSeed * 0.013f) * 2f - 1f) * err * 35f; // "general direction"

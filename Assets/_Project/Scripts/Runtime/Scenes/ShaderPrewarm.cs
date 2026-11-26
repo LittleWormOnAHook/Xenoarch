@@ -143,6 +143,27 @@ namespace DMI.Xenoarch.Scenes
             return t;
         }
 
+        static readonly List<Material> _runtime = new List<Material>();
+
+        /// <summary>Materials built in code (site marker, dig border, dig ring): compile them in the background now and
+        /// include them in every landing's loading-screen wait, so they never draw as the Editor's cyan placeholder
+        /// the first time a scan shows them.</summary>
+        public static void Warm(Material m)
+        {
+            if (m == null || _runtime.Contains(m)) return;
+            _runtime.Add(m);
+#if UNITY_EDITOR
+            Submit(m);
+#endif
+        }
+
+        /// <summary>Adds the runtime materials registered with <see cref="Warm"/> to a tracker.</summary>
+        public static void TrackRuntime(Tracker t)
+        {
+            if (t == null) return;
+            foreach (var m in _runtime) if (m != null) t.Add(m);
+        }
+
         /// <summary>Also track (and async-compile) the materials on these renderers (player rig, landed shuttle...).</summary>
         public static void TrackRenderers(Tracker t, Transform root)
         {

@@ -76,7 +76,7 @@ namespace DMI.Xenoarch.Exploration
             return root;
         }
 
-        static Material MarkerMaterial()
+        public static Material MarkerMaterial()
         {
             if (_mat != null) return _mat;
             var sh = Shader.Find("Universal Render Pipeline/Unlit");
@@ -91,6 +91,7 @@ namespace DMI.Xenoarch.Exploration
             _mat.SetInt("_ZWrite", 0);
             _mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             _mat.renderQueue = 3000;
+            DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(_mat);
             return _mat;
         }
     }

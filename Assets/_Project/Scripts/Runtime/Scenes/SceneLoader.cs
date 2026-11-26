@@ -113,6 +113,8 @@ namespace DMI.Xenoarch.Scenes
         IEnumerator HoldUntilReady(ShaderPrewarm.Tracker track, float baseP)
         {
             var rig = PlayerRigLocator.Find(); if (rig != null) ShaderPrewarm.TrackRenderers(track, rig.Root);
+            DMI.Xenoarch.Excavation.ExcavationSite.PrewarmRuntimeMaterials();
+            ShaderPrewarm.TrackRuntime(track);
             var seen = new System.Collections.Generic.HashSet<Func<string>>();
             float held = 0f, grace = 0f; int quiet = 0; bool shuttleTracked = false;
             while (held < maxHoldSeconds)
