@@ -175,3 +175,4 @@ Times are US Eastern (ET).
 - NavigationTerminal: floating info card removed; its info merged into the right panel (scrolls) above fuel/course/land actions, system and galaxy maps.
 - Smoke: new free-rotation check. SurfaceMapView (shuttle/orbit-scan map) stays 2D.
 - Map controls remapped (t81u): LMB drag = arcball on all 3 axes (outer ring rolls), RMB/MMB = pan, Ctrl+RMB = depth, Shift+LMB / Q E = roll.
+- UI panel pass (t83u): terminals scale with screen (88%, min 1180x760, max 1760x1000); .xa-term__btn / rows auto-height + wrap (no clipping); wider list columns (Nav, Shuttle); HUD prompt wraps.

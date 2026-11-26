@@ -35,7 +35,7 @@ namespace DMI.Xenoarch.Ship
             if (_galaxy) { BuildGalaxy(body, x, sys); return; }
 
             // --- left: list
-            var left = Col(body);
+            var left = Col(body); ListCol(left); left.style.overflow = Overflow.Hidden;
             Text(left, $"{sys.displayName.ToUpperInvariant()} SYSTEM", "xa-term__h");
             var list = new ScrollView(); list.AddToClassList("xa-term__list"); left.Add(list);
             foreach (var b in Ordered(sys))
@@ -176,9 +176,9 @@ namespace DMI.Xenoarch.Ship
         {
             var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.alignItems = Align.Center; col.Add(row);
             var sysBtn = Btn(row, "System map", () => { _galaxy = false; Refresh(); }, galaxy);
-            sysBtn.style.width = 130;
-            if (x.GalaxyMapUnlocked) { var g = Btn(row, "Galaxy map", () => { _galaxy = true; Refresh(); }, !galaxy); g.style.width = 130; }
-            var reset = Btn(row, "Reset view", () => { (galaxy ? _galView : _sysView).Reset(); if (galaxy) _galView.pitch = 50f; Refresh(); }); reset.style.width = 110;
+            sysBtn.style.minWidth = 130; sysBtn.style.marginRight = 6;
+            if (x.GalaxyMapUnlocked) { var g = Btn(row, "Galaxy map", () => { _galaxy = true; Refresh(); }, !galaxy); g.style.minWidth = 130; g.style.marginRight = 6; }
+            var reset = Btn(row, "Reset view", () => { (galaxy ? _galView : _sysView).Reset(); if (galaxy) _galView.pitch = 50f; Refresh(); }); reset.style.minWidth = 120;
             Text(col, "LMB drag: rotate (all axes; near the edge rolls)   Q E / Shift+LMB: roll   RMB / MMB drag: pan   Ctrl+RMB: depth   Wheel: zoom at cursor   Click: select   Double-click: focus   R: reset", "xa-term__dim");
         }
 
@@ -229,7 +229,7 @@ namespace DMI.Xenoarch.Ship
             foreach (var s in g.systems) if (x.IsSystemKnown(s) || s == here) known.Add(s);
             _selectedSystemId ??= here.Id;
 
-            var left = Col(body);
+            var left = Col(body); ListCol(left); left.style.overflow = Overflow.Hidden;
             Text(left, "KNOWN SYSTEMS", "xa-term__h");
             var list = new ScrollView(); list.AddToClassList("xa-term__list"); left.Add(list);
             foreach (var s in known)

@@ -136,6 +136,12 @@ namespace DMI.Xenoarch.UI
             return sv.contentContainer;
         }
 
+        /// <summary>Marks the column holding <paramref name="inCol"/> (a Col or ScrollCol content) as a wider list column.</summary>
+        protected static void ListCol(VisualElement inCol)
+        {
+            for (var e = inCol; e != null; e = e.parent) if (e.ClassListContains("xa-term__col")) { e.AddToClassList("xa-term__col--list"); return; }
+        }
+
         protected static Label Text(VisualElement parent, string text, string cls = "xa-term__text")
         {
             var l = new Label(text); l.AddToClassList(cls); parent.Add(l); return l;

@@ -14,7 +14,7 @@
 }
 .xa-crosshair--target { background-image: url("/Assets/_Project/Art/Placeholder/Genesis/HUD/Crosshair_Interact.png"); -unity-background-image-tint-color: var(--xa-amber); width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
 .xa-prompt {
-    position: absolute; left: 50%; top: 56%; width: 640px; margin-left: -320px;
+    position: absolute; left: 50%; top: 56%; width: 960px; margin-left: -480px;
     flex-direction: row; justify-content: center; align-items: center;
 }
 .xa-key {
@@ -25,6 +25,7 @@
 }
 .xa-prompt-text {
     font-size: 18px; color: var(--xa-text); padding: 4px 14px; background-color: var(--xa-graphite);
+    white-space: normal; flex-shrink: 1; max-width: 900px;
     border-left-width: 2px; border-left-color: var(--xa-amber);
 }
 .xa-hold-track {
@@ -44,7 +45,7 @@
 }
 .xa-slot__icon { width: 56px; height: 56px; -unity-background-scale-mode: scale-to-fit; }
 .xa-slot__count { position: absolute; right: 4px; top: 2px; font-size: 13px; color: var(--xa-amber); -unity-font-style: bold; }
-.xa-slot__name { font-size: 10px; color: var(--xa-text); white-space: normal; -unity-text-align: upper-center; width: 80px; overflow: hidden; height: 26px; }
+.xa-slot__name { font-size: 10px; color: var(--xa-text); white-space: normal; -unity-text-align: upper-center; width: 80px; overflow: hidden; height: 28px; }
 .xa-hint, .xa-hints { font-size: 13px; color: rgba(170, 205, 240, 0.75); }
 
 /* ---------- Main menu ---------- */
@@ -76,15 +77,17 @@
 /* ---------- Terminals (Phase 1B) ---------- */
 .xa-term-root { align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.45); }
 .xa-term {
-    width: 1180px; height: 760px; padding: 22px 26px; background-color: rgba(14, 18, 24, 0.94);
+    /* Scales with the screen (PanelSettings: scale-with-screen, 1920x1080 reference); never smaller than the old fixed size. */
+    width: 88%; height: 88%; min-width: 1180px; min-height: 760px; max-width: 1760px; max-height: 1000px; padding: 22px 26px; background-color: rgba(14, 18, 24, 0.94);
     border-width: 1px; border-color: rgba(170, 205, 240, 0.45); border-top-width: 3px; border-top-color: var(--xa-amber);
 }
 .xa-term__header { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .xa-term__title { font-size: 26px; -unity-font-style: bold; color: var(--xa-text); letter-spacing: 4px; }
 .xa-term__status { font-size: 15px; color: var(--xa-paleblue); }
 .xa-term__body { flex-grow: 1; flex-direction: row; }
-.xa-term__col { flex-grow: 1; flex-basis: 0; margin-right: 14px; }
+.xa-term__col { flex-grow: 1; flex-basis: 0; margin-right: 14px; min-width: 240px; min-height: 0; }
 .xa-term__col--wide { flex-grow: 1.6; }
+.xa-term__col--list { flex-grow: 1.3; min-width: 320px; }
 .xa-term__footer { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 10px; }
 .xa-term__hint { font-size: 13px; color: rgba(170, 205, 240, 0.7); }
 .xa-term__h { font-size: 15px; -unity-font-style: bold; color: var(--xa-amber); margin: 8px 0 6px 0; letter-spacing: 2px; }
@@ -92,19 +95,22 @@
 .xa-term__dim { font-size: 14px; color: rgba(170, 205, 240, 0.55); white-space: normal; }
 .xa-term__warn { font-size: 15px; color: rgb(255, 120, 90); white-space: normal; }
 .xa-term__good { font-size: 15px; color: rgb(140, 230, 160); white-space: normal; }
-.xa-term__list { flex-grow: 1; background-color: rgba(255, 255, 255, 0.03); border-width: 1px; border-color: rgba(170, 205, 240, 0.15); }
+.xa-term__list { flex-grow: 1; flex-shrink: 1; min-height: 0; background-color: rgba(255, 255, 255, 0.03); border-width: 1px; border-color: rgba(170, 205, 240, 0.15); }
 .xa-term__row {
-    flex-direction: row; justify-content: space-between; padding: 5px 10px; margin: 1px 0;
+    flex-direction: row; justify-content: space-between; align-items: center; padding: 6px 10px; margin: 1px 0;
+    height: auto; min-height: 32px; flex-shrink: 0; white-space: normal;
     background-color: rgba(0, 0, 0, 0); border-width: 0; border-left-width: 3px; border-left-color: rgba(0, 0, 0, 0);
     color: var(--xa-text); font-size: 15px; -unity-text-align: middle-left;
 }
+.xa-term__row > Label { white-space: normal; flex-shrink: 1; }
 .xa-term__row:hover { background-color: rgba(170, 205, 240, 0.1); }
 .xa-term__row--sel { background-color: rgba(242, 168, 56, 0.16); border-left-color: var(--xa-amber); }
 .xa-term__row--here { -unity-font-style: bold; }
 .xa-term__row--child { padding-left: 34px; }
 .xa-term__row--locked { color: rgba(170, 205, 240, 0.35); }
 .xa-term__btn {
-    height: 40px; margin: 6px 0; font-size: 16px; -unity-font-style: bold; color: rgb(20, 20, 20);
+    /* Auto height: long / two-line labels wrap and grow the button instead of clipping. */
+    height: auto; min-height: 40px; padding: 8px 12px; flex-shrink: 0; white-space: normal; margin: 6px 0; font-size: 16px; -unity-font-style: bold; color: rgb(20, 20, 20);
     background-color: var(--xa-amber); border-width: 0; border-radius: 2px;
 }
 .xa-term__btn:hover { background-color: rgb(255, 196, 100); }

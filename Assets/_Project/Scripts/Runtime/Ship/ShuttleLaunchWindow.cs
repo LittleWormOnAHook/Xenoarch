@@ -35,7 +35,7 @@ namespace DMI.Xenoarch.Ship
             var x = Session.Exploration;
             var b = x.CurrentBody;
             Status.text = ShipTravel.LocationText(x);
-            var left = ScrollCol(body, 0);
+            var left = ScrollCol(body, 0); ListCol(left);
             var right = Col(body, true);
             if (!ShipTravel.UsesShuttle(b)) { Text(left, b == null ? "Nothing in range." : $"No surveyed landing zone on {b.displayName}.", "xa-term__warn"); return; }
 
