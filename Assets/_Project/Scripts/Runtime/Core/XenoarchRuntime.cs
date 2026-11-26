@@ -24,6 +24,8 @@ namespace DMI.Xenoarch.Core
         GameSession _session;
         SceneLoader _loader;
         bool _sessionActive;
+        /// <summary>True while a game is running (not on the main menu).</summary>
+        public bool SessionActive => _sessionActive;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => Instance = null;
@@ -62,6 +64,8 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.MinimapHud>();
             gameObject.AddComponent<DMI.Xenoarch.UI.InventoryWindow>();
             gameObject.AddComponent<DMI.Xenoarch.Materials.MaterialsDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.PauseMenu>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
             _session.Discovery.JournalAdded += e => DMI.Xenoarch.UI.Toast.Show($"Journal: {e.text}", 8f);
@@ -104,6 +108,7 @@ namespace DMI.Xenoarch.Core
         public void ReturnToMainMenu()
         {
             _sessionActive = false;
+            Time.timeScale = 1f;
             _loader.Load(_session.Config.mainMenuScene, default);
         }
 
@@ -132,6 +137,7 @@ namespace DMI.Xenoarch.Core
         public bool LoadGame(string slot)
         {
             if (!_session.Saves.TryRead(slot, out var file, out var error)) { Debug.LogWarning($"[Xenoarch] Load failed: {error}"); return false; }
+            Time.timeScale = 1f;
             _session.Saves.Apply(file); // state first, so scene objects read restored state in Awake/Start
             _session.PlaySeconds = file.playSeconds;
             _sessionActive = true;
