@@ -1,0 +1,193 @@
+sheet,row,col,folder,filename,intended_use,matched_game_item_ids,native_w,native_h,scale_to_256,out_w,out_h,min_padding_px,qa_flags,src_box_x0y0x1y1
+sheet1,1,1,Interface,icon_ui_inspect.png,Artifact inspect view: inspect,ui.inspect,78,80,1.88,147,150,54,ok,76 51 154 131
+sheet1,1,2,Interface,icon_ui_rotate.png,Inspect view: rotate,ui.inspect_rotate,74,61,2.21,164,135,46,ok,203 60 277 121
+sheet1,1,3,Interface,icon_ui_zoom_in.png,Inspect/map: zoom in,ui.zoom_in,72,74,2.03,146,151,53,ok,334 56 406 130
+sheet1,1,4,Interface,icon_ui_zoom_out.png,Inspect/map: zoom out,ui.zoom_out,73,72,2.05,150,147,54,ok,457 57 530 129
+sheet1,1,5,Interface,icon_ui_pan.png,Inspect/map: pan,ui.pan,75,76,1.97,147,149,53,ok,572 52 647 128
+sheet1,1,6,Interface,icon_ui_reset_view.png,Inspect/map: reset view (reticle),ui.reset_view,83,83,1.79,148,148,55,ok,690 48 773 131
+sheet1,1,7,Research,icon_research_scan.png,Scan pulse / scanning,ui.scan,82,74,1.91,156,141,50,ok,817 52 899 126
+sheet1,1,8,Interface,icon_ui_journal.png,Journal / catalog (J),ui.journal,85,59,2.05,174,121,42,ok,943 62 1028 121
+sheet1,1,9,Tools,icon_tool_excavation_shovel.png,Excavation Shovel,item.tool.excavation_shovel,71,80,1.97,140,158,49,ok,1077 49 1148 129
+sheet1,1,10,Tools,icon_tool_excavation_brush.png,Excavation Brush,item.tool.brush research.cleaning,78,81,1.87,146,151,53,ok,1191 45 1269 126
+sheet1,1,11,Tools,icon_tool_pick.png,Pick (no game item yet),,79,77,1.9,150,147,53,ok,1297 52 1376 129
+sheet1,1,12,Tools,icon_tool_precision_tool.png,Precision Excavation Tool,item.tool.precision_tool,67,78,2.05,138,160,49,ok,1413 50 1480 128
+sheet1,2,1,Tools,icon_tool_powered_drill.png,Basic Powered Drill,item.tool.powered_drill,97,69,1.79,174,124,42,ok,59 180 156 249
+sheet1,2,2,Tools,icon_tool_handheld_scanner.png,Handheld Surface Scanner,item.tool.handheld_scanner,73,71,2.06,151,146,53,ok,204 178 277 249
+sheet1,2,3,Tools,icon_tool_depth_probe.png,Depth Probe,item.tool.depth_probe,80,81,1.84,148,149,53,ok,322 170 402 251
+sheet1,2,4,Items,icon_item_sample_container.png,Sample Container,item.consumable.sample_container,49,83,2.1,103,174,42,ok,458 169 507 252
+sheet1,2,5,Resources,icon_resource_regolith.png,Regolith,material.regolith,91,70,1.86,169,130,44,ok,561 179 652 249
+sheet1,2,6,Resources,icon_resource_ore_gold_honeycomb.png,Ore (gold honeycomb) - pack label iron_ore,material.iron_ore,89,74,1.83,163,135,47,ok,683 176 772 250
+sheet1,2,7,Resources,icon_resource_nickel_iron_ore.png,Nickel-Iron Ore,material.nickel_iron_ore,90,77,1.78,161,137,48,ok,807 174 897 251
+sheet1,2,8,Resources,icon_resource_ore_blue_crystal.png,Ore (blue crystalline) - pack label platinoid_ore,material.platinoid_ore,84,74,1.88,158,139,50,ok,931 175 1015 249
+sheet1,2,9,Resources,icon_resource_water_ice.png,Water Ice,material.water_ice,67,74,2.11,141,156,50,ok,1059 177 1126 251
+sheet1,2,10,Resources,icon_resource_methane_frost.png,Methane Frost,material.methane_frost,72,80,1.96,141,157,50,ok,1177 171 1249 251
+sheet1,2,11,Resources,icon_resource_mineral_salts.png,Mineral Salts,material.mineral_salts,81,70,1.97,160,138,48,ok,1293 175 1374 245
+sheet1,2,12,Resources,icon_resource_alloy_ingot.png,Alloy Ingot,material.alloy_ingot,81,64,2.06,167,132,44,ok,1401 181 1482 245
+sheet1,3,1,Resources,icon_resource_nickel_ingot.png,Nickel Ingot,material.nickel_ingot,89,69,1.89,169,131,44,ok,60 301 149 370
+sheet1,3,2,Resources,icon_resource_copper_ingot.png,Copper Ingot,material.copper_ingot,91,68,1.89,172,128,43,ok,185 301 276 369
+sheet1,3,3,Resources,icon_resource_gold_ingot.png,Gold Ingot,material.gold_ingot,92,72,1.82,168,131,44,ok,308 299 400 371
+sheet1,3,4,Resources,icon_resource_platinum_ingot.png,Platinum Ingot,material.platinum_ingot,89,68,1.91,170,130,43,ok,431 301 520 369
+sheet1,3,5,Resources,icon_resource_lab_reagent.png,Lab Reagent,material.lab_reagent,51,82,2.12,108,174,42,ok,575 293 626 375
+sheet1,3,6,Resources,icon_resource_fuel_cell.png,Fuel Cell,material.fuel_cell,59,85,2.05,121,174,42,ok,692 291 751 376
+sheet1,3,7,Resources,icon_resource_copper_nugget.png,Native Copper Nugget,item.valuable.copper_nugget,91,78,1.76,160,137,48,ok,798 296 889 374
+sheet1,3,8,Resources,icon_resource_gold_nugget.png,Gold Nugget,item.valuable.gold_nugget,89,78,1.78,159,139,49,ok,922 296 1011 374
+sheet1,3,9,Resources,icon_resource_silver_nugget.png,Silver Nugget,item.valuable.silver_nugget,88,77,1.8,159,139,48,ok,1046 296 1134 373
+sheet1,3,10,Resources,icon_resource_platinum_nugget.png,Platinum Nugget,item.valuable.platinum_nugget,86,78,1.81,156,141,50,ok,1167 295 1253 373
+sheet1,3,11,Resources,icon_resource_crystal_cluster_blue.png,Blue crystal cluster - pack label quartz_geode,item.valuable.quartz_geode,77,91,1.77,137,161,47,ok,1294 285 1371 376
+sheet1,3,12,Resources,icon_resource_meteoric_iron.png,Meteoric Iron Fragment,item.valuable.meteoric_iron,88,78,1.79,158,140,50,ok,1399 294 1487 372
+sheet1,4,1,Resources,icon_resource_blue_crystal_prism.png,Blue crystal prism - pack label iridium_core,item.valuable.iridium_core,45,85,2.05,92,174,41,ok,83 407 128 492
+sheet1,4,2,Items,icon_item_vael_token.png,Vael Token (coin),item.valuable.vael_coin,74,73,2.02,149,147,54,ok,188 415 262 488
+sheet1,4,3,Artifacts,icon_artifact_glyph_tablet.png,Shrine Tablet (glyph tablet),artifact.mars_glyph_tablet,96,69,1.81,174,125,41,ok,300 417 396 486
+sheet1,4,4,Artifacts,icon_artifact_relay_fragment.png,Relay Fragment,artifact.mars_relay_fragment,71,85,1.91,136,162,47,ok,433 408 504 493
+sheet1,4,5,Artifacts,icon_artifact_sensor_lattice.png,Vael Sensor Lattice,artifact.mars_sensor_lattice,77,79,1.9,147,150,54,ok,555 414 632 493
+sheet1,4,6,Artifacts,icon_artifact_star_disc.png,Star Disc,artifact.mars_star_disc,89,61,1.96,174,119,42,ok,673 422 762 483
+sheet1,4,7,Artifacts,icon_artifact_offering_bowl.png,Offering Bowl,artifact.mars_offering_bowl,83,64,2.04,169,130,44,ok,802 422 885 486
+sheet1,4,8,Unassigned,icon_unassigned_human_bust.png,Human bust in lab coat - pack label shrine_idol,,81,82,1.82,148,149,54,ok,927 408 1008 490
+sheet1,4,9,Artifacts,icon_artifact_navigation_core.png,Vael Navigation Core,artifact.mars_navigation_core,94,61,1.85,174,113,41,ok,1048 420 1142 481
+sheet1,4,10,Artifacts,icon_artifact_data_crystal.png,Data Crystal,artifact.moon_data_crystal,71,82,1.95,138,160,48,ok,1181 408 1252 490
+sheet1,4,11,Artifacts,icon_artifact_echo_lens.png,Echo Lens,artifact.moon_lens,84,70,1.94,163,136,47,ok,1292 416 1376 486
+sheet1,4,12,Artifacts,icon_artifact_power_cell.png,Depleted Power Cell,artifact.moon_power_cell,59,86,2.02,119,174,42,ok,1420 409 1479 495
+sheet1,5,1,Artifacts,icon_artifact_guardian_effigy.png,Guardian Effigy,artifact.vael_effigy,71,86,1.9,135,163,47,ok,65 521 136 607
+sheet1,5,2,Research,icon_research_unknown.png,Unknown / unidentified,condition.unknown,72,73,2.05,147,150,54,ok,189 525 261 598
+sheet1,5,3,Research,icon_research_condition_damaged.png,Condition: damaged,condition.damaged,70,77,2.02,142,156,50,ok,311 522 381 599
+sheet1,5,4,Research,icon_research_condition_intact.png,Condition: intact,condition.intact,68,73,2.11,143,154,52,ok,432 527 500 600
+sheet1,5,5,Research,icon_research_condition_complete.png,Condition: complete,condition.complete,70,75,2.05,143,154,52,ok,553 526 623 601
+sheet1,5,6,Research,icon_research_condition_reconstructed.png,Condition: reconstructed / Restoration,research.restoration,80,75,1.92,153,144,52,ok,671 525 751 600
+sheet1,5,7,Research,icon_research_decipher.png,Translation,research.translation,85,62,2.05,174,127,41,ok,797 532 882 594
+sheet1,5,8,Research,icon_research_analyze.png,Technology analysis,research.technology_analysis,93,70,1.84,171,129,43,ok,921 523 1014 593
+sheet1,5,9,Research,icon_research_isotope_analysis.png,Age estimation,research.age_estimation,76,82,1.88,143,154,52,ok,1052 522 1128 604
+sheet1,5,10,Research,icon_research_material_id.png,Material analysis,research.material_analysis,72,78,1.98,143,155,51,ok,1174 524 1246 602
+sheet1,5,11,Research,icon_research_structure_analysis.png,Identification / civilization ID,research.identification,78,77,1.92,149,148,54,ok,1290 527 1368 604
+sheet1,5,12,Research,icon_research_data_extract.png,Data extraction (chip),research.data_extraction,82,80,1.83,150,147,54,ok,1403 523 1485 603
+sheet1,6,1,Research,icon_research_archive.png,Archive / discovery log,research.archive,77,71,2.01,155,143,50,ok,62 641 139 712
+sheet1,6,2,Ship,icon_ship_shuttle.png,Shuttle,ship.shuttle,90,68,1.9,171,129,43,ok,174 639 264 707
+sheet1,6,3,Ship,icon_ship_engine.png,Ship engine,ship.engine,90,61,1.93,174,118,42,ok,301 644 391 705
+sheet1,6,4,Ship,icon_ship_shield.png,Ship shield,ship.shield,69,74,2.08,143,154,51,ok,431 638 500 712
+sheet1,6,5,Ship,icon_ship_life_support.png,Life support,ship.life_support,87,72,1.88,163,135,47,ok,540 635 627 707
+sheet1,6,6,Ship,icon_ship_comms.png,Comms,ship.comms,84,71,1.92,162,137,48,ok,669 639 753 710
+sheet1,6,7,Ship,icon_ship_cargo.png,Cargo / ship hold,ship.cargo,92,80,1.73,159,138,49,ok,793 636 885 716
+sheet1,6,8,Interface,icon_ui_inventory.png,Inventory / backpack (I),ui.inventory,80,78,1.88,150,147,53,ok,925 634 1005 712
+sheet1,6,9,Interface,icon_ui_equipment.png,Equipment / suit,ui.equipment,71,79,1.98,141,157,50,ok,1051 635 1122 714
+sheet1,6,10,Interface,icon_ui_loadout.png,Loadout,ui.loadout,86,59,2.02,174,119,42,ok,1167 646 1253 705
+sheet1,6,11,Interface,icon_ui_storage.png,Storage / toolbox,ui.storage,84,65,2.01,169,131,44,ok,1290 640 1374 705
+sheet1,6,12,Interface,icon_ui_missions.png,Missions / objectives,ui.missions,62,78,2.14,132,167,45,ok,1416 634 1478 712
+sheet1,7,1,Interface,icon_ui_map.png,Map (M / N),ui.map,82,78,1.86,152,145,53,ok,64 744 146 822
+sheet1,7,2,Interface,icon_ui_settings.png,Settings,ui.settings,78,75,1.94,151,146,53,ok,186 751 264 826
+sheet1,7,3,Interface,icon_ui_upgrade.png,Upgrade,ui.upgrade,58,71,2.31,134,164,46,ok,317 748 375 819
+sheet1,7,4,Interface,icon_ui_skill.png,Skills,ui.skills,69,63,2.25,155,142,50,ok,432 754 501 817
+sheet1,7,5,Interface,icon_ui_tech_tree.png,Tech tree,ui.tech_tree,83,65,2.02,168,131,45,ok,544 753 627 818
+sheet1,7,6,Interface,icon_ui_level.png,Level / rank / signal,ui.rank,72,62,2.22,160,138,49,ok,674 756 746 818
+sheet1,7,7,Interface,icon_ui_health.png,Health,ui.health,73,64,2.17,159,139,49,ok,800 755 873 819
+sheet1,7,8,Interface,icon_ui_energy.png,Energy / power,ui.energy,53,74,2.35,125,174,42,ok,939 751 992 825
+sheet1,7,9,Interface,icon_ui_oxygen.png,Oxygen,ui.oxygen,74,61,2.21,164,135,46,ok,1048 759 1122 820
+sheet1,7,10,Interface,icon_ui_info.png,Info toast,ui.toast_info,71,72,2.08,147,150,54,ok,1170 750 1241 822
+sheet1,7,11,Interface,icon_ui_warning.png,Warning toast,ui.toast_warning,75,67,2.09,157,140,50,ok,1287 750 1362 817
+sheet1,7,12,Interface,icon_ui_alert.png,Alert / alarm,ui.toast_alert,78,73,1.97,153,144,51,ok,1406 748 1484 821
+sheet1,8,1,Interface,icon_ui_complete.png,Complete / done check,ui.complete,72,72,2.06,148,148,55,ok,55 883 127 955
+sheet1,8,2,Interface,icon_ui_new_discovery.png,New discovery (star),ui.new_discovery,71,68,2.14,152,145,53,ok,154 883 225 951
+sheet1,8,3,Interface,icon_ui_xenoarch_mark.png,Xenoarch logo mark,ui.logo_mark,80,73,1.94,155,142,51,ok,239 881 319 954
+sheet1,8,4,Navigation,icon_nav_anomaly.png,Anomaly / dig site,map.dig_site,72,58,2.3,165,133,46,ok,339 890 411 948
+sheet1,8,5,Navigation,icon_nav_planet.png,Planet,map.planet,85,55,2.05,174,113,42,ok,428 891 513 946
+sheet1,8,6,Navigation,icon_nav_moon.png,Moon,map.moon,66,66,2.25,148,148,55,ok,529 887 595 953
+sheet1,8,7,Navigation,icon_nav_ore_pickup.png,Ore / resource node,map.ore,69,68,2.17,150,147,54,ok,620 887 689 955
+sheet1,8,8,Navigation,icon_nav_waypoint.png,Waypoint / flag,map.waypoint,53,71,2.42,128,172,43,ok,708 882 761 953
+sheet1,8,9,Navigation,icon_nav_landing_zone.png,Landing zone (H pad),map.landing_zone,79,51,2.2,174,112,42,ok,791 895 870 946
+sheet1,8,10,Navigation,icon_nav_rover.png,Rover,map.rover,80,63,2.09,167,132,45,ok,888 884 968 947
+sheet1,8,11,Navigation,icon_nav_base_outpost.png,Base / outpost,map.base,81,67,2.02,163,135,47,ok,985 882 1066 949
+sheet1,8,12,Navigation,icon_nav_beacon.png,Beacon / relay,map.beacon,58,71,2.31,134,164,46,ok,1099 881 1157 952
+sheet1,8,13,Ship,icon_ship_starship.png,Starship (player ship),ship.starship,81,52,2.15,174,112,42,ok,1189 894 1270 946
+sheet1,8,14,Interface,icon_ui_credits.png,Credits (cr),ui.credits,71,71,2.09,148,148,55,ok,1292 882 1363 953
+sheet1,8,15,Interface,icon_ui_trade.png,Trade / vendor (cart),ui.trade,82,65,2.03,167,132,45,ok,1392 887 1474 952
+sheet2,1,1,Items,icon_item_gas_mask.png,Gas mask,,87,95,1.63,142,155,51,ok,56 49 143 144
+sheet2,1,2,Items,icon_item_oxygen_tank.png,Oxygen tank,,55,106,1.64,90,174,42,ok,214 44 269 150
+sheet2,1,3,Items,icon_item_canister.png,Canister,,66,88,1.95,129,171,43,ok,343 52 409 140
+sheet2,1,4,Items,icon_item_space_helmet.png,Space helmet,,87,90,1.68,146,151,53,ok,466 52 553 142
+sheet2,1,5,Items,icon_item_eva_suit.png,EVA suit,,96,94,1.56,150,147,53,ok,594 48 690 142
+sheet2,1,6,Items,icon_item_eva_gloves.png,EVA gloves,,85,93,1.67,142,155,51,ok,728 51 813 144
+sheet2,1,7,Items,icon_item_eva_boots.png,EVA boots,,87,92,1.66,144,153,52,ok,853 53 940 145
+sheet2,1,8,Items,icon_item_backpack.png,Backpack,,81,96,1.68,136,162,48,ok,991 50 1072 146
+sheet2,1,9,Items,icon_item_data_tablet.png,Data tablet / PDA,,97,84,1.64,160,138,49,ok,1118 57 1215 141
+sheet2,1,10,Items,icon_item_supply_case.png,Supply case,,98,76,1.72,169,131,44,ok,1250 60 1348 136
+sheet2,1,11,Items,icon_item_supply_crate.png,Supply crate,,90,84,1.71,154,143,51,ok,1388 54 1478 138
+sheet2,2,1,Items,icon_item_medkit.png,Medkit,,93,76,1.77,164,134,46,ok,54 185 147 261
+sheet2,2,2,Items,icon_item_syringe.png,Syringe,,89,93,1.63,145,152,52,ok,195 176 284 269
+sheet2,2,3,Items,icon_item_pills.png,Pills / capsules,,89,77,1.79,160,138,49,ok,330 185 419 262
+sheet2,2,4,Items,icon_item_vial_empty.png,Empty vial,,45,90,1.93,87,174,41,ok,486 178 531 268
+sheet2,2,5,Items,icon_item_injector.png,Injector / auto-syringe,,81,79,1.86,150,147,53,ok,596 184 677 263
+sheet2,2,6,Items,icon_item_energy_cell.png,Energy cell (blue),,58,95,1.83,106,174,42,ok,744 175 802 270
+sheet2,2,7,Items,icon_item_battery.png,Battery,,59,98,1.78,105,174,42,ok,872 175 931 273
+sheet2,2,8,Items,icon_item_power_core.png,Power core (cell),,72,96,1.79,129,171,43,ok,997 176 1069 272
+sheet2,2,9,Items,icon_item_reactor_core.png,Reactor / generator core,,89,99,1.58,141,157,50,ok,1122 174 1211 273
+sheet2,2,10,Items,icon_item_solar_panel.png,Solar panel,,98,73,1.76,172,128,43,ok,1251 185 1349 258
+sheet2,2,11,Items,icon_item_microchip.png,Microchip / processor,item.component.sensor_array,86,85,1.74,149,148,54,ok,1394 180 1480 265
+sheet2,3,1,Items,icon_item_circuit_board.png,Circuit board,item.component.circuit,107,83,1.58,169,131,44,ok,43 303 150 386
+sheet2,3,2,Items,icon_item_copper_coil.png,Copper coil,,84,71,1.92,162,137,48,ok,191 309 275 380
+sheet2,3,3,Items,icon_item_wire_coil.png,Wire coil / cable,item.component.wiring,90,70,1.87,168,131,45,ok,309 311 399 381
+sheet2,3,4,Items,icon_item_metal_pipes.png,Metal pipes,,97,76,1.73,168,131,45,ok,428 307 525 383
+sheet2,3,5,Items,icon_item_gears.png,Gears,,78,78,1.9,148,148,54,ok,553 309 631 387
+sheet2,3,6,Items,icon_item_bearing.png,Bearing,,80,66,2.04,163,135,47,ok,662 315 742 381
+sheet2,3,7,Items,icon_item_spring.png,Spring,,62,71,2.24,139,159,48,ok,778 310 840 381
+sheet2,3,8,Items,icon_item_bolts_nuts.png,Bolts and nuts,,96,69,1.81,174,125,42,ok,883 308 979 377
+sheet2,3,9,Items,icon_item_metal_plates.png,Metal plates,item.component.alloy_plate,99,70,1.76,174,123,42,ok,1005 308 1104 378
+sheet2,3,10,Items,icon_item_metal_mesh.png,Metal mesh sheet,,110,69,1.58,174,109,42,ok,1134 310 1244 379
+sheet2,3,11,Items,icon_item_carbon_fiber.png,Carbon fibre sheet,,115,72,1.51,174,109,41,ok,1267 309 1382 381
+sheet2,3,12,Items,icon_item_glass_panel.png,Glass panel,,98,79,1.69,165,133,46,ok,1397 306 1495 385
+sheet2,4,1,Items,icon_item_cloth_roll.png,Cloth roll,,111,82,1.56,173,128,42,ok,44 422 155 504
+sheet2,4,2,Items,icon_item_mesh_fabric.png,Mesh fabric,,102,75,1.7,173,127,42,ok,178 424 280 499
+sheet2,4,3,Items,icon_item_leather.png,Leather,,95,75,1.76,167,132,45,ok,310 425 405 500
+sheet2,4,4,Items,icon_item_hide.png,Hide / pelt,,91,81,1.73,157,140,50,ok,444 424 535 505
+sheet2,4,5,Items,icon_item_folded_fabric.png,Folded fabric,,96,79,1.7,164,135,47,ok,571 423 667 502
+sheet2,4,6,Items,icon_item_wiring_tape.png,Wires + insulating tape,,109,73,1.6,174,117,42,composite_wires_plus_tape,706 426 815 499
+sheet2,4,7,Items,icon_item_bottle.png,Bottle,,56,87,2.0,112,174,42,ok,870 421 926 508
+sheet2,4,8,Items,icon_item_fuel_jerrycan.png,Fuel jerrycan,,69,87,1.92,132,167,45,ok,992 421 1061 508
+sheet2,4,9,Items,icon_item_flask_blue.png,Flask (blue chemical),,71,85,1.91,136,162,48,ok,1142 421 1213 506
+sheet2,4,10,Items,icon_item_flask_purple.png,Flask (purple chemical),,68,84,1.96,134,165,46,ok,1278 422 1346 506
+sheet2,4,11,Resources,icon_resource_plant_leaves.png,Plant / leaves (organic),,92,91,1.62,149,148,53,ok,1399 417 1491 508
+sheet2,5,1,Resources,icon_resource_raw_meat.png,Raw meat (organic),,94,73,1.79,168,131,45,ok,39 540 133 613
+sheet2,5,2,Resources,icon_resource_bone.png,Bone (organic),,85,72,1.9,161,137,48,ok,173 539 258 611
+sheet2,5,3,Resources,icon_resource_claw.png,Claw / tooth (organic),,80,70,1.98,159,139,49,ok,302 541 382 611
+sheet2,5,4,Resources,icon_resource_shell_fragment.png,Cracked shell / bark fragment,artifact.unknown_lump,89,74,1.83,163,135,47,ok,419 538 508 612
+sheet2,5,5,Resources,icon_resource_crystal_specimen.png,Faceted crystal specimen,,87,72,1.88,163,135,47,ok,542 541 629 613
+sheet2,5,6,Resources,icon_resource_mushrooms.png,Mushrooms (organic),,81,74,1.92,155,142,50,ok,667 540 748 614
+sheet2,5,7,Resources,icon_resource_coral.png,Coral / sponge (organic),,81,68,2.0,162,136,47,ok,796 544 877 612
+sheet2,5,8,Resources,icon_resource_alien_egg.png,Alien egg (organic),,67,79,2.04,137,161,48,ok,923 538 990 617
+sheet2,5,9,Resources,icon_resource_crystal_flower_purple.png,Purple crystal growth,,88,81,1.76,155,142,51,ok,1038 535 1126 616
+sheet2,5,10,Resources,icon_resource_root.png,Root (organic),,83,78,1.85,153,144,52,ok,1158 538 1241 616
+sheet2,5,11,Resources,icon_resource_seed_pods.png,Seed pods (organic),,81,79,1.86,150,147,54,ok,1290 537 1371 616
+sheet2,5,12,Resources,icon_resource_blue_flower.png,Blue flower (organic),,86,79,1.8,155,142,50,ok,1407 538 1493 617
+sheet2,6,1,Resources,icon_resource_rock_grey.png,Grey rock,,85,66,1.98,169,131,44,ok,42 651 127 717
+sheet2,6,2,Resources,icon_resource_ore_gold_veined.png,Rock with gold veins,material.auriferous_quartz,86,69,1.93,166,133,46,ok,168 650 254 719
+sheet2,6,3,Resources,icon_resource_ore_copper_red.png,Red copper ore,material.copper_sulfide,86,69,1.93,166,133,45,ok,295 650 381 719
+sheet2,6,4,Resources,icon_resource_ore_gold.png,Gold ore,,85,68,1.95,166,133,45,ok,420 651 505 719
+sheet2,6,5,Resources,icon_resource_ore_silver.png,Silver ore,,87,69,1.92,167,132,45,ok,542 650 629 719
+sheet2,6,6,Resources,icon_resource_ore_cobalt_blue.png,Blue-veined ore,,86,68,1.94,167,132,44,ok,667 652 753 720
+sheet2,6,7,Resources,icon_resource_crystal_blue.png,Blue crystal,,78,78,1.9,148,148,54,ok,798 644 876 722
+sheet2,6,8,Resources,icon_resource_crystal_purple.png,Purple crystal,,82,85,1.78,146,151,52,ok,915 641 997 726
+sheet2,6,9,Resources,icon_resource_crystal_green.png,Green crystal,,71,83,1.93,137,161,47,ok,1045 645 1116 728
+sheet2,6,10,Resources,icon_resource_crystal_red.png,Red crystal,,67,78,2.05,138,160,48,ok,1167 647 1234 725
+sheet2,6,11,Resources,icon_resource_crystal_iridescent.png,Iridescent crystal,item.valuable.starstone,73,83,1.91,139,158,50,ok,1288 646 1361 729
+sheet2,6,12,Resources,icon_resource_crystal_dark.png,Dark crystal,,85,83,1.77,150,147,53,ok,1405 647 1490 730
+sheet2,7,1,Artifacts,icon_artifact_tri_device.png,Triangular alien device,,87,78,1.8,157,141,49,ok,39 757 126 835
+sheet2,7,2,Artifacts,icon_artifact_caged_orb.png,Caged orb,artifact.mars_cell_core,80,83,1.82,146,151,53,ok,172 757 252 840
+sheet2,7,3,Artifacts,icon_artifact_ancient_ring.png,Ancient ring / band,artifact.moon_ring,84,67,1.98,166,133,45,ok,294 766 378 833
+sheet2,7,4,Artifacts,icon_artifact_pyramid_shard.png,Pyramid shard,artifact.mars_spire_cap,74,84,1.88,139,158,50,ok,421 757 495 841
+sheet2,7,5,Artifacts,icon_artifact_alien_cube.png,Alien cube,artifact.moon_deep_cache,86,82,1.77,152,145,53,ok,538 758 624 840
+sheet2,7,6,Artifacts,icon_artifact_armillary.png,Armillary / gyroscope,,95,90,1.61,153,145,52,ok,656 754 751 844
+sheet2,7,7,Artifacts,icon_artifact_obelisk.png,Obelisk,artifact.mars_canyon_marker,49,101,1.72,84,174,42,ok,801 750 850 851
+sheet2,7,8,Artifacts,icon_artifact_stone_tablet.png,Stone tablet,artifact.moon_metallic_tablet,76,80,1.9,145,152,53,ok,901 762 977 842
+sheet2,7,9,Artifacts,icon_artifact_seal_disc.png,Seal disc,artifact.moon_seal_disc,93,70,1.84,171,129,43,ok,1023 764 1116 834
+sheet2,7,10,Artifacts,icon_artifact_alien_skull.png,Alien skull,,63,95,1.83,115,174,42,ok,1167 753 1230 848
+sheet2,7,11,Artifacts,icon_artifact_curved_blade.png,Curved blade / claw,artifact.moon_tool_head,89,68,1.91,170,130,44,ok,1278 768 1367 836
+sheet2,7,12,Artifacts,icon_artifact_portal_ring.png,Portal ring / lens,,92,77,1.76,162,136,47,ok,1402 761 1494 838
+sheet2,8,1,Ship,icon_ship_starfighter.png,Starfighter,,110,57,1.58,174,90,41,ok,35 888 145 945
+sheet2,8,2,Navigation,icon_nav_rover_buggy.png,Rover buggy,,105,71,1.66,174,118,41,ok,171 886 276 957
+sheet2,8,3,Navigation,icon_nav_drone.png,Drone,,112,68,1.55,174,106,41,ok,297 884 409 952
+sheet2,8,4,Navigation,icon_nav_turret.png,Turret / sensor post,,79,77,1.9,150,147,54,ok,435 881 514 958
+sheet2,8,5,Navigation,icon_nav_satellite.png,Satellite,,85,67,1.97,167,132,45,ok,553 884 638 951
+sheet2,8,6,Navigation,icon_nav_radar_dish.png,Radar dish,,73,83,1.91,139,158,50,ok,672 876 745 959
+sheet2,8,7,Navigation,icon_nav_antenna_spire.png,Antenna spire,,57,88,1.98,113,174,42,ok,792 870 849 958
+sheet2,8,8,Navigation,icon_nav_habitat_dome.png,Habitat dome,,98,69,1.78,174,123,41,ok,884 883 982 952
+sheet2,8,9,Navigation,icon_nav_landing_pad.png,Landing pad,,105,50,1.66,174,83,41,ok,1013 897 1118 947
+sheet2,8,10,Ship,icon_ship_cargo_module.png,Cargo module,,100,72,1.74,174,125,42,ok,1145 882 1245 954
+sheet2,8,11,Ship,icon_ship_supply_module.png,Supply module,,95,70,1.82,173,127,41,ok,1280 886 1375 956
+sheet2,8,12,Navigation,icon_nav_refinery.png,Refinery / factory,ship.refiner,92,85,1.68,154,143,52,ok,1404 870 1496 955

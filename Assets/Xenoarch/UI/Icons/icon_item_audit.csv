@@ -1,0 +1,138 @@
+item_id,display_name,category,icon_filename,status,notes
+item.tool.brush,Excavation Brush,Tool,Tools/icon_tool_excavation_brush.png,Matched,shared with research op Cleaning; SHARED icon: research.cleaning
+item.tool.depth_probe,Depth Probe,Tool,Tools/icon_tool_depth_probe.png,Matched,reads like a pen/stylus at 64px
+item.tool.excavation_shovel,Excavation Shovel,Tool,Tools/icon_tool_excavation_shovel.png,Matched,trowel-style shovel
+item.tool.handheld_scanner,Handheld Surface Scanner Mk I,Tool,Tools/icon_tool_handheld_scanner.png,Matched,
+item.tool.powered_drill,Basic Powered Drill,Tool,Tools/icon_tool_powered_drill.png,Matched,
+item.tool.precision_tool,Precision Excavation Tool,Tool,Tools/icon_tool_precision_tool.png,Matched,
+item.consumable.sample_container,Sample Container,Consumable,Items/icon_item_sample_container.png,Matched,alt: icon_item_vial_empty
+item.test.unique_fragment,Unidentified Fragment (test),Artifact,,Needs review,test item; candidate icon_research_unknown (shared)
+item.component.alloy_plate,Alloy Plate,Misc,Items/icon_item_metal_plates.png,Matched,
+item.component.circuit,Circuit Board,Misc,Items/icon_item_circuit_board.png,Matched,
+item.component.sensor_array,Sensor Array,Misc,Items/icon_item_microchip.png,Needs review,no dedicated sensor-array art; microchip is the nearest
+item.component.wiring,Wiring Bundle,Misc,Items/icon_item_wire_coil.png,Matched,alt: icon_item_wiring_tape (composite)
+item.valuable.copper_nugget,Native Copper Nugget,Valuable,Resources/icon_resource_copper_nugget.png,Matched,
+item.valuable.gold_nugget,Gold Nugget,Valuable,Resources/icon_resource_gold_nugget.png,Matched,
+item.valuable.silver_nugget,Silver Nugget,Valuable,Resources/icon_resource_silver_nugget.png,Matched,
+item.valuable.platinum_nugget,Platinum Nugget,Valuable,Resources/icon_resource_platinum_nugget.png,Matched,
+item.valuable.iridium_core,Iridium Meteorite Core,Valuable,Resources/icon_resource_blue_crystal_prism.png,Needs review,"pack labels it iridium_core but art is a blue gem prism, not a metallic meteorite core"
+item.valuable.meteoric_iron,Meteoric Iron Fragment,Valuable,Resources/icon_resource_meteoric_iron.png,Matched,
+item.valuable.quartz_geode,Quartz Geode,Valuable,Resources/icon_resource_crystal_cluster_blue.png,Needs review,"crystal cluster, not a split geode"
+item.valuable.starstone,Vael Starstone,Valuable,Resources/icon_resource_crystal_iridescent.png,Needs review,candidate only (sheet2 r6c11)
+item.valuable.vael_coin,Vael Token,Valuable,Items/icon_item_vael_token.png,Needs review,coin with triangle-! glyph reads as a warning badge at 64px
+material.alloy_ingot,Alloy Ingot,Resource,Resources/icon_resource_alloy_ingot.png,Matched,
+material.copper_ingot,Copper Ingot,Resource,Resources/icon_resource_copper_ingot.png,Matched,
+material.gold_ingot,Gold Ingot,Resource,Resources/icon_resource_gold_ingot.png,Matched,
+material.nickel_ingot,Nickel Ingot,Resource,Resources/icon_resource_nickel_ingot.png,Matched,silver ingot; near-identical to alloy/platinum ingots
+material.platinum_ingot,Platinum Ingot,Resource,Resources/icon_resource_platinum_ingot.png,Matched,darker steel ingot; near-identical to nickel/alloy
+material.auriferous_quartz,Auriferous Quartz,Resource,Resources/icon_resource_ore_gold_veined.png,Needs review,grey rock with gold veins (sheet2 r6c2)
+material.copper_sulfide,Copper Sulfide Ore,Resource,Resources/icon_resource_ore_copper_red.png,Needs review,"red native-copper look, not sulfide; pack has no greenish/brassy sulfide ore"
+material.fuel_cell,Fuel Cell,Resource,Resources/icon_resource_fuel_cell.png,Matched,alt icon_item_battery is similar
+material.helium3,Helium-3 Regolith,Resource,,Missing,no He-3 regolith/gas icon; do not reuse regolith
+material.iron_ore,Iron Ore,Resource,Resources/icon_resource_ore_gold_honeycomb.png,Needs review,pack labels it iron_ore but art is gold-veined; alt icon_resource_rock_grey
+material.lab_reagent,Lab Reagent,Resource,Resources/icon_resource_lab_reagent.png,Matched,alts: flasks sheet2 r4c9/10
+material.methane_frost,Methane Frost,Resource,Resources/icon_resource_methane_frost.png,Matched,snowflake; similar to icon_research_condition_damaged
+material.mineral_salts,Mineral Salts,Resource,Resources/icon_resource_mineral_salts.png,Matched,
+material.nickel_iron_ore,Nickel-Iron Ore,Resource,Resources/icon_resource_nickel_iron_ore.png,Matched,
+material.platinoid_ore,Platinoid Ore,Resource,Resources/icon_resource_ore_blue_crystal.png,Needs review,blue crystalline rock; alt icon_resource_ore_silver
+material.regolith,Regolith,Resource,Resources/icon_resource_regolith.png,Matched,grey cube pile reads more like gravel/blocks
+material.water_ice,Water Ice,Resource,Resources/icon_resource_water_ice.png,Matched,
+artifact.mars_glyph_tablet,Shrine Tablet,Artifact,Artifacts/icon_artifact_glyph_tablet.png,Matched,
+artifact.mars_navigation_core,Vael Navigation Core,Artifact,Artifacts/icon_artifact_navigation_core.png,Matched,
+artifact.mars_offering_bowl,Offering Bowl,Artifact,Artifacts/icon_artifact_offering_bowl.png,Matched,
+artifact.mars_relay_fragment,Relay Fragment,Artifact,Artifacts/icon_artifact_relay_fragment.png,Matched,
+artifact.mars_sensor_lattice,Vael Sensor Lattice,Artifact,Artifacts/icon_artifact_sensor_lattice.png,Matched,
+artifact.mars_star_disc,Star Disc,Artifact,Artifacts/icon_artifact_star_disc.png,Matched,
+artifact.mars_shrine_idol,Dune Shrine Figure,Artifact,,Needs review,pack cell (sheet1 r4c8) is a human scientist bust in a lab coat - not a Vael shrine figure; exported as icon_unassigned_human_bust
+artifact.mars_bead_string,Bead String,Artifact,,Missing,
+artifact.mars_canyon_marker,Canyon Marker,Artifact,Artifacts/icon_artifact_obelisk.png,Needs review,candidate only
+artifact.mars_cell_core,Lattice Cell,Artifact,Artifacts/icon_artifact_caged_orb.png,Needs review,candidate only
+artifact.mars_dust_filter,Dust Filter,Artifact,,Missing,
+artifact.mars_spire_cap,Spire Capstone,Artifact,Artifacts/icon_artifact_pyramid_shard.png,Needs review,candidate only
+artifact.moon_data_crystal,Data Crystal,Artifact,Artifacts/icon_artifact_data_crystal.png,Matched,
+artifact.moon_lens,Echo Lens,Artifact,Artifacts/icon_artifact_echo_lens.png,Matched,
+artifact.moon_power_cell,Depleted Power Cell,Artifact,Artifacts/icon_artifact_power_cell.png,Matched,close to icon_item_energy_cell
+artifact.moon_deep_cache,Deep Echo Cache,Artifact,Artifacts/icon_artifact_alien_cube.png,Needs review,candidate only
+artifact.moon_glyph_shard,Glyph Shard,Artifact,,Missing,no shard-with-glyphs art
+artifact.moon_metallic_tablet,Vael Waystation Tablet,Artifact,Artifacts/icon_artifact_stone_tablet.png,Needs review,"stone, not metallic"
+artifact.moon_ring,Spiral Band,Artifact,Artifacts/icon_artifact_ancient_ring.png,Needs review,"plain band, no spiral"
+artifact.moon_seal_disc,Waystation Seal,Artifact,Artifacts/icon_artifact_seal_disc.png,Matched,
+artifact.moon_survey_spike,Vael Survey Spike,Artifact,,Missing,obelisk already proposed for canyon_marker
+artifact.moon_tool_head,Cutting Head,Artifact,Artifacts/icon_artifact_curved_blade.png,Needs review,candidate only
+artifact.moon_vault_plate,Vault Plate,Artifact,,Missing,
+artifact.unknown_lump,Fused Lump,Artifact,Resources/icon_resource_shell_fragment.png,Needs review,candidate only (cracked chunk)
+artifact.vael_effigy,Guardian Effigy,Artifact,Artifacts/icon_artifact_guardian_effigy.png,Matched,
+artifact.vael_comb,Ritual Comb,Artifact,,Missing,
+artifact.vael_gauge,Pressure Gauge,Artifact,,Missing,
+artifact.vael_hinge,Hinge Assembly,Artifact,,Missing,
+artifact.vael_pendant,Spiral Pendant,Artifact,,Missing,
+artifact.vael_scroll_case,Scroll Case,Artifact,,Missing,
+ui.journal,Journal (J),UI function,Interface/icon_ui_journal.png,Matched,
+ui.map,Map (M/N),UI function,Interface/icon_ui_map.png,Matched,
+ui.inventory,Inventory (I),UI function,Interface/icon_ui_inventory.png,Matched,
+ui.equipment,Equipment,UI function,Interface/icon_ui_equipment.png,Matched,
+ui.loadout,Loadout,UI function,Interface/icon_ui_loadout.png,Needs review,pistol - check tone for a non-combat game
+ui.storage,Storage / ship hold,UI function,Interface/icon_ui_storage.png,Matched,alt icon_ship_cargo
+ui.missions,Missions / objectives,UI function,Interface/icon_ui_missions.png,Matched,
+ui.settings,Settings,UI function,Interface/icon_ui_settings.png,Matched,
+ui.credits,Credits (cr),UI function,Interface/icon_ui_credits.png,Matched,
+ui.trade,Trade / vendor,UI function,Interface/icon_ui_trade.png,Matched,
+ui.upgrade,Upgrades,UI function,Interface/icon_ui_upgrade.png,Matched,
+ui.skills,Skills,UI function,Interface/icon_ui_skill.png,Matched,
+ui.tech_tree,Tech tree,UI function,Interface/icon_ui_tech_tree.png,Matched,
+ui.rank,Level / rank / notoriety,UI function,Interface/icon_ui_level.png,Needs review,rank/level bars
+ui.health,Health,UI function,Interface/icon_ui_health.png,Matched,
+ui.energy,Energy,UI function,Interface/icon_ui_energy.png,Matched,
+ui.oxygen,Oxygen,UI function,Interface/icon_ui_oxygen.png,Matched,
+ui.toast_info,Toast: info,UI function,Interface/icon_ui_info.png,Matched,
+ui.toast_warning,Toast: warning,UI function,Interface/icon_ui_warning.png,Matched,
+ui.toast_alert,Toast: alert,UI function,Interface/icon_ui_alert.png,Matched,
+ui.complete,Done / complete,UI function,Interface/icon_ui_complete.png,Matched,
+ui.new_discovery,New discovery,UI function,Interface/icon_ui_new_discovery.png,Matched,
+ui.logo_mark,Xenoarch mark,UI function,Interface/icon_ui_xenoarch_mark.png,Matched,
+ui.inspect,Inspect,UI function,Interface/icon_ui_inspect.png,Matched,
+ui.inspect_rotate,Inspect: rotate,UI function,Interface/icon_ui_rotate.png,Matched,faint at 64px
+ui.zoom_in,Zoom in,UI function,Interface/icon_ui_zoom_in.png,Matched,
+ui.zoom_out,Zoom out,UI function,Interface/icon_ui_zoom_out.png,Matched,
+ui.pan,Pan,UI function,Interface/icon_ui_pan.png,Matched,faint at 64px
+ui.reset_view,Reset view,UI function,Interface/icon_ui_reset_view.png,Matched,
+ui.scan,Scan pulse,UI function,Research/icon_research_scan.png,Matched,
+research.cleaning,Research: Cleaning,UI function,Tools/icon_tool_excavation_brush.png,Matched,shared with item.tool.brush; SHARED icon: item.tool.brush
+research.identification,Research: Identification,UI function,Research/icon_research_structure_analysis.png,Needs review,magnifier+molecule
+research.material_analysis,Research: Material analysis,UI function,Research/icon_research_material_id.png,Matched,
+research.age_estimation,Research: Age estimation,UI function,Research/icon_research_isotope_analysis.png,Matched,atom
+research.civilization_id,Research: Civilization ID,UI function,,Missing,
+research.restoration,Research: Restoration,UI function,Research/icon_research_condition_reconstructed.png,Needs review,shared with condition badge
+research.translation,Research: Translation,UI function,Research/icon_research_decipher.png,Matched,
+research.technology_analysis,Research: Technology analysis,UI function,Research/icon_research_analyze.png,Matched,
+research.data_extraction,Research: Data extraction,UI function,Research/icon_research_data_extract.png,Matched,
+research.archive,Discovery archive,UI function,Research/icon_research_archive.png,Matched,
+condition.unknown,Condition: unidentified,UI function,Research/icon_research_unknown.png,Matched,
+condition.damaged,Condition: damaged,UI function,Research/icon_research_condition_damaged.png,Needs review,looks like a snowflake - confusable with methane frost
+condition.intact,Condition: intact,UI function,Research/icon_research_condition_intact.png,Matched,
+condition.complete,Condition: complete,UI function,Research/icon_research_condition_complete.png,Matched,
+map.dig_site,Map: dig site / anomaly,UI function,Navigation/icon_nav_anomaly.png,Matched,
+map.cache,Map: cache marker,UI function,,Missing,no dedicated cache marker; do not reuse new_discovery
+map.waypoint,Map: waypoint / flag,UI function,Navigation/icon_nav_waypoint.png,Matched,
+map.landing_zone,Map: site landing zone,UI function,Navigation/icon_nav_landing_zone.png,Matched,
+map.base,Map: base / outpost,UI function,Navigation/icon_nav_base_outpost.png,Matched,
+map.ore,Map: ore node,UI function,Navigation/icon_nav_ore_pickup.png,Matched,
+map.beacon,Map: beacon / relay,UI function,Navigation/icon_nav_beacon.png,Matched,
+map.rover,Rover,UI function,Navigation/icon_nav_rover.png,Matched,second rover art: icon_nav_rover_buggy
+map.planet,Planet,UI function,Navigation/icon_nav_planet.png,Matched,
+map.moon,Moon,UI function,Navigation/icon_nav_moon.png,Matched,
+ship.shuttle,Shuttle,UI function,Ship/icon_ship_shuttle.png,Matched,
+ship.starship,Player ship,UI function,Ship/icon_ship_starship.png,Matched,
+ship.engine,Ship engine,UI function,Ship/icon_ship_engine.png,Matched,
+ship.shield,Ship shield,UI function,Ship/icon_ship_shield.png,Matched,
+ship.life_support,Life support,UI function,Ship/icon_ship_life_support.png,Matched,
+ship.comms,Comms,UI function,Ship/icon_ship_comms.png,Matched,
+ship.cargo,Cargo,UI function,Ship/icon_ship_cargo.png,Matched,
+ship.refiner,Refiner,UI function,Navigation/icon_nav_refinery.png,Needs review,"factory, not a ship refiner unit"
+ui.pause,Pause menu,UI function,,Missing,
+ui.save,Save,UI function,,Missing,
+ui.load,Load,UI function,,Missing,
+ui.quit,Quit,UI function,,Missing,
+ui.locked,Locked,UI function,,Missing,no padlock icon
+ui.close,Close,UI function,,Missing,
+ui.back,Back,UI function,,Missing,
