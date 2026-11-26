@@ -101,8 +101,27 @@ namespace DMI.Xenoarch.EditorTools
         static string Path(GameObject g) => g.transform.parent == null ? g.name : Path(g.transform.parent.gameObject) + "/" + g.name;
 
         /// <summary>Smoke: components present in the saved Ship_Starter file.</summary>
+        const string SfxPath = "Assets/_Project/Resources/XenoarchShipSfx.asset";
+        const string KitSounds = "Assets/_Creepy_Cat/_3D Scifi Kit Vol 3/Sounds/";
+
+        /// <summary>Ship sound set asset (not a scene object): references licensed Creepy Cat kit clips, keeps any clip already set.</summary>
+        public static void EnsureSfx(StringBuilder log)
+        {
+            var sfx = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Ship.ShipSfx>(SfxPath);
+            if (sfx == null) { sfx = ScriptableObject.CreateInstance<DMI.Xenoarch.Ship.ShipSfx>(); AssetDatabase.CreateAsset(sfx, SfxPath); }
+            AudioClip Clip(string f) => AssetDatabase.LoadAssetAtPath<AudioClip>(KitSounds + f);
+            if (sfx.liftStart == null) sfx.liftStart = Clip("DoorPump.wav");
+            if (sfx.liftLoop == null) sfx.liftLoop = Clip("Elevator.mp3");
+            if (sfx.liftStop == null) sfx.liftStop = Clip("DoorPump.wav");
+            EditorUtility.SetDirty(sfx);
+            log.AppendLine($"Ship SFX: lift start={Name(sfx.liftStart)}, loop={Name(sfx.liftLoop)}, stop={Name(sfx.liftStop)} ({SfxPath})");
+        }
+        static string Name(Object o) => o != null ? o.name : "procedural";
+
         public static void Validate(System.Action<bool, string> check)
         {
+            var sfx = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Ship.ShipSfx>(SfxPath);
+            check(sfx != null, $"Ship SFX: sound set at {SfxPath} (lift loop {(sfx != null ? Name(sfx.liftLoop) : "-")})");
             string path = XenoarchSetup.ScenePath(Core.SceneNames.ShipStarter);
             if (!System.IO.File.Exists(path)) { check(true, "Ship hookup: Ship_Starter missing - skipped"); return; }
             string text = System.IO.File.ReadAllText(path);

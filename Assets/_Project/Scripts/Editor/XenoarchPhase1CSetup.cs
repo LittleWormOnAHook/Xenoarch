@@ -84,6 +84,7 @@ namespace DMI.Xenoarch.EditorTools
             XenoarchShuttleSetup.Run(log);
             XenoarchMapsSetup.Run(log);
             XenoarchValuablesSetup.Run(log);
+            XenoarchShipHookup.EnsureSfx(log);
             WithScene(SceneNames.ShipStarter, log, s =>
             {
                 var all = s.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
