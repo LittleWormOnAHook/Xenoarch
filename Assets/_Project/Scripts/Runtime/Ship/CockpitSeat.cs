@@ -40,6 +40,7 @@ namespace DMI.Xenoarch.Ship
         readonly List<(Renderer r, bool on)> _hidden = new List<(Renderer, bool)>();
         float _seatedAt;
         ConsolePower _power;
+        CockpitHelm _helm;
 
         /// <summary>Console power controller for this seat (added at runtime to the faced console; nothing saved).</summary>
         public ConsolePower Power => _power;
@@ -54,8 +55,10 @@ namespace DMI.Xenoarch.Ship
                 { float d = Vector3.Distance(h.transform.position, transform.position); if (d < best) { best = d; c = h; } }
             }
             if (c == null) return;
-            _power = c.GetComponent<ConsolePower>();
-            if (_power == null) _power = c.gameObject.AddComponent<ConsolePower>(); // starts dark
+            _helm = c;
+            // power the whole console (buttons, panels, screens), not just the helm mesh; never dim the seat itself
+            var root = ConsolePower.ResolveRoot(c.transform);
+            _power = ConsolePower.Attach(root.gameObject, root != c.transform && transform.IsChildOf(root) ? transform : null); // starts dark
         }
 
         /// <summary>Seated: reach a hand to the console and press (click), then the displays blink on.</summary>
@@ -63,7 +66,7 @@ namespace DMI.Xenoarch.Ship
         {
             if (_power == null || _player == null) return;
             var arms = _player.GetComponentInChildren<FirstPersonArms>();
-            var helm = _power.GetComponent<CockpitHelm>();
+            var helm = _helm;
             Vector3 target = helm != null && _player.ViewCamera != null ? helm.PressPointFor(_player.ViewCamera.transform.position) : _power.transform.position;
             if (arms != null) arms.Reach(target, () => { if (IsOccupied) _power.PowerOn(); });
             else _power.PowerOn();

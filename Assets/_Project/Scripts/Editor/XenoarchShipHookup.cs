@@ -134,6 +134,34 @@ namespace DMI.Xenoarch.EditorTools
             bool dark = mpb.GetColor("_EmissionColor").maxColorComponent < 0.01f && mat.GetColor("_EmissionColor").maxColorComponent > 1f;
             Object.DestroyImmediate(go); Object.DestroyImmediate(mat);
             check(b0 == 0f && b1 == 1f && flips >= 4 && slots == 1 && dark, $"Console power: blink-on curve ({flips} blinks), display starts dark via property block, material untouched");
+
+            // t94u/t95u: a P_Cockpit_Tech_03_Rev_B-style console powers as a whole (buttons, panels, screens, its light),
+            // resolved from the nested helm, while the seat inside the prefab is left alone.
+            var root = new GameObject("P_Cockpit_Tech_03_Rev_B_SmokeTest") { hideFlags = HideFlags.HideAndDontSave };
+            var helmGo = new GameObject("P_Cockpit_Tech_03_Rev_A"); helmGo.transform.SetParent(root.transform);
+            var helmMesh = new GameObject("Cockpit_Tech_03_Rev_A"); helmMesh.transform.SetParent(helmGo.transform);
+            var emi = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "Wall_Atlas_Test" }; emi.EnableKeyword("_EMISSION"); emi.SetColor("_EmissionColor", Color.white * 2f); emi.SetColor("_BaseColor", Color.white);
+            GameObject Part(string n, Transform parent) { var p = GameObject.CreatePrimitive(PrimitiveType.Cube); p.name = n; p.transform.SetParent(parent); p.GetComponent<Renderer>().sharedMaterial = emi; Object.DestroyImmediate(p.GetComponent<Collider>()); return p; }
+            var button = Part("Push_Me", Part("P_Button_Squared_Blue", root.transform).transform);
+            var screen = Part("Screen_A", root.transform);
+            var panel = Part("P_Panel_Center_01", root.transform);
+            var chair = new GameObject("P_Chair_06"); chair.transform.SetParent(root.transform); var chairMesh = Part("Chair_06", chair.transform);
+            var lightGo = new GameObject("Point Light"); lightGo.transform.SetParent(root.transform); var light = lightGo.AddComponent<Light>(); light.intensity = 3f;
+            var resolved = DMI.Xenoarch.Ship.ConsolePower.ResolveRoot(helmMesh.transform);
+            var rp = DMI.Xenoarch.Ship.ConsolePower.Attach(resolved.gameObject, chair.transform);
+            int slotCount = rp.DisplayCount; // button, screen, panel (+ their P_ parents) but not the chair
+            Color Em(GameObject g) { var b = new MaterialPropertyBlock(); g.GetComponent<Renderer>().GetPropertyBlock(b, 0); return b.GetColor("_EmissionColor"); }
+            Color Base(GameObject g) { var b = new MaterialPropertyBlock(); g.GetComponent<Renderer>().GetPropertyBlock(b, 0); return b.GetColor("_BaseColor"); }
+            bool allDark = Em(button).maxColorComponent < 0.01f && Em(screen).maxColorComponent < 0.01f && Em(panel).maxColorComponent < 0.01f;
+            bool screenBaseDim = Base(screen).maxColorComponent < 0.5f, buttonBaseKept = Base(button).maxColorComponent < 0.01f; // no base override on buttons
+            var chairBlock = new MaterialPropertyBlock(); chairMesh.GetComponent<Renderer>().GetPropertyBlock(chairBlock, 0);
+            bool chairUntouched = chairBlock.isEmpty, lightOff = light.intensity < 0.01f && rp.LightCount == 1;
+            bool assetUntouched = emi.GetColor("_EmissionColor").maxColorComponent > 1f;
+            bool rootOk = resolved == root.transform;
+            Object.DestroyImmediate(root); Object.DestroyImmediate(emi);
+            check(rootOk, "Console power: nested helm (P_Cockpit_Tech_03_Rev_A) resolves to the whole P_Cockpit_Tech_03_Rev_B console");
+            check(slotCount == 4 && allDark && screenBaseDim && buttonBaseKept && chairUntouched && lightOff && assetUntouched,
+                $"Console power (Rev_B): buttons, panels and screens start dark ({slotCount} slots), screens dimmed, its light off, seat untouched, material asset untouched");
             var sfx = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Ship.ShipSfx>(SfxPath);
             check(sfx != null, $"Ship SFX: sound set at {SfxPath} (lift loop {(sfx != null ? Name(sfx.liftLoop) : "-")})");
             string path = XenoarchSetup.ScenePath(Core.SceneNames.ShipStarter);

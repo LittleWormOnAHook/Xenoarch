@@ -35,6 +35,47 @@ namespace DMI.Xenoarch.Ship
 
         struct Slot { public Renderer r; public int index; public Color emission; public Color baseCol; public int baseId; public bool hasBase; }
         readonly List<Slot> _slots = new List<Slot>();
+        readonly List<(Light l, float intensity)> _lights = new List<(Light, float)>();
+        Transform _exclude;            // e.g. the seat when it sits inside the console prefab (P_Chair_06 in P_Cockpit_Tech_03_Rev_B)
+        static Transform _pendingExclude;
+
+        /// <summary>Adds (or returns) the power controller on <paramref name="root"/>, skipping everything under
+        /// <paramref name="exclude"/> (set before Awake so the seat is never dimmed).</summary>
+        public static ConsolePower Attach(GameObject root, Transform exclude)
+        {
+            var cp = root.GetComponent<ConsolePower>();
+            if (cp != null) return cp;
+            _pendingExclude = exclude;
+            try { cp = root.AddComponent<ConsolePower>(); } finally { _pendingExclude = null; }
+            if (cp._exclude == null && exclude != null) { cp._exclude = exclude; cp._init = false; cp.ClearBlocks(); cp.EnsureInit(); }
+            return cp;
+        }
+
+        /// <summary>The whole console a helm belongs to: the top-most ancestor named "P_Cockpit_Tech*" (e.g.
+        /// P_Cockpit_Tech_03_Rev_B with all its buttons, panels and screens, or P_Cockpit_Tech_02), else the helm itself.</summary>
+        public static Transform ResolveRoot(Transform helm)
+        {
+            if (helm == null) return null;
+            Transform best = helm;
+            for (var t = helm; t != null; t = t.parent)
+                if (t.name.StartsWith("P_Cockpit_Tech", System.StringComparison.OrdinalIgnoreCase)) best = t;
+            return best;
+        }
+
+        /// <summary>Screens/displays get their base colour dimmed as well as their emission; buttons, panels and the
+        /// chassis atlas only lose their glow (so the console body never goes black).</summary>
+        static bool IsScreen(Renderer r, Material m)
+        {
+            if (m != null && (m.name.IndexOf("screen", System.StringComparison.OrdinalIgnoreCase) >= 0 || m.name.IndexOf("display", System.StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+            for (var t = r.transform; t != null; t = t.parent)
+            {
+                if (t.GetComponent<ConsolePower>() != null) break;
+                if (t.name.IndexOf("screen", System.StringComparison.OrdinalIgnoreCase) >= 0 || t.name.IndexOf("display", System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            }
+            return false;
+        }
+
+        bool Excluded(Transform t) => _exclude != null && (t == _exclude || t.IsChildOf(_exclude));
         MaterialPropertyBlock _mpb;
         AudioSource _sfx, _hum;
         Coroutine _routine;
@@ -46,18 +87,20 @@ namespace DMI.Xenoarch.Ship
         public bool IsOn { get; private set; }
         public int DisplayCount { get { EnsureInit(); return _slots.Count; } }
         bool _init;
-        void EnsureInit() { if (_init) return; _init = true; Collect(); SetLevel(0f); }
+        public int LightCount { get { EnsureInit(); return _lights.Count; } }
+        void EnsureInit() { if (_init) return; _init = true; if (_exclude == null) _exclude = _pendingExclude; Collect(); _level = -1f; SetLevel(0f); }
 
-        void Awake() { EnsureInit(); Debug.Log($"[Xenoarch] Console power: {name} starts off ({_slots.Count} display material slot(s))"); }
+        void Awake() { EnsureInit(); Debug.Log($"[Xenoarch] Console power: {name} starts off ({_slots.Count} emissive slot(s), {_lights.Count} light(s))"); }
         void OnDestroy() { ClearBlocks(); }
 
         /// <summary>Displays = material slots with an emission colour above black (and emission enabled).</summary>
         void Collect()
         {
-            _slots.Clear();
+            _slots.Clear(); _lights.Clear();
+            foreach (var l in GetComponentsInChildren<Light>(true)) if (!Excluded(l.transform)) _lights.Add((l, l.intensity));
             foreach (var r in GetComponentsInChildren<Renderer>(true))
             {
-                if (r is ParticleSystemRenderer) continue;
+                if (r is ParticleSystemRenderer || Excluded(r.transform)) continue;
                 var mats = r.sharedMaterials;
                 for (int i = 0; i < mats.Length; i++)
                 {
@@ -66,7 +109,7 @@ namespace DMI.Xenoarch.Ship
                     var e = m.GetColor(EmissionId);
                     bool emissive = e.maxColorComponent > 0.01f && (m.IsKeywordEnabled("_EMISSION") || m.globalIlluminationFlags != MaterialGlobalIlluminationFlags.EmissiveIsBlack);
                     if (!emissive) continue;
-                    int bid = m.HasProperty(BaseId) ? BaseId : m.HasProperty(ColorId) ? ColorId : -1;
+                    int bid = !IsScreen(r, m) ? -1 : m.HasProperty(BaseId) ? BaseId : m.HasProperty(ColorId) ? ColorId : -1;
                     _slots.Add(new Slot { r = r, index = i, emission = e, hasBase = bid != -1, baseId = bid, baseCol = bid != -1 ? m.GetColor(bid) : Color.white });
                 }
             }
@@ -87,9 +130,14 @@ namespace DMI.Xenoarch.Ship
                 if (s.hasBase) { var c = s.baseCol * bc; c.a = s.baseCol.a; _mpb.SetColor(s.baseId, c); }
                 s.r.SetPropertyBlock(_mpb, s.index);
             }
+            foreach (var (l, i) in _lights) if (l != null) l.intensity = i * k; // runtime instance only, never saved
         }
 
-        void ClearBlocks() { foreach (var s in _slots) if (s.r != null) s.r.SetPropertyBlock(null, s.index); }
+        void ClearBlocks()
+        {
+            foreach (var s in _slots) if (s.r != null) s.r.SetPropertyBlock(null, s.index);
+            foreach (var (l, i) in _lights) if (l != null) l.intensity = i;
+        }
 
         // ------------------------------------------------------------------ power
         /// <summary>Button click now (call at the hand's press), then blink on with the power-on sound, then hum.</summary>
