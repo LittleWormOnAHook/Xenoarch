@@ -158,7 +158,8 @@ namespace DMI.Xenoarch.Vehicles
             seatedEyeHeight = Mathf.Clamp(Mathf.Min(1.15f, (body.max.y - floorY) * 0.75f), 0.6f, 1.15f);
 
             // Door: open rotation = the 60 degree swing that moves the door out, away from the cabin.
-            doorInside = Marker("DoorInside", new Vector3(doorC.x, floorY, doorC.z) + fwd * 0.8f, fwd);
+            var diXZ = new Vector3(doorC.x, floorY, doorC.z) + fwd * 0.8f;
+            doorInside = Marker("DoorInside", new Vector3(diXZ.x, FloorBelow(diXZ + Vector3.up * 0.9f, floorY), diXZ.z), fwd);
             float reach = 0f;
             if (door != null)
             {
@@ -203,13 +204,11 @@ namespace DMI.Xenoarch.Vehicles
                 wheels.Add(new WheelSlot { collider = wc, visual = w.vis, front = Vector3.Dot(w.c, fwd) > midF });
             }
 
-            // Driving chassis (off while parked): the body above the wheel centres.
+            // Driving chassis (off while parked): the hull only (no antenna / props / wheels), above the wheel centres.
             var chGo = new GameObject("Chassis"); chGo.transform.SetParent(rig, false);
             chGo.transform.position = body.center; chGo.transform.rotation = Quaternion.identity;
             chassis = chGo.AddComponent<BoxCollider>();
-            float bottom = Mathf.Max(body.min.y, wheelY + 0.1f);
-            chassis.center = chGo.transform.InverseTransformPoint(new Vector3(body.center.x, (bottom + body.max.y) * 0.5f, body.center.z));
-            chassis.size = new Vector3(body.size.x, Mathf.Max(0.4f, body.max.y - bottom), body.size.z);
+            FitChassisInner();
             chassis.enabled = false;
 
             // Wide entry zone behind the door (looking at the ground / door area there also gets the prompt).
@@ -224,6 +223,63 @@ namespace DMI.Xenoarch.Vehicles
             else GetComponent<RoverDoor>().rover = this;
             var rb = GetComponent<Rigidbody>(); if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
             rb.isKinematic = true; rb.useGravity = false; rb.mass = mass;
+        }
+
+        /// <summary>Bounds of the hull mesh only: Rover_Body_01 (door included); falls back to every renderer outside
+        /// _Props, the wheel setups and the rig.</summary>
+        public Bounds HullBounds()
+        {
+            var hull = FindDeep(transform, "Rover_Body_01");
+            var list = new List<Renderer>();
+            if (hull != null) list.AddRange(hull.GetComponentsInChildren<Renderer>(true));
+            if (list.Count == 0)
+                foreach (var r in GetComponentsInChildren<Renderer>(true))
+                {
+                    bool skip = false;
+                    for (var t = r.transform; t != null && t != transform; t = t.parent)
+                        if (t.name == "_Props" || t.name.StartsWith("P_Wheel") || t.name.StartsWith("P_Rover_Setup") || t == rig) { skip = true; break; }
+                    if (!skip) list.Add(r);
+                }
+            return Bounds(list.ToArray());
+        }
+
+        /// <summary>Refits the baked chassis box to the hull (editor fix-up; the root must be upright).</summary>
+        public void FitChassis()
+        {
+            if (chassis == null) return;
+            var rot = transform.rotation;
+            transform.rotation = Quaternion.identity;
+            try { chassis.transform.rotation = Quaternion.identity; FitChassisInner(); }
+            finally { transform.rotation = rot; }
+        }
+
+        void FitChassisInner()
+        {
+            var hull = HullBounds();
+            float wheelY = hull.min.y; int n = 0; float sum = 0f;
+            foreach (var w in wheels) if (w.collider != null) { sum += w.collider.transform.position.y - suspension * 0.5f; n++; }
+            if (n > 0) wheelY = sum / n;
+            float bottom = Mathf.Max(hull.min.y, wheelY + 0.1f);
+            var ct = chassis.transform;
+            ct.position = hull.center;
+            chassis.center = ct.InverseTransformPoint(new Vector3(hull.center.x, (bottom + hull.max.y) * 0.5f, hull.center.z));
+            var ls = ct.lossyScale;
+            chassis.size = new Vector3(hull.size.x / ls.x, Mathf.Max(0.4f, hull.max.y - bottom) / ls.y, hull.size.z / ls.z);
+        }
+
+        /// <summary>Highest solid rover surface (not the rig, not triggers) under a point; fallback when nothing is hit.</summary>
+        public float FloorBelow(Vector3 from, float fallback, float max = 3f)
+        {
+            Physics.SyncTransforms();
+            float best = float.MaxValue, y = fallback;
+            foreach (var h in Physics.RaycastAll(from, Vector3.down, max, ~0, QueryTriggerInteraction.Ignore))
+            {
+                var c = h.collider;
+                if (c == null || c.isTrigger || !c.transform.IsChildOf(transform) || (rig != null && c.transform.IsChildOf(rig))) continue;
+                if (door != null && c.transform.IsChildOf(door)) continue;
+                if (h.distance < best) { best = h.distance; y = h.point.y; }
+            }
+            return y;
         }
 
         static Transform FindDeep(Transform t, string name)

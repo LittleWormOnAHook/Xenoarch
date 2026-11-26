@@ -24,6 +24,7 @@ namespace DMI.Xenoarch.EditorTools
         const string RoverTrigger = "Temp/xeno_rover.trig";
         const string RoverBakeTrigger = "Temp/xeno_rover_bake.trig";
         const string RoverMeasureTrigger = "Temp/xeno_rover_measure.trig";
+        const string RoverFixTrigger = "Temp/xeno_rover_fix.trig";
         const string RoverItemPath = "Assets/_Project/Data/Items/Item_vehicle_grasshopper.asset";
         const string GrasshopperGuid = "73a3d6dceb2a6f747b43ee02c5144d36"; // Assets/_Project/Prefabs/Vehicles and Ships/Grasshoper .prefab
         const string LogFile = "Logs/xeno_phase1e.txt";
@@ -41,6 +42,7 @@ namespace DMI.Xenoarch.EditorTools
             if (File.Exists(Trigger)) { File.Delete(Trigger); Run(); }
             if (File.Exists(RoverBakeTrigger)) { File.Delete(RoverBakeTrigger); BakeSceneRover(); }
             if (File.Exists(RoverMeasureTrigger)) { File.Delete(RoverMeasureTrigger); MeasureSceneRover(); }
+            if (File.Exists(RoverFixTrigger)) { File.Delete(RoverFixTrigger); FixRoverPrefab(); }
             if (File.Exists(RoverTrigger)) { File.Delete(RoverTrigger); try { RoverItem(); AssetDatabase.SaveAssets(); Log("rover done"); } catch (Exception e) { Log("FAILED " + e); } }
         }
 
@@ -297,6 +299,42 @@ namespace DMI.Xenoarch.EditorTools
                 }
             }
             catch (Exception e) { Log("rover measure FAILED " + e); }
+        }
+
+        /// <summary>t197: prefab-only fix-up. Chassis box refit to the hull (antenna / props excluded) and DoorInside lowered
+        /// onto the doorway floor (measured with a raycast on the scene copy). Edits the prefab asset only; the scene is not
+        /// touched or saved. Nothing else (door pivot, seat, console, scale) changes.</summary>
+        [MenuItem("Xenoarch/Setup/Rover: Fix Prefab Chassis + Door Point", priority = 63)]
+        public static void FixRoverPrefab()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("rover fix: exit Play Mode first"); return; }
+            string path = AssetDatabase.GUIDToAssetPath(GrasshopperGuid);
+            GameObject contents = null;
+            try
+            {
+                var inst = FindSceneRover(out _);
+                var sr = inst != null ? inst.GetComponent<DMI.Xenoarch.Vehicles.RoverVehicle>() : null;
+                if (sr == null || sr.doorInside == null) { Log("rover fix: scene rover not baked"); return; }
+                var di = sr.doorInside.position;
+                float fy = sr.FloorBelow(di + Vector3.up * 0.9f, float.NaN);
+                if (float.IsNaN(fy)) { Log("rover fix: no floor found under DoorInside"); return; }
+                var local = inst.transform.InverseTransformPoint(new Vector3(di.x, fy, di.z));
+                Log($"rover fix: scene DoorInside y {di.y:0.00} -> floor {fy:0.00} (drop {di.y - fy:0.00} m)");
+
+                contents = PrefabUtility.LoadPrefabContents(path);
+                var rv = contents.GetComponent<DMI.Xenoarch.Vehicles.RoverVehicle>();
+                if (rv == null || rv.chassis == null || rv.doorInside == null) { Log("rover fix: prefab not baked"); return; }
+                var root = contents.transform;
+                string Box(BoxCollider b) { var w = b.transform.TransformPoint(b.center); var sz = Vector3.Scale(b.size, b.transform.lossyScale); return $"size {sz} centre(root-local) {root.InverseTransformPoint(w)}"; }
+                Log($"rover fix: prefab root scale {root.localScale}; chassis before {Box(rv.chassis)}; DoorInside local y before {root.InverseTransformPoint(rv.doorInside.position).y:0.00}");
+                rv.FitChassis();
+                rv.doorInside.position = root.TransformPoint(local);
+                Log($"rover fix: chassis after {Box(rv.chassis)}; DoorInside local y after {root.InverseTransformPoint(rv.doorInside.position).y:0.00}; root scale {root.localScale}");
+                PrefabUtility.SaveAsPrefabAsset(contents, path, out bool ok);
+                Log($"rover fix: prefab saved {ok}; scene NOT saved");
+            }
+            catch (Exception e) { Log("rover fix FAILED " + e); }
+            finally { if (contents != null) PrefabUtility.UnloadPrefabContents(contents); }
         }
 
         static Bounds BoundsOf(Transform t)
