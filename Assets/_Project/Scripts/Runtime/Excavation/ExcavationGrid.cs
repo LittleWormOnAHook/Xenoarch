@@ -55,8 +55,9 @@ namespace DMI.Xenoarch.Excavation
     {
         // Built-in fallbacks (also used by the editor checks). Shovel: 3x the old effective dig speed (ZEN-8 / t104u).
         public static readonly DigToolSpec Shovel = new DigToolSpec { itemId = "item.tool.excavation_shovel", name = "Excavation shovel", shortName = "shovel", radius = 0.45f, removal = 2f, maxHardness = 2f, damage = 0.6f, rate = 5.6f, crude = true };
-        public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Precision tool", shortName = "precision", radius = 0.14f, removal = 0.375f, maxHardness = 2f, damage = 0f, rate = 4f };
-        public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Brush", shortName = "brush", radius = 0.18f, removal = 0.2f, maxHardness = 1f, damage = 0f, rate = 5f };
+        // ZEN-23 (t166u): precision = small shallow controlled bites, narrow; brush = a thin dust/loose-soil skim, wide and soft.
+        public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Precision tool", shortName = "precision", radius = 0.1f, removal = 0.15f, maxHardness = 2f, damage = 0f, rate = 5f, cells = 1, minBite = 0.02f };
+        public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Brush", shortName = "brush", radius = 0.6f, removal = 0.035f, maxHardness = 1f, damage = 0f, rate = 7f, cells = 1, minBite = 0.005f };
         public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Powered drill", shortName = "drill", radius = 0.25f, removal = 1.8f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
         public static readonly DigToolSpec[] Defaults = { Shovel, Precision, Brush, Drill };
 

@@ -19,10 +19,11 @@ MonoBehaviour:
     itemId: item.tool.precision_tool
     name: Precision tool
     shortName: precision
-    radius: 0.14
-    removal: 0.375
+    radius: 0.1
+    removal: 0.15
     maxHardness: 2
     damage: 0
     crude: 0
-    rate: 4
-    cells: 0
+    rate: 5
+    cells: 1
+    minBite: 0.02
