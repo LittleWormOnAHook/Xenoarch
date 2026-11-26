@@ -122,7 +122,7 @@ namespace DMI.Xenoarch.UI
                     if (def.icon != null) XenoarchIcons.ApplyItem(icon, def);
                 }
                 if (count <= 0) cell.style.opacity = 0.4f;
-                cell.tooltip = $"{k + 1}: {name}";
+                cell.tooltip = count > 0 ? $"{k + 1}: {name}" : $"{k + 1}: {name} (not owned yet)";
                 cell.Add(icon);
                 var key = new Label((k + 1).ToString()); key.AddToClassList("xa-slot__count"); key.style.left = 3; key.style.right = StyleKeyword.Auto; key.style.top = 1; key.style.bottom = StyleKeyword.Auto; cell.Add(key);
                 if (count > 1) { var c = new Label("x" + count); c.AddToClassList("xa-slot__count"); cell.Add(c); }

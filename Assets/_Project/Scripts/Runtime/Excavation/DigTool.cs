@@ -78,12 +78,15 @@ namespace DMI.Xenoarch.Excavation
             return 0;
         }
 
+        /// <summary>Feedback for a hotbar key whose tool is not in the backpack (ZEN-21).</summary>
+        public static string NotOwnedText(string name) => $"You don't have a {name} yet. Craft it aboard the ship, then press the key again.";
+
         static bool Has(string itemId) => XenoarchRuntime.Session != null && XenoarchRuntime.Session.Inventory.Count(itemId) > 0;
 
         public void Equip(int index)
         {
             if (index < 0 || index >= DigTools.All.Length || index == Equipped) { Holster(); return; }
-            if (!Has(DigTools.All[index].itemId)) { Toast.Show($"No {DigTools.All[index].name} in your inventory.", 2.5f); return; }
+            if (!Has(DigTools.All[index].itemId)) { Toast.Show(NotOwnedText(DigTools.All[index].name), 3f); return; }
             if (_scanner != null && _scanner.Equipped) _scanner.SetEquipped(false);
             Equipped = index;
             if (_arms != null) _arms.SetHeld(Hand.Right, true);

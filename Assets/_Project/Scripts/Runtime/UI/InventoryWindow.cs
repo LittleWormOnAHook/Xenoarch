@@ -77,7 +77,7 @@ namespace DMI.Xenoarch.UI
             Text(left, "HOTBAR", "xa-term__h");
             var hb = new VisualElement(); hb.style.flexDirection = FlexDirection.Row; hb.style.flexWrap = Wrap.Wrap; left.Add(hb);
             for (int k = 0; k < Hotbar.Size; k++) hb.Add(HotbarTile(k));
-            DragDrop.Target(grid, p => p.kind == "hotbar" || p.kind == "backpack", p => { if (p.kind == "hotbar") { s.Hotbar.Clear(p.index); Refresh(); } });
+            DragDrop.Target(grid, p => p.kind == "hotbar" || p.kind == "backpack", p => { if (p.kind == "hotbar") { TakeOffHotbar(p.index); Refresh(); } });
 
             Text(left, "SHIP STORAGE", "xa-term__h");
             foreach (var kv in s.Holds)
@@ -261,6 +261,19 @@ namespace DMI.Xenoarch.UI
             Refresh();
         }
 
+        /// <summary>Hotbar slot dropped on the backpack (ZEN-21): the hotbar only points at backpack items, so this clears the
+        /// shortcut and never removes an item. Says so, and says when the tool is not owned yet (default layout shows every tool).</summary>
+        void TakeOffHotbar(int index)
+        {
+            var bar = Session.Hotbar; string id = bar.At(index);
+            if (index <= 0 || id == null) return;
+            bar.Clear(index);
+            string name = Def(id)?.DisplayNameOrId ?? id;
+            Toast.Show(Session.Inventory.Count(id) > 0
+                ? $"{name} taken off the hotbar. It is still in your backpack: drag it back onto any slot."
+                : $"{name} taken off the hotbar. You don't have one yet: craft it aboard the ship, then drag it from the backpack onto the hotbar.", 4f);
+        }
+
         VisualElement HotbarTile(int k)
         {
             var bar = Session.Hotbar; string id = bar.At(k);
@@ -281,7 +294,8 @@ namespace DMI.Xenoarch.UI
             var key = new Label((k + 1).ToString()) { pickingMode = PickingMode.Ignore };
             key.style.position = Position.Absolute; key.style.left = 3; key.style.top = 1; key.style.fontSize = 11; key.style.color = XenoarchPalette.Highlight;
             t.Add(key);
-            t.tooltip = k == 0 ? "1: handheld scanner (fixed)" : id != null ? $"{k + 1}: {(d != null ? d.DisplayNameOrId : id)} (drag off to clear)" : $"{k + 1}: empty (drag an item here)";
+            bool owned = id != null && Session.Inventory.Count(id) > 0;
+            t.tooltip = k == 0 ? "1: handheld scanner (fixed)" : id != null ? $"{k + 1}: {(d != null ? d.DisplayNameOrId : id)}" + (owned ? " (drag off to clear)" : " (not owned yet: craft it aboard the ship)") : $"{k + 1}: empty (drag an item here)";
             if (k > 0)
             {
                 if (id != null) Drag.Source(t, () => new DragDrop.Payload { kind = "hotbar", index = k, itemId = id, icon = d != null ? d.icon : null });
@@ -304,7 +318,7 @@ namespace DMI.Xenoarch.UI
             DragDrop.Target(t, p => p.kind == "backpack" || p.kind == "hotbar", p =>
             {
                 if (p.kind == "backpack") inv0.Swap(p.index, index);
-                else Session.Hotbar.Clear(p.index);
+                else TakeOffHotbar(p.index);
                 Refresh();
             });
             t.style.width = 64; t.style.height = 64; t.style.marginRight = 4; t.style.marginBottom = 4;

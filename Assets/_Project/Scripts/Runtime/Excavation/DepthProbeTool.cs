@@ -83,7 +83,7 @@ namespace DMI.Xenoarch.Excavation
                 for (int k = 0; k < SlotKeys.Length && k + 1 < DMI.Xenoarch.Inventory.Hotbar.Size; k++)
                 {
                     if (!kb[SlotKeys[k]].wasPressedThisFrame) continue;
-                    if (s.Hotbar.At(k + 1) == _def.itemId) SetEquipped(!Equipped);
+                    if (s.Hotbar.At(k + 1) == _def.itemId) { if (!Equipped && !HasItem) Toast.Show(DigTool.NotOwnedText(_def.displayName), 3f); else SetEquipped(!Equipped); }
                     else if (Equipped) SetEquipped(false);
                 }
             }
