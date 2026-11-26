@@ -29,8 +29,8 @@ namespace DMI.Xenoarch.Exploration
         void Awake() { Instance = this; if (!SceneLoader.ReadyGates.Contains(BusyStatus)) SceneLoader.ReadyGates.Add(BusyStatus); }
         void OnEnable() => SceneManager.sceneLoaded += OnLoaded;
         void OnDisable() => SceneManager.sceneLoaded -= OnLoaded;
-        Scene _doneFor;
-        void Start() { var s = SceneManager.GetActiveScene(); if (_doneFor != s) Land(s, false); }
+        bool _landedOnce; // OnLoaded runs before Start for a loaded scene; Start only covers direct play
+        void Start() { if (!_landedOnce) Land(SceneManager.GetActiveScene(), false); }
         void OnLoaded(Scene s, LoadSceneMode m) { if (m == LoadSceneMode.Single) Land(s, true); }
 
         public static string BusyStatus() => _busy ? "Choosing landing zone" : null;
@@ -38,7 +38,7 @@ namespace DMI.Xenoarch.Exploration
         void Land(Scene scene, bool arriving)
         {
             Shuttle = null; _busy = false;
-            _doneFor = scene;
+            _landedOnce = true;
             var session = XenoarchRuntime.Session;
             if (session == null || !scene.IsValid()) return;
             var x = session.Exploration;

@@ -67,7 +67,10 @@ namespace DMI.Xenoarch.EditorTools
             var inv = session.Inventory;
             Check(inv.Add("item.consumable.sample_container", 25) == 0, "Stackable add 25 fits (stack 20 -> 2 slots)");
             Check(inv.Count("item.consumable.sample_container") == 25, "Stack count = 25");
-            Check(inv.Add("item.unknown.thing", 1) == 1, "Unknown item rejected");
+            // Expected rejection: mute its (intended) warning so smoke runs leave the Console clean.
+            bool logOn = Debug.unityLogger.logEnabled; Debug.unityLogger.logEnabled = false;
+            int rejected; try { rejected = inv.Add("item.unknown.thing", 1); } finally { Debug.unityLogger.logEnabled = logOn; }
+            Check(rejected == 1, "Unknown item rejected");
             Check(inv.Remove("item.consumable.sample_container", 10) == 10 && inv.Count("item.consumable.sample_container") == 15, "Remove 10 -> 15");
             Check(inv.AddInstance("item.test.unique_fragment", "inst_a"), "Unique instance added");
             Check(!inv.AddInstance("item.test.unique_fragment", "inst_a"), "Duplicate unique instance rejected");

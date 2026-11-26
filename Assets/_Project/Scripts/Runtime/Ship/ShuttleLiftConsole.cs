@@ -10,7 +10,7 @@ namespace DMI.Xenoarch.Ship
         public ShuttleLift lift;
         public Transform InteractionTransform => transform;
 
-        void Awake() { if (lift == null) lift = FindFirstObjectByType<ShuttleLift>(); }
+        void Awake() { if (lift == null) lift = FindAnyObjectByType<ShuttleLift>(); }
 
         public float GetPriority(in InteractionContext c) => lift != null && !lift.Moving ? 1f : -1f;
         public string GetPrompt(in InteractionContext c)

@@ -33,7 +33,7 @@ namespace DMI.Xenoarch.UI
         {
             WorldRect = worldRect.width > 1f ? worldRect : new Rect(-150f, -150f, 300f, 300f);
             style.backgroundColor = XenoarchPalette.PanelDeep;
-            if (map != null) { style.backgroundImage = map; style.unityBackgroundScaleMode = ScaleMode.StretchToFill; }
+            if (map != null) { style.backgroundImage = map; style.backgroundSize = new BackgroundSize(Length.Percent(100), Length.Percent(100)); style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat); }
             style.borderTopWidth = style.borderBottomWidth = style.borderLeftWidth = style.borderRightWidth = 1;
             style.borderTopColor = style.borderBottomColor = style.borderLeftColor = style.borderRightColor = XenoarchPalette.A(XenoarchPalette.Secondary, 0.5f);
             style.marginBottom = 8; style.overflow = Overflow.Hidden; style.flexShrink = 0;

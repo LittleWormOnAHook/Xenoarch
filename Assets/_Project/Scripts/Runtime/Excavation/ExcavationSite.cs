@@ -95,7 +95,7 @@ namespace DMI.Xenoarch.Excavation
         void Init(ArchaeologicalSiteDefinition def, float surfaceY)
         {
             Definition = def;
-            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            foreach (var mb in FindObjectsByType<MonoBehaviour>())
                 if (mb is IExcavationSurface s && mb.gameObject.scene == gameObject.scene) { _surface = s; break; }
 
             var style = def.style;

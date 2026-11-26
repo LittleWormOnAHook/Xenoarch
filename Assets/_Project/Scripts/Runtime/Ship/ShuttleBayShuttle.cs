@@ -17,7 +17,7 @@ namespace DMI.Xenoarch.Ship
 
         void Awake()
         {
-            foreach (var p in FindObjectsByType<Player.PlayerSpawnPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var p in FindObjectsByType<Player.PlayerSpawnPoint>(FindObjectsInactive.Include))
                 if (p.spawnId == ShipTravel.ShipSpawnShuttleBay) return; // a placed one wins
             if (!FindSpawn(out var pos, out var rot)) { Debug.LogWarning("[Xenoarch] Bay shuttle: no clear floor beside it for the return spawn; returns use the airlock."); return; }
             var go = new GameObject("Spawn_shuttle_bay (runtime)");

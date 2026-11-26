@@ -17,7 +17,7 @@ namespace DMI.Xenoarch.Ship
 
         static ShipSfx _cached; static bool _looked;
         public static ShipSfx Get() { if (!_looked) { _looked = true; _cached = Resources.Load<ShipSfx>(ResourcePath); } return _cached; }
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void Reset() { _cached = null; _looked = false; }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetStatics() { _cached = null; _looked = false; } // not "Reset": Unity calls Reset() on ScriptableObjects
 
         // ------------------------------------------------------------------ procedural fallbacks
         const int Rate = 44100;

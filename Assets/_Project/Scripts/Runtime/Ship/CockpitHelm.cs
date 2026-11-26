@@ -55,7 +55,7 @@ namespace DMI.Xenoarch.Ship
         CockpitSeat NearestFreeSeat(Vector3 from)
         {
             CockpitSeat best = null; float bd = 36f; // within 6 m
-            foreach (var s in FindObjectsByType<CockpitSeat>(FindObjectsSortMode.None))
+            foreach (var s in FindObjectsByType<CockpitSeat>())
             {
                 if (!s.isActiveAndEnabled || s.IsOccupied) continue;
                 float d = (s.transform.position - from).sqrMagnitude;

@@ -195,7 +195,8 @@ namespace DMI.Xenoarch.Ship
                 var vel = ps.velocityOverLifetime;
                 vel.enabled = true; vel.space = ParticleSystemSimulationSpace.Local;
                 vel.x = 0f; vel.y = 0f; vel.z = 0f;
-                vel.orbitalX = 0f; vel.orbitalY = 0f;
+                // All three orbital curves must share one mode (TwoConstants), else Unity warns every frame.
+                vel.orbitalX = new ParticleSystem.MinMaxCurve(0f, 0f); vel.orbitalY = new ParticleSystem.MinMaxCurve(0f, 0f);
                 vel.orbitalZ = new ParticleSystem.MinMaxCurve(streakSwirl * 0.75f, streakSwirl * 1.25f);
                 vel.radial = -streakSwirl * 3f; // a little inward pull keeps the spiral from flinging out of the window
             }

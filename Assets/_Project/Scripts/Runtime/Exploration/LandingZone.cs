@@ -24,7 +24,7 @@ namespace DMI.Xenoarch.Exploration
         public static LandingZone Find(string siteId)
         {
             siteId ??= "";
-            foreach (var z in FindObjectsByType<LandingZone>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            foreach (var z in FindObjectsByType<LandingZone>(FindObjectsInactive.Exclude))
                 if ((z.siteId ?? "") == siteId) return z;
             return null;
         }

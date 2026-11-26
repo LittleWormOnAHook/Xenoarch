@@ -85,7 +85,7 @@ namespace DMI.Xenoarch.Galaxy
             var session = XenoarchRuntime.Session;
             if (session == null || scene == SceneNames.Bootstrap || scene == SceneNames.MainMenu) return;
             // Handheld scanner rides on the player (added at runtime so the player prefab stays untouched).
-            foreach (var f in FindObjectsByType<FirstPersonController>(FindObjectsSortMode.None))
+            foreach (var f in FindObjectsByType<FirstPersonController>())
                 if (f.GetComponent<Exploration.SurfaceScannerTool>() == null) f.gameObject.AddComponent<Exploration.SurfaceScannerTool>();
 
             ApplySky(session, scene);
@@ -93,7 +93,7 @@ namespace DMI.Xenoarch.Galaxy
             Current = env;
             if (env == null) return;
 
-            foreach (var fpc in FindObjectsByType<FirstPersonController>(FindObjectsSortMode.None)) fpc.gravity = env.gravity;
+            foreach (var fpc in FindObjectsByType<FirstPersonController>()) fpc.gravity = env.gravity;
 
             if (env.applyLighting)
             {

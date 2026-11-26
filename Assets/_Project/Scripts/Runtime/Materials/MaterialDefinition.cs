@@ -24,11 +24,14 @@ namespace DMI.Xenoarch.Materials
         [Tooltip("Items per node (min, max).")] public Vector2Int unitsPerNode = new Vector2Int(2, 4);
         [Tooltip("Play seconds before a harvested node comes back.")] [Min(0f)] public float respawnSeconds = 1200f;
 
-        void OnValidate()
+#if UNITY_EDITOR
+        protected override void OnValidate()
         {
+            base.OnValidate(); // keeps the stable-id default (was hidden before)
             category = ItemCategory.Resource;
             uniqueInstance = false;
             if (maxStack < 2) maxStack = 50;
         }
+#endif
     }
 }

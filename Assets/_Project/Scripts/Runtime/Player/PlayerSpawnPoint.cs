@@ -12,13 +12,13 @@ namespace DMI.Xenoarch.Player
         {
             if (spawnId != null && spawnId.IndexOf('|') >= 0)
             {
-                var all = FindObjectsByType<PlayerSpawnPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                var all = FindObjectsByType<PlayerSpawnPoint>(FindObjectsInactive.Exclude);
                 foreach (var id in spawnId.Split('|'))
                     foreach (var p in all) if (p.spawnId == id) return p;
                 spawnId = Core.PlayerSpawnIds.Default;
             }
             PlayerSpawnPoint fallback = null;
-            foreach (var p in FindObjectsByType<PlayerSpawnPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            foreach (var p in FindObjectsByType<PlayerSpawnPoint>(FindObjectsInactive.Exclude))
             {
                 if (p.spawnId == spawnId) return p;
                 if (p.spawnId == Core.PlayerSpawnIds.Default || fallback == null) fallback = p;

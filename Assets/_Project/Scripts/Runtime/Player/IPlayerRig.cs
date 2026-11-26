@@ -34,7 +34,7 @@ namespace DMI.Xenoarch.Player
         /// <summary>Finds the first active IPlayerRig in the loaded scenes (one player per scene by design).</summary>
         public static IPlayerRig Find()
         {
-            foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude))
                 if (mb is IPlayerRig rig && mb.isActiveAndEnabled) return rig;
             return null;
         }
