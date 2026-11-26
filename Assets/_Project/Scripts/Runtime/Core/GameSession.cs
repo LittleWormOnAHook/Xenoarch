@@ -234,6 +234,18 @@ namespace DMI.Xenoarch.Core
                 if (s != null && s.item != null) Inventory.Add(s.item.Id, s.count);
             Location = new PlayerLocationState { sceneName = Config.firstGameplayScene, spawnId = Config.firstSpawnId };
             ApplyDevLoadout();
+            GrantStarterVehicles();
+        }
+
+        /// <summary>t187u: every expedition owns one Grasshopper rover (item.vehicle.grasshopper). Granted once per save
+        /// (fact grant.vehicle.grasshopper), into the backpack or, if full, a ship crate.</summary>
+        public void GrantStarterVehicles()
+        {
+            const string id = "item.vehicle.grasshopper", fact = "grant.vehicle.grasshopper";
+            if (Discovery == null || Discovery.Has(fact) || !Items.TryGetItem(id, out _)) return;
+            bool ok = Inventory.Add(id, 1) == 0;
+            if (!ok) foreach (var h in Holds.Values) if (h.Add(id, 1) == 0) { ok = true; break; }
+            if (ok) { Discovery.Publish(fact); Debug.Log("[Xenoarch] Granted the Grasshopper rover (inventory: Deploy on a planet surface)."); }
         }
 
         /// <summary>DEV / TESTING (XenoarchConfig.devTestingLoadout): makes sure every dig tool and the handheld scanner are

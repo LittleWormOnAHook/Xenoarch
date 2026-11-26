@@ -73,6 +73,7 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.DigSiteMapWindow>();
             gameObject.AddComponent<DMI.Xenoarch.UI.JournalReader>();
             gameObject.AddComponent<DMI.Xenoarch.Journals.JournalDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Vehicles.RoverDirector>();   // t187u
             gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Economy.VendorDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.DiscoveryJournalWindow>();
@@ -156,6 +157,7 @@ namespace DMI.Xenoarch.Core
             _session.Saves.Apply(file); // state first, so scene objects read restored state in Awake/Start
             _session.PlaySeconds = file.playSeconds;
             _session.ApplyDevLoadout();
+            _session.GrantStarterVehicles();
             _sessionActive = true;
             var loc = _session.Location;
             string scene = string.IsNullOrEmpty(loc.sceneName) ? _session.Config.firstGameplayScene : loc.sceneName;

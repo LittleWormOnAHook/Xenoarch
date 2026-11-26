@@ -21,6 +21,9 @@ namespace DMI.Xenoarch.EditorTools
     static class XenoarchPhase1ESetup
     {
         const string Trigger = "Temp/xeno_phase1e.trig";
+        const string RoverTrigger = "Temp/xeno_rover.trig";
+        const string RoverItemPath = "Assets/_Project/Data/Items/Item_vehicle_grasshopper.asset";
+        const string GrasshopperGuid = "73a3d6dceb2a6f747b43ee02c5144d36"; // Assets/_Project/Prefabs/Vehicles and Ships/Grasshoper .prefab
         const string LogFile = "Logs/xeno_phase1e.txt";
         const string NavCorePath = "Assets/_Project/Data/Artifacts/Artifact_mars_navigation_core.asset";
         const string TerrainLitPath = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/TerrainLit.mat";
@@ -32,9 +35,9 @@ namespace DMI.Xenoarch.EditorTools
         {
             if (EditorApplication.timeSinceStartup < _next) return;
             _next = EditorApplication.timeSinceStartup + 1.0;
-            if (!File.Exists(Trigger) || EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling) return;
-            File.Delete(Trigger);
-            Run();
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling) return;
+            if (File.Exists(Trigger)) { File.Delete(Trigger); Run(); }
+            if (File.Exists(RoverTrigger)) { File.Delete(RoverTrigger); try { RoverItem(); AssetDatabase.SaveAssets(); Log("rover done"); } catch (Exception e) { Log("FAILED " + e); } }
         }
 
         static void Log(string s)
@@ -52,6 +55,7 @@ namespace DMI.Xenoarch.EditorTools
                 Scene();
                 BuildSettings();
                 NavDrive();
+                RoverItem();
                 AssetDatabase.SaveAssets();
                 Log("done");
             }
@@ -105,6 +109,30 @@ namespace DMI.Xenoarch.EditorTools
             list.Add(new EditorBuildSettingsScene(path, true));
             EditorBuildSettings.scenes = list.ToArray();
             Log($"Build Settings: added {path} ({list.Count} scenes)");
+        }
+
+        /// <summary>t187u: the Grasshopper rover as an inventory item (Deploy on planet / moon surfaces). The prefab is
+        /// referenced, never modified.</summary>
+        static void RoverItem()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(GrasshopperGuid));
+            var item = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Vehicles.VehicleItemDefinition>(RoverItemPath);
+            bool created = item == null;
+            if (created) { item = ScriptableObject.CreateInstance<DMI.Xenoarch.Vehicles.VehicleItemDefinition>(); AssetDatabase.CreateAsset(item, RoverItemPath); item.baseValue = 18000; }
+            item.SetIdForTooling("item.vehicle.grasshopper");
+            item.displayName = "Grasshopper Rover";
+            item.description = "Surface rover, packed for transport. Deploy it on a planet or moon surface (not aboard the ship or a station). Enter through the rear door.";
+            item.category = DMI.Xenoarch.Items.ItemCategory.Equipment; item.maxStack = 1; item.uniqueInstance = false; item.mass = 0f;
+            if (prefab != null) item.vehiclePrefab = prefab;
+            EditorUtility.SetDirty(item);
+            var cfg = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
+            var reg = cfg != null ? cfg.itemRegistry : AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Items.ItemRegistry>(XenoarchSetup.RegistryPath);
+            if (reg != null)
+            {
+                var entries = reg.Entries.Where(e => e != null).ToList();
+                if (!entries.Any(e => e.Id == item.Id)) { entries.Add(item); reg.SetEntries(entries); EditorUtility.SetDirty(reg); }
+            }
+            Log($"rover item {(created ? "created" : "updated")} ({RoverItemPath}), prefab {(prefab != null ? AssetDatabase.GetAssetPath(prefab) : "NOT FOUND (guid " + GrasshopperGuid + ")")}, registry {(reg != null ? reg.name : "missing")}");
         }
 
         static void NavDrive()

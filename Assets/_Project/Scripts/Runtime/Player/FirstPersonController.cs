@@ -173,6 +173,14 @@ namespace DMI.Xenoarch.Player
             _seatLook = true;
         }
 
+        /// <summary>t187u: moving seat (rover): move the seated root and turn the seat facing, keeping the free look offset.</summary>
+        public void SetSeatFrame(Vector3 rootPosition, float seatYaw)
+        {
+            if (!Seated) return;
+            _seatYaw = seatYaw;
+            transform.SetPositionAndRotation(rootPosition, Quaternion.Euler(0f, _seatYaw + (_seatLook ? _yawOffset : 0f), 0f));
+        }
+
         /// <summary>Leave the seated state at the current pose (camera height restored, CharacterController back on).</summary>
         public void EndSeat()
         {

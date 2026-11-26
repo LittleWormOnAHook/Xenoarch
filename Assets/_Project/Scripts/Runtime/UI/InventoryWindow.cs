@@ -116,6 +116,20 @@ namespace DMI.Xenoarch.UI
                 if (!string.IsNullOrEmpty(d.description)) Text(mid, d.description, "xa-term__dim");
                 int bp = inv.Count(d.Id), all = s.Stock.Count(d.Id);
                 Text(mid, $"Backpack {bp}   |   Ship crates {all - bp}");
+                if (d is DMI.Xenoarch.Vehicles.VehicleItemDefinition && DMI.Xenoarch.Vehicles.RoverDirector.Instance is DMI.Xenoarch.Vehicles.RoverDirector rd)
+                {
+                    // t187u: vehicles deploy from the backpack on planet / moon surfaces only.
+                    if (rd.IsDeployed(d)) Btn(mid, "Recall vehicle", () => { rd.Recall(); Refresh(); });
+                    else
+                    {
+                        bool can = rd.CanDeploy(d, out var why);
+                        Btn(mid, can ? "Deploy" : $"Deploy\n{why}", () =>
+                        {
+                            if (rd.Deploy(d, out var r)) { Toast.Show($"{d.DisplayNameOrId} deployed. Rear door: E to open, E to enter."); Close(); }
+                            else { Toast.Show(r); Refresh(); }
+                        }, can);
+                    }
+                }
                 if (d is MaterialDefinition m)
                 {
                     if (m.fuelValue > 0f) Text(mid, $"Ship fuel: {m.fuelValue:0.#} per item (Refiner: Refuel)");

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bc5cb7247262ef40818c45dbb54d613, type: 3}
+  m_Name: Item_vehicle_grasshopper
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Vehicles.VehicleItemDefinition
+  id: item.vehicle.grasshopper
+  displayName: Grasshopper Rover
+  description: Surface rover, packed for transport. Deploy it on a planet or moon
+    surface (not aboard the ship or a station). Enter through the rear door.
+  icon: {fileID: 0}
+  category: 1
+  maxStack: 1
+  uniqueInstance: 0
+  mass: 0
+  baseValue: 18000
+  worldPrefab: {fileID: 0}
+  vehiclePrefab: {fileID: 208843848861736690, guid: 73a3d6dceb2a6f747b43ee02c5144d36, type: 3}
+  deployDistance: 14
