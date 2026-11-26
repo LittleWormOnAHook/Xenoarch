@@ -61,6 +61,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4f7a580e8bfc91947960be86ec44182f, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   defaultSpaceSkybox: {fileID: 2100000, guid: 8ba5043e1a9251278cb647dc04d2b025, type: 2}
+  preferOrbitViews: 1
+  shipAmbientScale: 0.7
+  basePostProfile: {fileID: 11400000, guid: 32ea3c0f8bca12b4a90e8e78447ec5f1, type: 2}
+  basePostEnabled: 1
   firstGameplayScene: Ship_Starter
   firstSpawnId: default
   inventoryCapacity: 24
@@ -77,6 +81,7 @@ MonoBehaviour:
     count: 8
   - item: {fileID: 11400000, guid: eff4e5e168cd61844a9f346199508bbb, type: 2}
     count: 2
+  devTestingLoadout: 1
   mainMenuScene: MainMenu
   fadeDuration: 0.35
   saveFolderName: Saves
