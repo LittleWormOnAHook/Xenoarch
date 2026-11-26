@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Galaxy;
 using DMI.Xenoarch.Player;
@@ -22,6 +23,27 @@ namespace DMI.Xenoarch.Exploration
 
         public bool Equipped { get; private set; }
         public string LastReading { get; private set; }
+        /// <summary>The equipped handheld scanner, if any. Used by the detector HUD.</summary>
+        public static SurfaceScannerTool Active { get; private set; }
+
+        /// <summary>True while the refined-mode hold-LMB metal-detector sweep is running.</summary>
+        public bool Sweeping => _sweeping;
+        public float SweepSignal { get; private set; }
+        public float SweepDistance { get; private set; }
+        public bool SweepAimed { get; private set; }
+
+        public readonly struct SweepBlip
+        {
+            public readonly float headingDeg; // 0 = camera forward, +right, -left
+            public readonly float rangeM;     // horizontal distance from the player
+            public readonly float signal01;   // 1 at the aim point, 0 at detectRadius
+            public readonly bool inBeam;      // within detectRadius of the current aim
+            public readonly bool closest;
+            public SweepBlip(float headingDeg, float rangeM, float signal01, bool inBeam, bool closest)
+            { this.headingDeg = headingDeg; this.rangeM = rangeM; this.signal01 = signal01; this.inBeam = inBeam; this.closest = closest; }
+        }
+        readonly List<SweepBlip> _blips = new List<SweepBlip>(16);
+        public IReadOnlyList<SweepBlip> SweepBlips => _blips;
 
         float _cooldownUntil, _pulseT = -1f;
         UIDocument _doc;
@@ -61,22 +83,32 @@ namespace DMI.Xenoarch.Exploration
 
         void Start() => BuildUi();
 
-        void OnDisable() { if (Equipped) SetEquipped(false); }
+        void OnEnable() { Active = this; }
+        void OnDisable()
+        {
+            if (Equipped) SetEquipped(false);
+            StopSweep();
+            if (Active == this) Active = null;
+        }
 
         public void SetEquipped(bool on)
         {
             Equipped = on && HasItem;
-            if (!Equipped) Refined = false;
+            if (!Equipped) { Refined = false; StopSweep(); }
             if (arms != null) arms.SetHeld(hand, Equipped);
-            XenoarchUI.Show(_panel, Equipped);
+            XenoarchUI.Show(_panel, Equipped && !_sweeping);
             if (Equipped && string.IsNullOrEmpty(LastReading)) SetText(ReadyText, false);
         }
 
         void LateUpdate()
         {
             // Stack under the minimap (top-right column) instead of overlapping it.
-            if (_panel != null && _panel.resolvedStyle.display == DisplayStyle.Flex)
-            { _panel.style.top = UI.HudLayout.NextTopRight; _panel.style.right = UI.HudLayout.CornerMargin; }
+            if (_panel != null)
+            {
+                XenoarchUI.Show(_panel, Equipped && !_sweeping && !UIState.BlocksGameplay);
+                if (_panel.resolvedStyle.display == DisplayStyle.Flex)
+                { _panel.style.top = UI.HudLayout.ScannerTop; _panel.style.right = UI.HudLayout.CornerMargin; }
+            }
         }
 
         void Update()
@@ -112,7 +144,7 @@ namespace DMI.Xenoarch.Exploration
         // Refined mode only. Tap LMB / RT = the refined pulse (pinpoint + red flag) on release; hold it past
         // SweepHoldSeconds = metal-detector sweep at the aim point: buried finds of the fenced site within detectRadius of
         // the aim glow faintly through the ground (Xenoarch/XRayGlow, ZTest Always) and a tick repeats faster and higher
-        // the closer the aim is. Release stops it. No new UI panel (the grid display waits on mockup approval).
+        // the closer the aim is. Release stops it. DetectorSweepHud (t169u/t170u) shows the half-disc while sweeping.
         public const float SweepHoldSeconds = 0.25f;
         [Header("Detector sweep (refined mode, hold LMB)")]
         [Tooltip("Aim reach of the sweep (m).")] public float sweepReach = 10f;
@@ -153,6 +185,7 @@ namespace DMI.Xenoarch.Exploration
             if (_close == null) _close = Resources.Load<AudioClip>("Audio/Scanner/detector_close");
             _glowProps ??= new MaterialPropertyBlock();
             if (arms != null) arms.RaiseTemporarily(hand, 0.5f);
+            _blips.Clear(); SweepSignal = 0f; SweepDistance = 0f; SweepAimed = false;
             SetText("DETECTOR SWEEP: move the aim over the ground. The tick speeds up near a find.", false);
         }
 
@@ -161,6 +194,7 @@ namespace DMI.Xenoarch.Exploration
             if (!_sweeping) return;
             _sweeping = false;
             _sweepTargets.Clear();
+            _blips.Clear(); SweepSignal = 0f; SweepDistance = 0f; SweepAimed = false;
             SetText(ReadyText, false);
         }
 
@@ -182,18 +216,43 @@ namespace DMI.Xenoarch.Exploration
             bool aimed = bd < float.MaxValue;
             float best = 0f; DMI.Xenoarch.Excavation.BuriedArtifact nearest = null; float nearestD = 0f;
             float pulse = 0.75f + 0.25f * Mathf.Sin(Time.time * 6f);
+            _blips.Clear();
+            var cam = _cam.transform;
+            var fwd = cam.forward; fwd.y = 0f;
+            if (fwd.sqrMagnitude < 0.0001f) fwd = cam.right; // fallback
+            Vector3 origin = cam.position; origin.y = 0f;
+            int closestIdx = -1;
             for (int i = _sweepTargets.Count - 1; i >= 0; i--)
             {
                 var a = _sweepTargets[i];
                 if (a == null || a.Grid == null || a.Grid.recovered) { _sweepTargets.RemoveAt(i); continue; }
-                if (!aimed) continue;
-                var d = a.transform.position - aim; d.y = 0f;
-                float dist = d.magnitude;
-                if (dist > detectRadius) continue;
-                float c = 1f - dist / detectRadius;
-                if (c > best) { best = c; nearest = a; nearestD = dist; }
-                DrawGlow(a, Mathf.Lerp(0.12f, 0.5f, c) * pulse);
+                var world = a.transform.position;
+                var to = world - cam.position; to.y = 0f;
+                float range = to.magnitude;
+                float heading = Vector3.SignedAngle(fwd, to, Vector3.up);
+                float signal = 0f; bool inBeam = false;
+                if (aimed)
+                {
+                    var d = world - aim; d.y = 0f;
+                    float dist = d.magnitude;
+                    if (dist <= detectRadius)
+                    {
+                        inBeam = true;
+                        signal = 1f - dist / detectRadius;
+                        if (signal > best) { best = signal; nearest = a; nearestD = dist; closestIdx = _blips.Count; }
+                        DrawGlow(a, Mathf.Lerp(0.12f, 0.5f, signal) * pulse);
+                    }
+                }
+                _blips.Add(new SweepBlip(heading, range, signal, inBeam, false));
             }
+            if (closestIdx >= 0)
+            {
+                var b = _blips[closestIdx];
+                _blips[closestIdx] = new SweepBlip(b.headingDeg, b.rangeM, b.signal01, b.inBeam, true);
+            }
+            SweepAimed = aimed;
+            SweepSignal = best;
+            SweepDistance = nearestD;
             // Tick: interval 0.8 s at the edge of the radius down to 0.07 s right over it; pitch rises with it.
             if (nearest != null && Time.time >= _nextTick && _audio != null)
             {

@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.UI
 {
     /// <summary>
-    /// Per-planet minimap (top-right) over the baked relief of the landing region: player arrow, shuttle, orbit-scanned
+    /// Per-planet minimap (top-right, or mid-right inside the visor when the helmet is on — t169u/t170u) over the baked relief of the landing region: player arrow, shuttle, orbit-scanned
     /// dig sites (approximate, with their uncertainty), revealed valuable caches and the handheld scan radius.
     /// M opens the full Maps window (Surface + Dig Sites tabs, <see cref="DigSiteMapWindow"/>). Only on bodies with a baked surface map.
     /// </summary>
@@ -82,7 +82,8 @@ namespace DMI.Xenoarch.UI
         {
             if (_frame == null) return;
             bool show = !UIState.BlocksGameplay && !(DMI.Xenoarch.Scenes.SceneLoader.Busy);
-            _frame.style.top = HudLayout.TopStart;
+            _frame.style.top = HudLayout.MinimapTop;
+            _frame.style.right = HudLayout.MinimapRight;
             XenoarchUI.Show(_frame, show);
             HudLayout.TopRightBottom = show && !float.IsNaN(_frame.layout.yMax) && _frame.layout.height > 1f ? _frame.layout.yMax : 0f;
             if (!show) return;

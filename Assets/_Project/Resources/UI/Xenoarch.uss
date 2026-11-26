@@ -188,3 +188,12 @@
 .xa-button:hover > .xa-glyph { -unity-background-image-tint-color: var(--xa-on-button); }
 .xa-button__label { font-size: 18px; color: var(--xa-text); -unity-text-align: middle-left; padding: 0; margin: 0; }
 .xa-button:hover > .xa-button__label { color: var(--xa-on-button); }
+
+/* ---------- Helmet detector (t169u/t170u) ---------- */
+.xa-icon--research-unknown { background-image: url("/Assets/Xenoarch/UI/Icons/Research/icon_research_unknown.png"); }
+.xa-detector { flex-direction: column; align-items: center; }
+.xa-detector__title { font-size: 12px; -unity-font-style: bold; color: var(--xa-heading); letter-spacing: 3px; margin-bottom: 2px; -unity-text-align: upper-center; }
+.xa-detector__disc { overflow: hidden; }
+.xa-detector__blip { -unity-background-scale-mode: scale-to-fit; }
+.xa-detector__signal { font-size: 15px; -unity-font-style: bold; color: var(--xa-highlight); letter-spacing: 1px; }
+.xa-detector__dist { font-size: 14px; color: var(--xa-text); margin-top: 2px; }
