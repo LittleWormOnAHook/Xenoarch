@@ -12,7 +12,7 @@ namespace DMI.Xenoarch.UI
     /// <summary>
     /// Per-planet minimap (top-right) over the baked relief of the landing region: player arrow, shuttle, orbit-scanned
     /// dig sites (approximate, with their uncertainty), revealed valuable caches and the handheld scan radius.
-    /// M toggles a larger view. Only on bodies with a baked surface map.
+    /// M opens the full Maps window (Surface + Dig Sites tabs, <see cref="DigSiteMapWindow"/>). Only on bodies with a baked surface map.
     /// </summary>
     public sealed class MinimapHud : MonoBehaviour
     {
@@ -37,7 +37,7 @@ namespace DMI.Xenoarch.UI
 
         void Bind(Scene scene)
         {
-            _body = null;
+            _body = null; HudLayout.TopRightBottom = 0f;
             var x = XenoarchRuntime.Session?.Exploration;
             if (x != null && x.Galaxy != null)
             {
@@ -52,7 +52,7 @@ namespace DMI.Xenoarch.UI
             if (_body == null) return;
 
             _frame = new VisualElement { pickingMode = PickingMode.Ignore };
-            _frame.style.position = Position.Absolute; _frame.style.right = 18; _frame.style.top = 18;
+            _frame.style.position = Position.Absolute; _frame.style.right = HudLayout.Margin; _frame.style.top = HudLayout.Margin;
             _frame.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDeep, 0.8f);
             _frame.style.paddingLeft = _frame.style.paddingRight = _frame.style.paddingTop = _frame.style.paddingBottom = 4;
             _title = new Label { pickingMode = PickingMode.Ignore };
@@ -70,7 +70,7 @@ namespace DMI.Xenoarch.UI
             if (_map == null) return;
             float s = _large ? largeSize : smallSize;
             _map.style.width = s; _map.style.height = s; _map.ShowLabels = _large;
-            _title.text = _large ? $"{_body.displayName.ToUpperInvariant()}  -  landing region {_body.surfaceMapRect.width:0} m   [M] close" : $"{_body.displayName.ToUpperInvariant()}   [M]";
+            _title.text = _large ? $"{_body.displayName.ToUpperInvariant()}  -  landing region {_body.surfaceMapRect.width:0} m   [M] close" : $"{_body.displayName.ToUpperInvariant()}   [M] map";
         }
 
         void Update()
@@ -78,9 +78,9 @@ namespace DMI.Xenoarch.UI
             if (_frame == null) return;
             bool show = !UIState.BlocksGameplay && !(DMI.Xenoarch.Scenes.SceneLoader.Busy);
             XenoarchUI.Show(_frame, show);
+            HudLayout.TopRightBottom = show && !float.IsNaN(_frame.layout.yMax) && _frame.layout.height > 1f ? _frame.layout.yMax : 0f;
             if (!show) return;
-            var kb = Keyboard.current;
-            if (kb != null && kb[toggleKey].wasPressedThisFrame) { _large = !_large; Resize(); }
+            // M is handled by DigSiteMapWindow (full-size map with cursor + pause); the minimap stays small.
             if (Time.unscaledTime < _next) return;
             _next = Time.unscaledTime + 0.15f;
             Refresh();

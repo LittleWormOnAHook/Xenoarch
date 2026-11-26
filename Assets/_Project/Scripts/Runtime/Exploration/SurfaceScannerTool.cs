@@ -72,6 +72,13 @@ namespace DMI.Xenoarch.Exploration
             if (Equipped && string.IsNullOrEmpty(LastReading)) SetText(ReadyText, false);
         }
 
+        void LateUpdate()
+        {
+            // Stack under the minimap (top-right column) instead of overlapping it.
+            if (_panel != null && _panel.resolvedStyle.display == DisplayStyle.Flex)
+            { _panel.style.top = UI.HudLayout.NextTopRight; _panel.style.right = UI.HudLayout.Margin; }
+        }
+
         void Update()
         {
             if (Equipped && !HasItem) SetEquipped(false);

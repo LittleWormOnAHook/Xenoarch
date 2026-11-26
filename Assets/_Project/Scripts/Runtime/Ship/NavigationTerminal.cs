@@ -120,10 +120,14 @@ namespace DMI.Xenoarch.Ship
                 if (down) Text(right, station ? "Docked. Use the airlock to go aboard the station." : "Landed. Use the airlock to go outside.", "xa-term__good");
                 bool busy = ShipLanding.Running;
                 if (busy) Text(right, "Manoeuvre in progress...", "xa-term__warn");
-                Btn(right, station ? (down ? "Undock" : "Dock") : (down ? "Take off" : "Land"), () =>
-                {
-                    if (ShipLanding.Begin(sel, !down, station)) { _message = null; Close(); }
-                }, !busy);
+                // t108u: planets are reached by shuttle only (shuttle bay / airlock "Take Shuttle"); the Nav terminal no
+                // longer lands the ship. Stations still dock here; a ship already landed by an older save can take off.
+                if (station || down)
+                    Btn(right, station ? (down ? "Undock" : "Dock") : "Take off", () =>
+                    {
+                        if (ShipLanding.Begin(sel, !down, station)) { _message = null; Close(); }
+                    }, !busy);
+                else Text(right, "Landing zone surveyed. Take the shuttle from the shuttle bay or airlock to go down.", "xa-term__dim");
             }
             else Text(right, "In orbit. No surveyed landing zone here yet.", "xa-term__dim");
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__good");

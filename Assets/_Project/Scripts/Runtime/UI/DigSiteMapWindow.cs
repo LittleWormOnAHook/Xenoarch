@@ -12,13 +12,16 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.UI
 {
     /// <summary>
-    /// Maps window (N), ZEN-9B. Tabs: "Surface" (this body's landing region with marked sites by code) and "Dig Sites"
+    /// Maps window (M = Surface tab, N = Dig Sites tab; t108u merged the minimap's large view into it), ZEN-9B.
+    /// Same size as the Nav terminal / menus (.xa-term); while open the cursor is free and gameplay is paused. Tabs: "Surface" (this body's landing region with marked sites by code) and "Dig Sites"
     /// (one plan per fenced dig site: fence, numbered spot flags and their state: flagged, digging, unfinished, done).
     /// Reads <see cref="DigSiteMapsService"/>, so it works away from the site (e.g. aboard the ship) too.
     /// </summary>
     public sealed class DigSiteMapWindow : MonoBehaviour
     {
         public Key toggleKey = Key.N;
+        [Tooltip("Opens the maps window on the Surface tab (the big map).")] public Key mapKey = Key.M;
+        float _prevTimeScale = 1f;
         UIDocument _doc; VisualElement _veil, _body;
         string _tab = "sites", _selected;
         float _next;
@@ -28,10 +31,12 @@ namespace DMI.Xenoarch.UI
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb != null && kb[toggleKey].wasPressedThisFrame)
+            bool n = kb != null && kb[toggleKey].wasPressedThisFrame, m = kb != null && kb[mapKey].wasPressedThisFrame;
+            if (n || m)
             {
-                if (IsOpen) Close();
-                else if (!UIState.BlocksGameplay && XenoarchRuntime.Instance != null && XenoarchRuntime.Instance.SessionActive && !(XenoarchRuntime.Scenes?.IsLoading ?? true)) Open();
+                string want = m ? "surface" : "sites";
+                if (IsOpen) { if (_tab == want) Close(); else { _tab = want; Render(); } }
+                else if (!UIState.BlocksGameplay && XenoarchRuntime.Instance != null && XenoarchRuntime.Instance.SessionActive && !(XenoarchRuntime.Scenes?.IsLoading ?? true)) { _tab = want; Open(); }
             }
             else if (IsOpen && kb != null && kb.escapeKey.wasPressedThisFrame) Close();
             if (IsOpen && _tab == "surface" && Time.unscaledTime >= _next) { _next = Time.unscaledTime + 0.5f; Render(); }
@@ -46,27 +51,28 @@ namespace DMI.Xenoarch.UI
             }
             var root = _doc.rootVisualElement; XenoarchUI.FillRoot(root);
             var uss = Resources.Load<StyleSheet>("UI/Xenoarch"); if (uss != null && !root.styleSheets.Contains(uss)) root.styleSheets.Add(uss);
-            _veil = new VisualElement(); XenoarchUI.FillRoot(_veil);
-            _veil.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDeep, 0.7f);
-            _veil.style.alignItems = Align.Center; _veil.style.justifyContent = Justify.Center;
-            var win = new VisualElement(); win.AddToClassList("xa-menu-panel");
-            win.style.width = 1100; win.style.height = 720;
+            _veil = new VisualElement(); XenoarchUI.FillRoot(_veil); _veil.AddToClassList("xa-term-root");
+            var win = new VisualElement(); win.AddToClassList("xa-term");   // same frame/size as the Nav terminal
             var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.alignItems = Align.Center;
             var title = new Label("MAPS"); title.AddToClassList("xa-title"); title.style.fontSize = 30; title.style.marginRight = 24; head.Add(title);
             Tab(head, "Surface", "surface"); Tab(head, "Dig Sites", "sites");
-            var close = new Label("[N] / Esc close"); close.AddToClassList("xa-hint"); close.style.marginLeft = 20; head.Add(close);
+            var close = new Label("[M] map   [N] dig sites   Esc close"); close.AddToClassList("xa-hint"); close.style.marginLeft = 20; head.Add(close);
             win.Add(head);
             _body = new VisualElement(); _body.style.flexGrow = 1; _body.style.flexDirection = FlexDirection.Row; _body.style.marginTop = 10;
             win.Add(_body);
             _veil.Add(win); root.Add(_veil);
-            UIState.SetOpen(Panel, true);
+            UIState.SetOpen(Panel, true);   // frees the cursor and blocks player input
+            _prevTimeScale = Time.timeScale > 0f ? Time.timeScale : 1f;
+            Time.timeScale = 0f;              // gameplay paused while the map is open
             Render();
         }
 
         void Close()
         {
+            bool wasOpen = _veil != null;
             _veil?.RemoveFromHierarchy(); _veil = null; _body = null;
             UIState.SetOpen(Panel, false);
+            if (wasOpen && Time.timeScale == 0f && !UIState.IsOpen(Panels.Pause)) Time.timeScale = _prevTimeScale;
         }
 
         void OnDisable() { if (IsOpen) Close(); }
@@ -93,7 +99,7 @@ namespace DMI.Xenoarch.UI
             var body = x.Galaxy != null ? x.Galaxy.FindBodyByScene(SceneManager.GetActiveScene().name) : null;
             if (body == null || body.surfaceMapRect.width < 10f) { Note(_body, "No surface map here. Land on a body to see its landing region; the Dig Sites tab works anywhere."); return; }
             var map = new SurfaceMapView(body.surfaceMap, body.surfaceMapRect) { AutoSquare = false };
-            map.style.width = 600; map.style.height = 600;
+            map.style.width = 660; map.style.height = 660; map.ShowLabels = true;
             foreach (var site in x.SitesOnBody(body.Id))
             {
                 var st = x.Site(site.Id);
@@ -103,6 +109,13 @@ namespace DMI.Xenoarch.UI
                 map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Site, world = new Vector2(est.x, est.z), uncertainty = ExplorationService.Uncertainty(st.revealLevel),
                     label = dm != null ? $"{dm.Code} {site.displayName}" : st.revealLevel >= 3 ? site.displayName : "Signature" });
             }
+            var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
+            if (vdir != null)
+                foreach (var v in vdir.Sites)
+                    if (s.Valuables.IsRevealed(v.id) && !s.Valuables.IsCollected(v.id))
+                        map.Markers.Add(new SurfaceMapView.Marker { id = v.id, kind = SurfaceMapView.Kind.Cache, world = new Vector2(v.position.x, v.position.z), label = "Cache" });
+            var shuttle = ShuttleDirector.Instance != null ? ShuttleDirector.Instance.Shuttle : null;
+            if (shuttle != null) map.Markers.Add(new SurfaceMapView.Marker { id = "shuttle", kind = SurfaceMapView.Kind.Shuttle, world = new Vector2(shuttle.transform.position.x, shuttle.transform.position.z), label = "Shuttle" });
             var rig = PlayerRigLocator.Find();
             if (rig != null) { var p = rig.Root.position; map.Markers.Add(new SurfaceMapView.Marker { id = "player", kind = SurfaceMapView.Kind.Player, world = new Vector2(p.x, p.z), heading = rig.Root.eulerAngles.y }); }
             map.Clicked += id => { if (s.DigMaps.Find(id) != null) { _selected = id; _tab = "sites"; Render(); } };
