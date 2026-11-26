@@ -104,17 +104,18 @@ namespace DMI.Xenoarch.EditorTools
         }
 
         // ------------------------------------------------------------------ scenes
-        internal static void WithScene(string name, StringBuilder log, System.Func<Scene, bool> work)
+        /// <param name="readOnly">Work only reads the scene (never saves it), so an open scene with unsaved changes is used as is.</param>
+        internal static void WithScene(string name, StringBuilder log, System.Func<Scene, bool> work, bool readOnly = false)
         {
             string path = XenoarchSetup.ScenePath(name);
             if (!File.Exists(path)) { log.AppendLine($"{name}: scene missing"); return; }
             var scene = SceneManager.GetSceneByPath(path);
             bool opened = false;
-            if (scene.IsValid() && scene.isLoaded) { if (scene.isDirty) { log.AppendLine($"{name}: has unsaved changes, SKIPPED (save it and re-run)"); return; } }
+            if (scene.IsValid() && scene.isLoaded) { if (scene.isDirty && !readOnly) { log.AppendLine($"{name}: has unsaved changes, SKIPPED (save it and re-run)"); return; } }
             else { scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive); opened = true; }
             try
             {
-                if (work(scene)) { EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); }
+                if (work(scene) && !readOnly) { EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); }
             }
             finally { if (opened) EditorSceneManager.CloseScene(scene, true); }
         }

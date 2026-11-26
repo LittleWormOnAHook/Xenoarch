@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Dune Shrine
   bodyId: body.sol.mars
   sceneName: Mars_Excavation_01
-  position: {x: 0, y: 0, z: 10}
+  position: {x: 358, y: 0, z: 358}
   radius: 3
   depth: 1
   difficulty: 1
@@ -41,5 +41,5 @@ MonoBehaviour:
     cell: {x: 10, y: 1, z: 8}
     footprint: 1
   gateFact: 
-  landingHint: {x: -14.980154, y: -24.54377, z: 104.58104}
+  landingHint: {x: 336.32065, y: -32.30178, z: 343.1813}
   hasLandingHint: 1

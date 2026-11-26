@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Buried Spire
   bodyId: body.sol.mars
   sceneName: Mars_Excavation_01
-  position: {x: 60, y: 0, z: 70}
+  position: {x: -394, y: 0, z: 438}
   radius: 6
   depth: 3.8
   difficulty: 3
@@ -38,5 +38,5 @@ MonoBehaviour:
     cell: {x: 30, y: 14, z: 18}
     footprint: 1
   gateFact: 
-  landingHint: {x: 17.07994, y: -25.913559, z: 129.07445}
+  landingHint: {x: -370.07214, y: -13.48, z: 456.9454}
   hasLandingHint: 1

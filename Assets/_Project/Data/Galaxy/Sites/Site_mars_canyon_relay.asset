@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Canyon Relay
   bodyId: body.sol.mars
   sceneName: Mars_Excavation_01
-  position: {x: -55, y: 0, z: 30}
+  position: {x: 342, y: 0, z: -234}
   radius: 4
   depth: 2.2
   difficulty: 2
@@ -41,5 +41,5 @@ MonoBehaviour:
     cell: {x: 22, y: 2, z: 22}
     footprint: 1
   gateFact: chain.moon_mars.mars_coords
-  landingHint: {x: -16.329088, y: -24.584938, z: 105.895935}
+  landingHint: {x: 321.81827, y: -30.334091, z: -215.05586}
   hasLandingHint: 1

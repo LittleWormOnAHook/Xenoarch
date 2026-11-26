@@ -47,7 +47,7 @@ namespace DMI.Xenoarch.EditorTools
             {
                 var body = config.galaxy.FindBodyByScene(name);
                 if (body == null) { log.AppendLine($"Maps: no body lands in {name}"); continue; }
-                XenoarchPhase1CSetup.WithScene(name, log, s => { Bake(s, body, config, log); return false; });
+                XenoarchPhase1CSetup.WithScene(name, log, s => { Bake(s, body, config, log); return false; }, readOnly: true); // bake only reads the scene
             }
             Systems(config.galaxy, log);
             AssetDatabase.SaveAssets();
