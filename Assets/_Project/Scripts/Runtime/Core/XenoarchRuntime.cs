@@ -147,6 +147,7 @@ namespace DMI.Xenoarch.Core
             Time.timeScale = 1f;
             _session.Saves.Apply(file); // state first, so scene objects read restored state in Awake/Start
             _session.PlaySeconds = file.playSeconds;
+            _session.ApplyDevLoadout();
             _sessionActive = true;
             var loc = _session.Location;
             string scene = string.IsNullOrEmpty(loc.sceneName) ? _session.Config.firstGameplayScene : loc.sceneName;

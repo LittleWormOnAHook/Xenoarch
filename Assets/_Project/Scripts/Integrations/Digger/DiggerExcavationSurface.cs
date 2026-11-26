@@ -13,6 +13,7 @@ namespace DMI.Xenoarch.Integrations.Digger
     /// when the Editor leaves Play mode.
     /// </summary>
     [AddComponentMenu("Xenoarch/Excavation/Digger Excavation Surface")]
+    [DefaultExecutionOrder(-100)]   // before DiggerMasterRuntime (-10) initialises the voxel grid
     public sealed class DiggerExcavationSurface : MonoBehaviour, IExcavationSurface
     {
         [SerializeField] DiggerMasterRuntime digger;
@@ -20,6 +21,10 @@ namespace DMI.Xenoarch.Integrations.Digger
         [SerializeField] BrushType brush = BrushType.Sphere;
         [Tooltip("Queued async edits (one stroke cuts several cells; load replays many).")]
         [SerializeField] int bufferSize = 512;
+        [Tooltip("Runtime voxel height (m). Digger's default is 1 m: with ~5 cm horizontal voxels a dig sphere under 0.5 m " +
+                 "often touches no voxel layer at all, so holes stopped in ~1 m steps with spiky walls. Applied before Digger " +
+                 "initialises (Play only, the scene is not changed). 0 = keep the scene setting.")]
+        [SerializeField] float runtimeVoxelHeight = 0.1f;
 
         float _minRadius = 0.15f;
         public bool IsBusy => digger == null || digger.IsRunningAsync;
@@ -32,8 +37,25 @@ namespace DMI.Xenoarch.Integrations.Digger
             digger.BufferSize = Mathf.Max(1, bufferSize);
             var master = FindAnyObjectByType<DiggerMaster>();
             var t = Terrain.activeTerrain;
+            if (master != null && runtimeVoxelHeight > 0.01f)
+            {
+                master.AutoVoxelHeight = false;
+                master.VoxelHeight = runtimeVoxelHeight;
+            }
             if (master != null && t != null && t.terrainData != null)
-                _minRadius = Mathf.Max(0.1f, t.terrainData.heightmapScale.x / Mathf.Max(1, master.ResolutionMult));
+            {
+                float horiz = t.terrainData.heightmapScale.x / Mathf.Max(1, master.ResolutionMult);
+                float vert = master.AutoVoxelHeight ? horiz : master.VoxelHeight;
+                // A carve must span at least ~1.5 voxels in every axis or it can fall between voxel samples (no visible cut).
+                _minRadius = Mathf.Max(0.1f, horiz * 1.5f, vert * 1.6f);
+            }
+        }
+
+        void Start()
+        {
+            var ds = FindAnyObjectByType<DiggerSystem>();
+            if (ds != null)
+                Debug.Log($"[Xenoarch] Digger voxels: {ds.HeightmapScale.x:0.###} x {ds.HeightmapScale.y:0.###} m (h x v), min carve radius {_minRadius:0.##} m");
         }
 
         public bool Apply(in ExcavationEdit edit)

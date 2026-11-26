@@ -153,6 +153,23 @@ namespace DMI.Xenoarch.Core
             foreach (var s in Config.startingItems)
                 if (s != null && s.item != null) Inventory.Add(s.item.Id, s.count);
             Location = new PlayerLocationState { sceneName = Config.firstGameplayScene, spawnId = Config.firstSpawnId };
+            ApplyDevLoadout();
+        }
+
+        /// <summary>DEV / TESTING (XenoarchConfig.devTestingLoadout): makes sure every dig tool and the handheld scanner are
+        /// in the inventory. Only adds missing ones; turning the flag off stops it (items already granted stay).</summary>
+        public void ApplyDevLoadout()
+        {
+            if (Config == null || !Config.devTestingLoadout) return;
+            var granted = new System.Text.StringBuilder();
+            void Give(string id)
+            {
+                if (string.IsNullOrEmpty(id) || Inventory.Count(id) > 0) return;
+                if (Inventory.Add(id, 1) == 0) granted.Append(granted.Length > 0 ? ", " : "").Append(id);
+            }
+            foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) Give(t.itemId);
+            Give(Config.surfaceScanner != null ? Config.surfaceScanner.itemId : "item.tool.handheld_scanner");
+            if (granted.Length > 0) Debug.Log($"[Xenoarch] DEV testing loadout (XenoarchConfig.devTestingLoadout): granted {granted}");
         }
 
         sealed class InventorySection : ISaveSection

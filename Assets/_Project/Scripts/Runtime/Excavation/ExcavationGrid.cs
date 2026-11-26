@@ -16,6 +16,8 @@ namespace DMI.Xenoarch.Excavation
         [Tooltip("How hard the band is (dust 0.5, loose 1, compacted 2, rock/ice 3). Every tool can cut it; tools rated below it are slower.")] public float hardness;
         public Color color;
         [Tooltip("Digger texture (terrain layer) index painted by strokes in this band.")] public int diggerTexture;
+        [Tooltip("Tool rating (DigToolSpec.maxHardness) needed to cut this band at all. 0 = every tool can dig it (harder " +
+                 "bands are just slower). Use on later worlds to require an upgraded shovel, a drill, etc.")] public float minToolRating;
 
         public static SoilLayer Make(string label, SoilMaterial kind, float thickness, float hardness, Color color, int tex = 0) =>
             new SoilLayer { label = label, kind = kind, thickness = thickness, hardness = hardness, color = color, diggerTexture = tex };
@@ -45,6 +47,8 @@ namespace DMI.Xenoarch.Excavation
         [Tooltip("Crude tools (shovel, drill) can jar or damage finds; fine tools never do.")] public bool crude;
         [Tooltip("Strokes per second while the button is held.")] public float rate;
         [Tooltip("Optional cap on cells cut per column per stroke (0 = no cap: the chunk size decides).")] public int cells;
+        [Tooltip("Smallest bite (cell fraction) a stroke always takes from the aimed column, however hard the band (0 = 0.03), " +
+                 "so slow digging still shows progress.")] public float minBite;
     }
 
     public static class DigTools
@@ -75,13 +79,17 @@ namespace DMI.Xenoarch.Excavation
         /// <summary>Drop the cached list (editor tooling after assets change).</summary>
         public static void Reload() => _all = null;
 
-        /// <summary>Divisor for removal in a band of this hardness: the band's hardness, squared-slower past the tool rating.</summary>
+        /// <summary>Divisor for removal in a band of this hardness: the band's hardness, and linearly slower again past the
+        /// tool rating (t108u: was squared, which made rock bands with the shovel/precision tool feel like a wall).</summary>
         public static float Resistance(float hardness, float rated)
         {
             float d = Mathf.Max(0.25f, hardness);
-            if (rated > 0f && hardness > rated) { float k = hardness / rated; d *= k * k; }
+            if (rated > 0f && hardness > rated) d *= hardness / rated;
             return d;
         }
+
+        /// <summary>Can this tool cut the band at all (the band's optional minimum tool rating)?</summary>
+        public static bool CanCut(in SoilLayer layer, in DigToolSpec tool) => layer.minToolRating <= 0f || tool.maxHardness >= layer.minToolRating;
     }
 
     /// <summary>An artifact embedded in the grid: top cell (x, y, z), footprint = cells per side, height = layers.
@@ -107,6 +115,8 @@ namespace DMI.Xenoarch.Excavation
         /// <summary>A crude stroke cut right above a still-hidden find (jarring it) or within two cells of it (warning).</summary>
         public GridArtifact hiddenBelow;
         public bool jarred;
+        /// <summary>The band needs a better tool (SoilLayer.minToolRating); set when that is why nothing was cut.</summary>
+        public bool needsBetterTool;
         /// <summary>Finds that became visible with this stroke (first glimpse).</summary>
         public List<GridArtifact> emerged;
         public List<Vector3Int> cut;    // cells cut by this stroke (drives Digger)
@@ -249,11 +259,14 @@ namespace DMI.Xenoarch.Excavation
                         var layer = LayerAt(y);
                         if (centre || !centreSet) { r.material = layer.kind; r.layer = layer; centreSet |= centre; }
                         if (layer.kind == SoilMaterial.Bedrock) { if (c == 0) r.refused = true; break; }   // the site floor
+                        if (!DigTools.CanCut(layer, tool)) { if (c == 0) { r.refused = true; r.needsBetterTool = true; } break; }
                         float res = DigTools.Resistance(layer.hardness, tool.maxHardness);
                         if (layer.hardness > tool.maxHardness) r.slowed = true;
                         int i = Index(x, y, z);
                         float before = fill[i] / 255f;
                         float take = Mathf.Min(before, amount / res);
+                        // Minimum effective bite on the aimed column: hard bands are slow, never a wall.
+                        if (centre && c == 0) take = Mathf.Min(before, Mathf.Max(take, tool.minBite > 0f ? tool.minBite : 0.03f));
                         if (take <= 0f) continue;
                         amount -= take * res;
                         fill[i] = (byte)Mathf.Clamp(Mathf.RoundToInt((before - take) * 255f), 0, 255);

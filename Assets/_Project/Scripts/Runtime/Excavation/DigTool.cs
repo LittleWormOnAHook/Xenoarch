@@ -129,7 +129,9 @@ namespace DMI.Xenoarch.Excavation
                 {
                     refusedHere = true;
                     _audio.PlayOneShot(_clunk);
-                    Flash("Bedrock: the site floor. Nothing below.");
+                    Flash(r.needsBetterTool
+                        ? $"This {r.layer.label} needs a tool rated {r.layer.minToolRating:0.#}+. {ToolsFor(r.layer.minToolRating)}"
+                        : "Bedrock: the site floor. Nothing below.");
                 }
             }
             if (_ring != null)
@@ -232,6 +234,7 @@ namespace DMI.Xenoarch.Excavation
                     var lay = site.Grid.LayerAt(top);
                     var cur = Current;
                     if (lay.kind == SoilMaterial.Bedrock) l2 += "   |   BEDROCK: site floor reached";
+                    else if (!DigTools.CanCut(lay, cur)) l2 += $"   |   {lay.label} needs a tool rated {lay.minToolRating:0.#}+. {ToolsFor(lay.minToolRating)}";
                     else if (lay.hardness > cur.maxHardness)
                         l2 += $"   |   HARD {lay.label} (hardness {lay.hardness:0.#}): slow going with the {cur.shortName ?? cur.name}. {ToolsFor(lay.hardness)}";
                 }
@@ -289,6 +292,8 @@ namespace DMI.Xenoarch.Excavation
             _panel.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.85f);
             _line1 = new Label { pickingMode = PickingMode.Ignore }; _line1.style.color = XenoarchPalette.Primary; _line1.style.fontSize = 17;
             _line2 = new Label { pickingMode = PickingMode.Ignore }; _line2.style.color = XenoarchPalette.Text; _line2.style.fontSize = 17;
+            _panel.style.maxWidth = Length.Percent(72);   // long hints wrap instead of running under the side HUD
+            _line2.style.whiteSpace = WhiteSpace.Normal;
             _panel.Add(_line1); _panel.Add(_line2);
             root.Add(_panel);
             XenoarchUI.Show(_panel, Equipped >= 0);
