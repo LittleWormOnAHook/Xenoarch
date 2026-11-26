@@ -33,6 +33,8 @@ namespace DMI.Xenoarch.Scenes
         // real work 1:1 from 0%. Shader progress counts only the work left at the start of the load (cached passes are free).
         const float WLoad = 0.30f, WShaders = 0.45f, WGates = 0.17f, WSettle = 0.08f;
         [Tooltip("Editor: after the tracked shaders are compiled, wait at most this long for other async compiles (s).")] public float compileGraceSeconds = 3f;
+        [Tooltip("With the hidden warm pass drawing every tracked material, wait at most this long for the compiles it starts (s).")] public float warmGraceSeconds = 25f;
+        [Tooltip("Frames the hidden warm pass draws before the shader stage can finish.")] public int warmFrames = 4;
         float _shown;
 
         /// <summary>Optional title for the next load (else derived: "Returning to the ship" / "Landing: body").</summary>
@@ -118,6 +120,7 @@ namespace DMI.Xenoarch.Scenes
             var rig = PlayerRigLocator.Find(); if (rig != null) ShaderPrewarm.TrackRenderers(track, rig.Root);
             DMI.Xenoarch.Excavation.ExcavationSite.PrewarmRuntimeMaterials();
             ShaderPrewarm.TrackRuntime(track);
+            ShaderPrewarm.WarmPass warm = null;
             var seen = new System.Collections.Generic.HashSet<Func<string>>();
             float held = 0f, grace = 0f, sinceAdvance = 0f, lastWork = -1f; int quiet = 0; bool shuttleTracked = false, gaveUp = false;
             string lastBusy = null;
@@ -128,11 +131,16 @@ namespace DMI.Xenoarch.Scenes
                     var sh = DMI.Xenoarch.Exploration.ShuttleDirector.Instance != null ? DMI.Xenoarch.Exploration.ShuttleDirector.Instance.Shuttle : null;
                     if (sh != null) { ShaderPrewarm.TrackRenderers(track, sh.transform); shuttleTracked = true; }
                 }
+                // hidden warm pass: draw every tracked material once in this scene's real lighting (behind the overlay)
+                var cam = Camera.main;
+                if (warm == null && cam != null) warm = ShaderPrewarm.WarmPass.Begin(track, cam);
+                warm?.Sync(track); warm?.Tick();
                 // shaders (relative to what was left when this load started)
                 float sp = track.Relative;
                 bool compiling = ShaderPrewarm.AnythingCompiling;
                 if (sp >= 1f && compiling) grace += Time.unscaledDeltaTime;
-                bool shaderBusy = sp < 1f || (compiling && grace < compileGraceSeconds);
+                bool warmPending = warm != null && warm.Frames < warmFrames;
+                bool shaderBusy = sp < 1f || warmPending || (compiling && grace < (warm != null ? warmGraceSeconds : compileGraceSeconds));
                 float shaderStage = sp < 1f ? sp * 0.97f : shaderBusy ? 0.98f : 1f;
                 // gates (only once the shaders are done, so the bar never jumps ahead of real work)
                 float gp = Gates(seen, out string gateStatus);
@@ -148,7 +156,7 @@ namespace DMI.Xenoarch.Scenes
                 // stall detection: keep waiting while anything advances; give up only after stallSeconds of no progress
                 // (monotonic: a gate that flickers busy / idle, or the compiler toggling, does not count as progress)
                 float work = track.Done + gp * 1000f + quiet * 0.001f;
-                if (work > lastWork + 0.0005f) { lastWork = work; sinceAdvance = 0f; } else sinceAdvance += Time.unscaledDeltaTime;
+                if (work > lastWork + 0.0005f) { lastWork = work; sinceAdvance = 0f; } else sinceAdvance += Time.unscaledDeltaTime * (compiling ? 0.25f : 1f);
                 if (shaderBusy && !compiling && sinceAdvance >= 3f)
                 {
                     // nothing compiling and no pass finished for 3 s: the rest never compile here (wrong pipeline / no
@@ -160,6 +168,9 @@ namespace DMI.Xenoarch.Scenes
                 held += Time.unscaledDeltaTime;
                 yield return null;
             }
+            int warmCount = warm != null ? warm.Count : 0;
+            warm?.End();
+            if (warmCount > 0) Debug.Log($"[Xenoarch] Shader warm pass: drew {warmCount} materials off-screen before reveal");
             if (gaveUp)
                 Debug.LogWarning($"[Xenoarch] Loading screen: stopped waiting after {held:0}s ({(sinceAdvance >= stallSeconds ? $"no progress for {stallSeconds:0}s" : $"cap {maxHoldSeconds:0}s")}): " +
                                  $"{lastBusy ?? BusyStatus() ?? "unknown"}; shaders {track.Done}/{track.Total}");
@@ -232,6 +243,8 @@ namespace DMI.Xenoarch.Scenes
             if (IsLoading) _view?.Tick(Time.unscaledDeltaTime);
             // Background prewarm (on the ship, before any jump): a little per frame normally, much more behind the loading screen.
             ShaderPrewarm.Tick(IsLoading ? 16 : 4);
+            var cfg = DMI.Xenoarch.Core.XenoarchRuntime.Session?.Config;
+            ShaderPrewarm.DevAudit(cfg != null && cfg.logShaderWarm, IsLoading);
         }
 
 

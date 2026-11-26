@@ -65,6 +65,30 @@ namespace DMI.Xenoarch.Excavation
             }
         }
 
+        static readonly System.Collections.Generic.Dictionary<string, Material> _artifactMats = new System.Collections.Generic.Dictionary<string, Material>();
+        /// <summary>One shared material per artifact definition (was one per spawned piece), registered with the shader
+        /// warm-up so a recovered piece never draws as the cyan placeholder.</summary>
+        static Material ArtifactMaterial(ArtifactDefinition def)
+        {
+            string key = def.Id ?? "";
+            if (_artifactMats.TryGetValue(key, out var m) && m != null) return m;
+            var sh = Shader.Find("Universal Render Pipeline/Lit");
+            if (sh == null) return null;
+            m = new Material(sh) { name = $"Artifact {def.Id}" };
+            m.SetColor("_BaseColor", def.tint);
+            bool metal = def.material != null && (def.material.Contains("alloy") || def.material.Contains("metal"));
+            m.SetFloat("_Metallic", metal ? 0.8f : 0.1f);
+            m.SetFloat("_Smoothness", metal ? 0.55f : 0.25f);
+            if (def.artifactCategory == ArtifactCategory.DataCrystal || def.artifactCategory == ArtifactCategory.PowerSource)
+            {
+                m.EnableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", def.tint * 1.5f);
+            }
+            _artifactMats[key] = m;
+            DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(m);
+            return m;
+        }
+
         static GameObject Visual(ArtifactDefinition def)
         {
             Shape(def, out var p, out var scale);
@@ -74,21 +98,8 @@ namespace DMI.Xenoarch.Excavation
             vis.transform.SetParent(root.transform, false);
             vis.transform.localScale = scale;
             if (def.shape == ArtifactShape.Crystal) vis.transform.localRotation = Quaternion.Euler(0f, 45f, 20f);
-            var sh = Shader.Find("Universal Render Pipeline/Lit");
-            if (sh != null)
-            {
-                var m = new Material(sh) { name = $"Artifact {def.Id}" };
-                m.SetColor("_BaseColor", def.tint);
-                bool metal = def.material != null && (def.material.Contains("alloy") || def.material.Contains("metal"));
-                m.SetFloat("_Metallic", metal ? 0.8f : 0.1f);
-                m.SetFloat("_Smoothness", metal ? 0.55f : 0.25f);
-                if (def.artifactCategory == ArtifactCategory.DataCrystal || def.artifactCategory == ArtifactCategory.PowerSource)
-                {
-                    m.EnableKeyword("_EMISSION");
-                    m.SetColor("_EmissionColor", def.tint * 1.5f);
-                }
-                vis.GetComponent<Renderer>().sharedMaterial = m;
-            }
+            var m = ArtifactMaterial(def);
+            if (m != null) vis.GetComponent<Renderer>().sharedMaterial = m;
             var box = root.AddComponent<BoxCollider>();
             box.isTrigger = true;
             float m2 = Mathf.Max(scale.x, Mathf.Max(scale.y, scale.z));

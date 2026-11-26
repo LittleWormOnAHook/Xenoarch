@@ -112,7 +112,7 @@ namespace DMI.Xenoarch.Galaxy
                 var mr = dgo.AddComponent<MeshRenderer>();
                 mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
                 mr.lightProbeUsage = LightProbeUsage.Off; mr.reflectionProbeUsage = ReflectionProbeUsage.Off;
-                if (_discMat == null) _discMat = new Material(sh) { name = "Sun Disc (runtime)" };
+                if (_discMat == null) { _discMat = new Material(sh) { name = "Sun Disc (runtime)" }; DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(_discMat); }
                 float drawDeg = Mathf.Max(minDiscDeg, v.angularDiameterDeg);
                 float areaK = (v.angularDiameterDeg * v.angularDiameterDeg) / (drawDeg * drawDeg); // keep total light for a clamped point
                 _discMat.SetColor("_Color", v.color * discBrightness * areaK);

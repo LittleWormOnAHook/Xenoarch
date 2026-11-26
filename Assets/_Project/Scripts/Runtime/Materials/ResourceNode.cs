@@ -27,19 +27,28 @@ namespace DMI.Xenoarch.Materials
             return n;
         }
 
+        static readonly System.Collections.Generic.Dictionary<string, Material> _nodeMats = new System.Collections.Generic.Dictionary<string, Material>();
+        /// <summary>One shared material per resource kind (was one per node), registered with the shader warm-up.</summary>
+        static Material NodeMaterial(MaterialDefinition def)
+        {
+            string key = def != null ? def.Id ?? "" : "";
+            if (_nodeMats.TryGetValue(key, out var mat) && mat != null) return mat;
+            var sh = Shader.Find("Universal Render Pipeline/Lit");
+            if (sh == null || def == null) return null;
+            mat = new Material(sh) { name = $"Node {def.Id}" };
+            mat.SetColor("_BaseColor", def.tint);
+            mat.SetFloat("_Smoothness", def.tint.b > 0.7f ? 0.7f : 0.15f);
+            if (def.fuelValue > 0f) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", def.tint * 0.4f); }
+            _nodeMats[key] = mat;
+            DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(mat);
+            return mat;
+        }
+
         void BuildVisual()
         {
             _visual = new GameObject("Visual");
             _visual.transform.SetParent(transform, false);
-            var sh = Shader.Find("Universal Render Pipeline/Lit");
-            Material mat = null;
-            if (sh != null)
-            {
-                mat = new Material(sh) { name = $"Node {Def.Id}" };
-                mat.SetColor("_BaseColor", Def.tint);
-                mat.SetFloat("_Smoothness", Def.tint.b > 0.7f ? 0.7f : 0.15f);
-                if (Def.fuelValue > 0f) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", Def.tint * 0.4f); }
-            }
+            var mat = NodeMaterial(Def);
             var rng = new System.Random(NodeId.GetHashCode());
             for (int i = 0; i < 3; i++)
             {

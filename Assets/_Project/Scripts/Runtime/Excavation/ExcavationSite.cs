@@ -463,6 +463,7 @@ namespace DMI.Xenoarch.Excavation
                 m[i] = new Material(sh) { name = $"Soil {(SoilMaterial)i} ({key})" };
                 m[i].SetColor("_BaseColor", c); m[i].color = c;
                 m[i].SetFloat("_Smoothness", 0.08f);
+                DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(m[i]);
             }
             MatCache[key] = m;
             return m;

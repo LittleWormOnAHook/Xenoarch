@@ -64,6 +64,8 @@ namespace DMI.Xenoarch.Core
         [Header("Development")]
         [Tooltip("F5 quick save, F9 quick load in gameplay scenes.")]
         public bool enableDebugHotkeys = true;
+        [Tooltip("Editor: log [ShaderWarm] lines when a visible material is still compiling (drawn cyan) outside the loading screen.")]
+        public bool logShaderWarm = false;
     }
 
     public static class SceneNames
