@@ -1,5 +1,26 @@
 # Xenoarch Changelog
 
+## 2026-11-26 - Loading/shuttle fixes, space visuals, FTL tunnel (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. It compiles cleanly in the Editor, with no shader import errors.
+
+### Bug batch (commit c6e3078)
+- Loading screen starts at 0% and fills in stage order (load 30% / materials 45% / gates 17% / settle 8%). "Compiling shaders" text removed.
+- Shader wait: keeps waiting while progress advances (20 s stall limit, 180 s hard cap). Passes that never compile are skipped and remembered. The give-up log now states the reason.
+- Distinct titles: New expedition, Loading saved game, Main menu, In-system transit, Landing/Docking, Aboard the ship. "Returning to the ship" is used only for the shuttle ascent.
+- Landed shuttle is re-placed on flat ground within 40 m of the player after load, continue or autosave restore.
+- Removed the red/crimson bottom-bar gradient (`.xa-bottom` in Xenoarch.uss).
+
+### Space visuals
+- `StarPhysics`: per-star radius and luminosity. Sun angular size is 2·atan(R/d); brightness scales with sqrt(flux) using the body's distance in AU.
+- `SunDirector`: a `[Sun]` disc plus a URP Lens Flare (SRP) in every scene. Surface lights are scaled by flux; the ship gets a `[Sun Light]`. Hidden during FTL.
+- Skies: `Sky_SpaceMilkyWay` (NASA SVS starmap, config default, vacuum/icy envs), `Sky_MoonSurface` (black sky with stars) and `Sky_MarsSurface` (thin dusty day sky). Old 6-sided skies have exposure lowered to 0.62. Ship ambient is scaled ×0.7 (`XenoarchConfig.shipAmbientScale`).
+- `OrbitViewDirector` and `OrbitViewDefinition`: a real planet sphere plus an atmosphere shell outside the helm window. Earth, Moon and Mars use Solar System Scope CC BY 4.0 textures; Jupiter and the exoplanet arrivals use PlanetPack02. The `XenoarchConfig.preferOrbitViews` toggle can be switched off to restore the kit orbit skies.
+- PlanetPack02 is copied from Genesis to `Assets/_Vendor/PlanetPack02` (gitignored). Our materials use URP shaders.
+- Licences are listed in `Art/Space/SOURCES.md` and `Art/Skyboxes/Textures/SOURCES.md`.
+
+### FTL
+- The tunnel has two layers: an outer gold vortex and an inner cyan/violet layer spinning faster. It adds a cyan-white core with a violet ring and about 9× more white star streaks; bloom is stronger. Velocity curve modes are unchanged.
 ## 2026-11-25 — Code polish & gameplay refinement pass (UNTESTED)
 
 Nothing in this pass has been run in Play Mode, smoke-tested or unit-tested. All changes compile cleanly in the Editor; everything else needs manual testing.

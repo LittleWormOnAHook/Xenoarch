@@ -43,7 +43,9 @@ namespace DMI.Xenoarch.Ship
         public bool vendorDust = false;
         [Tooltip("How fast the tunnel streaks rush toward the window (texture repeats/sec).")] public float tunnelRushSpeed = 1.6f;
         [Tooltip("How fast the tunnel rotates around the view axis (turns/sec). Same direction as the star streak swirl.")] public float tunnelSpin = 0.12f;
-        [Range(0f, 1.5f)] public float tunnelBrightness = 0.85f;
+        [Range(0f, 4f)] public float tunnelBrightness = 1.6f;
+        [Tooltip("Bright cyan-white core with a violet / blue inner ring at the tunnel's vanishing point.")] public bool tunnelCore = true;
+        [Range(0f, 8f)] public float coreBrightness = 3.2f;
 
         /// <summary>Jump (hyperspace) seconds for a given distance: min at 0 AU, max at farDistanceAU, never below 5 s.</summary>
         public float JumpSecondsFor(float au)
@@ -93,7 +95,11 @@ namespace DMI.Xenoarch.Ship
             }
             // (The old spool glow, Creepy Cat Particle_Afterburner_Small, is no longer used: its Flare material is URP/Lit with
             // no texture, so it drew as small grey quads in the middle of the window.)
-            Material tunnelMat = tunnel ? BuildTunnel(root.transform, eye, windowDir) : null;
+            Material tunnelMat = tunnel ? BuildTunnel(root.transform, eye, windowDir, 1f, TunnelTexture(), "FTL Tunnel") : null;
+            // inner layer: a narrower violet / blue tube spinning faster -> thick, layered vortex
+            Material innerMat = tunnel ? BuildTunnel(root.transform, eye, windowDir, 0.42f, TunnelTexture(true), "FTL Tunnel Inner") : null;
+            if (innerMat != null) innerMat.SetTextureScale("_BaseMap", new Vector2(2f, 4f));
+            Material coreMat = tunnel && tunnelCore ? BuildCore(root.transform, eye, windowDir) : null;
             float tunnelSpinSign = -1f; // matches the streak orbit direction as seen from the cockpit
             var vol = BuildVolume(root, out var lens, out var ca, out var bloom);
             var audio = root.AddComponent<AudioSource>();
@@ -113,12 +119,15 @@ namespace DMI.Xenoarch.Ship
                 audio.volume = k * 0.35f; audio.pitch = 0.6f + k * 0.3f;
                 vol.weight = k * 0.25f;
                 TunnelTick(tunnelMat, Mathf.Clamp01((k - 0.4f) / 0.6f) * 0.35f, tunnelSpinSign, 0.4f);
+                TunnelTick(innerMat, Mathf.Clamp01((k - 0.6f) / 0.4f) * 0.25f, tunnelSpinSign * 1.8f, 0.5f, InnerTint);
+                CoreTick(coreMat, Mathf.Clamp01((k - 0.5f) / 0.5f) * 0.3f, t);
                 yield return null;
             }
 
             // Jump
             var hud = CountdownHud.Show($"FTL: {to.displayName}", jumpSeconds, hum: false); // arrival countdown (beeps + chime)
             streaks.Play();
+            DMI.Xenoarch.Galaxy.SunDirector.Hidden = true; // no sun / lens flare inside the tunnel
             if (dust != null) dust.SetActive(true);
             bool arrived = false;
             for (float t = 0f; t < jumpSeconds; t += Time.deltaTime)
@@ -128,18 +137,23 @@ namespace DMI.Xenoarch.Ship
                 vol.weight = 0.25f + 0.75f * env;
                 lens.intensity.value = -0.55f * env;
                 ca.intensity.value = env;
-                bloom.intensity.value = 1.5f + 3f * env;
+                bloom.intensity.value = 2f + 5f * env;
                 cam.fieldOfView = baseFov + 14f * env;
                 audio.volume = 0.35f + 0.45f * env; audio.pitch = 0.9f + 0.5f * env;
-                var em = streaks.emission; em.rateOverTime = Mathf.Lerp(150f, 1400f, env);
+                var em = streaks.emission; em.rateOverTime = Mathf.Lerp(600f, 5200f, env);
                 if (hud != null) hud.Tick(t);
                 float tin = Mathf.Clamp01(t / 0.8f), tout = Mathf.Clamp01((jumpSeconds - t) / 0.5f);
-                TunnelTick(tunnelMat, Mathf.Lerp(0.35f, 1f, tin) * Mathf.Lerp(0.6f, 1f, env) * tout, tunnelSpinSign, 0.4f + 0.6f * tin);
+                float tunnelA = Mathf.Lerp(0.35f, 1f, tin) * Mathf.Lerp(0.7f, 1f, env) * tout;
+                TunnelTick(tunnelMat, tunnelA, tunnelSpinSign, 0.4f + 0.6f * tin);
+                TunnelTick(innerMat, tunnelA * 0.9f, tunnelSpinSign * 1.8f, 0.6f + 0.9f * tin, InnerTint);
+                CoreTick(coreMat, Mathf.Lerp(0.3f, 1f, tin) * Mathf.Lerp(0.75f, 1f, env) * tout, t);
                 if (!arrived && k >= 0.5f)
                 {
                     arrived = true;
                     if (!x.CommitTravel(to, out var why)) Debug.LogWarning($"[Xenoarch] FTL: arrival failed ({why})");
                     EnvironmentDirector.ApplySky(session, gameObject.scene.name);
+                    DMI.Xenoarch.Galaxy.SunDirector.Refresh();       // new star distance / size / light
+                    DMI.Xenoarch.Galaxy.OrbitViewDirector.Refresh(); // planet outside the window (if any)
                     Debug.Log($"[Xenoarch] FTL: arrived at {to.displayName} (fuel {x.Ship.fuel:0.#})");
                 }
                 yield return null;
@@ -153,6 +167,9 @@ namespace DMI.Xenoarch.Ship
             {
                 float k = t / dropSeconds;
                 TunnelTick(tunnelMat, 0f, tunnelSpinSign, 0f);
+                TunnelTick(innerMat, 0f, tunnelSpinSign * 1.8f, 0f, InnerTint);
+                CoreTick(coreMat, 0f, t);
+                if (k > 0.25f) DMI.Xenoarch.Galaxy.SunDirector.Hidden = false;
                 if (flash != null) flash.style.opacity = Mathf.Clamp01(1f - k * 1.4f) * 0.85f;
                 audio.volume = (1f - k) * 0.4f;
                 cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, baseFov, k);
@@ -162,6 +179,9 @@ namespace DMI.Xenoarch.Ship
 
             cam.fieldOfView = baseFov;
             if (tunnelMat != null) Destroy(tunnelMat);
+            if (innerMat != null) Destroy(innerMat);
+            if (coreMat != null) Destroy(coreMat);
+            DMI.Xenoarch.Galaxy.SunDirector.Hidden = false;
             Destroy(root);
             rig.SetInputEnabled(true);
             Running = false;
@@ -181,13 +201,13 @@ namespace DMI.Xenoarch.Ship
             main.playOnAwake = false; main.loop = true; main.duration = 1f;
             main.startSpeed = streakSpeed;
             main.startLifetime = (spawnDist - killDist) / streakSpeed;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.14f);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.75f, 0.85f, 1f), new Color(1f, 0.9f, 0.75f));
-            main.maxParticles = 6000;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.2f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.9f, 0.95f, 1f), new Color(1f, 0.97f, 0.9f)); // white star streaks
+            main.maxParticles = 14000;
             main.simulationSpace = ParticleSystemSimulationSpace.Local; // orbital velocity spins around this emitter's view axis
             var shape = ps.shape;
-            shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 22f; shape.radiusThickness = 0.85f; shape.arc = 360f;
-            var em = ps.emission; em.rateOverTime = 150f;
+            shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 30f; shape.radiusThickness = 0.9f; shape.arc = 360f;
+            var em = ps.emission; em.rateOverTime = 600f;
             if (streakSwirl > 0f)
             {
                 // Tangential (orbital) speed around the view axis so streaks curve with the tunnel swirl instead of running
@@ -208,30 +228,32 @@ namespace DMI.Xenoarch.Ship
         }
 
         // ---------- Swirl tunnel ----------
-        // A cone-shaped tube along the view axis (wide near the window, narrowing to a dark vanishing point), drawn from the
-        // inside with a procedural additive streak texture in gold/orange, cyan and purple. The texture scrolls toward the
-        // viewer and rotates around the axis. The far end fades to black, so there is no bright core. Ship walls occlude it,
-        // so it only shows through the windows.
-        const float TunnelLength = 320f, TunnelNearRadius = 34f, TunnelFarRadius = 3f;
+        // Two cone-shaped tubes along the view axis (wide near the window, narrowing to the vanishing point), drawn from the
+        // inside with procedural additive streak textures: the outer vortex mostly orange / gold, a narrower inner layer
+        // cyan / blue / violet spinning faster. They scroll toward the viewer and rotate around the axis, and a bright
+        // cyan-white core with a violet ring sits at the far end (BuildCore). HDR tints so bloom makes it glow. Ship walls
+        // occlude it, so it only shows through the windows.
+        const float TunnelLength = 320f, TunnelNearRadius = 46f, TunnelFarRadius = 2.5f;
+        static readonly Color InnerTint = new Color(0.9f, 0.95f, 1.25f); // inner layer a touch cooler / brighter
 
-        Material BuildTunnel(Transform parent, Vector3 eye, Vector3 dir)
+        Material BuildTunnel(Transform parent, Vector3 eye, Vector3 dir, float radiusScale, Texture2D tex, string name)
         {
             var sh = Shader.Find("Universal Render Pipeline/Particles/Unlit");
             if (sh == null) return null;
-            var go = new GameObject("FTL Tunnel");
+            var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(dir, Vector3.up));
+            go.transform.localScale = new Vector3(radiusScale, radiusScale, 1f);
             go.AddComponent<MeshFilter>().sharedMesh = TunnelMesh();
             var mr = go.AddComponent<MeshRenderer>();
             mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
-            var m = new Material(sh) { name = "FTL Tunnel (runtime)" };
+            var m = new Material(sh) { name = name + " (runtime)" };
             m.SetFloat("_Surface", 1f); m.SetFloat("_Blend", 2f);
             m.SetOverrideTag("RenderType", "Transparent");
             m.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha); m.SetInt("_DstBlend", (int)BlendMode.One); m.SetInt("_ZWrite", 0);
             m.SetFloat("_Cull", 0f); m.SetInt("_Cull", 0);
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); m.EnableKeyword("_BLENDMODE_ADD");
-            m.renderQueue = 2990; // behind the streaks
-            var tex = TunnelTexture();
+            m.renderQueue = radiusScale < 1f ? 2991 : 2990; // behind the streaks
             m.SetTexture("_BaseMap", tex); m.mainTexture = tex;
             m.SetTextureScale("_BaseMap", new Vector2(3f, 3f));
             m.SetColor("_BaseColor", new Color(1f, 1f, 1f, 0f));
@@ -239,7 +261,9 @@ namespace DMI.Xenoarch.Ship
             return m;
         }
 
-        void TunnelTick(Material m, float alpha, float spinSign, float speedK)
+        void TunnelTick(Material m, float alpha, float spinSign, float speedK) => TunnelTick(m, alpha, spinSign, speedK, Color.white);
+
+        void TunnelTick(Material m, float alpha, float spinSign, float speedK, Color tint)
         {
             if (m == null) return;
             var off = m.GetTextureOffset("_BaseMap");
@@ -249,7 +273,9 @@ namespace DMI.Xenoarch.Ship
             m.SetTextureOffset("_BaseMap", off);
             var c = m.GetColor("_BaseColor");
             // ease toward the target so fade-out at drop is smooth rather than a pop
-            c.a = Mathf.MoveTowards(c.a, alpha * tunnelBrightness, Time.deltaTime * 2.5f);
+            // alpha = fade (<= 1); brightness goes into HDR rgb so bloom makes it glow
+            c.a = Mathf.MoveTowards(c.a, Mathf.Clamp01(alpha), Time.deltaTime * 2.5f);
+            c.r = tint.r * tunnelBrightness; c.g = tint.g * tunnelBrightness; c.b = tint.b * tunnelBrightness;
             m.SetColor("_BaseColor", c);
         }
 
@@ -268,7 +294,7 @@ namespace DMI.Xenoarch.Ship
                 float z = 4f + s * TunnelLength;
                 float r = Mathf.Lerp(TunnelNearRadius, TunnelFarRadius, Mathf.Pow(s, 0.55f));
                 // fade in from the window, full in the middle, fade to black at the vanishing point (no bright core)
-                float a = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(s / 0.08f)) * (1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((s - 0.45f) / 0.5f)));
+                float a = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(s / 0.06f)) * (1f - 0.55f * Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((s - 0.55f) / 0.45f)));
                 for (int i = 0; i <= around; i++)
                 {
                     float u = i / (float)around;
@@ -294,27 +320,36 @@ namespace DMI.Xenoarch.Ship
             return _tunnelMesh;
         }
 
-        static Texture2D _tunnelTex;
-        static Texture2D TunnelTexture()
+        static Texture2D _tunnelTex, _tunnelTexInner;
+        static Texture2D TunnelTexture() => TunnelTexture(false);
+        /// <param name="inner">false = the outer vortex (mostly orange / gold, some cyan and purple); true = the inner
+        /// layer (cyan / blue / violet) that frames the core.</param>
+        static Texture2D TunnelTexture(bool inner)
         {
-            if (_tunnelTex != null) return _tunnelTex;
+            if (!inner && _tunnelTex != null) return _tunnelTex;
+            if (inner && _tunnelTexInner != null) return _tunnelTexInner;
             const int W = 512, H = 256; // x = around the tube, y = along it
             var acc = new Color[W * H];
-            var rng = new System.Random(1337);
-            var palette = new[]
+            var rng = new System.Random(inner ? 4242 : 1337);
+            var palette = inner ? new[]
+            {
+                new Color(0.25f, 0.85f, 1f), new Color(0.35f, 0.6f, 1f), new Color(0.55f, 0.35f, 1f),
+                new Color(0.7f, 0.4f, 1f), new Color(0.8f, 0.95f, 1f),
+            } : new[]
             {
                 new Color(1f, 0.62f, 0.18f), new Color(1f, 0.78f, 0.3f), new Color(1f, 0.45f, 0.12f), // orange / gold
+                new Color(1f, 0.70f, 0.22f), new Color(1f, 0.55f, 0.15f), new Color(1f, 0.85f, 0.45f), // (weighted: mostly gold)
                 new Color(0.25f, 0.85f, 1f), new Color(0.35f, 0.6f, 1f),                               // cyan / blue
                 new Color(0.65f, 0.3f, 1f), new Color(0.85f, 0.35f, 0.95f),                            // purple / magenta
             };
             const float skew = 0.35f; // streaks lean around the tube (pixels in x per pixel in y) -> spiral
-            for (int n = 0; n < 420; n++)
+            for (int n = 0; n < 1500; n++)
             {
                 var c = palette[rng.Next(palette.Length)];
                 float bright = 0.35f + (float)rng.NextDouble() * 0.65f;
                 float x0 = (float)rng.NextDouble() * W, y0 = (float)rng.NextDouble() * H;
                 int len = 25 + rng.Next(110);
-                float width = 0.6f + (float)rng.NextDouble() * 1.8f;
+                float width = 0.8f + (float)rng.NextDouble() * 2.2f;
                 for (int d = 0; d < len; d++)
                 {
                     float f = d / (float)len;
@@ -338,10 +373,87 @@ namespace DMI.Xenoarch.Ship
                 c.a = Mathf.Clamp01(m);
                 acc[i] = c;
             }
-            _tunnelTex = new Texture2D(W, H, TextureFormat.RGBA32, true) { name = "FTL Tunnel Streaks", wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear, anisoLevel = 4 };
-            _tunnelTex.SetPixels(acc);
-            _tunnelTex.Apply(true, true);
-            return _tunnelTex;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, true) { name = inner ? "FTL Tunnel Streaks Inner" : "FTL Tunnel Streaks", wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear, anisoLevel = 4 };
+            tex.SetPixels(acc);
+            tex.Apply(true, true);
+            if (inner) _tunnelTexInner = tex; else _tunnelTex = tex;
+            return tex;
+        }
+
+        // ---------- Core ----------
+        // Camera-facing additive disc deep in the tunnel: a white-cyan centre, a violet / blue ring around it and a soft
+        // halo. HDR, so bloom turns it into the bright vanishing point of the vortex.
+        Material BuildCore(Transform parent, Vector3 eye, Vector3 dir)
+        {
+            var sh = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (sh == null) return null;
+            var go = new GameObject("FTL Core");
+            go.transform.SetParent(parent, false);
+            float d = TunnelLength * 0.7f;
+            go.transform.SetPositionAndRotation(eye + dir * d, Quaternion.LookRotation(dir, Vector3.up));
+            float size = 2f * d * Mathf.Tan(13f * Mathf.Deg2Rad); // ~26 degrees across incl. halo
+            go.transform.localScale = new Vector3(size, size, 1f);
+            var q = new Mesh { name = "FTL Core Quad" };
+            q.vertices = new[] { new Vector3(-0.5f, -0.5f, 0), new Vector3(0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0), new Vector3(0.5f, 0.5f, 0) };
+            q.uv = new[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1) };
+            q.triangles = new[] { 0, 2, 1, 2, 3, 1, 0, 1, 2, 2, 1, 3 }; // both sides
+            q.RecalculateBounds();
+            go.AddComponent<MeshFilter>().sharedMesh = q;
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
+            var m = new Material(sh) { name = "FTL Core (runtime)" };
+            m.SetFloat("_Surface", 1f); m.SetFloat("_Blend", 2f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha); m.SetInt("_DstBlend", (int)BlendMode.One); m.SetInt("_ZWrite", 0);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); m.EnableKeyword("_BLENDMODE_ADD");
+            m.renderQueue = 2992;
+            var tex = CoreTexture();
+            m.SetTexture("_BaseMap", tex); m.mainTexture = tex;
+            m.SetColor("_BaseColor", new Color(1f, 1f, 1f, 0f));
+            mr.sharedMaterial = m;
+            return m;
+        }
+
+        void CoreTick(Material m, float alpha, float time)
+        {
+            if (m == null) return;
+            var c = m.GetColor("_BaseColor");
+            c.a = Mathf.MoveTowards(c.a, Mathf.Clamp01(alpha), Time.deltaTime * 2.5f);
+            float pulse = 1f + 0.12f * Mathf.Sin(time * 7.3f) + 0.06f * Mathf.Sin(time * 17.1f);
+            c.r = c.g = c.b = coreBrightness * pulse;
+            m.SetColor("_BaseColor", c);
+        }
+
+        static Texture2D _coreTex;
+        static Texture2D CoreTexture()
+        {
+            if (_coreTex != null) return _coreTex;
+            const int N = 256;
+            var px = new Color[N * N];
+            var white = new Color(0.92f, 1f, 1f); var cyan = new Color(0.35f, 0.9f, 1f);
+            var violet = new Color(0.55f, 0.3f, 1f); var blue = new Color(0.25f, 0.4f, 1f);
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    float dx = (x + 0.5f) / N * 2f - 1f, dy = (y + 0.5f) / N * 2f - 1f;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float ang = Mathf.Atan2(dy, dx);
+                    float core = Mathf.Exp(-r * r / 0.006f);                       // white-hot centre
+                    float glow = Mathf.Exp(-r * r / 0.035f);                       // cyan glow
+                    float ringR = 0.30f + 0.015f * Mathf.Sin(ang * 9f);            // slightly wavy violet ring
+                    float ring = Mathf.Exp(-(r - ringR) * (r - ringR) / 0.0025f);
+                    float halo = Mathf.Exp(-r * r / 0.22f) * 0.35f;                // soft blue halo
+                    var c = white * core * 1.0f + cyan * glow * 0.8f + violet * ring * 0.75f + blue * halo;
+                    float m = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
+                    float a = Mathf.Clamp01(m) * Mathf.Clamp01((1f - r) / 0.25f);
+                    if (m > 1f) c /= m;
+                    c.a = a;
+                    px[y * N + x] = c;
+                }
+            _coreTex = new Texture2D(N, N, TextureFormat.RGBA32, true) { name = "FTL Core", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            _coreTex.SetPixels(px);
+            _coreTex.Apply(true, true);
+            return _coreTex;
         }
 
         static Material _additive;
