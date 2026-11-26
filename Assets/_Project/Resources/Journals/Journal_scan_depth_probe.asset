@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_scan_depth_probe
+  m_EditorClassIdentifier: 
+  id: journal.scan_depth_probe
+  title: "How Deep Is It?"
+  author: "Instrument Tech R. Osei"
+  dateLine: "Equipment note, Depth Probe"
+  category: 2
+  body: "The handheld scanner finds a site. The Depth Probe tells you what is under your feet once you are in the pit. Craft it aboard the ship (Tools). It sits on hotbar key 6 by default; drag it to another slot in the inventory if you like.
+
+Aim at the floor you have dug and pulse with LMB, or hold LMB for a live reading. It reports roughly how far below that point the nearest buried object lies, and which way it is offset: ahead, left, behind-right and so on. A ring on the surface marks the spot. It never tells you what the object is: a tablet and a lump of platinum read the same.
+
+The base probe (Mk I) tracks one object and only gives bands: under 10 cm, 10-30 cm, 30-60 cm, or deep. Upgrades, crafted aboard the ship (Upgrades), help. Mk II tracks two objects with a metre reading, and Mk III tracks three, deeper, wider and accurate to a few centimetres. Each tracked object gets its own line and its own coloured ring.
+
+When it says VERY CLOSE, the object is a hand's width down. Put the shovel and drill away and switch to the brush (4) or the precision tool (3)."
+  placement: 3
+  bodyId: 
+  siteIndex: 0
+  order: 25

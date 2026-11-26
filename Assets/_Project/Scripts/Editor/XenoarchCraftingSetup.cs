@@ -161,6 +161,7 @@ namespace DMI.Xenoarch.EditorTools
             }
             config.craftRecipes = crafts;
             EditorUtility.SetDirty(config);
+            XenoarchDepthProbeSetup.Run(config, log); // ZEN-16: keep the Depth Probe item + recipes after a rebuild
 
             // ---------------- icons (only where none is set)
             int assigned = 0;

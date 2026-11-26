@@ -32,6 +32,7 @@ namespace DMI.Xenoarch.Excavation
             }
             var rig = PlayerRigLocator.Find();
             if (rig != null && made > 0 && rig.Root.GetComponent<DigTool>() == null) rig.Root.gameObject.AddComponent<DigTool>();
+            if (rig != null && made > 0) DMI.Xenoarch.Excavation.DepthProbeTool.Ensure(rig.Root);
         }
 
         static float SurfaceY(Vector3 p) => ExcavationSite.TerrainHeight(p) ?? p.y;

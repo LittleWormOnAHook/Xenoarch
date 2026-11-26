@@ -61,6 +61,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a0a226ba68059af4c80258dcd459bddb, type: 2}
   - {fileID: 11400000, guid: ef53b369102c58d4887c22053d4532b6, type: 2}
   - {fileID: 11400000, guid: 4f7a580e8bfc91947960be86ec44182f, type: 2}
+  - {fileID: 11400000, guid: 07757f30d8fae054da993cfc0a59d05a, type: 2}
+  - {fileID: 11400000, guid: 662083da485c0574db8e34c914065cc0, type: 2}
+  - {fileID: 11400000, guid: 3a00c84b8dac33c4fbbd681ff9025467, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   defaultSpaceSkybox: {fileID: 2100000, guid: 8ba5043e1a9251278cb647dc04d2b025, type: 2}
   preferOrbitViews: 1
@@ -88,4 +91,18 @@ MonoBehaviour:
   fadeDuration: 0.35
   saveFolderName: Saves
   quickSaveSlot: quick
+  pitFillIntensity: 0.8
+  digYieldMultiplier: 0.4
+  resourceNodeMultiplier: 3
+  resourceNodesNearZones: 0.35
+  siteLayout:
+    spacing: 280
+    maxFromBase: 520
+    edgeMargin: 180
+    maxSlope: 9
+    flatRadius: 14
+    maxRelief: 1.6
+    landingOffset: 22
+    gridStep: 16
   enableDebugHotkeys: 1
+  logShaderWarm: 0

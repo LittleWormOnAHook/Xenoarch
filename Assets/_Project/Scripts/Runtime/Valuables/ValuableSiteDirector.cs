@@ -95,6 +95,7 @@ namespace DMI.Xenoarch.Valuables
             _digs[v.id] = dig;
             var rig = PlayerRigLocator.Find();
             if (rig != null && rig.Root.GetComponent<DigTool>() == null) rig.Root.gameObject.AddComponent<DigTool>();
+            if (rig != null) DMI.Xenoarch.Excavation.DepthProbeTool.Ensure(rig.Root);
         }
 
         void Update()

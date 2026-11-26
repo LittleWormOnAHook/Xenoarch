@@ -71,7 +71,7 @@ namespace DMI.Xenoarch.Core
             Saves.Register(new JsonStateSection<PlayerLocationState>(LocationKey, 0, () => Location, v => Location = v));
             Saves.Register(new InventorySection(InventoryKey, 0, Inventory));
             Hotbar = new Hotbar(() => Config.surfaceScanner != null ? Config.surfaceScanner.itemId : "item.tool.handheld_scanner",
-                () => { var l = new System.Collections.Generic.List<string>(); foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) l.Add(t.itemId); return l; });
+                () => { var l = new System.Collections.Generic.List<string>(); foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) l.Add(t.itemId); l.Add(DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().itemId); return l; });
             Saves.Register(new JsonStateSection<HotbarData>(Hotbar.Key, 0, () => Hotbar.Data, v => Hotbar.Set(v)));
             Saves.Register(World);
             Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
@@ -115,13 +115,15 @@ namespace DMI.Xenoarch.Core
             }
         }
 
-        public const string UpgradeHold = "ship.hold", UpgradeHandheldScanner = "scanner.handheld", UpgradeOrbitalScanner = "scanner.orbital";
+        public const string UpgradeHold = "ship.hold", UpgradeHandheldScanner = "scanner.handheld", UpgradeOrbitalScanner = "scanner.orbital",
+            UpgradeDepthProbe = DMI.Xenoarch.Excavation.DepthProbeDefinition.UpgradeId;
 
         public int UpgradeLevel(string id) => id switch
         {
             UpgradeHold => Exploration.Ship.holdLevel,
             UpgradeHandheldScanner => Exploration.Ship.handheldScannerLevel,
             UpgradeOrbitalScanner => Exploration.Ship.orbitalRangeLevel,
+            UpgradeDepthProbe => Exploration.Ship.depthProbeLevel,
             _ => 0,
         };
 
@@ -132,6 +134,7 @@ namespace DMI.Xenoarch.Core
             UpgradeHold => Top(Config.starterShip?.holdSlotsByLevel),
             UpgradeHandheldScanner => Top(Config.surfaceScanner?.rangeByLevel),
             UpgradeOrbitalScanner => Top(Config.starterShip?.orbitalScanRadiusByLevel),
+            UpgradeDepthProbe => DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().MaxLevel,
             _ => 0,
         };
 
@@ -148,6 +151,7 @@ namespace DMI.Xenoarch.Core
                     return true;
                 case UpgradeHandheldScanner: s.handheldScannerLevel++; return true;
                 case UpgradeOrbitalScanner: s.orbitalRangeLevel++; return true;
+                case UpgradeDepthProbe: s.depthProbeLevel++; return true;
             }
             return false;
         }
@@ -176,6 +180,7 @@ namespace DMI.Xenoarch.Core
             }
             foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) Give(t.itemId);
             Give(Config.surfaceScanner != null ? Config.surfaceScanner.itemId : "item.tool.handheld_scanner");
+            Give(DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().itemId);
             if (granted.Length > 0) Debug.Log($"[Xenoarch] DEV testing loadout (XenoarchConfig.devTestingLoadout): granted {granted}");
         }
 

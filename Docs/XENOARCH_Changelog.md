@@ -1,5 +1,16 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (night) - t132-t133 (ZEN-16): Depth Probe - third scanner, upgradable to 3 tracked objects (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- Item `item.tool.depth_probe` (Tool). Default hotbar key 6 (when the hotbar was never customised); otherwise drag it onto any slot 2-8. Equipping it holsters the dig tool / scanner and vice versa.
+- Use: aim at the dug surface (up to 5 m), LMB pulse or hold LMB for live readings (every 0.25 s; a reading stays 6 s). For the nearest buried objects (unrecovered artifacts by the top of their shape, uncollected cache loot) below that point it shows depth and sideways offset (ahead / left / behind-right...), never the object type. A pulse ring and a coloured ring over each tracked object mark the surface. Under 12 cm: "VERY CLOSE - switch to the brush (4) or precision tool (3)", rings turn red.
+- Tiers (data: `Resources/Excavation/DepthProbe.asset`, `DepthProbeDefinition`): Mk I 1 object, bands only (<10 cm, 10-30, 30-60, deep), 1.5 m across / 1.2 m down; Mk II 2 objects, metres +/-8 cm, 2.5 m / 2 m; Mk III 3 objects, +/-3 cm, 3.5 m / 3 m. Error is stable per object.
+- Crafting (ship): Depth Probe (Tools: 1 alloy plate, 2 wiring, 1 circuit), Mk II (Upgrades: 2 circuit, 1 gold ingot), Mk III (1 sensor array, 2 circuit, 1 platinum ingot). Upgrade id `scanner.depth_probe`, saved as `Ship.depthProbeLevel` (older saves = Mk I). In the DEV testing loadout.
+- Setup: `Tools/Xenoarch/Setup/Depth Probe (item, tiers, recipes)` / `Temp/xenoarch_depthprobe.trigger` creates the item, definition and recipes and appends them to the registry / config; Batch E crafting setup calls it too.
+- Journal entry "How Deep Is It?" (FirstDigSite) explains it and the upgrades.
+
 ## 2026-11-26 (night) - t131 (ZEN-15): survey journals - datapad pickups, note reader, inventory Journals (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
