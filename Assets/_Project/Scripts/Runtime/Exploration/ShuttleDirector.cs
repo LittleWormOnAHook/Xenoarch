@@ -137,10 +137,14 @@ namespace DMI.Xenoarch.Exploration
             LastPick = $"{scene.name}: shuttle near {(site != null ? site.Id : "base zone")} via {how}, gear {_gears.Count} down{(def != null && def.shuttleScale > 0.01f ? $", scale {def.shuttleScale:0.###}" : "")}";
             Debug.Log($"[Xenoarch] {LastPick}");
             // Direct play in the Editor: nothing teleports the player (they stay where you placed them).
-            StartCoroutine(Settle(holder, height));
+            _scene = scene; _terrain = terrain; _rules = rules; _footprint = footprint; _yawOffset = def != null ? def.shuttleYawOffset : 0f;
+            StartCoroutine(Settle(holder, height, arriving));
         }
 
         readonly List<Transform> _gears = new List<Transform>();
+        Scene _scene; Terrain _terrain; LandingZonePicker.Rules _rules; float _footprint, _yawOffset;
+        [Tooltip("After the player is placed (landing, save load, Continue, autosave restore), the shuttle is moved next to them if it is farther than this (m).")]
+        public float maxPlayerDistance = 40f;
         float _groundOffset;
 
         static Transform FindDeep(Transform t, string name)
@@ -175,14 +179,45 @@ namespace DMI.Xenoarch.Exploration
             if (!float.IsInfinity(ground)) holder.position = new Vector3(p.x, ground + _groundOffset, p.z);
         }
 
-        IEnumerator Settle(GameObject holder, LandingZonePicker.HeightFn height)
+        IEnumerator Settle(GameObject holder, LandingZonePicker.HeightFn height, bool arriving)
         {
-            // Wait for Digger to finish replaying saved digs (terrain can change), then re-ground the shuttle once.
-            float t = 0f;
+            // Wait for the scene loader to place the player (arrivals), then for Digger to finish replaying saved digs
+            // (terrain can change); then make sure the shuttle is beside the player and re-ground it once.
+            float t = 0f; int startFrame = Time.frameCount;
             yield return null;
+            while (arriving && SceneLoader.PlacedFrame < startFrame && t < 5f) { t += Time.unscaledDeltaTime; yield return null; }
+            t = 0f;
             while (ExcavationSite.BusyStatus() != null && t < 20f) { t += Time.unscaledDeltaTime; yield return null; }
-            if (holder != null) GroundOnGear(holder.transform, height);
+            if (holder != null) { EnsureNearPlayer(holder, height); GroundOnGear(holder.transform, height); }
             _busy = false;
+        }
+
+        /// <summary>The landed shuttle must always be beside the player, whatever brought them here (shuttle descent,
+        /// airlock disembark, a saved pose from Load / Continue / autosave). The player is placed by the scene loader
+        /// after sceneLoaded, so this runs a frame later: if the shuttle is too far, re-pick flat ground near the player.</summary>
+        void EnsureNearPlayer(GameObject holder, LandingZonePicker.HeightFn height)
+        {
+            var rig = PlayerRigLocator.Find();
+            if (rig == null || holder == null) return;
+            Vector3 p = rig.Root.position, s = holder.transform.position;
+            float d = Vector2.Distance(new Vector2(p.x, p.z), new Vector2(s.x, s.z));
+            if (d <= maxPlayerDistance) return;
+            var avoid = new List<(Vector3, float)> { (p, 3f + _footprint * 0.5f) }; // never on top of the player
+            var x = XenoarchRuntime.Session?.Exploration;
+            if (x != null) avoid.AddRange(Avoid(x, _scene.name));
+            var res = LandingZonePicker.Pick(p, avoid, _rules, height, (c, rad) => Blocked(c, rad, _scene, _terrain, holder.transform, rig.Root), _yawOffset);
+            Vector3 pos; float yaw;
+            if (res.found && Vector3.Distance(res.position, p) <= maxPlayerDistance * 1.5f) { pos = res.position; yaw = res.yaw; }
+            else
+            {
+                var fwd = rig.Root.forward; fwd.y = 0f; if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
+                pos = p + Quaternion.Euler(0f, 60f, 0f) * fwd.normalized * (_footprint + 4f);
+                if (height(pos.x, pos.z, out float gy, out _)) pos.y = gy;
+                yaw = rig.Root.eulerAngles.y + 180f;
+            }
+            holder.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f));
+            LastPick += $"; moved next to the player ({d:0} m away)";
+            Debug.Log($"[Xenoarch] Shuttle was {d:0} m from the player; landed beside them at {pos}");
         }
 
         static List<(Vector3, float)> Avoid(ExplorationService x, string sceneName)

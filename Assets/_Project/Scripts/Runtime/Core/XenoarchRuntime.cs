@@ -104,6 +104,8 @@ namespace DMI.Xenoarch.Core
         {
             _session.StartNewGame();
             _sessionActive = true;
+            SceneLoader.NextTitle = "New expedition";
+            SceneLoader.NextSubtitle = DMI.Xenoarch.Galaxy.ShipTravel.LocationText(_session.Exploration);
             _loader.Load(_session.Location.sceneName, SceneLoader.Arrival.AtSpawn(_session.Location.spawnId));
         }
 
@@ -111,6 +113,7 @@ namespace DMI.Xenoarch.Core
         {
             _sessionActive = false;
             Time.timeScale = 1f;
+            SceneLoader.NextTitle = "Main menu";
             _loader.Load(_session.Config.mainMenuScene, default);
         }
 
@@ -149,6 +152,8 @@ namespace DMI.Xenoarch.Core
                 ? new SceneLoader.Arrival { usePose = true, position = loc.position, yaw = loc.yaw }
                 : SceneLoader.Arrival.AtSpawn(loc.spawnId);
             Debug.Log($"[Xenoarch] Loading slot '{slot}' (save v{file.version}) -> {scene}");
+            SceneLoader.NextTitle = "Loading saved game";
+            SceneLoader.NextSubtitle = DMI.Xenoarch.Galaxy.ShipTravel.LocationText(_session.Exploration);
             return _loader.Load(scene, arrival);
         }
 

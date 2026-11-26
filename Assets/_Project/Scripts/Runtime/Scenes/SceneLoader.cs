@@ -17,7 +17,8 @@ namespace DMI.Xenoarch.Scenes
     public sealed class SceneLoader : MonoBehaviour
     {
         public float fadeDuration = 0.35f;
-        [Tooltip("Longest the loading screen waits for shaders / terrain after the scene loads (s).")] public float maxHoldSeconds = 30f;
+        [Tooltip("Give up waiting when nothing has advanced (shaders / terrain) for this long (s).")] public float stallSeconds = 20f;
+        [Tooltip("Hard cap on the loading-screen wait after the scene loads, even while work is still advancing (s).")] public float maxHoldSeconds = 180f;
         [Tooltip("Frames to keep the loading screen up after everything reports ready (lets the first frames render).")] public int settleFrames = 30;
         [Tooltip("Shortest time the loading screen stays up after the scene loads (s), so late materials finish too.")] public float minHoldSeconds = 2.5f;
 
@@ -28,7 +29,9 @@ namespace DMI.Xenoarch.Scenes
         public static readonly System.Collections.Generic.Dictionary<Func<string>, Func<float>> GateProgress = new System.Collections.Generic.Dictionary<Func<string>, Func<float>>();
 
         // Loading-bar weights (sum 1): scene async load, shader compile / warm-up, ready gates (Digger replay, landing pick), settle.
-        const float WLoad = 0.45f, WShaders = 0.25f, WGates = 0.20f, WSettle = 0.10f;
+        // Stages fill in order (a later stage never adds to the bar before the earlier one is done), so the bar tracks the
+        // real work 1:1 from 0%. Shader progress counts only the work left at the start of the load (cached passes are free).
+        const float WLoad = 0.30f, WShaders = 0.45f, WGates = 0.17f, WSettle = 0.08f;
         [Tooltip("Editor: after the tracked shaders are compiled, wait at most this long for other async compiles (s).")] public float compileGraceSeconds = 3f;
         float _shown;
 
@@ -85,13 +88,13 @@ namespace DMI.Xenoarch.Scenes
             if (_fade == null) BuildOverlay();
             if (_fade != null) { _alpha = 1f; _fade.style.opacity = 1f; _fade.pickingMode = PickingMode.Position; }
             _shown = 0f;
-            _view?.SetTitle(TitleFor(SceneManager.GetActiveScene().name)); _view?.SetSubtitle(null); _view?.SetVisible(true);
+            _view?.SetTitle(TitleFor(SceneManager.GetActiveScene().name)); NextTitle = null; _view?.SetSubtitle(null); NextSubtitle = null; _view?.SetVisible(true);
             var track = ShaderPrewarm.TrackScene(SceneManager.GetActiveScene().name);
-            ShowProgress("Loading", WLoad);
+            ShowProgress("Loading", 0f); // scene already open (direct play): the bar covers the remaining work only
             UIState.SetOpen(Panels.Loading, true);
             PlayerRigLocator.Find()?.SetInputEnabled(false);
             yield return null;
-            yield return HoldUntilReady(track, WLoad);
+            yield return HoldUntilReady(track, 0f);
             UIState.SetOpen(Panels.Loading, false);
             yield return Fade(0f);
             _view?.SetVisible(false);
@@ -116,33 +119,51 @@ namespace DMI.Xenoarch.Scenes
             DMI.Xenoarch.Excavation.ExcavationSite.PrewarmRuntimeMaterials();
             ShaderPrewarm.TrackRuntime(track);
             var seen = new System.Collections.Generic.HashSet<Func<string>>();
-            float held = 0f, grace = 0f; int quiet = 0; bool shuttleTracked = false;
-            while (held < maxHoldSeconds)
+            float held = 0f, grace = 0f, sinceAdvance = 0f, lastWork = -1f; int quiet = 0; bool shuttleTracked = false, gaveUp = false;
+            string lastBusy = null;
+            while (true)
             {
                 if (!shuttleTracked)
                 {
                     var sh = DMI.Xenoarch.Exploration.ShuttleDirector.Instance != null ? DMI.Xenoarch.Exploration.ShuttleDirector.Instance.Shuttle : null;
                     if (sh != null) { ShaderPrewarm.TrackRenderers(track, sh.transform); shuttleTracked = true; }
                 }
-                // shaders
-                float sp = track.Progress;
+                // shaders (relative to what was left when this load started)
+                float sp = track.Relative;
                 bool compiling = ShaderPrewarm.AnythingCompiling;
                 if (sp >= 1f && compiling) grace += Time.unscaledDeltaTime;
                 bool shaderBusy = sp < 1f || (compiling && grace < compileGraceSeconds);
-                float shaderStage = sp < 1f ? sp * 0.95f : shaderBusy ? 0.97f : 1f;
-                // gates
+                float shaderStage = sp < 1f ? sp * 0.97f : shaderBusy ? 0.98f : 1f;
+                // gates (only once the shaders are done, so the bar never jumps ahead of real work)
                 float gp = Gates(seen, out string gateStatus);
-                string busy = shaderBusy ? (track.Total > 0 && sp < 1f ? $"Compiling shaders {track.Done}/{track.Total}" : "Compiling shaders") : gateStatus;
+                string busy = shaderBusy ? "Preparing materials" : gateStatus;
+                if (busy != null) lastBusy = shaderBusy ? $"shaders {track.Done}/{track.Total} compiled, {(compiling ? "compiler busy" : "compiler idle")}" : gateStatus;
+                float gatesStage = shaderBusy ? 0f : gp;
                 // settle
                 if (busy == null) quiet++; else quiet = 0;
                 float settle = busy == null ? Mathf.Min(quiet / (float)Mathf.Max(1, settleFrames), Mathf.Clamp01(held / Mathf.Max(0.01f, minHoldSeconds))) : 0f;
-                ShowProgress(busy ?? "Settling", baseP + WShaders * shaderStage + WGates * gp + WSettle * settle);
+                float p = baseP + (1f - baseP) * (WShaders * shaderStage + WGates * gatesStage + WSettle * settle) / (WShaders + WGates + WSettle);
+                ShowProgress(busy ?? "Settling", p);
                 if (busy == null && quiet >= settleFrames && held >= minHoldSeconds) break;
+                // stall detection: keep waiting while anything advances; give up only after stallSeconds of no progress
+                // (monotonic: a gate that flickers busy / idle, or the compiler toggling, does not count as progress)
+                float work = track.Done + gp * 1000f + quiet * 0.001f;
+                if (work > lastWork + 0.0005f) { lastWork = work; sinceAdvance = 0f; } else sinceAdvance += Time.unscaledDeltaTime;
+                if (shaderBusy && !compiling && sinceAdvance >= 3f)
+                {
+                    // nothing compiling and no pass finished for 3 s: the rest never compile here (wrong pipeline / no
+                    // variants). Skip them now and in later loads instead of holding the screen for them.
+                    int n = track.SkipStalled();
+                    if (n > 0) { Debug.Log($"[Xenoarch] Loading screen: {n} shader passes never compile in this pipeline; skipped from now on"); sinceAdvance = 0f; }
+                }
+                if (sinceAdvance >= stallSeconds || held >= maxHoldSeconds) { gaveUp = true; break; }
                 held += Time.unscaledDeltaTime;
                 yield return null;
             }
-            if (held >= maxHoldSeconds) Debug.LogWarning($"[Xenoarch] Loading screen: gave up waiting after {maxHoldSeconds:0}s ({BusyStatus()}; shaders {track.Done}/{track.Total})");
-            else if (held > 0.5f) Debug.Log($"[Xenoarch] Loading screen held {held:0.0}s (shaders {track.Done}/{track.Total} passes/variants)");
+            if (gaveUp)
+                Debug.LogWarning($"[Xenoarch] Loading screen: stopped waiting after {held:0}s ({(sinceAdvance >= stallSeconds ? $"no progress for {stallSeconds:0}s" : $"cap {maxHoldSeconds:0}s")}): " +
+                                 $"{lastBusy ?? BusyStatus() ?? "unknown"}; shaders {track.Done}/{track.Total}");
+            else if (held > 0.5f) Debug.Log($"[Xenoarch] Loading screen held {held:0.0}s (shaders {track.Done}/{track.Total}, {Mathf.Max(0, track.StartDone)} already compiled before this load)");
             ShowProgress("Ready", 1f, true);
         }
 
@@ -210,13 +231,13 @@ namespace DMI.Xenoarch.Scenes
         {
             if (IsLoading) _view?.Tick(Time.unscaledDeltaTime);
             // Background prewarm (on the ship, before any jump): a little per frame normally, much more behind the loading screen.
-            ShaderPrewarm.Tick(IsLoading ? 16 : 2);
+            ShaderPrewarm.Tick(IsLoading ? 16 : 4);
         }
 
 
         static string BusyStatus()
         {
-            if (ShaderPrewarm.AnythingCompiling) return "Compiling shaders";
+            if (ShaderPrewarm.AnythingCompiling) return "shader compiler busy";
             foreach (var g in ReadyGates)
             {
                 if (g == null) continue;
@@ -230,15 +251,20 @@ namespace DMI.Xenoarch.Scenes
         static string TitleFor(string sceneName)
         {
             if (!string.IsNullOrEmpty(NextTitle)) return NextTitle;
-            if (sceneName == Core.SceneNames.ShipStarter) return "Returning to the ship";
+            // "Returning to the ship" is only set by the shuttle ascent (ShipTravel.ReturnToShip); other ship loads are neutral.
+            if (sceneName == Core.SceneNames.ShipStarter) return "Aboard the ship";
             var body = Core.XenoarchRuntime.Session?.Exploration?.CurrentBody;
             if (sceneName.Contains("Excavation") || sceneName.Contains("Surface")) return body != null ? $"Landing: {body.displayName}" : "Landing";
             if (sceneName == Core.SceneNames.MainMenu) return "Xenoarch";
             return body != null ? body.displayName : sceneName.Replace('_', ' ');
         }
 
+        /// <summary>Frame of the last <see cref="PlacePlayer"/> (directors that must act after the player is placed).</summary>
+        public static int PlacedFrame { get; private set; } = -1;
+
         static void PlacePlayer(Arrival arrival)
         {
+            PlacedFrame = Time.frameCount;
             var rig = PlayerRigLocator.Find();
             if (rig == null) return; // menus have no player
             if (arrival.usePose)

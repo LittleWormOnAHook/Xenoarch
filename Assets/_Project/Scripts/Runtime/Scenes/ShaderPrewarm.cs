@@ -20,14 +20,20 @@ namespace DMI.Xenoarch.Scenes
             get { if (!_svcLoaded) { _svcLoaded = true; _svc = Resources.Load<ShaderVariantCollection>(CollectionResource); } return _svc; }
         }
 
-        /// <summary>Progress of a set of shader work the loading screen waits on.</summary>
+        /// <summary>Progress of a set of shader work the loading screen waits on. Passes already compiled by earlier loads /
+        /// the background prewarm count as done from the start (<see cref="StartDone"/>), so <see cref="Relative"/> runs
+        /// 0..1 over the work that is actually left. Passes that never compile (no compiler output for this pipeline,
+        /// e.g. built-in-only passes) are remembered once a load stalls on them and skipped from then on.</summary>
         public sealed class Tracker
         {
             internal readonly List<Material> mats = new List<Material>();
             internal readonly HashSet<Material> set = new HashSet<Material>();
             public int Total { get; private set; }
             public int Done { get; private set; }
-            /// <summary>0..1; recomputed each call (cheap: a flag read per pass).</summary>
+            /// <summary>Passes already compiled when tracking started (-1 = not sampled yet).</summary>
+            public int StartDone { get; private set; } = -1;
+            public int Remaining => Mathf.Max(0, Total - Done);
+            /// <summary>0..1 over all tracked passes; recomputed each call (cheap: a flag read per pass).</summary>
             public float Progress
             {
                 get
@@ -37,20 +43,56 @@ namespace DMI.Xenoarch.Scenes
                     foreach (var m in mats)
                     {
                         if (m == null || m.shader == null) continue;
-                        for (int i = 0; i < m.passCount; i++) { total++; if (UnityEditor.ShaderUtil.IsPassCompiled(m, i)) done++; }
+                        for (int i = 0; i < m.passCount; i++)
+                        {
+                            if (_stuck.Contains(Key(m, i))) continue;
+                            total++; if (UnityEditor.ShaderUtil.IsPassCompiled(m, i)) done++;
+                        }
                     }
                     Total = total; Done = done;
+                    if (StartDone < 0) StartDone = done;
                     return total == 0 ? 1f : (float)done / total;
 #else
                     var c = Collection;
-                    if (c == null || c.variantCount == 0) { Total = Done = 0; return 1f; }
+                    if (c == null || c.variantCount == 0) { Total = Done = 0; if (StartDone < 0) StartDone = 0; return 1f; }
                     Total = c.variantCount; Done = Mathf.Min(c.warmedUpVariantCount, Total);
+                    if (StartDone < 0) StartDone = Done;
                     return c.isWarmedUp ? 1f : (float)Done / Total;
 #endif
                 }
             }
+            /// <summary>0..1 over the work left when tracking started (call after <see cref="Progress"/>).</summary>
+            public float Relative
+            {
+                get
+                {
+                    float p = Progress;
+                    if (p >= 1f) return 1f;
+                    int left = Total - Mathf.Max(0, StartDone);
+                    return left <= 0 ? 1f : Mathf.Clamp01((Done - StartDone) / (float)left);
+                }
+            }
+            /// <summary>The load stalled with nothing compiling: remember the still-uncompiled passes as never-compiling so
+            /// this and later loads stop waiting on them. Returns how many were skipped.</summary>
+            public int SkipStalled()
+            {
+                int n = 0;
+#if UNITY_EDITOR
+                foreach (var m in mats)
+                {
+                    if (m == null || m.shader == null) continue;
+                    for (int i = 0; i < m.passCount; i++)
+                        if (!UnityEditor.ShaderUtil.IsPassCompiled(m, i) && _stuck.Add(Key(m, i))) n++;
+                }
+#endif
+                return n;
+            }
             internal void Add(Material m) { if (m != null && set.Add(m)) mats.Add(m); }
         }
+
+        // (material, pass) pairs that never compiled in an earlier load (kept for the session).
+        static readonly HashSet<(Material, int)> _stuck = new HashSet<(Material, int)>();
+        static (Material, int) Key(Material m, int pass) => (m, pass);
 
         /// <summary>True while the Editor is compiling any shader asynchronously (always false in builds).</summary>
         public static bool AnythingCompiling
@@ -69,7 +111,7 @@ namespace DMI.Xenoarch.Scenes
         static bool _allQueued;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { _queue.Clear(); _submitted.Clear(); _sceneMats.Clear(); _allQueued = false; _svc = null; _svcLoaded = false; }
+        static void ResetStatics() { _queue.Clear(); _submitted.Clear(); _sceneMats.Clear(); _allQueued = false; _svc = null; _svcLoaded = false; _stuck.Clear(); }
 
         /// <summary>Request async compilation of every pass of <paramref name="m"/> (never blocks, never shows the dialog).</summary>
         static void Submit(Material m)

@@ -30,7 +30,9 @@
 .xa-hold-fill { height: 100%; width: 0; background-color: var(--xa-bar); }
 .xa-bottom {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 20px 10px 20px;
-    background-image: url("/Assets/_Project/Art/Placeholder/Genesis/HUD/Gradient_Bottom.png"); -unity-background-image-tint-color: rgba(40, 9, 14, 0.8);
+    /* no background: the full-width bottom gradient (crimson-tinted after the palette remap) tinted the whole screen
+       bottom during play (t106u). Only the slots / panels inside it have backgrounds. */
+    background-image: none; background-color: rgba(0, 0, 0, 0);
 }
 .xa-strip { flex-direction: row; align-items: flex-end; margin-bottom: 6px; }
 .xa-slot {

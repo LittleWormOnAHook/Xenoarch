@@ -49,6 +49,7 @@ namespace DMI.Xenoarch.Galaxy
             if (x == null || rt == null) { reason = "No session"; return false; }
             if (!x.CommitTravel(body, out reason)) return false;
             Debug.Log($"[Xenoarch] Ship travelled to {body.displayName} (fuel {x.Ship.fuel:0.#}/{x.Ship.fuelCapacity:0})");
+            Scenes.SceneLoader.NextTitle = $"In-system transit: {body.displayName}";
             return rt.Travel(ShipScene, ShipSpawnBridge);
         }
 
@@ -63,6 +64,7 @@ namespace DMI.Xenoarch.Galaxy
             bool station = body.kind == CelestialKind.Station;
             x.SetLanded(!station, station);
             var bd = x.Body(body.Id); bd.visited = true;
+            Scenes.SceneLoader.NextTitle = station ? $"Docking: {body.displayName}" : $"Landing: {body.displayName}";
             return rt.Travel(body.sceneName, string.IsNullOrEmpty(body.arrivalSpawnId) ? PlayerSpawnIds.Default : body.arrivalSpawnId);
         }
 
@@ -72,6 +74,8 @@ namespace DMI.Xenoarch.Galaxy
             var rt = XenoarchRuntime.Instance;
             if (rt == null) return false;
             Scenes.SceneLoader.NextTitle = "Returning to the ship";
+            var b = X?.CurrentBody;
+            Scenes.SceneLoader.NextSubtitle = b != null ? $"Shuttle ascent from {b.displayName}" : null;
             return rt.Travel(ShipScene, ShipSpawnShuttleBay + "|" + ShipSpawnAirlock); // bay, else the airlock
         }
 
