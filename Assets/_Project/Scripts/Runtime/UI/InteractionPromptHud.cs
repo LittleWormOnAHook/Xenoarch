@@ -119,7 +119,7 @@ namespace DMI.Xenoarch.UI
                 if (s.Items.TryGetItem(id, out var def))
                 {
                     name = def.DisplayNameOrId;
-                    if (def.icon != null) icon.style.backgroundImage = new StyleBackground(def.icon);
+                    if (def.icon != null) XenoarchIcons.ApplyItem(icon, def);
                 }
                 if (count <= 0) cell.style.opacity = 0.4f;
                 cell.tooltip = $"{k + 1}: {name}";

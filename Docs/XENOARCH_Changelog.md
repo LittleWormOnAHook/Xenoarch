@@ -1,5 +1,17 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (morning) - UI icons: one style (t155u, approved mockups, UNTESTED)
+
+- Applied the mockups Anthony approved (`Docs/Images/UI_Icons/01-04`, rules in `Docs/XENOARCH_UI_Icons.md`). Compiles; not seen in Play yet.
+- **Hotbar strip, inventory (hotbar row, backpack, details), artifact puzzle slots and drag ghost:**
+  - Every item icon is a white silhouette at one size and padding (78% of the icon box), tinted by category: tools bone white, artifacts orange, parts teal, materials their light colour.
+  - The handheld scanner is now radar-sweep, the powered drill is drill, and the test fragment is rune-stone. All artifacts get rune-stone, except the sensor lattice, which gets alien-stare (Lorc, game-icons.net, CC BY 3.0, credited in `Art/Icons/GameIcons/SOURCES.md`).
+  - Brush, shovel, precision tool and sample container use padded copies in `Art/Icons/Items`.
+- **Minimap, Maps window, orbital scanner and shuttle maps:** site, cache, base and landing markers are now Kenney target, star, home and arrowDown glyphs with a dark halo, in the same colours. The uncertainty circle and the player and shuttle arrows are unchanged, and a selected marker gets a ring.
+- **Pause menu:** Kenney glyphs on Resume, Save, Load, Settings, Main menu and Quit.
+- **Journal (J):** check / arrow / lock glyphs instead of `[x]` / `[ ]`.
+- Shared USS: `.xa-icon`, `.xa-item-icon--*`, `.xa-map-icon--*`, `.xa-journal-icon--*` and `--xa-icon-*` / `--xa-map-*` variables. Code helper: `XenoarchIcons`.
+
 ## 2026-11-26 (morning) - Decorative rocks on planets (t151u, UNTESTED)
 
 - Poly Haven CC0 rocks from `Assets/Xenoarch_Free` are now prefabs in `Resources/World/Rocks` (moon_rock_01/03/05/07 and boulder_01). They use URP Lit materials in `Art/Rocks`, convex colliders, a bottom-centre pivot normalised to 1 m, and a cull-only LODGroup.

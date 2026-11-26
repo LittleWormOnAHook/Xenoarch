@@ -110,7 +110,7 @@ namespace DMI.Xenoarch.UI
             if (d == null) Text(mid, "Select an item.", "xa-term__dim");
             else
             {
-                if (d.icon != null) { var big = new VisualElement(); big.style.width = 96; big.style.height = 96; big.style.backgroundImage = new StyleBackground(d.icon); big.style.marginBottom = 6; mid.Add(big); }
+                if (d.icon != null) { var big = new VisualElement(); big.style.width = 96; big.style.height = 96; XenoarchIcons.ApplyItem(big, d); big.style.marginBottom = 6; mid.Add(big); }
                 Text(mid, d.DisplayNameOrId.ToUpperInvariant(), "xa-term__h");
                 Text(mid, $"{d.category}   |   value {d.baseValue}   |   mass {d.mass:0.##}");
                 if (!string.IsNullOrEmpty(d.description)) Text(mid, d.description, "xa-term__dim");
@@ -273,7 +273,7 @@ namespace DMI.Xenoarch.UI
             t.style.borderTopColor = t.style.borderBottomColor = t.style.borderLeftColor = t.style.borderRightColor = bc;
             if (d != null && d.icon != null)
             {
-                var img = new VisualElement { pickingMode = PickingMode.Ignore }; img.style.flexGrow = 1; img.style.backgroundImage = new StyleBackground(d.icon);
+                var img = new VisualElement { pickingMode = PickingMode.Ignore }; img.style.flexGrow = 1; XenoarchIcons.ApplyItem(img, d);
                 if (Session.Inventory.Count(id) <= 0) img.style.opacity = 0.35f;
                 t.Add(img);
             }
@@ -319,8 +319,7 @@ namespace DMI.Xenoarch.UI
             if (d != null && d.icon != null)
             {
                 var img = new VisualElement { pickingMode = PickingMode.Ignore };
-                img.style.flexGrow = 1; img.style.backgroundImage = new StyleBackground(d.icon);
-                if (d is MaterialDefinition m) img.style.unityBackgroundImageTintColor = Color.Lerp(Color.white, m.tint, 0.35f);
+                img.style.flexGrow = 1; XenoarchIcons.ApplyItem(img, d);
                 t.Add(img);
             }
             else t.Add(new Label(d != null ? d.DisplayNameOrId : st.itemId) { pickingMode = PickingMode.Ignore, style = { fontSize = 10, whiteSpace = WhiteSpace.Normal } });

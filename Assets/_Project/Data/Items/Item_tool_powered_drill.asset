@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.tool.powered_drill
   displayName: Basic Powered Drill
   description: Breaks compacted or frozen material. High risk near artifacts.
-  icon: {fileID: 21300000, guid: fba0c47d0db80bf47a502c3ee2c73988, type: 3}
+  icon: {fileID: 21300000, guid: e7b43b225ffe0db4e87adf82b4c5469b, type: 3}
   category: 0
   maxStack: 1
   uniqueInstance: 0

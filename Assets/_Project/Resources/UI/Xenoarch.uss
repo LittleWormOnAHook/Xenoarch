@@ -138,3 +138,40 @@
 .xa-term__dropdown-menu { background-color: var(--xa-panel-dark); border-width: 1px; border-color: var(--xa-frame); padding: 4px; margin-bottom: 6px; flex-shrink: 0; }
 .xa-term__dropdown-item { justify-content: space-between; }
 .xa-term__dropdown-item:disabled { opacity: 0.55; }
+
+/* ---------- Icons (t155u, approved mockups: Docs/XENOARCH_UI_Icons.md) ----------
+   One style: items = flat white silhouettes (Art/Icons, glyph 78% of a square canvas) tinted by category;
+   menus, map markers and journal states = Kenney Game Icons (CC0, cropped copies in Art/Icons/UI). */
+.xa-icon { -unity-background-scale-mode: scale-to-fit; flex-shrink: 0; }
+.xa-icon--target { background-image: url("/Assets/_Project/Art/Icons/UI/target.png"); }
+.xa-icon--star { background-image: url("/Assets/_Project/Art/Icons/UI/star.png"); }
+.xa-icon--home { background-image: url("/Assets/_Project/Art/Icons/UI/home.png"); }
+.xa-icon--arrowDown { background-image: url("/Assets/_Project/Art/Icons/UI/arrowDown.png"); }
+.xa-icon--arrowRight { background-image: url("/Assets/_Project/Art/Icons/UI/arrowRight.png"); }
+.xa-icon--save { background-image: url("/Assets/_Project/Art/Icons/UI/save.png"); }
+.xa-icon--import { background-image: url("/Assets/_Project/Art/Icons/UI/import.png"); }
+.xa-icon--gear { background-image: url("/Assets/_Project/Art/Icons/UI/gear.png"); }
+.xa-icon--exit { background-image: url("/Assets/_Project/Art/Icons/UI/exit.png"); }
+.xa-icon--checkmark { background-image: url("/Assets/_Project/Art/Icons/UI/checkmark.png"); }
+.xa-icon--locked { background-image: url("/Assets/_Project/Art/Icons/UI/locked.png"); }
+.xa-item-icon { -unity-background-scale-mode: scale-to-fit; }
+.xa-item-icon--tool { -unity-background-image-tint-color: var(--xa-icon-tool); }
+.xa-item-icon--artifact { -unity-background-image-tint-color: var(--xa-icon-artifact); }
+.xa-item-icon--part { -unity-background-image-tint-color: var(--xa-icon-part); }
+/* .xa-item-icon--material: tint is the item's own colour, set from code (light material colour over bone white). */
+.xa-map-icon { position: absolute; width: var(--xa-icon-map); height: var(--xa-icon-map); }
+.xa-map-icon__halo { width: var(--xa-icon-map-halo); height: var(--xa-icon-map-halo); -unity-background-image-tint-color: var(--xa-map-halo); }
+.xa-map-icon--site { -unity-background-image-tint-color: var(--xa-map-site); }
+.xa-map-icon--cache { -unity-background-image-tint-color: var(--xa-map-cache); }
+.xa-map-icon--base { -unity-background-image-tint-color: var(--xa-map-base); }
+.xa-map-icon--landing { -unity-background-image-tint-color: var(--xa-map-landing); }
+.xa-journal-row { flex-direction: row; align-items: center; }
+.xa-journal-icon { width: var(--xa-icon-journal); height: var(--xa-icon-journal); margin-right: 8px; margin-bottom: 3px; }
+.xa-journal-icon--done { -unity-background-image-tint-color: var(--xa-icon-done); }
+.xa-journal-icon--open { -unity-background-image-tint-color: var(--xa-icon-open); }
+.xa-journal-icon--locked { -unity-background-image-tint-color: var(--xa-secondary-text); }
+/* Menu buttons with a glyph (pause menu): reuses .xa-glyph (20 px, secondary-text tint); dark on hover like the text. */
+.xa-button > .xa-glyph { margin-right: 14px; }
+.xa-button:hover > .xa-glyph { -unity-background-image-tint-color: var(--xa-on-button); }
+.xa-button__label { font-size: 18px; color: var(--xa-text); -unity-text-align: middle-left; padding: 0; margin: 0; }
+.xa-button:hover > .xa-button__label { color: var(--xa-on-button); }

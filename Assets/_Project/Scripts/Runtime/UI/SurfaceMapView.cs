@@ -7,7 +7,7 @@ namespace DMI.Xenoarch.UI
 {
     /// <summary>
     /// Top-down terrain view of a landing region (baked relief map, <c>CelestialBodyDefinition.surfaceMap</c>) with
-    /// markers: dig-site signatures (red triangles + uncertainty circle), landing sites (green rings), base zone, and an
+    /// markers: dig-site signatures (red target glyph + uncertainty circle), landing sites (green arrow), base zone (home), caches (star), and an
     /// optional scan sweep. Click a marker to select it. Square; world x/z -> map via <see cref="WorldRect"/>.
     /// </summary>
     public sealed class SurfaceMapView : VisualElement
@@ -26,6 +26,9 @@ namespace DMI.Xenoarch.UI
         public Vector2 ScanCentre; public float ScanRadius;
         public event Action<string> Clicked;
         readonly List<Label> _labels = new List<Label>();
+        // Site / cache / base / landing markers are Kenney glyph elements (t155u icon style, classes in Xenoarch.uss).
+        readonly List<VisualElement> _icons = new List<VisualElement>(), _halos = new List<VisualElement>();
+        int _iconSig; bool _relayoutQueued;
 
         public static readonly Color SiteRed = new Color(0.95f, 0.2f, 0.15f), LandingGreen = new Color(0.35f, 1f, 0.55f), Amber = XenoarchPalette.Primary;
 
@@ -37,6 +40,7 @@ namespace DMI.Xenoarch.UI
             style.borderTopWidth = style.borderBottomWidth = style.borderLeftWidth = style.borderRightWidth = 1;
             style.borderTopColor = style.borderBottomColor = style.borderLeftColor = style.borderRightColor = XenoarchPalette.A(XenoarchPalette.Secondary, 0.5f);
             style.marginBottom = 8; style.overflow = Overflow.Hidden; style.flexShrink = 0;
+            XenoarchIcons.EnsureStyles(this);
             generateVisualContent += Draw;
             RegisterCallback<GeometryChangedEvent>(e =>
             {
@@ -69,6 +73,38 @@ namespace DMI.Xenoarch.UI
                 lbl.style.display = DisplayStyle.Flex;
             }
             for (int i = li; i < _labels.Count; i++) _labels[i].style.display = DisplayStyle.None;
+
+            int ii = 0;
+            foreach (var m in Markers)
+            {
+                string glyph = Glyph(m.kind); if (glyph == null) continue;
+                if (ii >= _icons.Count)
+                {
+                    var h = new VisualElement { pickingMode = PickingMode.Ignore }; var ic = new VisualElement { pickingMode = PickingMode.Ignore };
+                    Insert(0, ic); Insert(0, h); _halos.Add(h); _icons.Add(ic); // under the labels
+                }
+                var halo = _halos[ii]; var icon = _icons[ii]; ii++;
+                var p = ToPx(m.world);
+                halo.ClearClassList(); halo.AddToClassList("xa-icon"); halo.AddToClassList("xa-icon--" + glyph); halo.AddToClassList("xa-map-icon"); halo.AddToClassList("xa-map-icon__halo");
+                icon.ClearClassList(); icon.AddToClassList("xa-icon"); icon.AddToClassList("xa-icon--" + glyph); icon.AddToClassList("xa-map-icon"); icon.AddToClassList("xa-map-icon--" + m.kind.ToString().ToLowerInvariant());
+                halo.style.left = p.x - 11f; halo.style.top = p.y - 11f;
+                icon.style.left = p.x - 9f; icon.style.top = p.y - 9f;
+                halo.style.display = icon.style.display = DisplayStyle.Flex;
+            }
+            for (int i = ii; i < _icons.Count; i++) _icons[i].style.display = _halos[i].style.display = DisplayStyle.None;
+            _iconSig = IconSignature();
+        }
+
+        static string Glyph(Kind k) => k == Kind.Site ? "target" : k == Kind.Cache ? "star" : k == Kind.Base ? "home" : k == Kind.Landing ? "arrowDown" : null;
+
+        int IconSignature()
+        {
+            unchecked
+            {
+                int h = 17 + (int)contentRect.width * 31;
+                foreach (var m in Markers) if (Glyph(m.kind) != null) h = h * 31 + m.kind.GetHashCode() * 7 + m.world.GetHashCode();
+                return h;
+            }
         }
 
         void Draw(MeshGenerationContext ctx)
@@ -112,16 +148,11 @@ namespace DMI.Xenoarch.UI
                             p.strokeColor = new Color(SiteRed.r, SiteRed.g, SiteRed.b, 0.45f); p.lineWidth = 1f;
                             p.BeginPath(); p.Arc(c, m.uncertainty * MetresToPx, 0f, 360f); p.Stroke();
                         }
-                        p.fillColor = SiteRed;
-                        p.BeginPath(); p.MoveTo(c + new Vector2(0, -8)); p.LineTo(c + new Vector2(7, 5)); p.LineTo(c + new Vector2(-7, 5)); p.ClosePath(); p.Fill();
-                        if (m.selected) { p.strokeColor = Amber; p.lineWidth = 2f; p.BeginPath(); p.MoveTo(c + new Vector2(0, -11)); p.LineTo(c + new Vector2(10, 7)); p.LineTo(c + new Vector2(-10, 7)); p.ClosePath(); p.Stroke(); }
+                        if (m.selected) { p.strokeColor = Amber; p.lineWidth = 2f; p.BeginPath(); p.Arc(c, 12f, 0f, 360f); p.Stroke(); }
                         break;
                     case Kind.Landing:
                     case Kind.Base:
-                        p.strokeColor = m.selected ? Amber : m.kind == Kind.Base ? new Color(0.85f, 0.95f, 1f, 0.8f) : LandingGreen;
-                        p.lineWidth = m.selected ? 3f : 2f;
-                        p.BeginPath(); p.Arc(c, 6f, 0f, 360f); p.Stroke();
-                        p.BeginPath(); p.MoveTo(c + new Vector2(-3, -3)); p.LineTo(c + new Vector2(-3, 3)); p.MoveTo(c + new Vector2(3, -3)); p.LineTo(c + new Vector2(3, 3)); p.MoveTo(c + new Vector2(-3, 0)); p.LineTo(c + new Vector2(3, 0)); p.Stroke();
+                        if (m.selected) { p.strokeColor = Amber; p.lineWidth = 2f; p.BeginPath(); p.Arc(c, 12f, 0f, 360f); p.Stroke(); }
                         break;
                     case Kind.Shuttle:
                         p.fillColor = LandingGreen; p.BeginPath(); p.MoveTo(c + new Vector2(0, -7)); p.LineTo(c + new Vector2(5, 6)); p.LineTo(c + new Vector2(-5, 6)); p.ClosePath(); p.Fill();
@@ -133,12 +164,13 @@ namespace DMI.Xenoarch.UI
                         break;
                     }
                     case Kind.Cache:
-                        p.fillColor = new Color(1f, 0.82f, 0.25f); p.BeginPath(); p.MoveTo(c + new Vector2(0, -6)); p.LineTo(c + new Vector2(5, 0)); p.LineTo(c + new Vector2(0, 6)); p.LineTo(c + new Vector2(-5, 0)); p.ClosePath(); p.Fill();
-                        if (m.selected) { p.strokeColor = new Color(0.4f, 1f, 0.55f); p.lineWidth = 1.5f; p.BeginPath(); p.Arc(c, 8f, 0f, 360f); p.Stroke(); }
+                        if (m.selected) { p.strokeColor = new Color(0.4f, 1f, 0.55f); p.lineWidth = 1.5f; p.BeginPath(); p.Arc(c, 12f, 0f, 360f); p.Stroke(); }
                         break;
                 }
             }
             p.lineWidth = 1f;
+            // Callers that only repaint after changing markers: move the glyph elements on the next frame.
+            if (!_relayoutQueued && IconSignature() != _iconSig) { _relayoutQueued = true; schedule.Execute(() => { _relayoutQueued = false; Relayout(); }); }
         }
 
         void OnClick(PointerUpEvent e)

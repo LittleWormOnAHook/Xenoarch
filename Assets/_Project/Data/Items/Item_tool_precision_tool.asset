@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.tool.precision_tool
   displayName: Precision Excavation Tool
   description: Fine trowel/probe for working close to finds.
-  icon: {fileID: 21300000, guid: e943be6a0e43c3944b2abc718735338b, type: 3}
+  icon: {fileID: 21300000, guid: 657b376aa9004fc392d6344dca1fe714, type: 3}
   category: 0
   maxStack: 1
   uniqueInstance: 0

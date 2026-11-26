@@ -106,6 +106,20 @@ namespace DMI.Xenoarch.UI
             return b;
         }
 
+        /// <summary>Menu button with a Kenney glyph before the text (t155u icon style, pause menu).</summary>
+        public static Button GlyphButton(VisualElement parent, string text, string glyph, Action click, bool enabled = true)
+        {
+            var b = new Button(() => click?.Invoke()) { text = "" };
+            b.AddToClassList("xa-button");
+            XenoarchIcons.EnsureStyles(b);
+            var g = XenoarchIcons.Glyph(glyph, "xa-glyph");
+            b.Add(g);
+            var l = new Label(text) { pickingMode = PickingMode.Ignore }; l.AddToClassList("xa-button__label"); b.Add(l);
+            b.SetEnabled(enabled);
+            parent.Add(b);
+            return b;
+        }
+
         public static Label Note(VisualElement parent, string text)
         {
             var l = new Label(text); l.AddToClassList("xa-hint"); l.style.whiteSpace = WhiteSpace.Normal; l.style.marginTop = 4; l.style.marginBottom = 4;

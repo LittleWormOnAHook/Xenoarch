@@ -122,7 +122,7 @@ namespace DMI.Xenoarch.UI
                 if (d != null && d.icon != null)
                 {
                     var img = new VisualElement { pickingMode = PickingMode.Ignore }; img.style.width = Length.Percent(60); img.style.height = Length.Percent(60);
-                    img.style.backgroundImage = new StyleBackground(d.icon); el.Add(img);
+                    XenoarchIcons.ApplyItem(img, d); el.Add(img);
                 }
                 el.Add(new Label(a != null ? s.Artifacts.DisplayName(a) : "?") { pickingMode = PickingMode.Ignore, style = { fontSize = 12, whiteSpace = WhiteSpace.Normal, unityTextAlign = TextAnchor.MiddleCenter } });
             }

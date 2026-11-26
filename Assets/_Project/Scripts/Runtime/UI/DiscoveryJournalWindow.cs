@@ -88,6 +88,15 @@ namespace DMI.Xenoarch.UI
 
         static Label T(VisualElement p, string text, string cls = "xa-term__text") { var l = new Label(text); l.AddToClassList(cls); p.Add(l); return l; }
 
+        /// <summary>Journal line with a state glyph (done / open / locked), t155u icon style.</summary>
+        static void StateRow(VisualElement p, string glyph, string state, string text, string cls)
+        {
+            var row = new VisualElement(); row.AddToClassList("xa-journal-row");
+            row.Add(XenoarchIcons.Glyph(glyph, "xa-journal-icon", "xa-journal-icon--" + state));
+            T(row, text, cls).style.flexShrink = 1;
+            p.Add(row);
+        }
+
         void Render()
         {
             if (_body == null) return;
@@ -116,9 +125,9 @@ namespace DMI.Xenoarch.UI
                     bool isDone = done.Contains(n.id);
                     bool open = isDone || PrereqsMet(n, done);
                     string tag = n.optional ? "  (optional)" : "";
-                    if (isDone) T(chains, $"[x] {n.title}{tag}");
-                    else if (open) T(chains, $"[ ] {n.title}{tag}", "xa-term__text");
-                    else T(chains, $"[ ] ???{tag}", "xa-term__dim");
+                    if (isDone) StateRow(chains, "checkmark", "done", $"{n.title}{tag}", "xa-term__text");
+                    else if (open) StateRow(chains, "arrowRight", "open", $"{n.title}{tag}", "xa-term__text");
+                    else StateRow(chains, "locked", "locked", $"???{tag}", "xa-term__dim");
                 }
             }
             if (d.Chains.Count == 0) T(chains, "No discovery chains.", "xa-term__dim");

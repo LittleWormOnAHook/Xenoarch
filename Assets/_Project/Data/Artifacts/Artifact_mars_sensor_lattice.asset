@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.mars_sensor_lattice
   displayName: Vael Sensor Lattice
   description: A palm-sized lattice that refracts light in patterns.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 29a319cabe2a4f5bb2cb022461a7af5b, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

@@ -1,7 +1,7 @@
 # Icon sources
 
 White item icons in `Art/Icons/GameIcons/` come from **game-icons.net** (https://game-icons.net), licensed **CC BY 3.0** (https://creativecommons.org/licenses/by/3.0/).
-Changes: the black background square was removed and the icons were rendered to 128x128 white-on-transparent PNGs. In game, material icons are lightly tinted with the material colour.
+Changes: the black background square was removed and the icons were rendered to 128x128 white-on-transparent PNGs, with the glyph cropped and scaled to fill 78% of the canvas (t155u: one size and padding rule for every item icon). In game, material icons are lightly tinted with the material colour.
 
 | File | Icon | Author | Source |
 |---|---|---|---|
@@ -27,5 +27,15 @@ Changes: the black background square was removed and the icons were rendered to 
 | upgrade.png | upgrade | Delapouite | https://game-icons.net/1x1/delapouite/upgrade.html |
 | drill.png | drill | Delapouite | https://game-icons.net/1x1/delapouite/drill.html |
 | backpack.png | backpack | Delapouite | https://game-icons.net/1x1/delapouite/backpack.html |
+| radar-sweep.png | radar-sweep | Lorc | https://game-icons.net/1x1/lorc/radar-sweep.html |
+| rune-stone.png | rune-stone | Lorc | https://game-icons.net/1x1/lorc/rune-stone.html |
+| alien-stare.png | alien-stare | Lorc | https://game-icons.net/1x1/lorc/alien-stare.html |
 
 Attribution line for credits: Icons by Lorc, Delapouite, Skoll, Faithtoken and Willdabeast, from game-icons.net, CC BY 3.0.
+
+Credit: radar-sweep, rune-stone and alien-stare icons by Lorc (https://lorcblog.blogspot.com), from game-icons.net, CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Used as the handheld scanner, artifact and sensor lattice item icons.
+
+## Other icon folders
+
+- `Art/Icons/Items/`: tool-brush, tool-shovel, tool-precision and consumable-sample-container are Dark Matter Interactive's own Genesis Shift placeholder icons (copies from `Art/Placeholder/Genesis/Items`), cropped and padded to the same 78% rule.
+- `Art/Icons/UI/`: Kenney Game Icons (CC0 1.0, https://kenney.nl/assets/game-icons, also in `Assets/Xenoarch_Free/UI/Kenney_GameIcons`), cropped to the glyph and padded to 95% of a 128x128 canvas. Used for menu buttons, map markers and journal states.

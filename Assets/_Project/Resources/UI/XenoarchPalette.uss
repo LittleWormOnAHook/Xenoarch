@@ -21,4 +21,18 @@
     --xa-frame: rgb(170, 64, 78);           /* frame border: lighter crimson so it shows on the crimson panel */
     --xa-text: rgb(232, 226, 208);          /* bone white: all other text */
     --xa-graphite: rgba(78, 18, 26, 0.88);  /* HUD panels */
+    /* Icons (t155u: one style; see Docs/XENOARCH_UI_Icons.md) */
+    --xa-icon-tool: rgb(232, 226, 208);     /* items: tools, consumables, valuables (bone white) */
+    --xa-icon-artifact: rgb(255, 169, 103); /* items: artifacts (heading orange) */
+    --xa-icon-part: rgb(104, 223, 214);     /* items: parts / components (teal) */
+    --xa-icon-done: rgb(104, 223, 214);     /* journal: completed */
+    --xa-icon-open: rgb(255, 169, 103);     /* journal: available */
+    --xa-map-site: rgb(242, 51, 38);        /* map: dig site (same red as before) */
+    --xa-map-cache: rgb(255, 209, 64);      /* map: revealed cache */
+    --xa-map-base: rgb(216, 242, 255);      /* map: base landing zone */
+    --xa-map-landing: rgb(89, 255, 140);    /* map: site landing zone */
+    --xa-map-halo: rgba(40, 9, 14, 0.78);   /* dark halo behind map icons */
+    --xa-icon-map: 18px;
+    --xa-icon-map-halo: 22px;
+    --xa-icon-journal: 16px;
 }

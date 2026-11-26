@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.vael_scroll_case
   displayName: Scroll Case
   description: A tube sealed at both ends.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

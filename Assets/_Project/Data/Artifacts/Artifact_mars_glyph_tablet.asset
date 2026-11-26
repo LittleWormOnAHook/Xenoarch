@@ -15,7 +15,7 @@ MonoBehaviour:
   id: artifact.mars_glyph_tablet
   displayName: Shrine Tablet
   description: A smaller cousin of the Moon tablet.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

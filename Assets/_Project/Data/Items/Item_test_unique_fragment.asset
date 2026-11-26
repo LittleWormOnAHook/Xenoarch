@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Unidentified Fragment (test)
   description: 'Foundation test item: unique-instance handling. Real artifacts arrive
     in Phase 1C.'
-  icon: {fileID: 21300000, guid: 3e515b6c3933757469b98cea37ee664c, type: 3}
+  icon: {fileID: 21300000, guid: a381def6b214461393be0794e9037c27, type: 3}
   category: 2
   maxStack: 1
   uniqueInstance: 1

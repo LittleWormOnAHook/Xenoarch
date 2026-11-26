@@ -77,12 +77,12 @@ namespace DMI.Xenoarch.UI
         void ShowMain()
         {
             var p = MenuScreens.Panel("PAUSED", SaveSlots.Pretty(SceneManager.GetActiveScene().name));
-            MenuScreens.Button(p, "Resume", Close);
-            MenuScreens.Button(p, "Save game", () => Swap(MenuScreens.Slots(true, ShowMain, null)));
-            MenuScreens.Button(p, "Load game", () => Swap(MenuScreens.Slots(false, ShowMain, Close)));
-            MenuScreens.Button(p, "Settings", () => Swap(MenuScreens.Settings(ShowMain)));
-            MenuScreens.Button(p, "Main menu", () => MenuScreens.Confirm(p, "Return to the main menu? Unsaved progress since the last save is lost.", () => { Close(); XenoarchRuntime.Instance?.ReturnToMainMenu(); }));
-            MenuScreens.Button(p, "Quit", () => MenuScreens.Confirm(p, "Quit the game? Unsaved progress since the last save is lost.", MenuScreens.Quit));
+            MenuScreens.GlyphButton(p, "Resume", "arrowRight", Close);
+            MenuScreens.GlyphButton(p, "Save game", "save", () => Swap(MenuScreens.Slots(true, ShowMain, null)));
+            MenuScreens.GlyphButton(p, "Load game", "import", () => Swap(MenuScreens.Slots(false, ShowMain, Close)));
+            MenuScreens.GlyphButton(p, "Settings", "gear", () => Swap(MenuScreens.Settings(ShowMain)));
+            MenuScreens.GlyphButton(p, "Main menu", "home", () => MenuScreens.Confirm(p, "Return to the main menu? Unsaved progress since the last save is lost.", () => { Close(); XenoarchRuntime.Instance?.ReturnToMainMenu(); }));
+            MenuScreens.GlyphButton(p, "Quit", "exit", () => MenuScreens.Confirm(p, "Quit the game? Unsaved progress since the last save is lost.", MenuScreens.Quit));
             Swap(p);
         }
     }
