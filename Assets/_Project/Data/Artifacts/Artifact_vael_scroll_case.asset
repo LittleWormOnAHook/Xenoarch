@@ -39,6 +39,8 @@ MonoBehaviour:
     text: ...a record of the walkers...
   - threshold: 0.6
     text: ...they left when the sun dimmed...
+  setId: 
+  fragmentOf: proxima_star_map
   shape: 2
   tint: {r: 0.6, g: 0.45, b: 0.25, a: 1}
   size: 0.3

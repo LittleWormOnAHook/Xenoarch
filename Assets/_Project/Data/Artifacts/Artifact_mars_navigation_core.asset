@@ -37,6 +37,8 @@ MonoBehaviour:
   buriedCondition: 0.55
   researchOps: 00000000010000000200000003000000040000000500000007000000
   translation: []
+  setId: 
+  fragmentOf: proxima_star_map
   shape: 7
   tint: {r: 0.2, g: 0.7, b: 0.6, a: 1}
   size: 0.6

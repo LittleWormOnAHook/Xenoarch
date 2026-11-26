@@ -39,6 +39,8 @@ MonoBehaviour:
     text: ...path...
   - threshold: 0.5
     text: ...keep the path open for those who follow...
+  setId: 
+  fragmentOf: proxima_star_map
   shape: 1
   tint: {r: 0.45, g: 0.8, b: 0.85, a: 1}
   size: 0.15

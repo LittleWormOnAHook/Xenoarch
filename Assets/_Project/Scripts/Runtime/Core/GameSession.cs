@@ -40,6 +40,8 @@ namespace DMI.Xenoarch.Core
         /// <summary>Random valuable caches on planets (handheld-scanner finds, not part of the discovery chain).</summary>
         public DMI.Xenoarch.Valuables.ValuableService Valuables { get; }
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
+        /// <summary>Fragment puzzles (e.g. the Vael star map that reveals Proxima Centauri).</summary>
+        public DMI.Xenoarch.Artifacts.ArtifactPuzzleService Puzzles { get; }
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
         /// <summary>Backpack + the three ship crates as one stock (refiner and crafting take from it, backpack first).</summary>
@@ -67,6 +69,7 @@ namespace DMI.Xenoarch.Core
             Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
             Discovery = new DMI.Xenoarch.Discovery.DiscoveryService(config.discoveryChains, Exploration, Saves) { Clock = () => PlaySeconds };
             Artifacts = new DMI.Xenoarch.Artifacts.ArtifactService(items, config.civilizations, Discovery, Saves) { Clock = () => PlaySeconds, TranslationCap = config.labTranslationCap };
+            Puzzles = new DMI.Xenoarch.Artifacts.ArtifactPuzzleService(Artifacts, Discovery, Saves) { Clock = () => PlaySeconds };
             Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
             Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
             Valuables = new DMI.Xenoarch.Valuables.ValuableService(Saves);
@@ -77,6 +80,7 @@ namespace DMI.Xenoarch.Core
                 Saves.Register(new DMI.Xenoarch.Ship.ShipHold.Section(role, hold, () => DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, Exploration.Ship.holdLevel)));
             }
             Stock = new ItemPool(items, Inventory, HoldOrder);
+            Puzzles.Owns = id => Inventory.ContainsInstance(id) || System.Linq.Enumerable.Any(Holds.Values, h => h.ContainsInstance(id));
             Materials.Pool = Stock;
             Crafting = new DMI.Xenoarch.Crafting.CraftingService(items, Stock, config.craftRecipes)
             {

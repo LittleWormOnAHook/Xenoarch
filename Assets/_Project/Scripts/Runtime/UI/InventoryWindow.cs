@@ -1,4 +1,5 @@
 using System.Linq;
+using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Crafting;
 using DMI.Xenoarch.Inventory;
@@ -58,6 +59,8 @@ namespace DMI.Xenoarch.UI
 
         protected override void Build(VisualElement body)
         {
+            _menu = null;
+            if (!_menuHooked) { _menuHooked = true; body.RegisterCallback<PointerDownEvent>(e => { if (_menu != null && !_menu.worldBound.Contains(e.position)) HideMenu(); }); }
             var s = Session; var inv = s.Inventory;
             Status.text = $"Backpack {inv.Capacity - inv.FreeSlots}/{inv.Capacity}   |   Ship storage level {s.Exploration.Ship.holdLevel + 1}" + (s.AboardShip ? "   |   Aboard: ship workshop available" : "");
             Hint.text = "I / Tab / Esc: close   |   Move items in and out of the ship crates at the crates";
@@ -150,6 +153,48 @@ namespace DMI.Xenoarch.UI
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__warn");
         }
 
+        VisualElement _menu; bool _menuHooked;
+
+        /// <summary>Right-click menu for a puzzle piece.</summary>
+        void ShowPieceMenu(string instanceId, string group, Vector2 screenPos)
+        {
+            HideMenu();
+            var s = Session; var p = s.Puzzles; var spec = ArtifactPuzzleService.Spec(group);
+            _menu = new VisualElement();
+            _menu.style.position = Position.Absolute; _menu.style.minWidth = 300;
+            _menu.style.backgroundColor = XenoarchPalette.PanelDeep;
+            _menu.style.paddingLeft = _menu.style.paddingRight = _menu.style.paddingTop = _menu.style.paddingBottom = 6;
+            _menu.style.borderTopWidth = _menu.style.borderBottomWidth = _menu.style.borderLeftWidth = _menu.style.borderRightWidth = 1;
+            _menu.style.borderTopColor = _menu.style.borderBottomColor = _menu.style.borderLeftColor = _menu.style.borderRightColor = XenoarchPalette.Highlight;
+            int found = p.Pieces(group).Count;
+            Text(_menu, $"{spec?.title ?? group} piece   ({found} found)", "xa-term__dim");
+            bool can = p.CanCombine(group);
+            string label = p.IsSolved(group) ? "View reconstructed star map" : "Combine with other artifact";
+            Btn(_menu, can ? label : "Combine (needs 2 puzzle pieces)", () => { HideMenu(); OpenPuzzle(group, instanceId); }, can);
+            Btn(_menu, "Cancel", HideMenu).AddToClassList("xa-term__btn--ghost");
+            Body.Add(_menu);
+            var local = Body.WorldToLocal(screenPos);
+            _menu.style.left = local.x; _menu.style.top = local.y;
+            _menu.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                if (_menu == null) return;
+                var b = Body.contentRect;
+                _menu.style.left = Mathf.Clamp(local.x, 0f, Mathf.Max(0f, b.width - _menu.layout.width));
+                _menu.style.top = Mathf.Clamp(local.y, 0f, Mathf.Max(0f, b.height - _menu.layout.height));
+            });
+        }
+
+        void HideMenu() { if (_menu != null) { _menu.RemoveFromHierarchy(); _menu = null; } }
+
+        void OpenPuzzle(string group, string instanceId)
+        {
+            var w = GetComponent<ArtifactPuzzleWindow>();
+            if (w == null) w = gameObject.AddComponent<ArtifactPuzzleWindow>();
+            Close();
+            w.Back = () => { w.Back = null; Open(); };
+            w.Show(group, instanceId);
+        }
+
         /// <summary>Where a missing ingredient comes from: a Refiner recipe or a crafting recipe that makes it.</summary>
         static string Source(GameSession s, string itemId)
         {
@@ -197,13 +242,24 @@ namespace DMI.Xenoarch.UI
                 t.Add(img);
             }
             else t.Add(new Label(d != null ? d.DisplayNameOrId : st.itemId) { pickingMode = PickingMode.Ignore, style = { fontSize = 10, whiteSpace = WhiteSpace.Normal } });
+            // Puzzle pieces: right-click menu (Combine with other artifact).
+            var art = !string.IsNullOrEmpty(st.instanceId) ? Session.Artifacts.Get(st.instanceId) : null;
+            var group = art != null ? Session.Puzzles.GroupOf(art) : null;
+            if (group != null)
+            {
+                var mark = new VisualElement { pickingMode = PickingMode.Ignore };
+                mark.style.position = Position.Absolute; mark.style.left = 4; mark.style.top = 4; mark.style.width = 8; mark.style.height = 8; mark.style.backgroundColor = XenoarchPalette.Primary;
+                t.Add(mark);
+                string inst = st.instanceId, item = st.itemId;
+                t.RegisterCallback<PointerDownEvent>(e => { if (e.button == 1) { e.StopPropagation(); _selItem = item; ShowPieceMenu(inst, group, e.position); } });
+            }
             if (st.count > 1)
             {
                 var n = new Label(st.count.ToString()) { pickingMode = PickingMode.Ignore };
                 n.style.position = Position.Absolute; n.style.right = 3; n.style.bottom = 1; n.style.fontSize = 12; n.style.color = Color.white;
                 t.Add(n);
             }
-            t.tooltip = d != null ? d.DisplayNameOrId : st.itemId;
+            t.tooltip = (d != null ? d.DisplayNameOrId : st.itemId) + (group != null ? "  (puzzle piece: right-click)" : "");
             return t;
         }
     }

@@ -39,6 +39,8 @@ MonoBehaviour:
     text: ...the second waystation...
   - threshold: 0.45
     text: ...rest here, then follow the guide-stone...
+  setId: 
+  fragmentOf: proxima_star_map
   shape: 0
   tint: {r: 0.6, g: 0.45, b: 0.25, a: 1}
   size: 0.22

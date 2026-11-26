@@ -127,6 +127,17 @@ namespace DMI.Xenoarch.Discovery
             return true;
         }
 
+        /// <summary>Adds a journal record for a discovery made outside the chains (e.g. a solved fragment puzzle).</summary>
+        public void Record(string chainId, string nodeId, string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            foreach (var j in State.journal) if (j != null && j.chainId == chainId && j.nodeId == nodeId) return;
+            var e = new JournalEntry { time = Clock(), chainId = chainId, nodeId = nodeId, text = text };
+            State.journal.Add(e);
+            JournalAdded?.Invoke(e);
+            Changed?.Invoke();
+        }
+
         public ChainProgress Progress(string chainId)
         {
             foreach (var c in State.chains) if (c.chainId == chainId) return c;
