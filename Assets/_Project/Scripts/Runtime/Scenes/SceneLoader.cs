@@ -290,6 +290,9 @@ namespace DMI.Xenoarch.Scenes
             else Debug.LogWarning("[Xenoarch] No PlayerSpawnPoint in scene; player left where it was authored");
         }
 
+        /// <summary>Phase 1D: fade the screen to black (1) or back (0) for in-scene moves (buried chambers).</summary>
+        public IEnumerator FadeTo(float target) => Fade(target);
+
         IEnumerator Fade(float target)
         {
             if (_fade == null) BuildOverlay();

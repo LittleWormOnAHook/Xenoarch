@@ -38,6 +38,8 @@ namespace DMI.Xenoarch.Excavation
         public bool MirrorsToSurface => _surface != null;
         /// <summary>Random valuable cache (small gold-bordered dig), not a major dig site: no fence, circle or dig map.</summary>
         public bool IsCache { get; set; }
+        /// <summary>Phase 1D: a dig bed inside a buried chamber (no terrain, no Digger: trench mesh; no border).</summary>
+        public bool Underground { get; private set; }
         readonly List<BuriedArtifact> _pieces = new List<BuriedArtifact>();
         Mesh _mesh;
         MeshCollider _collider;
@@ -61,15 +63,31 @@ namespace DMI.Xenoarch.Excavation
         /// <summary>The site whose footprint contains the world point (x/z), if any.</summary>
         public static ExcavationSite At(Vector3 world)
         {
-            foreach (var s in Active) if (s != null && s.Grid != null && s.Contains(world)) return s;
+            foreach (var s in Active) if (s != null && s.Grid != null && s.Contains(world) && s.WithinDepth(world)) return s;
             return null;
         }
 
-        public static ExcavationSite Create(ArchaeologicalSiteDefinition def, float surfaceY, UnityEngine.SceneManagement.Scene scene)
+        /// <summary>Vertical window of a site (sites stacked above each other, e.g. a chamber under a dig, stay apart).</summary>
+        public bool WithinDepth(Vector3 world)
+        {
+            var l = transform.InverseTransformPoint(world);
+            return l.y >= -(Grid.ny * Grid.cell) - 2f && l.y <= 40f;
+        }
+
+        /// <summary>Ground height for readings: an underground dig bed's surface where one contains the point, else the terrain.</summary>
+        public static float GroundAt(Vector3 p, float fallback)
+        {
+            foreach (var s in Active)
+                if (s != null && s.Underground && s.Grid != null && s.Contains(p) && s.WithinDepth(p)) return s.transform.position.y;
+            return TerrainHeight(p) ?? fallback;
+        }
+
+        public static ExcavationSite Create(ArchaeologicalSiteDefinition def, float surfaceY, UnityEngine.SceneManagement.Scene scene, bool underground = false)
         {
             var go = new GameObject($"DigSite {def.Id}");
             UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(go, scene);
             var site = go.AddComponent<ExcavationSite>();
+            site.Underground = underground;
             site.Init(def, surfaceY);
             return site;
         }
@@ -98,8 +116,9 @@ namespace DMI.Xenoarch.Excavation
         void Init(ArchaeologicalSiteDefinition def, float surfaceY)
         {
             Definition = def;
-            foreach (var mb in FindObjectsByType<MonoBehaviour>())
-                if (mb is IExcavationSurface s && mb.gameObject.scene == gameObject.scene) { _surface = s; break; }
+            if (!Underground)
+                foreach (var mb in FindObjectsByType<MonoBehaviour>())
+                    if (mb is IExcavationSurface s && mb.gameObject.scene == gameObject.scene) { _surface = s; break; }
 
             var style = def.style;
             Grid = ExcavationGrid.ForSite(def.radius, def.depth, def.cellSize, style != null ? style.Profile() : null);
@@ -110,7 +129,7 @@ namespace DMI.Xenoarch.Excavation
             transform.position = corner;
 
             // Per-column surface heights from the terrain (sites on uneven ground).
-            if (TerrainHeight(def.position).HasValue)
+            if (!Underground && TerrainHeight(def.position).HasValue)
             {
                 Grid.surface = new float[Grid.nx * Grid.nz];
                 for (int x = 0; x < Grid.nx; x++)
@@ -156,7 +175,7 @@ namespace DMI.Xenoarch.Excavation
                 if (!a.recovered) _pieces.Add(BuriedArtifact.Spawn(this, a, arts.Definition(def.artifacts[a.index].artifactId)));
 
             var xs = XenoarchRuntime.Session?.Exploration;
-            if (xs != null && xs.Site(def.Id).revealLevel >= (int)SiteRevealLevel.Pinpointed) ShowBorder(true);
+            if (!Underground && xs != null && xs.Site(def.Id).revealLevel >= (int)SiteRevealLevel.Pinpointed) ShowBorder(true);
             Debug.Log($"[Xenoarch] Dig site {def.Id} ({(style != null ? style.displayName : "default soil")}): {Grid.nx}x{Grid.nz}x{Grid.ny} cells of {Grid.cell} m, {_pieces.Count} buried artifact(s){(restored ? ", restored from save" : "")}{(_surface != null ? ", carving " + _surface.GetType().Name : ", trench mesh")}");
         }
 
@@ -376,6 +395,7 @@ namespace DMI.Xenoarch.Excavation
         public void ShowBorder(bool on)
         {
             if (!on) { if (_border != null) _border.enabled = false; if (_fence != null) _fence.SetActive(false); return; }
+            if (Underground) return;
             if (_border == null)
             {
                 var go = new GameObject("Site Border");

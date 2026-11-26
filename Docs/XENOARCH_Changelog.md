@@ -1,5 +1,24 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - t140u: Mars buried chamber; dev testing loadout off (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- `devTestingLoadout` is now OFF in XenoarchConfig (commit 1e5877d): new games start with the normal kit.
+- **Buried chamber under the Canyon Relay (Mars)**, built the way Anthony described:
+  - Dig the Canyon Relay site down to its floor (3 m) at grid cell (6, 6), near one corner. That uncovers a sealed Vael door with a glowing ring. Hold E (1.2 s) to open it. The first time, it publishes `chamber.opened:chamber.mars.canyon_relay`, gives +10 notoriety and shows a message.
+  - After a short fade you arrive in a stone vestibule. A 10 m tunnel leads to a 7 x 7 m room whose floor is 2 m of diggable Mars soil, with 3.4 m of headroom above it.
+  - The room holds four Vael finds: glyph tablet, effigy, offering bowl and bead string. Several are Proxima star-map fragment types, so they give another chance at missing pieces.
+  - Every dig tool works in the room, and the bed saves like any dig site (`chamber.mars.canyon_relay.floor`). Glyph strips and lights light the chamber. The glowing panel at the back of the vestibule takes you back up onto the door in the pit.
+- Data-driven: `ChamberDefinition` (Resources/Excavation/Chambers: host site, entrance cell, layout sizes, finds, colours) and `ChamberDirector`, which builds everything at runtime. **No scene was edited or saved.**
+  - The interior is built below the terrain's own volume, so terrain and Digger never touch it.
+  - The soil bed is a trench-mesh dig grid, not Digger voxels.
+- An optional chain node, "Open the buried chamber under the Canyon Relay", follows the Mars scan.
+- Dig sites now also check height when matching a hit point (`ExcavationSite.At`), so stacked sites stay separate.
+- Known limits:
+  - Chamber yaw should stay at 0/90/180/270, because dig grids are axis-aligned.
+  - Moving in and out is a fade, not a walk-through.
+
 ## 2026-11-26 (early) - Phase 1D batch 5: notoriety unlocks; Phase 1D code complete (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.

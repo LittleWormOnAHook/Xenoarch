@@ -29,6 +29,7 @@ namespace DMI.Xenoarch.Economy
         [Tooltip("Any other completed research operation.")] public int researchOp = 1;
         [Tooltip("Digging up a valuable cache.")] public int cacheCollected = 2;
         [Tooltip("Installing a functional alien device.")] public int techInstalled = 20;
+        [Tooltip("Opening a buried chamber.")] public int chamberOpened = 10;
         [Tooltip("Rank rewards. Defaults only announce the vendor rank gates; no star system is unlocked by rank until that is decided.")]
         public RankUnlock[] rankUnlocks =
         {

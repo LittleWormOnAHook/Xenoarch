@@ -151,7 +151,7 @@ namespace DMI.Xenoarch.Exploration
             if (flags != null && flags.TryPinpoint(site, transform.position, refinedRange, out var map, out var spot, out var find))
             {
                 var c = site.CellCentre(find.x, find.y, find.z);
-                float ground = DMI.Xenoarch.Excavation.ExcavationSite.TerrainHeight(c) ?? site.transform.position.y;
+                float ground = DMI.Xenoarch.Excavation.ExcavationSite.GroundAt(c, site.transform.position.y);
                 var to = c - transform.position; to.y = 0f;
                 float rel = Mathf.DeltaAngle(ViewYaw(), Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg);
                 SetText($"FIND PINPOINTED: {map.SpotCode(spot)}\n~{to.magnitude:0.0} m {Direction(rel)}, about {Mathf.Max(0f, ground - c.y):0.0} m down. Red flag placed; marked on the dig site map (N).");

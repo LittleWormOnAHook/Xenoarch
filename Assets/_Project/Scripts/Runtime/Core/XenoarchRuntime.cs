@@ -75,6 +75,7 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Economy.VendorDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.DiscoveryJournalWindow>();
+            gameObject.AddComponent<DMI.Xenoarch.Excavation.ChamberDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
             _session.Discovery.JournalAdded += e => DMI.Xenoarch.UI.Toast.Show($"Journal: {e.text}", 8f);

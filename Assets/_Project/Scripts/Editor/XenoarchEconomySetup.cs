@@ -77,6 +77,7 @@ namespace DMI.Xenoarch.EditorTools
                 log.AppendLine("added 4 upgrades to Vendor_equipment_supplier");
             }
             AlienTech(log);
+            Chamber(log);
             AssetDatabase.SaveAssets();
         }
 
@@ -119,6 +120,50 @@ namespace DMI.Xenoarch.EditorTools
                 });
                 EditorUtility.SetDirty(chain);
                 log.AppendLine("chain: added sensor_install node");
+            }
+        }
+
+        /// <summary>
+        /// Mars buried chamber (t140u): under the Canyon Relay dig site floor. Dig down to the site floor at cell (6, 6)
+        /// to uncover a sealed door; through it a tunnel leads to a room with 2 m of diggable soil and four Vael finds.
+        /// Adds an optional chain node. Creates the asset only if missing (hand edits kept).
+        /// </summary>
+        static void Chamber(StringBuilder log)
+        {
+            string folder = XenoarchSetup.ResourcesFolder + "/" + DMI.Xenoarch.Excavation.ChamberDefinition.ResourceFolder;
+            XenoarchSetup.EnsureFolder(folder);
+            string path = folder + "/Chamber_mars_canyon_relay.asset";
+            var def = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.ChamberDefinition>(path);
+            if (def == null)
+            {
+                def = ScriptableObject.CreateInstance<DMI.Xenoarch.Excavation.ChamberDefinition>();
+                def.SetIdForTooling("chamber.mars.canyon_relay");
+                def.displayName = "Vael Relay Chamber"; def.hostSiteId = "site.mars.canyon_relay";
+                def.entranceCell = new Vector2Int(6, 6); def.yaw = 0f;
+                def.artifacts = new List<DMI.Xenoarch.Galaxy.SiteArtifactSpawn>
+                {
+                    new DMI.Xenoarch.Galaxy.SiteArtifactSpawn { artifactId = "artifact.mars_glyph_tablet", cell = new Vector3Int(8, 3, 9), footprint = 1 },
+                    new DMI.Xenoarch.Galaxy.SiteArtifactSpawn { artifactId = "artifact.vael_effigy", cell = new Vector3Int(19, 5, 18), footprint = 1 },
+                    new DMI.Xenoarch.Galaxy.SiteArtifactSpawn { artifactId = "artifact.mars_offering_bowl", cell = new Vector3Int(14, 4, 21), footprint = 1 },
+                    new DMI.Xenoarch.Galaxy.SiteArtifactSpawn { artifactId = "artifact.mars_bead_string", cell = new Vector3Int(21, 2, 7), footprint = 1 },
+                };
+                def.openedMessage = "The Vael seal gives way. A tunnel leads down into a buried chamber.";
+                AssetDatabase.CreateAsset(def, path);
+                log.AppendLine("created " + path);
+            }
+            else log.AppendLine("kept " + path);
+            var chain = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Discovery.DiscoveryChainDefinition>(XenoarchSetup.Root + "/Data/Discovery/Chain_MoonMars.asset");
+            if (chain != null && !chain.nodes.Exists(n => n.id == "chamber"))
+            {
+                chain.nodes.Add(new DMI.Xenoarch.Discovery.DiscoveryNode
+                {
+                    id = "chamber", title = "Open the buried chamber under the Canyon Relay",
+                    factKey = DMI.Xenoarch.Discovery.Facts.ChamberOpened(def.Id), threshold = 1f,
+                    prerequisites = new List<string> { "mars_scan" }, optional = true,
+                    reward = new DMI.Xenoarch.Discovery.DiscoveryReward { journal = "A sealed Vael door lay under the Canyon Relay floor. Beyond it: a tunnel and a buried room." },
+                });
+                EditorUtility.SetDirty(chain);
+                log.AppendLine("chain: added chamber node");
             }
         }
 

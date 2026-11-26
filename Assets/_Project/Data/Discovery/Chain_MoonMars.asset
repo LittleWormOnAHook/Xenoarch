@@ -182,3 +182,22 @@ MonoBehaviour:
       scannerLevelBonus: 0
       unlockSystemId: 
       revealSiteIds: []
+  - id: chamber
+    title: Open the buried chamber under the Canyon Relay
+    factKey: chamber.opened:chamber.mars.canyon_relay
+    threshold: 1
+    prerequisites:
+    - mars_scan
+    mode: 0
+    count: 1
+    optional: 1
+    reward:
+      journal: 'A sealed Vael door lay under the Canyon Relay floor. Beyond it: a
+        tunnel and a buried room.'
+      setFact: 
+      revealSiteId: 
+      revealLevel: 1
+      discoverBodyId: 
+      scannerLevelBonus: 0
+      unlockSystemId: 
+      revealSiteIds: []
