@@ -1,5 +1,17 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - Phase 1D batch 5: notoriety unlocks; Phase 1D code complete (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- Every rank publishes the discovery fact `notoriety.rank` (value = rank), so chain nodes and gates can require a rank.
+- `XenoarchConfig.economy.rankUnlocks`: per rank, an optional fact, an optional Nav star system (`unlockSystemId`) and a message shown with the rank-up toast. Applied whenever the rank is reached or a save loads.
+- Defaults (placeholders):
+  - Rank 1 and rank 2 announce the Equipment Supplier's rank-gated stock and upgrades.
+  - Rank 3 notes the better buyer prices.
+  - **No star system is unlocked by rank.** Which system (if any) a rank or a chain node unlocks, such as Barnard's Star or Epsilon Eridani, is still Anthony's call: set `unlockSystemId` on a rank or on a chain reward.
+- Phase 1D (credits, vendors, Trade Hub, equipment and upgrade purchases, fuel, notoriety and unlocks, alien tech, discovery journal UI) is now all in code. None of it has been played. Prices and points are placeholders for the cost pass. Phase 1E (integration) has not been started.
+
 ## 2026-11-26 (early) - Phase 1D batch 4: discovery journal screen (J) (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.

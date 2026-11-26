@@ -52,3 +52,8 @@ The loop: gather deposits on planet surfaces, then either use them directly or r
 **Save:** section `materials.state` holds harvested deposits and the refiner batch. Materials themselves are inventory items.
 
 **Open / later:** credits value for selling materials (TradeHub vendors), refiner tiers (parallel batches, better yields), deposit models instead of placeholder rocks, scanner ping for deposits.
+
+## Implementation status (2026-11-26, Phase 1D, not yet played)
+- Wallet `player.wallet` and notoriety `progression.notoriety`: `EconomyService` (Scripts/Runtime/Economy); tunables in `XenoarchConfig.economy` (starting credits, rank thresholds and names, award points, `rankUnlocks`). Ranks are configured there instead of a separate NotorietyConfig asset.
+- Vendors: `VendorDefinition` assets in Resources/Vendors (buys categories x rate + rank bonus, rank-gated stock, one-off items, upgrades for credits, fuel price). `VendorDirector` attaches a `VendorTerminal` to the named anchor object in the vendor's scene at runtime. Setup: Tools > Xenoarch > Setup > Economy.
+- Transactions: logged in the wallet (last 200). Recovered tech: `ArtifactDefinition.installTarget` / `installBonus`, installed at the research lab after Technology analysis (fact `tech.installed:<id>`).

@@ -25,7 +25,13 @@ namespace DMI.Xenoarch.Economy
             if (eco != null) eco.RankUp += OnRankUp;
         }
         void OnDestroy() { if (_hooked != null) _hooked.RankUp -= OnRankUp; }
-        static void OnRankUp(int rank, string name) => DMI.Xenoarch.UI.Toast.Show($"Notoriety rank: {name}", 6f);
+        static void OnRankUp(int rank, string name)
+        {
+            var msg = $"Notoriety rank: {name}";
+            var list = XenoarchRuntime.Session?.Economy?.Settings.rankUnlocks;
+            if (list != null) foreach (var u in list) if (u != null && u.rank == rank && !string.IsNullOrEmpty(u.message)) msg += "\n" + u.message;
+            DMI.Xenoarch.UI.Toast.Show(msg, 8f);
+        }
         void OnLoaded(Scene s, LoadSceneMode m) { if (m == LoadSceneMode.Single) Bind(s); }
 
         void Bind(Scene scene)

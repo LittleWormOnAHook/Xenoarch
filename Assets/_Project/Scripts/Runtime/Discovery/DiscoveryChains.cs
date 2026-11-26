@@ -54,6 +54,8 @@ namespace DMI.Xenoarch.Discovery
         public static string Visited(string bodyId) => "body.visited:" + bodyId;
         /// <summary>Phase 1D: a functional alien device was fitted (artifact definition id).</summary>
         public static string Installed(string artifactId) => "tech.installed:" + artifactId;
+        /// <summary>Phase 1D: current notoriety rank (value = rank index; facts keep the max).</summary>
+        public const string NotorietyRank = "notoriety.rank";
         /// <summary>Distinct members of a collectible artifact set recovered (value = count).</summary>
         public static string SetProgress(string setId) => "artifact.set:" + setId;
         /// <summary>Distinct pieces of a fragment group recovered (value = count).</summary>

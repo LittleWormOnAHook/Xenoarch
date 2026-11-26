@@ -124,10 +124,29 @@ namespace DMI.Xenoarch.Core
             Exploration.SiteRevealed += (id, level) => { if (level >= 3) Economy.Award(eco.sitePinpointed, "site:" + id, "site pinpointed " + id); };
             Artifacts.Installed += (a, d) => Economy.Award(eco.techInstalled, "installed:" + a.instanceId, "installed " + d.DisplayNameOrId);
             Exploration.OrbitalTechBonus = () => Artifacts.TechBonus(DMI.Xenoarch.Artifacts.TechInstallTarget.OrbitalScanner);
+            Economy.Changed += ApplyRankUnlocks;   // also after a load (restore raises Changed)
             Valuables.Collected += id => Economy.Award(eco.cacheCollected, "cache:" + id, "cache " + id);
         }
 
         public DMI.Xenoarch.Economy.EconomyService Economy { get; private set; }
+
+        int _rankApplied = -1;
+        /// <summary>Phase 1D: publishes notoriety.rank and every reached <see cref="DMI.Xenoarch.Economy.RankUnlock"/> (idempotent facts).</summary>
+        void ApplyRankUnlocks()
+        {
+            int r = Economy.Rank;
+            if (r == _rankApplied) return;
+            _rankApplied = r;
+            Discovery.Publish(DMI.Xenoarch.Discovery.Facts.NotorietyRank, r);
+            var list = Economy.Settings.rankUnlocks;
+            if (list == null) return;
+            foreach (var u in list)
+            {
+                if (u == null || u.rank > r) continue;
+                if (!string.IsNullOrEmpty(u.setFact)) Discovery.Publish(u.setFact);
+                if (!string.IsNullOrEmpty(u.unlockSystemId)) Discovery.Publish(DMI.Xenoarch.Discovery.Facts.NavSystem(u.unlockSystemId));
+            }
+        }
 
         System.Collections.Generic.IEnumerable<(InventoryModel, Func<ItemCategory, bool>)> HoldOrder()
         {

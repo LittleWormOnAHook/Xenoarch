@@ -3,6 +3,16 @@ using UnityEngine;
 
 namespace DMI.Xenoarch.Economy
 {
+    /// <summary>What reaching a notoriety rank unlocks (applied once the rank is reached, also for loaded saves).</summary>
+    [Serializable]
+    public sealed class RankUnlock
+    {
+        [Tooltip("Rank index (0 = Unknown Explorer).")] public int rank = 1;
+        [Tooltip("Discovery fact set at this rank (chains / gates can use it). Every rank also publishes notoriety.rank = rank.")] public string setFact;
+        [Tooltip("Optional star system unlocked in the Nav dropdown, e.g. \"sys.barnards_star\" (design decision pending).")] public string unlockSystemId;
+        [Tooltip("Shown with the rank-up message.")] public string message;
+    }
+
     /// <summary>Phase 1D tunables: credits, notoriety ranks and awards (config.economy). Defaults are placeholders to balance later.</summary>
     [Serializable]
     public sealed class EconomySettings
@@ -19,6 +29,13 @@ namespace DMI.Xenoarch.Economy
         [Tooltip("Any other completed research operation.")] public int researchOp = 1;
         [Tooltip("Digging up a valuable cache.")] public int cacheCollected = 2;
         [Tooltip("Installing a functional alien device.")] public int techInstalled = 20;
+        [Tooltip("Rank rewards. Defaults only announce the vendor rank gates; no star system is unlocked by rank until that is decided.")]
+        public RankUnlock[] rankUnlocks =
+        {
+            new RankUnlock { rank = 1, setFact = "notoriety.unlock.supplier_tier1", message = "Equipment Supplier: circuits, precision tool, depth probe and scanner upgrades now offered." },
+            new RankUnlock { rank = 2, setFact = "notoriety.unlock.supplier_tier2", message = "Equipment Supplier: sensor arrays, powered drill and depth probe upgrades now offered." },
+            new RankUnlock { rank = 3, setFact = "notoriety.unlock.renowned", message = "Buyers pay more for your finds (rank bonus)." },
+        };
         [Tooltip("Selling an artifact to a buyer (small: museums pay in reputation too).")] public int artifactSold = 1;
     }
 }
