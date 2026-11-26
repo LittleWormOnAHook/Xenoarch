@@ -1,22 +1,24 @@
-/* Xenoarch UI palette (t85u). The single theme file: every UITK colour comes from these variables.
+/* Xenoarch UI palette (t85u, remapped t89u). The single theme file: every UITK colour comes from these variables.
    C# drawn UI (maps, loading screen, HUD bits) mirrors them in DMI.Xenoarch.UI.XenoarchPalette. */
 :root {
-    --xa-panel: rgb(43, 78, 94);            /* #2B4E5E panel background */
-    --xa-panel-a: rgba(43, 78, 94, 0.96);
-    --xa-panel-dark: rgb(26, 48, 58);       /* darker shade: lists, inset areas */
-    --xa-panel-deep: rgb(14, 27, 33);       /* darkest: page backdrop, maps, menu */
-    --xa-backdrop: rgba(10, 20, 25, 0.62);  /* dims the game behind terminals */
-    --xa-primary: rgb(255, 169, 103);       /* #FFA967 primary buttons, headings */
-    --xa-primary-hover: rgb(255, 196, 150);
-    --xa-on-primary: rgb(30, 20, 14);       /* dark text on primary */
-    --xa-highlight: rgb(104, 223, 214);     /* #68DFD6 highlights, selection, scanner, info */
-    --xa-highlight-soft: rgba(104, 223, 214, 0.16);
-    --xa-secondary: rgb(92, 167, 168);      /* #5CA7A8 borders, inactive tabs */
-    --xa-secondary-text: rgb(139, 201, 201);/* #5CA7A8 lifted for readable secondary text on the panel */
-    --xa-secondary-soft: rgba(92, 167, 168, 0.35);
-    --xa-warn: rgb(176, 59, 59);            /* #B03B3B warnings, damage, errors (fills / borders) */
-    --xa-warn-text: rgb(232, 120, 120);     /* #B03B3B lifted for readable warning text */
-    --xa-frame: rgb(118, 28, 39);           /* #761C27 frames, accent borders, danger */
-    --xa-text: rgb(228, 240, 241);
-    --xa-graphite: rgba(26, 48, 58, 0.88);  /* HUD panels */
+    --xa-panel: rgb(118, 28, 39);           /* #761C27 panel / window background */
+    --xa-panel-a: rgba(118, 28, 39, 0.96);
+    --xa-panel-dark: rgb(78, 18, 26);       /* darker shade: lists, inset areas */
+    --xa-panel-deep: rgb(40, 9, 14);        /* darkest: page backdrop, maps, menu */
+    --xa-backdrop: rgba(24, 6, 9, 0.62);    /* dims the game behind terminals */
+    --xa-heading: rgb(255, 169, 103);       /* #FFA967 titles, headings, uppercase labels */
+    --xa-bar: rgb(255, 169, 103);           /* #FFA967 sliders, progress bars */
+    --xa-button: rgb(104, 223, 214);        /* #68DFD6 buttons */
+    --xa-button-hover: rgb(160, 238, 232);
+    --xa-on-button: rgb(16, 32, 34);        /* dark text on buttons */
+    --xa-highlight: rgb(104, 223, 214);     /* #68DFD6 selection, scanner, info */
+    --xa-highlight-soft: rgba(104, 223, 214, 0.18);
+    --xa-secondary: rgb(92, 167, 168);      /* #5CA7A8 inactive tabs */
+    --xa-secondary-text: rgba(232, 226, 208, 0.72); /* bone white, dimmed: secondary text */
+    --xa-secondary-soft: rgba(232, 226, 208, 0.22); /* thin borders on crimson */
+    --xa-warn: rgb(176, 59, 59);            /* #B03B3B warnings, damage, errors (fills) */
+    --xa-warn-text: rgb(255, 150, 140);     /* lifted for readable warning text on crimson */
+    --xa-frame: rgb(170, 64, 78);           /* frame border: lighter crimson so it shows on the crimson panel */
+    --xa-text: rgb(232, 226, 208);          /* bone white: all other text */
+    --xa-graphite: rgba(78, 18, 26, 0.88);  /* HUD panels */
 }

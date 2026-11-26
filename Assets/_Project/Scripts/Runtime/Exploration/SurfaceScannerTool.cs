@@ -195,7 +195,7 @@ namespace DMI.Xenoarch.Exploration
             _doc = host.AddComponent<UIDocument>();
             _doc.panelSettings = XenoarchUI.LoadPanelSettings();
             _doc.sortingOrder = 5;
-            var root = _doc.rootVisualElement;
+            var root = _doc.rootVisualElement; DMI.Xenoarch.UI.XenoarchUI.FillRoot(root);
             if (root == null) return;
             var uss = Resources.Load<StyleSheet>("UI/Xenoarch"); if (uss != null) root.styleSheets.Add(uss);
             root.pickingMode = PickingMode.Ignore;

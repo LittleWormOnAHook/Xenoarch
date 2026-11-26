@@ -92,6 +92,7 @@ namespace DMI.Xenoarch.UI
             _doc.sortingOrder = 40;
             var docRoot = _doc.rootVisualElement;
             if (docRoot == null) { Debug.LogError($"[Xenoarch] {terminalName}: UIDocument has no root"); return; }
+            XenoarchUI.FillRoot(docRoot); docRoot.pickingMode = PickingMode.Ignore; // full-screen root so the window centres
             var uss = Resources.Load<StyleSheet>("UI/Xenoarch");
             if (uss != null) docRoot.styleSheets.Add(uss);
 

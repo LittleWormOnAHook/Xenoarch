@@ -15,3 +15,7 @@ MonoBehaviour:
   liftStart: {fileID: 8300000, guid: 45e99b21f16484749b99d567b3d68627, type: 3}
   liftLoop: {fileID: 8300000, guid: 5fc3751831851524cbe0fb03b020de9e, type: 3}
   liftStop: {fileID: 8300000, guid: 45e99b21f16484749b99d567b3d68627, type: 3}
+  consoleClick: {fileID: 0}
+  consolePowerOn: {fileID: 0}
+  consoleHum: {fileID: 8300000, guid: da31aa0e649b84455a9aa70684bf4126, type: 3}
+  consolePowerOff: {fileID: 0}

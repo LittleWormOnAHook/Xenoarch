@@ -35,7 +35,7 @@ namespace DMI.Xenoarch.UI
             var doc = gameObject.AddComponent<UIDocument>();
             doc.panelSettings = XenoarchUI.LoadPanelSettings();
             doc.sortingOrder = 60;
-            var root = doc.rootVisualElement;
+            var root = doc.rootVisualElement; XenoarchUI.FillRoot(root);
             if (root == null) return;
             root.pickingMode = PickingMode.Ignore;
             root.style.position = Position.Absolute; root.style.left = 0; root.style.right = 0; root.style.top = 0; root.style.bottom = 0;

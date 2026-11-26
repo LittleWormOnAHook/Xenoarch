@@ -224,7 +224,7 @@ namespace DMI.Xenoarch.Excavation
             var doc = host.AddComponent<UIDocument>();
             doc.panelSettings = XenoarchUI.LoadPanelSettings();
             doc.sortingOrder = 30;
-            var root = doc.rootVisualElement;
+            var root = doc.rootVisualElement; DMI.Xenoarch.UI.XenoarchUI.FillRoot(root);
             if (root == null) return;
             root.pickingMode = PickingMode.Ignore;
             root.style.position = Position.Absolute; root.style.left = 0; root.style.right = 0; root.style.top = 0; root.style.bottom = 0;

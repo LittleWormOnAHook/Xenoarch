@@ -14,6 +14,7 @@ namespace DMI.Xenoarch.EditorTools
         const string Marker = "Library/XenoarchFirstRun.done";
         /// <summary>Create this (empty) file to have the smoke check run once after the next script reload (tooling/CI hook).</summary>
         const string SmokeTrigger = "Temp/xenoarch_smoke.trigger";
+        const string SystemsTrigger = "Temp/xenoarch_systems.trigger";
 
         /// <summary>Create this (empty) file to re-run "Create Foundation Assets" (idempotent) after the next script reload.</summary>
         const string AssetsTrigger = "Temp/xenoarch_assets.trigger";
@@ -81,6 +82,11 @@ namespace DMI.Xenoarch.EditorTools
             {
                 File.Delete(XenoarchProbe.Trigger);
                 XenoarchProbe.Run();
+            }
+            if (File.Exists(SystemsTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(SystemsTrigger);
+                XenoarchMapsSetup.EnsureSystems();
             }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {

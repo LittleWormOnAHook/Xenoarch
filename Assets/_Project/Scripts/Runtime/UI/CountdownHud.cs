@@ -45,7 +45,7 @@ namespace DMI.Xenoarch.UI
             var doc = gameObject.AddComponent<UIDocument>();
             doc.panelSettings = XenoarchUI.LoadPanelSettings();
             doc.sortingOrder = 55;
-            var root = doc.rootVisualElement;
+            var root = doc.rootVisualElement; XenoarchUI.FillRoot(root);
             if (root != null)
             {
                 root.pickingMode = PickingMode.Ignore;
@@ -63,7 +63,7 @@ namespace DMI.Xenoarch.UI
                 var track = new VisualElement(); track.style.height = 10; track.style.marginTop = 6;
                 track.style.backgroundColor = XenoarchPalette.PanelDeep;
                 _fill = new VisualElement(); _fill.style.height = Length.Percent(100); _fill.style.width = Length.Percent(0);
-                _fill.style.backgroundColor = XenoarchPalette.Highlight;
+                _fill.style.backgroundColor = XenoarchPalette.Bar;
                 track.Add(_fill); _panel.Add(track);
                 wrap.Add(_panel); root.Add(wrap);
             }
@@ -112,7 +112,7 @@ namespace DMI.Xenoarch.UI
             _finished = true;
             if (_titleL != null && !string.IsNullOrEmpty(doneText)) _titleL.text = doneText;
             if (_timeL != null) _timeL.text = "";
-            if (_fill != null) _fill.style.backgroundColor = XenoarchPalette.Primary;
+            if (_fill != null) _fill.style.backgroundColor = XenoarchPalette.Highlight;
             if (_humSrc != null) _humSrc.Stop();
             if (chime) { _sfx.pitch = 1f; _sfx.PlayOneShot(ChimeClip(), 0.7f); }
             if (Current == this) Current = null;

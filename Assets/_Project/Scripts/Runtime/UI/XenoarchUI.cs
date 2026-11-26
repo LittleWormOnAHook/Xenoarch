@@ -39,11 +39,19 @@ namespace DMI.Xenoarch.UI
             var root = doc.rootVisualElement;
             if (root != null)
             {
-                root.style.position = Position.Absolute;
-                root.style.left = 0; root.style.top = 0; root.style.right = 0; root.style.bottom = 0;
+                FillRoot(root);
                 root.pickingMode = PickingMode.Ignore;
             }
             return doc;
+        }
+
+        /// <summary>Make a UIDocument root fill the whole panel. Without this a code-built document root (no UXML) can
+        /// end up 0 px tall, so anything centred inside it sits at the top edge, half off-screen.</summary>
+        public static void FillRoot(VisualElement root)
+        {
+            if (root == null) return;
+            root.style.position = Position.Absolute;
+            root.style.left = 0; root.style.top = 0; root.style.right = 0; root.style.bottom = 0;
         }
 
         public static void Show(VisualElement e, bool visible)

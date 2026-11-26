@@ -127,6 +127,29 @@ namespace DMI.Xenoarch.Galaxy
         public bool GalaxyMapUnlocked => GalaxyUnlocked(Galaxy, Gate);
         public bool IsSystemKnown(StarSystemDefinition s) => SystemKnown(s, Gate);
 
+        /// <summary>Systems offered by the Nav terminal's system dropdown, in order. Sol is first and the default.</summary>
+        public static readonly (string id, string name)[] NavSystems =
+        {
+            ("sys.sol", "Sol"),
+            ("sys.proxima_centauri", "Proxima Centauri"),
+            ("sys.barnards_star", "Barnard's Star"),
+            ("sys.epsilon_eridani", "Epsilon Eridani"),
+        };
+
+        /// <summary>Fact that unlocks a Nav dropdown system, e.g. "nav.system.proxima_centauri" (set by the discovery chain).</summary>
+        public static string NavUnlockFact(string systemId) =>
+            "nav.system." + (systemId != null && systemId.StartsWith("sys.") ? systemId.Substring(4) : systemId);
+
+        /// <summary>Nav dropdown unlock: Sol and the ship's current system always; others once their unlock fact is known
+        /// (and the system asset exists in the galaxy data).</summary>
+        public bool IsNavSystemUnlocked(string systemId)
+        {
+            if (string.IsNullOrEmpty(systemId)) return false;
+            if (systemId == NavSystems[0].id || systemId == Ship.currentSystemId) return true;
+            if (Galaxy == null || Galaxy.FindSystem(systemId) == null) return false;
+            return Gate != null && Gate(NavUnlockFact(systemId));
+        }
+
         public CelestialBodyDefinition CurrentBody => Galaxy != null ? Galaxy.FindBody(Ship.currentBodyId) : null;
         public StarSystemDefinition CurrentSystem => Galaxy != null ? Galaxy.FindSystem(Ship.currentSystemId) : null;
 

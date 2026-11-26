@@ -39,6 +39,35 @@ namespace DMI.Xenoarch.Ship
         IInteractionInput _input;
         readonly List<(Renderer r, bool on)> _hidden = new List<(Renderer, bool)>();
         float _seatedAt;
+        ConsolePower _power;
+
+        /// <summary>Console power controller for this seat (added at runtime to the faced console; nothing saved).</summary>
+        public ConsolePower Power => _power;
+
+        void Start()
+        {
+            var c = console;
+            if (c == null)
+            { // no console assigned: the nearest helm console
+                float best = 6f;
+                foreach (var h in FindObjectsByType<CockpitHelm>())
+                { float d = Vector3.Distance(h.transform.position, transform.position); if (d < best) { best = d; c = h; } }
+            }
+            if (c == null) return;
+            _power = c.GetComponent<ConsolePower>();
+            if (_power == null) _power = c.gameObject.AddComponent<ConsolePower>(); // starts dark
+        }
+
+        /// <summary>Seated: reach a hand to the console and press (click), then the displays blink on.</summary>
+        void PowerUpConsole()
+        {
+            if (_power == null || _player == null) return;
+            var arms = _player.GetComponentInChildren<FirstPersonArms>();
+            var helm = _power.GetComponent<CockpitHelm>();
+            Vector3 target = helm != null && _player.ViewCamera != null ? helm.PressPointFor(_player.ViewCamera.transform.position) : _power.transform.position;
+            if (arms != null) arms.Reach(target, () => { if (IsOccupied) _power.PowerOn(); });
+            else _power.PowerOn();
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetStatics() => Occupied = null;
 
@@ -126,6 +155,7 @@ namespace DMI.Xenoarch.Ship
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
             InteractionPromptHud.IdlePrompt = "Stand up";
+            PowerUpConsole();
             onSeated?.Invoke();
         }
 
@@ -134,6 +164,7 @@ namespace DMI.Xenoarch.Ship
             Transitioning = true;
             var p = _player;
             InteractionPromptHud.IdlePrompt = null;
+            if (_power != null) _power.PowerOff();
             Vector3 from = p.Root.position, to = SafeExit(p);
             float yaw = p.Root.eulerAngles.y, pitch = p.Pitch;
             for (float t = 0f; t < transitionSeconds; t += Time.deltaTime)
@@ -183,6 +214,7 @@ namespace DMI.Xenoarch.Ship
 
         void Release()
         {
+            if (_power != null) _power.PowerOff();
             HideBody(_player, false);
             if (Occupied == this) Occupied = null;
             InteractionPromptHud.IdlePrompt = null;

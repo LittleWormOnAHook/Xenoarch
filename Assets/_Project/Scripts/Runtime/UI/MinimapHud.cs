@@ -45,7 +45,7 @@ namespace DMI.Xenoarch.UI
                 if (ShipTravel.UsesShuttle(b) && b.surfaceMapRect.width >= 10f) _body = b;
             }
             EnsureDoc();
-            var root = _doc.rootVisualElement;
+            var root = _doc.rootVisualElement; XenoarchUI.FillRoot(root);
             if (root == null) return;
             root.Clear(); _frame = null; _map = null;
             root.pickingMode = PickingMode.Ignore;

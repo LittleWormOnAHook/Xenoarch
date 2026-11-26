@@ -378,7 +378,7 @@ namespace DMI.Xenoarch.Ship
             var doc = root.AddComponent<UIDocument>();
             doc.panelSettings = XenoarchUI.LoadPanelSettings();
             doc.sortingOrder = 60;
-            var r = doc.rootVisualElement;
+            var r = doc.rootVisualElement; DMI.Xenoarch.UI.XenoarchUI.FillRoot(r);
             if (r == null) return null;
             r.pickingMode = PickingMode.Ignore;
             var f = new VisualElement { pickingMode = PickingMode.Ignore };

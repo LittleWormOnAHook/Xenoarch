@@ -30,19 +30,19 @@ namespace DMI.Xenoarch.UI
             _root.Add(_spinner);
 
             _title = new Label { pickingMode = PickingMode.Ignore };
-            _title.style.fontSize = 34; _title.style.color = XenoarchPalette.Text; _title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _title.style.fontSize = 34; _title.style.color = XenoarchPalette.Heading; _title.style.unityFontStyleAndWeight = FontStyle.Bold;
             _title.style.letterSpacing = 3;
             _root.Add(_title);
             _subtitle = new Label { pickingMode = PickingMode.Ignore };
             _subtitle.style.fontSize = 18; _subtitle.style.color = XenoarchPalette.SecondaryText; _subtitle.style.marginTop = 4;
             _root.Add(_subtitle);
             _status = new Label { pickingMode = PickingMode.Ignore };
-            _status.style.fontSize = 17; _status.style.color = XenoarchPalette.Primary; _status.style.marginTop = 8;
+            _status.style.fontSize = 17; _status.style.color = XenoarchPalette.Text; _status.style.marginTop = 8;
             _root.Add(_status);
             var bar = new VisualElement { pickingMode = PickingMode.Ignore };
-            bar.style.width = 420; bar.style.height = 6; bar.style.marginTop = 12; bar.style.backgroundColor = XenoarchPalette.Panel;
+            bar.style.width = 420; bar.style.height = 6; bar.style.marginTop = 12; bar.style.backgroundColor = XenoarchPalette.PanelDark;
             _barFill = new VisualElement { pickingMode = PickingMode.Ignore };
-            _barFill.style.height = Length.Percent(100); _barFill.style.width = Length.Percent(0); _barFill.style.backgroundColor = XenoarchPalette.Highlight;
+            _barFill.style.height = Length.Percent(100); _barFill.style.width = Length.Percent(0); _barFill.style.backgroundColor = XenoarchPalette.Bar;
             bar.Add(_barFill); _root.Add(bar);
             parent.Add(_root);
         }

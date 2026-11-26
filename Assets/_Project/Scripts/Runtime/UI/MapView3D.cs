@@ -197,6 +197,7 @@ namespace DMI.Xenoarch.UI
             string best = null; float bestD = float.MaxValue; Vector3 bestPos = default;
             foreach (var it in Items)
             {
+                if (string.IsNullOrEmpty(it.id)) continue; // display-only item
                 var s = ToScreen(it.pos, out _);
                 float d = (s - pos).magnitude, hit = Mathf.Max(10f, it.size * 0.5f + 5f);
                 if (d <= hit && d < bestD) { bestD = d; best = it.id; bestPos = it.pos; }

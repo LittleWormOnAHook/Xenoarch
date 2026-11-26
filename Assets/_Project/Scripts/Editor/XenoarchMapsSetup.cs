@@ -29,6 +29,15 @@ namespace DMI.Xenoarch.EditorTools
         [MenuItem("Xenoarch/Setup/12. Maps: bake surface maps, landing hints, galaxy systems", priority = 32)]
         public static void RunMenu() { var log = new StringBuilder(); Run(log); Debug.Log($"[Xenoarch] Maps setup:\n{log}"); }
 
+        /// <summary>Adds any missing galaxy system assets (e.g. Proxima Centauri for the Nav dropdown) without re-baking maps.</summary>
+        public static void EnsureSystems()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
+            if (config == null || config.galaxy == null) { Debug.LogWarning("[Xenoarch] Systems: config/galaxy missing"); return; }
+            var log = new StringBuilder(); Systems(config.galaxy, log);
+            AssetDatabase.SaveAssets(); Debug.Log($"[Xenoarch] {log}");
+        }
+
         public static void Run(StringBuilder log)
         {
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
@@ -130,6 +139,7 @@ namespace DMI.Xenoarch.EditorTools
             var defs = new (string id, string name, string cls, Vector3 pos, string fact, string note)[]
             {
                 ("sys.alpha_centauri", "Alpha Centauri", "G2V", new Vector3(-1.6f, -1.4f, -3.8f), null, null),
+                ("sys.proxima_centauri", "Proxima Centauri", "M5.5Ve", new Vector3(-1.55f, -1.18f, -3.77f), null, null),
                 ("sys.barnards_star", "Barnard's Star", "M4V", new Vector3(-0.06f, -5.94f, 0.49f), null, null),
                 ("sys.sirius", "Sirius", "A1V", new Vector3(-1.6f, 8.1f, -2.5f), null, null),
                 ("sys.epsilon_eridani", "Epsilon Eridani", "K2V", new Vector3(6.2f, 8.3f, -1.7f), null, null),
@@ -181,6 +191,13 @@ namespace DMI.Xenoarch.EditorTools
             check(tau != null && lockedBefore && unlockedAfter, "3C galaxy: galaxy map and Tau Ceti stay hidden until the navigation core is decoded");
             bool chainSets = config != null && config.discoveryChains.Any(ch => ch != null && JsonUtility.ToJson(ch).Contains(ExtrasolarFact));
             check(chainSets, "3C galaxy: the discovery chain publishes the extrasolar-coordinates fact");
+            bool navData = g != null && ExplorationService.NavSystems[0].id == "sys.sol"
+                && ExplorationService.NavSystems.All(n => g.FindSystem(n.id) != null);
+            bool navUnlockFact = ExplorationService.NavUnlockFact("sys.proxima_centauri") == "nav.system.proxima_centauri";
+            var bf = StarFacts.For("sys.barnards_star"); var pf = StarFacts.For("sys.proxima_centauri"); var ef = StarFacts.For("sys.epsilon_eridani");
+            check(bf != null && bf.planets.Length == 4 && pf != null && pf.planets.Any(pl => pl.Candidate) && ef != null,
+                "3C nav: real star facts for Proxima Centauri, Barnard's Star, Epsilon Eridani (candidates flagged)");
+            check(navData && navUnlockFact, "3C nav: system dropdown lists Sol (default), Proxima Centauri, Barnard's Star, Epsilon Eridani");
 
             foreach (var name in new[] { SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
             {

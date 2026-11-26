@@ -14,6 +14,11 @@ namespace DMI.Xenoarch.Ship
         public AudioClip liftStart;
         public AudioClip liftLoop;
         public AudioClip liftStop;
+        [Header("Cockpit consoles (empty = procedural)")]
+        public AudioClip consoleClick;
+        public AudioClip consolePowerOn;
+        [Tooltip("Seated hum loop (played very quietly).")] public AudioClip consoleHum;
+        public AudioClip consolePowerOff;
 
         static ShipSfx _cached; static bool _looked;
         public static ShipSfx Get() { if (!_looked) { _looked = true; _cached = Resources.Load<ShipSfx>(ResourcePath); } return _cached; }

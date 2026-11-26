@@ -113,6 +113,7 @@ namespace DMI.Xenoarch.EditorTools
             if (sfx.liftStart == null) sfx.liftStart = Clip("DoorPump.wav");
             if (sfx.liftLoop == null) sfx.liftLoop = Clip("Elevator.mp3");
             if (sfx.liftStop == null) sfx.liftStop = Clip("DoorPump.wav");
+            if (sfx.consoleHum == null) sfx.consoleHum = Clip("Computer_Server.wav"); // click / power-on / power-off stay procedural (kit has no short ones)
             EditorUtility.SetDirty(sfx);
             log.AppendLine($"Ship SFX: lift start={Name(sfx.liftStart)}, loop={Name(sfx.liftLoop)}, stop={Name(sfx.liftStop)} ({SfxPath})");
         }
@@ -120,6 +121,19 @@ namespace DMI.Xenoarch.EditorTools
 
         public static void Validate(System.Action<bool, string> check)
         {
+            // Console power (t88u): blink curve dark -> on, and an emissive test console dims to off via property blocks only.
+            float b0 = DMI.Xenoarch.Ship.ConsolePower.BlinkLevel(0f, 1.2f, 0.6f, 14f), b1 = DMI.Xenoarch.Ship.ConsolePower.BlinkLevel(1.2f, 1.2f, 0.6f, 14f);
+            int flips = 0; float prev = 0f;
+            for (float t = 0f; t < 0.72f; t += 0.01f) { float v = DMI.Xenoarch.Ship.ConsolePower.BlinkLevel(t, 1.2f, 0.6f, 14f); if (Mathf.Abs(v - prev) > 0.15f) flips++; prev = v; }
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube); go.hideFlags = HideFlags.HideAndDontSave;
+            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit")); mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", Color.cyan * 2f);
+            go.GetComponent<Renderer>().sharedMaterial = mat;
+            var cp = go.AddComponent<DMI.Xenoarch.Ship.ConsolePower>();
+            int slots = cp.DisplayCount; // edit mode: no Awake, this initialises (dims) it
+            var mpb = new MaterialPropertyBlock(); go.GetComponent<Renderer>().GetPropertyBlock(mpb, 0);
+            bool dark = mpb.GetColor("_EmissionColor").maxColorComponent < 0.01f && mat.GetColor("_EmissionColor").maxColorComponent > 1f;
+            Object.DestroyImmediate(go); Object.DestroyImmediate(mat);
+            check(b0 == 0f && b1 == 1f && flips >= 4 && slots == 1 && dark, $"Console power: blink-on curve ({flips} blinks), display starts dark via property block, material untouched");
             var sfx = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Ship.ShipSfx>(SfxPath);
             check(sfx != null, $"Ship SFX: sound set at {SfxPath} (lift loop {(sfx != null ? Name(sfx.liftLoop) : "-")})");
             string path = XenoarchSetup.ScenePath(Core.SceneNames.ShipStarter);

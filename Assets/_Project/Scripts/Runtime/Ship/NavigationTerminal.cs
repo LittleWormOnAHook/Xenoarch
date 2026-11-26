@@ -17,6 +17,8 @@ namespace DMI.Xenoarch.Ship
         string _message;
         bool _galaxy;
         string _selectedSystemId;
+        string _viewSystemId;   // system shown on the system map (dropdown); null = the ship's current system
+        bool _sysMenuOpen;
         readonly MapView3D.ViewState _sysView = new MapView3D.ViewState();
         readonly MapView3D.ViewState _galView = new MapView3D.ViewState { pitch = 50f };
 
@@ -27,17 +29,37 @@ namespace DMI.Xenoarch.Ship
         protected override void Build(VisualElement body)
         {
             var x = Session.Exploration;
-            var sys = x.CurrentSystem;
+            var cur = x.CurrentSystem;
+            var sys = cur;
+            if (!string.IsNullOrEmpty(_viewSystemId) && _viewSystemId != cur?.Id && x.IsNavSystemUnlocked(_viewSystemId))
+                sys = x.Galaxy.FindSystem(_viewSystemId) ?? cur;
+            bool remote = sys != cur;
             var course = x.PlottedBody;
             Status.text = $"{ShipTravel.LocationText(x)}   |   Fuel {x.Ship.fuel:0.#} / {x.Ship.fuelCapacity:0}" + (course != null ? $"   |   Course: {course.displayName}" : "");
             if (sys == null) { Text(body, "No star system data (run Xenoarch > Setup > 7. Phase 1B assets).", "xa-term__warn"); return; }
             if (_galaxy && !x.GalaxyMapUnlocked) _galaxy = false;
-            if (_galaxy) { BuildGalaxy(body, x, sys); return; }
+            if (_galaxy) { BuildGalaxy(body, x, cur); return; }
 
             // --- left: list
             var left = Col(body); ListCol(left); left.style.overflow = Overflow.Hidden;
-            Text(left, $"{sys.displayName.ToUpperInvariant()} SYSTEM", "xa-term__h");
+            SystemDropdown(left, x, sys);
             var list = new ScrollView(); list.AddToClassList("xa-term__list"); left.Add(list);
+            if (Ordered(sys).Count == 0)
+            {
+                var star = new Button(() => { _selectedId = sys.Id; _message = null; Refresh(); }) { text = "" };
+                star.AddToClassList("xa-term__row"); if (_selectedId == sys.Id) star.AddToClassList("xa-term__row--sel");
+                star.Add(new Label(sys.displayName)); var st = new Label("star"); st.style.color = XenoarchPalette.SecondaryText; star.Add(st);
+                list.Add(star);
+                var facts = StarFacts.For(sys.Id);
+                if (facts != null)
+                    foreach (var pl in facts.planets)
+                    {
+                        var r = new VisualElement(); r.AddToClassList("xa-term__row"); r.AddToClassList("xa-term__row--child"); r.AddToClassList("xa-term__row--locked");
+                        r.Add(new Label(pl.name)); var t = new Label(pl.Candidate ? "candidate" : "planet"); t.style.color = XenoarchPalette.SecondaryText; r.Add(t);
+                        list.Add(r);
+                    }
+                Text(list, "No survey data yet: only the star can be inspected.", "xa-term__dim");
+            }
             foreach (var b in Ordered(sys))
             {
                 bool known = x.IsDiscovered(b.Id);
@@ -62,6 +84,15 @@ namespace DMI.Xenoarch.Ship
 
             // --- right: details + actions
             var right = Col(body); right.style.minHeight = 0; right.style.overflow = Overflow.Hidden;
+            if (remote)
+            {
+                var sb = sys.FindBody(_selectedId);
+                if (sb != null) InfoSection(right, BodyInfo(x, sys, sb), 0, "xa-term__dim");
+                else InfoSection(right, SystemInfo(x, cur ?? sys, sys), 0, "xa-term__dim");
+                Text(right, $"Viewing {sys.displayName}. Interstellar travel arrives in a later phase.", "xa-term__dim");
+                Btn(right, $"Back to {(cur != null ? cur.displayName : "current system")}", () => { _viewSystemId = null; _selectedId = x.Ship.currentBodyId; Refresh(); });
+                return;
+            }
             var sel = sys.FindBody(_selectedId) ?? x.CurrentBody;
             if (sel == null) return;
             InfoSection(right, BodyInfo(x, sys, sel), 0, "xa-term__dim");
@@ -145,6 +176,8 @@ namespace DMI.Xenoarch.Ship
                 $"Archaeological potential: {Potential(s.archaeologicalPotential)}",
                 $"Status: {(s == here ? "explored" : !string.IsNullOrEmpty(s.revealFact) ? "located from decoded Vael data" : "charted")}",
             };
+            var f = StarFacts.For(s.Id);
+            if (f != null) { lines.RemoveAll(l => l.StartsWith("Star class") || l.StartsWith("Known bodies")); lines.AddRange(StarFacts.Lines(f)); return (s.displayName.ToUpperInvariant(), lines, f.summary + (string.IsNullOrEmpty(s.revealNote) ? "" : " " + s.revealNote)); }
             return (s.displayName.ToUpperInvariant(), lines, s.revealNote);
         }
 
@@ -161,7 +194,7 @@ namespace DMI.Xenoarch.Ship
         static List<CelestialBodyDefinition> Ordered(StarSystemDefinition sys)
         {
             var roots = new List<CelestialBodyDefinition>();
-            foreach (var b in sys.bodies) if (b != null && string.IsNullOrEmpty(b.parentId)) roots.Add(b);
+            if (sys.bodies != null) foreach (var b in sys.bodies) if (b != null && string.IsNullOrEmpty(b.parentId)) roots.Add(b);
             roots.Sort((a, c) => a.orbitAU.CompareTo(c.orbitAU));
             var result = new List<CelestialBodyDefinition>();
             foreach (var r in roots)
@@ -170,6 +203,44 @@ namespace DMI.Xenoarch.Ship
                 foreach (var b in sys.bodies) if (b != null && b.parentId == r.Id) result.Add(b);
             }
             return result;
+        }
+
+        /// <summary>Header of the system list: "SOL SYSTEM v" toggles a palette-styled list of the Nav systems.
+        /// Locked systems are greyed with a lock note; picking an unlocked one switches the system map to it.</summary>
+        void SystemDropdown(VisualElement col, ExplorationService x, StarSystemDefinition sys)
+        {
+            var head = new Button(() => { _sysMenuOpen = !_sysMenuOpen; Refresh(); }) { text = "" };
+            head.AddToClassList("xa-term__dropdown");
+            if (_sysMenuOpen) head.AddToClassList("xa-term__dropdown--open");
+            var hl = new Label($"{sys.displayName.ToUpperInvariant()} SYSTEM"); hl.AddToClassList("xa-term__dropdown-label");
+            var arrow = new Label(_sysMenuOpen ? "\u25B2" : "\u25BC"); arrow.AddToClassList("xa-term__dropdown-arrow");
+            head.Add(hl); head.Add(arrow); col.Add(head);
+            if (!_sysMenuOpen) return;
+            var menu = new VisualElement(); menu.AddToClassList("xa-term__dropdown-menu"); col.Add(menu);
+            foreach (var (id, name) in ExplorationService.NavSystems)
+            {
+                bool open = x.IsNavSystemUnlocked(id);
+                bool shown = id == sys.Id;
+                string sid = id;
+                var row = new Button(() =>
+                {
+                    if (!open) return;
+                    _viewSystemId = sid == x.Ship.currentSystemId ? null : sid;
+                    _sysMenuOpen = false; _selectedId = null; _message = null;
+                    if (_viewSystemId == null) _selectedId = x.Ship.currentBodyId;
+                    _sysView.Reset();
+                    Refresh();
+                }) { text = "" };
+                row.AddToClassList("xa-term__row");
+                row.AddToClassList("xa-term__dropdown-item");
+                if (shown) row.AddToClassList("xa-term__row--sel");
+                if (!open) { row.AddToClassList("xa-term__row--locked"); row.SetEnabled(false); }
+                row.Add(new Label(name));
+                var tag = new Label(!open ? "LOCKED" : id == x.Ship.currentSystemId ? "current" : "");
+                tag.style.color = XenoarchPalette.SecondaryText; row.Add(tag);
+                menu.Add(row);
+            }
+            Text(menu, "Locked systems open as the discovery chain reveals them.", "xa-term__dim");
         }
 
         void MapHeader(VisualElement col, ExplorationService x, bool galaxy)
@@ -187,7 +258,26 @@ namespace DMI.Xenoarch.Ship
         {
             map.Extent = 1.08f;
             float maxAU = 0.1f;
-            foreach (var b in sys.bodies) if (b != null && string.IsNullOrEmpty(b.parentId)) maxAU = Mathf.Max(maxAU, b.orbitAU);
+            bool hasStar = false;
+            if (sys.bodies != null) foreach (var b in sys.bodies) if (b != null) { if (string.IsNullOrEmpty(b.parentId)) maxAU = Mathf.Max(maxAU, b.orbitAU); if (b.kind == CelestialKind.Star) hasStar = true; }
+            if (!hasStar) // unsurveyed system: its star (the only clickable item) plus any published planets, display-only
+            {
+                map.Items.Add(new MapView3D.Item { id = sys.Id, pos = Vector3.zero, label = sys.displayName, color = StarColor(sys.stellarClass), size = 22f, alwaysLabel = true, selected = _selectedId == sys.Id });
+                var f = StarFacts.For(sys.Id);
+                if (f != null)
+                {
+                    float maxP = 0.05f; foreach (var pl in f.planets) maxP = Mathf.Max(maxP, pl.au);
+                    int i = 0;
+                    foreach (var pl in f.planets)
+                    {
+                        float r = 0.18f + 0.8f * Mathf.Log(1f + pl.au * 40f) / Mathf.Log(1f + maxP * 40f);
+                        float ang = (i * 137.5f + 20f) * Mathf.Deg2Rad; i++;
+                        var col = pl.Candidate ? XenoarchPalette.A(XenoarchPalette.Secondary, 0.5f) : XenoarchPalette.Secondary;
+                        map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = r, color = XenoarchPalette.A(XenoarchPalette.Secondary, pl.Candidate ? 0.12f : 0.25f) });
+                        map.Items.Add(new MapView3D.Item { id = null, pos = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * r, label = pl.name + (pl.Candidate ? " ?" : ""), color = col, size = 7f, dim = pl.Candidate, alwaysLabel = true });
+                    }
+                }
+            }
             float R(float au) => au <= 0f ? 0f : Mathf.Log(1f + au * 4f) / Mathf.Log(1f + maxAU * 4f);
             var placed = new Dictionary<string, Vector3>();
             foreach (var b in Ordered(sys))
