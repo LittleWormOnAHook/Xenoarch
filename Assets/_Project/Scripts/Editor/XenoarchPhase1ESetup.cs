@@ -23,6 +23,7 @@ namespace DMI.Xenoarch.EditorTools
         const string Trigger = "Temp/xeno_phase1e.trig";
         const string RoverTrigger = "Temp/xeno_rover.trig";
         const string RoverBakeTrigger = "Temp/xeno_rover_bake.trig";
+        const string RoverMeasureTrigger = "Temp/xeno_rover_measure.trig";
         const string RoverItemPath = "Assets/_Project/Data/Items/Item_vehicle_grasshopper.asset";
         const string GrasshopperGuid = "73a3d6dceb2a6f747b43ee02c5144d36"; // Assets/_Project/Prefabs/Vehicles and Ships/Grasshoper .prefab
         const string LogFile = "Logs/xeno_phase1e.txt";
@@ -39,6 +40,7 @@ namespace DMI.Xenoarch.EditorTools
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling) return;
             if (File.Exists(Trigger)) { File.Delete(Trigger); Run(); }
             if (File.Exists(RoverBakeTrigger)) { File.Delete(RoverBakeTrigger); BakeSceneRover(); }
+            if (File.Exists(RoverMeasureTrigger)) { File.Delete(RoverMeasureTrigger); MeasureSceneRover(); }
             if (File.Exists(RoverTrigger)) { File.Delete(RoverTrigger); try { RoverItem(); AssetDatabase.SaveAssets(); Log("rover done"); } catch (Exception e) { Log("FAILED " + e); } }
         }
 
@@ -176,6 +178,139 @@ namespace DMI.Xenoarch.EditorTools
                 Log($"rover bake: applied to {prefabPath} (prefab root scale {asset.transform.localScale}, RoverVehicle {(asset.GetComponent<DMI.Xenoarch.Vehicles.RoverVehicle>() != null)}); scene NOT saved");
             }
             catch (Exception e) { Log("rover bake FAILED " + e); }
+        }
+
+        static GameObject FindSceneRover(out int count)
+        {
+            string prefabPath = AssetDatabase.GUIDToAssetPath(GrasshopperGuid);
+            GameObject inst = null; count = 0;
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var sc = SceneManager.GetSceneAt(i);
+                if (!sc.isLoaded) continue;
+                foreach (var root in sc.GetRootGameObjects())
+                    foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                    {
+                        if (!PrefabUtility.IsAnyPrefabInstanceRoot(t.gameObject)) continue;
+                        if (PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(t.gameObject) != prefabPath) continue;
+                        count++; if (inst == null) inst = t.gameObject;
+                    }
+            }
+            return inst;
+        }
+
+        /// <summary>t196u: read-only fit check of the player against the scene Grasshopper (nothing is changed).</summary>
+        [MenuItem("Xenoarch/Setup/Rover: Measure Player Fit (read-only)", priority = 62)]
+        public static void MeasureSceneRover()
+        {
+            try
+            {
+                var inst = FindSceneRover(out _);
+                if (inst == null) { Log("rover measure: no scene instance"); return; }
+                var rover = inst.GetComponent<DMI.Xenoarch.Vehicles.RoverVehicle>();
+                if (rover == null || rover.seat == null) { Log("rover measure: not baked"); return; }
+                var tr = inst.transform;
+
+                // Player capsule from the XA_Player prefab.
+                float ph = 1.8f, pr = 0.3f, eye = 1.6f;
+                var guid = AssetDatabase.FindAssets("XA_Player t:Prefab").FirstOrDefault();
+                if (guid != null)
+                {
+                    var pp = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+                    var cc = pp.GetComponent<CharacterController>();
+                    if (cc != null) { ph = cc.height * pp.transform.localScale.y; pr = cc.radius * pp.transform.localScale.x; }
+                    var cam = pp.GetComponentInChildren<Camera>(true);
+                    if (cam != null) eye = pp.transform.InverseTransformPoint(cam.transform.position).y;
+                }
+                Log($"rover measure: player capsule height {ph:0.00} radius {pr:0.00} standing eye {eye:0.00}; rover seated eye {rover.seatedEyeHeight:0.00}; rover scale {tr.lossyScale.x:0.###}");
+
+                // Body bounds and what sets the top.
+                var rends = inst.GetComponentsInChildren<Renderer>(true);
+                var body = rends[0].bounds; foreach (var r in rends) body.Encapsulate(r.bounds);
+                Log($"rover measure: body bounds size {body.size} min.y {body.min.y:0.00} max.y {body.max.y:0.00}");
+                foreach (var r in rends.OrderByDescending(r => r.bounds.max.y).Take(5))
+                    Log($"rover measure:   top renderer {PathOf(r.transform, tr)} max.y {r.bounds.max.y:0.00} size {r.bounds.size}");
+
+                Physics.SyncTransforms();
+                var rig = rover.rig;
+                bool Mine(Collider c) => c != null && !c.isTrigger && c.transform.IsChildOf(tr) && (rig == null || !c.transform.IsChildOf(rig));
+                float Cast(Vector3 o, Vector3 d, float max, out string what)
+                {
+                    what = "none"; float best = max;
+                    foreach (var h in Physics.RaycastAll(o, d, max, ~0, QueryTriggerInteraction.Ignore))
+                        if (Mine(h.collider) && h.distance < best) { best = h.distance; what = PathOf(h.collider.transform, tr); }
+                    return best;
+                }
+                int mine = inst.GetComponentsInChildren<Collider>(true).Count(c => Mine(c) && c.enabled && c.gameObject.activeInHierarchy);
+                Log($"rover measure: {mine} active solid rover colliders");
+
+                Vector3 fwd = rig != null ? rig.forward : tr.forward; fwd.y = 0; fwd.Normalize();
+                Vector3 right = Vector3.Cross(Vector3.up, fwd);
+
+                // Seat: floor, roof, side clearance.
+                var s = rover.seat.position;
+                float down = Cast(s + Vector3.up * 0.5f, Vector3.down, 3f, out var fl);
+                float floorY = s.y + 0.5f - down;
+                float up = Cast(new Vector3(s.x, floorY + 0.05f, s.z), Vector3.up, 10f, out var roof);
+                var chairB = rover.driverChair != null ? BoundsOf(rover.driverChair) : new Bounds(s, Vector3.zero);
+                float seatTop = chairB.min.y + Mathf.Min(0.5f, chairB.size.y);
+                float l = Cast(new Vector3(s.x, floorY + 1.0f, s.z), -right, 5f, out var lw), rr = Cast(new Vector3(s.x, floorY + 1.0f, s.z), right, 5f, out var rw);
+                Log($"rover measure: seat floor {floorY:0.00} (hit {fl}, seat marker y {s.y:0.00}); floor->roof {up + 0.05f:0.00} m (hit {roof}); chair size {chairB.size} (across {Mathf.Abs(Vector3.Dot(chairB.size, right)):0.00}); seated head top ~{rover.seatedEyeHeight + 0.15f:0.00} above floor; side clearance L {l:0.00} ({lw}) R {rr:0.00} ({rw})");
+
+                // Rear doorway: height and width just inside the door.
+                if (rover.door != null && rover.doorInside != null)
+                {
+                    var di = rover.doorInside.position;
+                    foreach (float off in new[] { -0.6f, -0.3f, 0f, 0.4f })
+                    {
+                        var p = di + fwd * off;
+                        float d2 = Cast(p + Vector3.up * 0.9f, Vector3.down, 3f, out var f2);
+                        float fy = p.y + 0.9f - d2;
+                        float h2 = Cast(new Vector3(p.x, fy + 0.05f, p.z), Vector3.up, 10f, out var r2);
+                        var mid = new Vector3(p.x, fy + 0.9f, p.z);
+                        float a = Cast(mid, -right, 5f, out var aw), b = Cast(mid, right, 5f, out var bw);
+                        Log($"rover measure: doorway {off:+0.0;-0.0} m from DoorInside: floor {fy:0.00} ({f2}), height {h2 + 0.05f:0.00} ({r2}), width {a + b:0.00} (L {aw} / R {bw})");
+                    }
+                }
+
+                // Path door -> seat: capsule overlap every 0.25 m (standing player), stopping 0.6 m short of the seat.
+                if (rover.doorInside != null)
+                {
+                    var a0 = rover.doorInside.position; var b0 = s;
+                    float len = Vector3.Distance(new Vector3(a0.x, 0, a0.z), new Vector3(b0.x, 0, b0.z));
+                    int blocked = 0, n = 0; var names = new System.Collections.Generic.HashSet<string>();
+                    float minHead = 99f;
+                    for (float t = 0; t <= Mathf.Max(0f, len - 0.6f); t += 0.25f, n++)
+                    {
+                        var p = Vector3.Lerp(a0, b0, len > 0 ? t / len : 0);
+                        float d2 = Cast(p + Vector3.up * 0.9f, Vector3.down, 3f, out _);
+                        float fy = p.y + 0.9f - d2;
+                        float h2 = Cast(new Vector3(p.x, fy + 0.05f, p.z), Vector3.up, 10f, out _) + 0.05f;
+                        minHead = Mathf.Min(minHead, h2);
+                        var c1 = new Vector3(p.x, fy + pr + 0.05f, p.z); var c2 = new Vector3(p.x, fy + ph - pr, p.z);
+                        bool hit = false;
+                        foreach (var c in Physics.OverlapCapsule(c1, c2, pr, ~0, QueryTriggerInteraction.Ignore))
+                            if (Mine(c)) { hit = true; names.Add(PathOf(c.transform, tr)); }
+                        if (hit) blocked++;
+                    }
+                    Log($"rover measure: path door->seat {len:0.00} m, {n} samples, {blocked} blocked by a standing capsule; lowest floor->roof on path {minHead:0.00} m; blockers: {string.Join(", ", names)}");
+                }
+            }
+            catch (Exception e) { Log("rover measure FAILED " + e); }
+        }
+
+        static Bounds BoundsOf(Transform t)
+        {
+            var rs = t.GetComponentsInChildren<Renderer>(true);
+            if (rs.Length == 0) return new Bounds(t.position, Vector3.zero);
+            var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds); return b;
+        }
+
+        static string PathOf(Transform t, Transform root)
+        {
+            var s = t.name;
+            while (t.parent != null && t != root && t.parent != root) { t = t.parent; s = t.name + "/" + s; }
+            return s;
         }
 
         static void NavDrive()
