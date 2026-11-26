@@ -176,3 +176,4 @@ Times are US Eastern (ET).
 - Smoke: new free-rotation check. SurfaceMapView (shuttle/orbit-scan map) stays 2D.
 - Map controls remapped (t81u): LMB drag = arcball on all 3 axes (outer ring rolls), RMB/MMB = pan, Ctrl+RMB = depth, Shift+LMB / Q E = roll.
 - UI panel pass (t83u): terminals scale with screen (88%, min 1180x760, max 1760x1000); .xa-term__btn / rows auto-height + wrap (no clipping); wider list columns (Nav, Shuttle); HUD prompt wraps.
+- Loading screen (t84u): real weighted progress (scene load 45%, shaders 25%, ready gates 20% incl. Digger replay columns, settle 10%), monotonic, 100% only when ready; progress bar. Removed forced sync ShaderUtil.CompilePass (source of the Editor 'Compiling shader' dialog); new ShaderPrewarm: Editor async compiles queued from game start (ship) + destination at load start; builds use WarmUpProgressively.

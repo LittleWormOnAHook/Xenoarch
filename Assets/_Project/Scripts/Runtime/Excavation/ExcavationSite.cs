@@ -210,15 +210,35 @@ namespace DMI.Xenoarch.Excavation
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RegisterGate() { if (!Scenes.SceneLoader.ReadyGates.Contains(BusyStatus)) Scenes.SceneLoader.ReadyGates.Add(BusyStatus); }
+        static void RegisterGate()
+        {
+            if (!Scenes.SceneLoader.ReadyGates.Contains(BusyStatus)) Scenes.SceneLoader.ReadyGates.Add(BusyStatus);
+            Scenes.SceneLoader.GateProgress[BusyStatus] = BusyProgress;
+        }
+
+        int _replayDone, _replayTotal;
+        /// <summary>Loading-bar progress of the terrain rebuild: replayed columns / all columns per site (Digger still
+        /// applying edits after the replay counts as 95%).</summary>
+        public static float BusyProgress()
+        {
+            float sum = 0f; int n = 0;
+            foreach (var s in Active)
+            {
+                if (s == null) continue;
+                n++;
+                if (s._replaying) sum += s._replayTotal > 0 ? (float)s._replayDone / s._replayTotal : 0f;
+                else sum += (s._surface != null && s._surface.IsBusy) ? 0.95f : 1f;
+            }
+            return n == 0 ? 1f : sum / n;
+        }
 
         System.Collections.IEnumerator Replay()
         {
-            _replaying = true;
+            _replaying = true; _replayDone = 0; _replayTotal = Grid.nx * Grid.nz;
             yield return null;
             int ops = 0;
             for (int x = 0; x < Grid.nx; x++)
-                for (int z = 0; z < Grid.nz; z++)
+                for (int z = 0; z < Grid.nz; z++, _replayDone++)
                     for (int y = 0; y < Grid.ny; y++)
                     {
                         byte f = Grid.Fill(x, y, z);

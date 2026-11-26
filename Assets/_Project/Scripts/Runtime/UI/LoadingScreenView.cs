@@ -9,7 +9,7 @@ namespace DMI.Xenoarch.UI
     /// </summary>
     public sealed class LoadingScreenView
     {
-        readonly VisualElement _root, _spinner;
+        readonly VisualElement _root, _spinner, _barFill;
         readonly Label _title, _subtitle, _status;
         float _angle;
 
@@ -39,12 +39,19 @@ namespace DMI.Xenoarch.UI
             _status = new Label { pickingMode = PickingMode.Ignore };
             _status.style.fontSize = 17; _status.style.color = new Color(0.95f, 0.72f, 0.35f); _status.style.marginTop = 8;
             _root.Add(_status);
+            var bar = new VisualElement { pickingMode = PickingMode.Ignore };
+            bar.style.width = 420; bar.style.height = 6; bar.style.marginTop = 12; bar.style.backgroundColor = new Color(1f, 1f, 1f, 0.12f);
+            _barFill = new VisualElement { pickingMode = PickingMode.Ignore };
+            _barFill.style.height = Length.Percent(100); _barFill.style.width = Length.Percent(0); _barFill.style.backgroundColor = new Color(0.95f, 0.72f, 0.35f);
+            bar.Add(_barFill); _root.Add(bar);
             parent.Add(_root);
         }
 
         public void SetTitle(string t) => _title.text = t ?? "";
         public void SetSubtitle(string t) { _subtitle.text = t ?? ""; _subtitle.style.display = string.IsNullOrEmpty(t) ? DisplayStyle.None : DisplayStyle.Flex; }
         public void SetStatus(string s) => _status.text = s ?? "";
+        /// <summary>Loading bar fill (0..1), same value as the percentage in the status line.</summary>
+        public void SetProgress(float p01) => _barFill.style.width = Length.Percent(Mathf.Clamp01(p01) * 100f);
         public void SetVisible(bool on) => _root.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
 
         public void Tick(float dt)
