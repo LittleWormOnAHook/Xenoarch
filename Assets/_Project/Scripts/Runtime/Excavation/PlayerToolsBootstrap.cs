@@ -35,6 +35,7 @@ namespace DMI.Xenoarch.Excavation
             var root = rig.Root;
             if (root.GetComponent<DigTool>() == null) root.gameObject.AddComponent<DigTool>();
             DepthProbeTool.Ensure(root);
+            if (root.GetComponent<HeldToolVisuals>() == null) root.gameObject.AddComponent<HeldToolVisuals>();
             _done = root;
         }
     }

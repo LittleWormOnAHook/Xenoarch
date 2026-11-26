@@ -24,6 +24,7 @@ namespace DMI.Xenoarch.Excavation
         IPlayerRig _rig;
         DigTool _dig;
         SurfaceScannerTool _scanner;
+        FirstPersonArms _arms;
         UIDocument _doc; VisualElement _panel; Label _head, _body;
         float _nextPulse, _showUntil;
         readonly List<Track> _tracks = new List<Track>();
@@ -49,6 +50,7 @@ namespace DMI.Xenoarch.Excavation
             _rig = GetComponentInParent<IPlayerRig>() ?? PlayerRigLocator.Find();
             _dig = GetComponent<DigTool>();
             _scanner = GetComponentInChildren<SurfaceScannerTool>(true);
+            _arms = GetComponentInChildren<FirstPersonArms>(true);
         }
 
         void OnDisable() => SetEquipped(false);
@@ -70,6 +72,7 @@ namespace DMI.Xenoarch.Excavation
                 SetText($"{_def.displayName} {_def.Tier(Level).label}", "Aim at the dug surface. LMB: probe   hold LMB: live");
             }
             else ClearMarkers();
+            if (_arms != null) _arms.SetHeld(Hand.Right, Equipped);
             if (_panel != null) XenoarchUI.Show(_panel, on);
         }
 

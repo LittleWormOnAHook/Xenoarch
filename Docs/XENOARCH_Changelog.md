@@ -1,5 +1,13 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (afternoon) - Held first-person tool models (ZEN-23, UNTESTED)
+
+- Added held models for the six tools Anthony picked from the mockups: wand depth probe, pistol-grip scanner, entrenching shovel, dual-ended precision tool, stubby brush and heavy rock drill. They are simple generated meshes under `Assets/Xenoarch/Tools/Held/`.
+- `HeldToolVisuals` (added on the player by `PlayerToolsBootstrap`) parents the matching prefab to `HandSlot_R` when that tool is equipped from the hotbar, and hides it on holster or switch. The arm is raised with `FirstPersonArms.SetHeld`. The depth probe now also calls `SetHeld` (the dig tools and scanner already did).
+- The probe and drill models only appear when those items are owned, because their equip paths already refuse if the inventory does not have them.
+- Rebuild: Tools/Xenoarch/Player/Build Held Tool Prefabs (`Temp/xenoarch_heldtools.trigger` -> `Logs/xenoarch_heldtools.txt`). Catalog: `Resources/Tools/HeldToolCatalog`.
+- No scene was edited or saved. Compiles; not seen in Play yet. Grip pose is a starting alignment on `HandSlot_R` and may need a small tweak after looking at it in game.
+
 ## 2026-11-26 (morning) - UI icons: one style (t155u, approved mockups, UNTESTED)
 
 - Applied the mockups Anthony approved (`Docs/Images/UI_Icons/01-04`, rules in `Docs/XENOARCH_UI_Icons.md`). Compiles; not seen in Play yet.
