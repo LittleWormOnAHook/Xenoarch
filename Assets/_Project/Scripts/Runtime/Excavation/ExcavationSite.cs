@@ -169,6 +169,9 @@ namespace DMI.Xenoarch.Excavation
         public StrokeResult Stroke(Vector3 worldHit, DigToolSpec tool)
         {
             var l = transform.InverseTransformPoint(worldHit);
+            // The Digger carve is at least CarveRadius wide, so the grid stroke covers the same footprint (otherwise the hole
+            // looks dug where the grid still says "surface", and the next aim there reads depth 0).
+            if (_surface != null) tool.radius = Mathf.Max(tool.radius, CarveRadius * 0.8f);
             var r = Grid.StrokeAt(l.x, l.z, l.y, tool);
             if (!r.accepted) return r;
             if (_mesh != null) Rebuild();
@@ -179,19 +182,39 @@ namespace DMI.Xenoarch.Excavation
             return r;
         }
 
+        /// <summary>Radius of one Digger carve (never below Digger's voxel size).</summary>
+        public float CarveRadius => _surface != null ? Mathf.Max(Grid.cell * 0.8f, _surface.MinRadius * 1.25f) : Grid.cell * 0.72f;
+
         bool Carve(int x, int y, int z, float strength)
         {
-            float rad = Mathf.Max(Grid.cell * 0.72f, _surface.MinRadius);
+            float rad = CarveRadius;
+            // Sphere sits so its bottom is the bottom of the removed cell: the visual depth then matches the grid depth
+            // instead of a sphere centred mid-cell digging half a radius too deep.
+            var pos = CellCentre(x, y, z, 1f) + transform.up * (rad * 0.92f);
             return _surface.Apply(new ExcavationEdit
             {
-                position = CellCentre(x, y, z), radius = rad, strength = strength,
+                position = pos, radius = rad, strength = strength,
                 stroke = ExcavationStroke.Remove, materialIndex = Grid.LayerAt(y).diggerTexture,
             });
         }
 
         /// <summary>Re-carves the saved dug state into the Digger surface (Digger edits are not persisted separately).</summary>
+        bool _replaying;
+
+        /// <summary>Loading-screen gate: a dig site is still re-carving its saved hole, or Digger is still applying edits.</summary>
+        public static string BusyStatus()
+        {
+            foreach (var s in Active)
+                if (s != null && (s._replaying || (s._surface != null && s._surface.IsBusy))) return "Preparing excavation terrain";
+            return null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void RegisterGate() { if (!Scenes.SceneLoader.ReadyGates.Contains(BusyStatus)) Scenes.SceneLoader.ReadyGates.Add(BusyStatus); }
+
         System.Collections.IEnumerator Replay()
         {
+            _replaying = true;
             yield return null;
             int ops = 0;
             for (int x = 0; x < Grid.nx; x++)
@@ -203,6 +226,7 @@ namespace DMI.Xenoarch.Excavation
                         while (!Carve(x, y, z, f == 0 ? 1f : 0.6f)) yield return null;
                         ops++;
                     }
+            _replaying = false;
             Debug.Log($"[Xenoarch] Dig site {Definition.Id}: replayed {ops} carve op(s) into the terrain");
         }
 

@@ -41,6 +41,7 @@ namespace DMI.Xenoarch.Excavation
         [Tooltip("Condition loss factor when the stroke cuts a visible artifact's cell (x fragility x removed fraction). Only crude tools damage.")] public float damage;
         [Tooltip("Crude tools (shovel, drill) damage finds once they are visible; fine tools never do.")] public bool crude;
         [Tooltip("Strokes per second while the button is held.")] public float rate;
+        [Tooltip("Most cells one stroke can cut down through per column (0 = 1). Leftover removal carries into the next cell.")] public int cells;
     }
 
     public static class DigTools
@@ -90,6 +91,8 @@ namespace DMI.Xenoarch.Excavation
         public float[] surface;
         /// <summary>How far (in cells) a stroke may be from a column's floor and still cut it (bigger with Digger meshes).</summary>
         public float tolerance = 1.5f;
+        [Tooltip("How far (m) below a column's grid floor an aim may land and still dig it (Digger's visual hole can run deeper).")]
+        public float belowSlack = 1f;
         public float Surface(int x, int z) => surface != null ? surface[x + nx * z] : 0f;
         /// <summary>Local height of the column's current floor (surface minus dug depth).</summary>
         public float FloorY(int x, int z) => Surface(x, z) - TopDepth(x, z);
@@ -194,30 +197,40 @@ namespace DMI.Xenoarch.Excavation
                     if (!centre && dist > tool.radius) continue;
                     int y = TopLayer(x, z);
                     if (y >= ny) continue;
-                    if (Mathf.Abs(FloorY(x, z) - hitY) > cell * tolerance) continue;
-                    var layer = LayerAt(y);
-                    var mat = layer.kind;
-                    if (centre || !centreSet) { r.material = mat; r.layer = layer; centreSet |= centre; }
-                    float hard = layer.hardness;
-                    if (hard > tool.maxHardness) { r.refused = true; continue; }
-                    float amount = tool.removal / Mathf.Max(0.25f, hard) * (1f - 0.5f * Mathf.Clamp01(dist / Mathf.Max(0.01f, tool.radius)));
-                    int i = Index(x, y, z);
-                    float before = fill[i] / 255f;
-                    float take = Mathf.Min(before, amount);
-                    if (take <= 0f) continue;
-                    fill[i] = (byte)Mathf.Clamp(Mathf.RoundToInt((before - take) * 255f), 0, 255);
-                    if (fill[i] <= 2) fill[i] = 0;
-                    r.removed += take; r.accepted = true;
-                    r.cut ??= new List<Vector3Int>();
-                    r.cut.Add(new Vector3Int(x, y, z));
-
-                    // Damage: only a crude tool cutting a cell of a find that is already (partly) visible.
-                    var hit = ArtifactAt(x, y, z);
-                    if (hit != null && tool.crude && tool.damage > 0f && visibleBefore.Contains(hit))
+                    // Only reject aims clearly ABOVE this column's floor (rock, a wall, a find sticking up). Aims below it are
+                    // fine: the visual (Digger) hole can be a little deeper/wider than the grid, and rejecting those was what
+                    // stopped a held shovel after one stroke.
+                    float off = hitY - FloorY(x, z);
+                    if (off > cell * tolerance || off < -Mathf.Max(belowSlack, cell * tolerance)) continue;
+                    float amount = tool.removal * (1f - 0.5f * Mathf.Clamp01(dist / Mathf.Max(0.01f, tool.radius)));
+                    int maxCells = Mathf.Max(1, tool.cells);
+                    for (int c = 0; c < maxCells && y < ny && amount > 0.001f; c++, y++)
                     {
-                        float dmg = tool.damage * hit.fragility * take;
-                        hit.condition = Mathf.Max(0.05f, hit.condition - dmg);
-                        r.damageDealt += dmg; r.damaged = hit;
+                        var layer = LayerAt(y);
+                        if (centre || !centreSet) { r.material = layer.kind; r.layer = layer; centreSet |= centre; }
+                        float hard = layer.hardness;
+                        if (hard > tool.maxHardness) { if (c == 0) r.refused = true; break; }
+                        int i = Index(x, y, z);
+                        float before = fill[i] / 255f;
+                        float take = Mathf.Min(before, amount / Mathf.Max(0.25f, hard));
+                        if (take <= 0f) continue;
+                        amount -= take * Mathf.Max(0.25f, hard);
+                        fill[i] = (byte)Mathf.Clamp(Mathf.RoundToInt((before - take) * 255f), 0, 255);
+                        if (fill[i] <= 2) fill[i] = 0;
+                        r.removed += take; r.accepted = true;
+                        r.cut ??= new List<Vector3Int>();
+                        r.cut.Add(new Vector3Int(x, y, z));
+
+                        // Damage: only a crude tool cutting a cell of a find that is already (partly) visible.
+                        var hit = ArtifactAt(x, y, z);
+                        if (hit != null && tool.crude && tool.damage > 0f && visibleBefore.Contains(hit))
+                        {
+                            float dmg = tool.damage * hit.fragility * take;
+                            hit.condition = Mathf.Max(0.05f, hit.condition - dmg);
+                            r.damageDealt += dmg; r.damaged = hit;
+                        }
+                        if (hit != null) break;      // never cut through a find in one stroke
+                        if (fill[i] > 0) break;      // cell not finished: stop here
                     }
                 }
             if (r.accepted) strokes++;

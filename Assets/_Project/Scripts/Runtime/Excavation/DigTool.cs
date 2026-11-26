@@ -17,7 +17,27 @@ namespace DMI.Xenoarch.Excavation
     {
         public const float Reach = 3f;
         public int Equipped { get; private set; } = -1;
-        public DigToolSpec Current => Equipped >= 0 ? DigTools.All[Equipped] : default;
+
+        [Header("Dig strength (tunable)")]
+        [Tooltip("Removal multiplier for the crude tools (shovel, drill): >1 digs deeper per stroke.")] [Range(0.5f, 6f)] public float crudeStrength = 3f;
+        [Tooltip("Most cells (0.25 m each) one crude stroke can cut down through per column.")] [Range(1, 6)] public int crudeCellsPerStroke = 3;
+        [Tooltip("Removal multiplier for the fine tools (precision tool, brush).")] [Range(0.5f, 4f)] public float fineStrength = 1.5f;
+        [Tooltip("Show the projected aim ring on the ground while a dig tool is out.")] public bool aimRing = true;
+
+        /// <summary>The equipped tool with the tunable strength applied.</summary>
+        public DigToolSpec Current
+        {
+            get
+            {
+                if (Equipped < 0) return default;
+                var t = DigTools.All[Equipped];
+                if (t.crude) { t.removal *= crudeStrength; t.cells = Mathf.Max(t.cells, crudeCellsPerStroke); }
+                else { t.removal *= fineStrength; t.cells = Mathf.Max(t.cells, 1); }
+                return t;
+            }
+        }
+
+        DigAimRing _ring;
 
         FirstPersonArms _arms;
         SurfaceScannerTool _scanner;
@@ -40,7 +60,7 @@ namespace DMI.Xenoarch.Excavation
             _clunk = Noise("clunk", 0.08f, 0.15f);
         }
 
-        void Start() => BuildUi();
+        void Start() { BuildUi(); if (aimRing) _ring = DigAimRing.Create(transform); }
         void OnDisable() => Holster();
 
         static bool Has(string itemId) => XenoarchRuntime.Session != null && XenoarchRuntime.Session.Inventory.Count(itemId) > 0;
@@ -61,6 +81,7 @@ namespace DMI.Xenoarch.Excavation
             Equipped = -1;
             if (_arms != null) _arms.SetHeld(Hand.Right, false);
             XenoarchUI.Show(_panel, false);
+            if (_ring != null) _ring.Hide();
         }
 
         void Update()
@@ -79,14 +100,17 @@ namespace DMI.Xenoarch.Excavation
 
             var cam = _rig?.ViewCamera != null ? _rig.ViewCamera : Camera.main;
             ExcavationSite site = null; RaycastHit hit = default;
-            if (cam != null && Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, Reach, ~0, QueryTriggerInteraction.Ignore))
-                site = hit.collider.GetComponentInParent<ExcavationSite>() ?? ExcavationSite.At(hit.point);
+            bool aimed = cam != null && Aim(cam, out hit);
+            bool inReach = aimed && hit.distance <= Reach;
+            if (aimed) site = SiteFor(hit);
+            var tool = Current;
 
             bool held = !UIState.BlocksGameplay && ((mouse != null && mouse.leftButton.isPressed) || (gp != null && gp.rightTrigger.isPressed));
-            if (held && site != null && Time.time >= _nextStroke)
+            bool refusedHere = false;
+            if (held && site != null && inReach && Time.time >= _nextStroke)
             {
-                _nextStroke = Time.time + 1f / Mathf.Max(0.5f, Current.rate);
-                var r = site.Stroke(hit.point, Current);
+                _nextStroke = Time.time + 1f / Mathf.Max(0.5f, tool.rate);
+                var r = site.Stroke(hit.point, tool);
                 if (r.accepted)
                 {
                     _audio.pitch = Random.Range(0.85f, 1.15f);
@@ -96,11 +120,50 @@ namespace DMI.Xenoarch.Excavation
                 }
                 else if (r.refused)
                 {
+                    refusedHere = true;
                     _audio.PlayOneShot(_clunk);
-                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {Current.name.ToLowerInvariant()} ({r.layer.label}). {(r.layer.hardness > 2f ? "Use the drill." : "Try the precision tool or drill.")}");
+                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {tool.name.ToLowerInvariant()} ({r.layer.label}). {(r.layer.hardness > 2f ? "Use the drill." : "Try the precision tool or drill.")}");
                 }
             }
+            if (_ring != null)
+            {
+                if (!aimed || UIState.BlocksGameplay) _ring.Hide();
+                else
+                {
+                    float rad = tool.radius;
+                    if (site != null && site.MirrorsToSurface) rad = Mathf.Max(rad, site.CarveRadius * 0.8f);
+                    var st = site == null ? DigAimRing.State.Neutral : (inReach && !refusedHere ? DigAimRing.State.Valid : DigAimRing.State.Invalid);
+                    _ring.Show(hit.point, hit.normal, rad, st);
+                }
+            }
+            if (!inReach) site = null;
             UpdateHud(site, hit);
+        }
+
+        static readonly RaycastHit[] _hits = new RaycastHit[12];
+
+        /// <summary>Nearest hit along the view ray (up to 6 m), skipping the player's own colliders, triggers and buried
+        /// find visuals, so a freshly carved Digger chunk or an exposed artifact never steals the aim.</summary>
+        bool Aim(Camera cam, out RaycastHit best)
+        {
+            best = default;
+            int n = Physics.RaycastNonAlloc(cam.transform.position, cam.transform.forward, _hits, 6f, ~0, QueryTriggerInteraction.Ignore);
+            float bd = float.MaxValue;
+            for (int i = 0; i < n; i++)
+            {
+                var h = _hits[i];
+                if (h.collider == null || h.distance >= bd) continue;
+                if (h.collider.transform.IsChildOf(transform.root)) continue;           // the player rig, held tools
+                if (h.collider.GetComponentInParent<BuriedArtifact>() != null) continue; // finds: aim through to the soil
+                bd = h.distance; best = h;
+            }
+            return bd < float.MaxValue;
+        }
+
+        static ExcavationSite SiteFor(in RaycastHit hit)
+        {
+            var s = hit.collider.GetComponentInParent<ExcavationSite>();
+            return s != null ? s : ExcavationSite.At(hit.point);
         }
 
         void Flash(string text) { _flash = text; _flashUntil = Time.time + 2.5f; }

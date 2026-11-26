@@ -47,6 +47,8 @@ namespace DMI.Xenoarch.EditorTools
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
             if (config == null || config.itemRegistry == null || config.siteRegistry == null) { Debug.LogError("[Xenoarch] 1C: config/registries missing (run Setup 1-7 first)"); return; }
 
+            XenoarchDigRingSetup.Run(log);
+            XenoarchShaderWarmup.Run(log);
             var civ = Civ();
             var arts = Artifacts(log);
             var reg = config.itemRegistry;
@@ -418,6 +420,22 @@ namespace DMI.Xenoarch.EditorTools
             log.AppendLine($"Refiner: placeholder pillar added next to the Research Laboratory at {go.transform.position} (parent '{(go.transform.parent != null ? go.transform.parent.name : "scene root")}')");
         }
 
+        /// <summary>Batch 3A: a held shovel keeps digging the same spot (aims below the grid floor are accepted), and one
+        /// crude stroke goes deeper than one cell on soft soil.</summary>
+        public static void ValidateDigging(System.Action<bool, string> check)
+        {
+            var g = new ExcavationGrid(8, 8, 8, 0.25f);
+            var shovel = DigTools.Shovel; shovel.removal *= 3f; shovel.cells = 3;
+            var r1 = g.StrokeAt(1.125f, 1.125f, 0f, shovel);
+            float d1 = g.TopDepth(4, 4);
+            // aim at the visual hole, 0.4 m below the grid floor (what a Digger carve looks like): must still dig
+            var r2 = g.StrokeAt(1.125f, 1.125f, -d1 - 0.4f, shovel);
+            float d2 = g.TopDepth(4, 4);
+            var r3 = g.StrokeAt(1.125f, 1.125f, -d2 + 2f, shovel); // aimed 2 m above the floor: ignored
+            check(r1.accepted && r2.accepted && d1 >= 0.49f && d2 > d1 && !r3.accepted,
+                $"3A digging: repeated shovel strokes keep cutting ({d1:0.00} m -> {d2:0.00} m), above-floor aim ignored");
+        }
+
         public static void ValidateFtl(System.Action<bool, string> check)
         {
             var go = new GameObject("ftl probe") { hideFlags = HideFlags.HideAndDontSave };
@@ -685,6 +703,10 @@ namespace DMI.Xenoarch.EditorTools
 
             ValidateMaterials(check, config);
             ValidateFtl(check);
+            XenoarchDigRingSetup.Validate(check);
+            XenoarchShaderWarmup.Validate(check);
+            check(DMI.Xenoarch.Scenes.SceneLoader.ReadyGates != null, "3A loading screen: ready gates available (shader compile, Digger replay)");
+            ValidateDigging(check);
 
             // Grid rules
             var grid = ExcavationGrid.ForSite(3f, 1.2f, 0.25f);
@@ -735,7 +757,7 @@ namespace DMI.Xenoarch.EditorTools
             var g6 = ExcavationGrid.ForSite(1f, 1.2f, 0.25f);
             g6.surface = new float[g6.nx * g6.nz];
             for (int i = 0; i < g6.surface.Length; i++) g6.surface[i] = 0.5f;
-            var r6a = g6.StrokeAt(1f, 1f, 0f, DigTools.Shovel);
+            var r6a = g6.StrokeAt(1f, 1f, -1.5f, DigTools.Shovel); // 2 m under the real ground: not this site's surface
             var r6b = g6.StrokeAt(1f, 1f, 0.5f, DigTools.Shovel);
             check(!r6a.accepted && r6b.accepted && r6b.cut != null && r6b.cut.Count > 0, "1C dig: grid follows the terrain surface per column (stroke must hit the real ground; cut cells reported for Digger)");
             for (int i = 0; i < 200; i++) grid2.Stroke(lx, lz, grid2.TopDepth(10, 10), DigTools.Drill);

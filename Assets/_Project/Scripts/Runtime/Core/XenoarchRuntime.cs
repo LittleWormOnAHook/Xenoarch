@@ -74,6 +74,7 @@ namespace DMI.Xenoarch.Core
                 _session.Location.sceneName = active;
                 _sessionActive = true;
                 Debug.Log($"[Xenoarch] Direct play of '{active}': implicit new game started");
+                _loader.CoverCurrentScene(); // loading screen until shaders/terrain are ready
             }
         }
 
