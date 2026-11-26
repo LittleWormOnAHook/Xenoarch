@@ -60,6 +60,23 @@ namespace DMI.Xenoarch.Excavation
         void Start() { BuildUi(); if (aimRing) _ring = DigAimRing.Create(transform); }
         void OnDisable() => Holster();
 
+        static int ToolIndex(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return -1;
+            var all = DigTools.All;
+            for (int i = 0; i < all.Length; i++) if (all[i].itemId == itemId) return i;
+            return -1;
+        }
+
+        /// <summary>Hotbar key (2-8) a tool is on, or 0.</summary>
+        static int KeyFor(int toolIndex)
+        {
+            var bar = XenoarchRuntime.Session?.Hotbar;
+            if (bar == null || toolIndex < 0) return 0;
+            for (int k = 1; k < DMI.Xenoarch.Inventory.Hotbar.Size; k++) if (bar.At(k) == DigTools.All[toolIndex].itemId) return k + 1;
+            return 0;
+        }
+
         static bool Has(string itemId) => XenoarchRuntime.Session != null && XenoarchRuntime.Session.Inventory.Count(itemId) > 0;
 
         public void Equip(int index)
@@ -89,9 +106,15 @@ namespace DMI.Xenoarch.Excavation
             var kb = Keyboard.current; var gp = Gamepad.current; var mouse = Mouse.current;
             if (!UIState.BlocksGameplay && kb != null)
             {
-                int n = Mathf.Min(DigTools.All.Length, SlotKeys.Length);
-                for (int i = 0; i < n; i++)
-                    if (kb[SlotKeys[i]].wasPressedThisFrame) Equip(Equipped == i ? -1 : i);
+                // Keys 2-8 follow the hotbar (drag tools onto it in the inventory); default layout = 2 shovel, 3 precision...
+                var bar = XenoarchRuntime.Session.Hotbar;
+                for (int k = 0; k < SlotKeys.Length && k + 1 < DMI.Xenoarch.Inventory.Hotbar.Size; k++)
+                {
+                    if (!kb[SlotKeys[k]].wasPressedThisFrame) continue;
+                    int i = ToolIndex(bar.At(k + 1));
+                    if (i >= 0) Equip(Equipped == i ? -1 : i);
+                    else if (Equipped >= 0) Holster();
+                }
             }
             if (Equipped < 0) return;
             if (!Has(Current.itemId) || (_scanner != null && _scanner.Equipped)) { Holster(); return; }
@@ -205,7 +228,8 @@ namespace DMI.Xenoarch.Excavation
             {
                 var t = all[i];
                 if (t.maxHardness < hardness) continue;
-                string n = $"{t.name.ToLowerInvariant()} ({i + 2})";
+                int key = KeyFor(i);
+                string n = key > 0 ? $"{t.name.ToLowerInvariant()} ({key})" : $"{t.name.ToLowerInvariant()} (put it on the hotbar)";
                 if (Has(t.itemId)) owned = owned == null ? n : owned + " or " + n; else missing = missing == null ? t.name.ToLowerInvariant() : missing + ", " + t.name.ToLowerInvariant();
             }
             if (owned != null) return $"The {owned} cuts it faster.";
@@ -264,7 +288,10 @@ namespace DMI.Xenoarch.Excavation
             var sb = new System.Text.StringBuilder();
             var all = DigTools.All;
             for (int i = 0; i < all.Length && i < SlotKeys.Length; i++)
-                sb.Append($"{i + 2} {(string.IsNullOrEmpty(all[i].shortName) ? all[i].name : all[i].shortName)}{(Has(all[i].itemId) ? "" : " (none)")}  ");
+            {
+                int key = KeyFor(i); if (key <= 0) continue;
+                sb.Append($"{key} {(string.IsNullOrEmpty(all[i].shortName) ? all[i].name : all[i].shortName)}{(Has(all[i].itemId) ? "" : " (none)")}  ");
+            }
             return sb.ToString().TrimEnd();
         }
 

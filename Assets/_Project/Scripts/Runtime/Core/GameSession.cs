@@ -53,6 +53,8 @@ namespace DMI.Xenoarch.Core
         public PlayerLocationState Location { get; internal set; } = new PlayerLocationState();
         public float PlaySeconds { get; set; }
 
+        /// <summary>Hotbar assignment (keys 1-8), saved; missing in old saves = default layout.</summary>
+        public Hotbar Hotbar { get; }
         public const string LocationKey = "player.location";
         public const string InventoryKey = "player.inventory";
         public const string WorldKey = "world.persistence";
@@ -67,6 +69,9 @@ namespace DMI.Xenoarch.Core
 
             Saves.Register(new JsonStateSection<PlayerLocationState>(LocationKey, 0, () => Location, v => Location = v));
             Saves.Register(new InventorySection(InventoryKey, 0, Inventory));
+            Hotbar = new Hotbar(() => Config.surfaceScanner != null ? Config.surfaceScanner.itemId : "item.tool.handheld_scanner",
+                () => { var l = new System.Collections.Generic.List<string>(); foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) l.Add(t.itemId); return l; });
+            Saves.Register(new JsonStateSection<HotbarData>(Hotbar.Key, 0, () => Hotbar.Data, v => Hotbar.Set(v)));
             Saves.Register(World);
             Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
             Discovery = new DMI.Xenoarch.Discovery.DiscoveryService(config.discoveryChains, Exploration, Saves) { Clock = () => PlaySeconds };

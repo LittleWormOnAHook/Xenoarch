@@ -146,6 +146,14 @@ namespace DMI.Xenoarch.Inventory
             return false;
         }
 
+        /// <summary>Swap two backpack slots (drag and drop inside the inventory).</summary>
+        public void Swap(int a, int b)
+        {
+            if (a == b || a < 0 || b < 0 || a >= _slots.Count || b >= _slots.Count) return;
+            (_slots[a], _slots[b]) = (_slots[b], _slots[a]);
+            Changed?.Invoke();
+        }
+
         public void Clear()
         {
             foreach (var s in _slots) s.Clear();

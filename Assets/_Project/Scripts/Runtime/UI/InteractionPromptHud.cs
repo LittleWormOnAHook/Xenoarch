@@ -23,7 +23,7 @@ namespace DMI.Xenoarch.UI
 
         VisualElement _root, _crosshair, _prompt, _holdTrack, _holdFill, _strip;
         Label _promptText, _hints;
-        InventoryModel _boundInventory;
+        InventoryModel _boundInventory; Hotbar _boundHotbar;
         bool _stripDirty = true;
 
         void Awake() { if (interactor == null) interactor = FindAnyObjectByType<Interactor>(); }
@@ -49,6 +49,8 @@ namespace DMI.Xenoarch.UI
         {
             if (_boundInventory != null) _boundInventory.Changed -= MarkDirty;
             _boundInventory = null;
+            if (_boundHotbar != null) _boundHotbar.Changed -= MarkDirty;
+            _boundHotbar = null;
         }
 
         void MarkDirty() => _stripDirty = true;
@@ -77,6 +79,14 @@ namespace DMI.Xenoarch.UI
                 if (inv != null) inv.Changed += MarkDirty;
                 _stripDirty = true;
             }
+            var bar = XenoarchRuntime.Session?.Hotbar;
+            if (bar != _boundHotbar)
+            {
+                if (_boundHotbar != null) _boundHotbar.Changed -= MarkDirty;
+                _boundHotbar = bar;
+                if (bar != null) bar.Changed += MarkDirty;
+                _stripDirty = true;
+            }
             if (_stripDirty) RebuildStrip();
         }
 
@@ -87,26 +97,31 @@ namespace DMI.Xenoarch.UI
             _strip.Clear();
             var s = XenoarchRuntime.Session;
             if (s == null) return;
+            // Hotbar (keys 1-8): assigned by dragging items onto it in the inventory window (I).
             int shown = 0;
-            foreach (var slot in s.Inventory.Slots)
+            for (int k = 0; k < Hotbar.Size && k < maxStripSlots; k++)
             {
-                if (slot.IsEmpty) continue;
-                if (shown++ >= maxStripSlots) break;
+                string id = s.Hotbar.At(k);
+                if (id == null) continue;
+                int count = s.Inventory.Count(id);
+                shown++;
                 var cell = new VisualElement(); cell.AddToClassList("xa-slot");
                 var icon = new VisualElement(); icon.AddToClassList("xa-slot__icon");
-                string name = slot.itemId;
-                if (s.Items.TryGetItem(slot.itemId, out var def))
+                string name = id;
+                if (s.Items.TryGetItem(id, out var def))
                 {
                     name = def.DisplayNameOrId;
                     if (def.icon != null) icon.style.backgroundImage = new StyleBackground(def.icon);
                 }
-                cell.tooltip = name;
+                if (count <= 0) cell.style.opacity = 0.4f;
+                cell.tooltip = $"{k + 1}: {name}";
                 cell.Add(icon);
-                if (slot.count > 1) { var c = new Label("x" + slot.count); c.AddToClassList("xa-slot__count"); cell.Add(c); }
+                var key = new Label((k + 1).ToString()); key.AddToClassList("xa-slot__count"); key.style.left = 3; key.style.right = StyleKeyword.Auto; key.style.top = 1; key.style.bottom = StyleKeyword.Auto; cell.Add(key);
+                if (count > 1) { var c = new Label("x" + count); c.AddToClassList("xa-slot__count"); cell.Add(c); }
                 var n = new Label(name); n.AddToClassList("xa-slot__name"); cell.Add(n);
                 _strip.Add(cell);
             }
-            if (shown == 0) { var e = new Label("Inventory empty"); e.AddToClassList("xa-hint"); _strip.Add(e); }
+            if (shown == 0) { var e = new Label("Hotbar empty: drag items onto it in the inventory (I)"); e.AddToClassList("xa-hint"); _strip.Add(e); }
         }
     }
 }

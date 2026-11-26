@@ -137,7 +137,7 @@ namespace DMI.Xenoarch.Ship
 
             var left = ScrollCol(body, 0, true);
             Text(left, $"BACKPACK  ({inv.Capacity - inv.FreeSlots}/{inv.Capacity})", "xa-term__h");
-            Text(left, $"Click a stack to store it here. {Accepts()}");
+            Text(left, $"Click or drag a stack to store it here. {Accepts()}");
             Rows(left, inv, hold, "->");
             Btn(left, "Store everything this crate takes (not tools in hand)", () =>
             {
@@ -147,7 +147,7 @@ namespace DMI.Xenoarch.Ship
 
             var right = ScrollCol(body, 1, true);
             Text(right, $"{Title.ToUpperInvariant()}  ({used}/{hold.Capacity})", "xa-term__h");
-            Text(right, "Click a stack to take it.");
+            Text(right, "Click or drag a stack to take it.");
             Rows(right, hold, inv, "<-");
             if (ShipHold.Level < ShipHold.MaxLevel) Text(right, $"Hold upgrades: {ShipHold.SlotsFor(Session.Config.starterShip, ShipHold.Level + 1)} slots at the next level (ship upgrades, coming with crafting).");
         }
@@ -164,16 +164,29 @@ namespace DMI.Xenoarch.Ship
         void Rows(VisualElement col, InventoryModel from, InventoryModel to, string arrow)
         {
             bool any = false;
-            foreach (var s in Snapshot(from))
+            string kind = from == HoldInv ? "crate" : "backpack";
+            // Drop zone: the whole column takes stacks dragged from the other side (t108u drag and drop).
+            DragDrop.Target(col, p => p.kind != kind && p.container is InventoryModel, p =>
             {
+                var src = (InventoryModel)p.container;
+                if (p.index < 0 || p.index >= src.Slots.Count || src.Slots[p.index].IsEmpty) return;
+                var st = src.Slots[p.index].Clone();
+                if (from == HoldInv && Session.Items.TryGetItem(st.itemId, out var dd) && dd != null && !ShipHold.Accepts(Role, dd.category)) { Toast.Show($"{Title} does not take that"); return; }
+                if (ShipHold.Transfer(src, from, st) == 0) Toast.Show(from == HoldInv ? $"{Title} is full" : "Backpack is full");
+            });
+            for (int i = 0; i < from.Slots.Count; i++)
+            {
+                var s = from.Slots[i];
+                if (s.IsEmpty) continue;
                 any = true;
                 string name = Session.Items.TryGetItem(s.itemId, out var d) && d != null ? d.DisplayNameOrId : s.itemId;
-                var stack = s;
+                var stack = s.Clone(); int index = i; var icon = d != null ? d.icon : null;
                 bool ok = to != HoldInv || d == null || ShipHold.Accepts(Role, d.category);
-                Btn(col, arrow == "->" ? $"{name}  x{s.count}   {arrow}" : $"{arrow}   {name}  x{s.count}", () =>
+                var b = Btn(col, arrow == "->" ? $"{name}  x{s.count}   {arrow}" : $"{arrow}   {name}  x{s.count}", () =>
                 {
                     if (ShipHold.Transfer(from, to, stack) == 0) Toast.Show(to == HoldInv ? $"{Title} is full" : "Backpack is full");
                 }, ok);
+                if (ok) Drag.Source(b, () => new DragDrop.Payload { kind = kind, index = index, itemId = stack.itemId, container = from, icon = icon });
             }
             if (!any) Text(col, "(empty)");
         }

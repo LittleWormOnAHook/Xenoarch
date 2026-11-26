@@ -69,13 +69,23 @@ namespace DMI.Xenoarch.UI
             var left = ScrollCol(body, 0, true);
             Text(left, "BACKPACK", "xa-term__h");
             var grid = new VisualElement(); grid.style.flexDirection = FlexDirection.Row; grid.style.flexWrap = Wrap.Wrap; left.Add(grid);
-            foreach (var st in inv.Slots) grid.Add(Tile(st));
+            for (int i = 0; i < inv.Slots.Count; i++) grid.Add(Tile(inv.Slots[i], i));
+            Text(left, "Drag items to rearrange, onto the hotbar, or onto a crate below.", "xa-term__dim");
+
+            // Hotbar (keys 1-8). Slot 1 is the scanner; drag tools/items onto 2-8, drag off to clear.
+            Text(left, "HOTBAR", "xa-term__h");
+            var hb = new VisualElement(); hb.style.flexDirection = FlexDirection.Row; hb.style.flexWrap = Wrap.Wrap; left.Add(hb);
+            for (int k = 0; k < Hotbar.Size; k++) hb.Add(HotbarTile(k));
+            DragDrop.Target(grid, p => p.kind == "hotbar" || p.kind == "backpack", p => { if (p.kind == "hotbar") { s.Hotbar.Clear(p.index); Refresh(); } });
+
             Text(left, "SHIP STORAGE", "xa-term__h");
             foreach (var kv in s.Holds)
             {
                 var h = kv.Value; int used = h.Capacity - h.FreeSlots;
                 var top = h.Slots.Where(x => !x.IsEmpty).GroupBy(x => x.itemId).Select(g => $"{Def(g.Key)?.DisplayNameOrId ?? g.Key} x{g.Sum(x => x.count)}").Take(4);
-                Text(left, $"{kv.Key} crate: {used}/{h.Capacity} slots" + (used > 0 ? $"  ({string.Join(", ", top)}{(h.Slots.Count(x => !x.IsEmpty) > 4 ? ", ..." : "")})" : ""), "xa-term__dim");
+                var line = Text(left, $"{kv.Key} crate: {used}/{h.Capacity} slots" + (used > 0 ? $"  ({string.Join(", ", top)}{(h.Slots.Count(x => !x.IsEmpty) > 4 ? ", ..." : "")})" : "") + "   [drop here]", "xa-term__dim");
+                var role = kv.Key; var hold = h;
+                DragDrop.Target(line, p => p.kind == "backpack", p => DropToCrate(role, hold, p));
             }
 
             // ---------------- details
@@ -222,9 +232,66 @@ namespace DMI.Xenoarch.UI
             return null;
         }
 
-        VisualElement Tile(ItemStack st)
+        bool IsAboardShip() => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.StartsWith("Ship_");
+
+        void DropToCrate(DMI.Xenoarch.Ship.StorageRole role, InventoryModel hold, DragDrop.Payload p)
+        {
+            var inv = Session.Inventory;
+            if (p.index < 0 || p.index >= inv.Slots.Count || inv.Slots[p.index].IsEmpty) return;
+            var st = inv.Slots[p.index];
+            var d = Def(st.itemId);
+            if (!IsAboardShip()) { Toast.Show("Crates are aboard the ship"); return; }
+            if (d != null && !ShipHold.Accepts(role, d.category)) { Toast.Show($"The {role} crate does not take that"); return; }
+            if (ShipHold.Transfer(inv, hold, st.Clone()) == 0) Toast.Show($"{role} crate is full");
+            Refresh();
+        }
+
+        VisualElement HotbarTile(int k)
+        {
+            var bar = Session.Hotbar; string id = bar.At(k);
+            var d = Def(id);
+            var t = new VisualElement();
+            t.style.width = 56; t.style.height = 56; t.style.marginRight = 4; t.style.marginBottom = 4;
+            t.style.backgroundColor = XenoarchPalette.PanelDark;
+            t.style.borderTopWidth = t.style.borderBottomWidth = t.style.borderLeftWidth = t.style.borderRightWidth = 1;
+            var bc = k == 0 ? XenoarchPalette.A(XenoarchPalette.Secondary, 0.25f) : XenoarchPalette.A(XenoarchPalette.Primary, 0.6f);
+            t.style.borderTopColor = t.style.borderBottomColor = t.style.borderLeftColor = t.style.borderRightColor = bc;
+            if (d != null && d.icon != null)
+            {
+                var img = new VisualElement { pickingMode = PickingMode.Ignore }; img.style.flexGrow = 1; img.style.backgroundImage = new StyleBackground(d.icon);
+                if (Session.Inventory.Count(id) <= 0) img.style.opacity = 0.35f;
+                t.Add(img);
+            }
+            else if (id != null) t.Add(new Label(d != null ? d.DisplayNameOrId : id) { pickingMode = PickingMode.Ignore, style = { fontSize = 9, whiteSpace = WhiteSpace.Normal } });
+            var key = new Label((k + 1).ToString()) { pickingMode = PickingMode.Ignore };
+            key.style.position = Position.Absolute; key.style.left = 3; key.style.top = 1; key.style.fontSize = 11; key.style.color = XenoarchPalette.Highlight;
+            t.Add(key);
+            t.tooltip = k == 0 ? "1: handheld scanner (fixed)" : id != null ? $"{k + 1}: {(d != null ? d.DisplayNameOrId : id)} (drag off to clear)" : $"{k + 1}: empty (drag an item here)";
+            if (k > 0)
+            {
+                if (id != null) Drag.Source(t, () => new DragDrop.Payload { kind = "hotbar", index = k, itemId = id, icon = d != null ? d.icon : null });
+                DragDrop.Target(t, p => p.kind == "backpack" || p.kind == "hotbar", p =>
+                {
+                    if (p.kind == "hotbar") bar.Swap(p.index, k);
+                    else if (!string.IsNullOrEmpty(p.itemId)) bar.Assign(k, p.itemId);
+                    Refresh();
+                });
+            }
+            else DragDrop.Target(t, p => true, p => Toast.Show("Slot 1 is the scanner"));
+            return t;
+        }
+
+        VisualElement Tile(ItemStack st, int index)
         {
             var t = new Button(() => { if (!st.IsEmpty) { _selItem = st.itemId; Refresh(); } }) { text = "" };
+            var inv0 = Session.Inventory;
+            Drag.Source(t, () => st.IsEmpty ? null : new DragDrop.Payload { kind = "backpack", index = index, itemId = st.itemId, container = inv0, icon = Def(st.itemId)?.icon });
+            DragDrop.Target(t, p => p.kind == "backpack" || p.kind == "hotbar", p =>
+            {
+                if (p.kind == "backpack") inv0.Swap(p.index, index);
+                else Session.Hotbar.Clear(p.index);
+                Refresh();
+            });
             t.style.width = 64; t.style.height = 64; t.style.marginRight = 4; t.style.marginBottom = 4;
             t.style.paddingLeft = t.style.paddingRight = t.style.paddingTop = t.style.paddingBottom = 4;
             t.style.backgroundColor = XenoarchPalette.PanelDark;

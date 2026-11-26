@@ -18,6 +18,9 @@ namespace DMI.Xenoarch.UI
         public Transform interactionPoint;
 
         protected VisualElement Body { get; private set; }
+        DragDrop _drag;
+        /// <summary>Drag and drop for this window (lazy; lives on the window root so the ghost is never clipped).</summary>
+        protected DragDrop Drag => _drag ??= new DragDrop(_root);
         protected Label Status { get; private set; }
         protected Label Hint { get; private set; }
         protected GameSession Session => XenoarchRuntime.Session;
