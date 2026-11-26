@@ -39,3 +39,31 @@ Nothing in this pass has been run in Play Mode, smoke-tested or unit-tested. All
 - Decide which chain nodes unlock Proxima Centauri, Barnard's Star and Epsilon Eridani (set `unlockSystemId` on those nodes' rewards), and whether Tau Ceti's coordinates should be re-pointed to one of the core four.
 - Author artifact sets/fragments on existing ArtifactDefinitions and add chain nodes that require set progress.
 - Review recipe costs for grind (no recipe assets were changed in this pass).
+
+## 2026-11-25 (late): Discovery puzzle + Creepy Cat importer fix (UNTESTED)
+
+All of this compiles cleanly. Nothing was played or tested.
+
+### Vael star map puzzle (commit d32f67b)
+- **Pieces:** the 29 Sol-system artifacts (11 `Artifact_moon_*`, 12 `Artifact_mars_*`, 6 `Artifact_vael_*`) now have `fragmentOf: proxima_star_map`. `Artifact_unknown_lump` is excluded. Since there are more than 8 definitions, the board needs **8 distinct artifact types**: no duplicates, and no artifact gives more than one piece. Loot tables are unchanged.
+- **Inventory:** puzzle pieces show a small orange corner mark. Right-clicking one opens a menu with "Combine with other artifact", which is enabled once at least 2 pieces are owned (backpack or ship crates).
+- **Reconstruction panel** (`UI/ArtifactPuzzleWindow.cs`):
+  - The left side lists the owned pieces.
+  - The right side is a square 3x3 board: 8 slots around a "MAP CORE" counter.
+  - Click a piece and then a slot, or drag a piece onto a slot. Right-click a slot to remove its piece. Back or Esc returns to the inventory.
+  - Artifacts stay in the inventory; the board only references them. A piece that is sold or lost drops off an unsolved board.
+- **Reveal:** filling all 8 slots fades in a star map (Sol to Proxima bearing) and types out the coordinates RA 14h 29m 43s, Dec -62° 40' 46", 4.25 ly, with a chime and a toast. It then:
+  - publishes `puzzle.solved:proxima_star_map`;
+  - publishes `nav.system.proxima_centauri`, which unlocks the Nav dropdown entry;
+  - adds a journal record (`DiscoveryService.Record`).
+- **Save:** board state is saved under the new key `artifacts.puzzles`. Older saves load with an empty board.
+- **DLC hook:** `ArtifactPuzzleService.Register(PuzzleSpec)` adds more puzzles.
+
+### Creepy Cat FBX import warnings (commit f4a97a8)
+- **Cause:** 416 FBX models under `Assets/_Creepy_Cat/_3D Scifi Kit Vol 3` (Meshes, Meshes/_Letters_Numbers, and one in Station Ptolemy) were set to the legacy `materialLocation: 0` (External). Unity 6 warns "MaterialLocation.External is obsolete" on every import.
+- **Fix:** the Editor tool `XenoarchImporterFixes` (Tools/Xenoarch/Fix Creepy Cat FBX Material Location, or Temp/xenoarch_ccfix.trigger) did the following:
+  - recorded each renderer slot's material;
+  - switched the importers to `materialLocation: 1` (InPrefab);
+  - added 923 external-object remaps that point every embedded material back to the same .mat asset it used before.
+- **Result:** 0 conflicts and 0 slot mismatches on re-verification. 832 reimports produced no MaterialLocation warnings.
+- **Not in git:** `Assets/_Creepy_Cat` is gitignored, so the changed .meta files live only on this machine. The tool is committed so the fix can be re-applied after a fresh vendor import. A backup of the original metas is at `C:\Users\Teabagger\cc_meta_backup`.
