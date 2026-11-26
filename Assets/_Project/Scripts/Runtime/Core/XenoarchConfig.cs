@@ -35,6 +35,10 @@ namespace DMI.Xenoarch.Core
         [Tooltip("Crafting recipes (Crafting/CraftRecipe).")] public List<DMI.Xenoarch.Crafting.CraftRecipe> craftRecipes = new List<DMI.Xenoarch.Crafting.CraftRecipe>();
         [Tooltip("Environment for scenes not tied to a body (fallback).")] public DMI.Xenoarch.Galaxy.EnvironmentProfile defaultEnvironment;
         [Tooltip("Deep-space sky used aboard the ship when the current body has no orbit skybox.")] public Material defaultSpaceSkybox;
+        [Tooltip("Aboard the ship, bodies with an Orbit View show the real planet sphere outside the window under the Milky Way sky instead of their painted orbit skybox (off = the kit's orbit skyboxes as before).")]
+        public bool preferOrbitViews = true;
+        [Tooltip("Aboard the ship: multiplier on the scene's authored ambient light (darker space; 1 = as authored).")]
+        [Range(0.2f, 1.5f)] public float shipAmbientScale = 0.7f;
 
         [Header("New game")]
         public string firstGameplayScene = SceneNames.ShipStarter;

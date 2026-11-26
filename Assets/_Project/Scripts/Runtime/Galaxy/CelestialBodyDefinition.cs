@@ -25,6 +25,8 @@ namespace DMI.Xenoarch.Galaxy
         public Color mapColor = Color.white;
         [Tooltip("Sky seen from the ship while parked in orbit of / docked at this body (empty = galaxy default deep space).")]
         public Material orbitSkybox;
+        [Tooltip("Planet sphere shown outside the ship window while in orbit of this body (used when there is no orbitSkybox). Optional.")]
+        public OrbitViewDefinition orbitView;
         [TextArea] public string description;
         [Header("Surface map (baked by setup from the landing scene's terrain)")]
         [Tooltip("Top-down relief map of the landing region (orbit scan view, minimap).")] public Texture2D surfaceMap;

@@ -60,7 +60,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ef53b369102c58d4887c22053d4532b6, type: 2}
   - {fileID: 11400000, guid: 4f7a580e8bfc91947960be86ec44182f, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
-  defaultSpaceSkybox: {fileID: 2100000, guid: a01121a83277da848a2a5f4917888ed4, type: 2}
+  defaultSpaceSkybox: {fileID: 2100000, guid: 8ba5043e1a9251278cb647dc04d2b025, type: 2}
   firstGameplayScene: Ship_Starter
   firstSpawnId: default
   inventoryCapacity: 24

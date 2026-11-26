@@ -57,6 +57,8 @@ namespace DMI.Xenoarch.Core
             _loader = gameObject.AddComponent<SceneLoader>();
             _loader.fadeDuration = config.fadeDuration;
             gameObject.AddComponent<DMI.Xenoarch.Galaxy.EnvironmentDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Galaxy.SunDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Galaxy.OrbitViewDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Exploration.SiteMarkerDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Excavation.ExcavationDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Exploration.ShuttleDirector>();

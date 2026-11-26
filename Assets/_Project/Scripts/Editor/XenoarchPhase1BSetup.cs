@@ -389,7 +389,7 @@ namespace DMI.Xenoarch.EditorTools
             check(ship.exteriorPrefab != null && ship.interiorPrefab != null, $"1B: ship prefabs linked (exterior={(ship.exteriorPrefab ? ship.exteriorPrefab.name : "none")}, interior={(ship.interiorPrefab ? ship.interiorPrefab.name : "none")})");
 
             var sky = config.defaultSpaceSkybox;
-            check(sky != null && sky.shader != null && sky.shader.name == "Skybox/6 Sided" && sky.GetTexture("_FrontTex") != null, $"1B sky: default deep-space skybox ({(sky ? sky.name : "none")})");
+            check(sky != null && sky.shader != null && ((sky.shader.name == "Skybox/6 Sided" && sky.GetTexture("_FrontTex") != null) || (sky.shader.name == "Xenoarch/Skybox/Planet Sky" && sky.GetTexture("_StarTex") != null)), $"1B sky: default deep-space skybox ({(sky ? sky.name : "none")})");
             var wrongSky = sol.bodies.Where(b => b != null && (OrbitSkies.TryGetValue(b.Id, out var m) ? (b.orbitSkybox == null || b.orbitSkybox.name != m) : b.orbitSkybox != null)).Select(b => b.Id).ToList();
             check(wrongSky.Count == 0, $"1B sky: Earth=EarthOrbit, Moon=MoonOrbit, Mars=MarsOrbit, every other body = ship scene sky{(wrongSky.Count > 0 ? " (wrong: " + string.Join(", ", wrongSky) + ")" : "")}");
             var sceneSky = AssetDatabase.LoadAssetAtPath<Material>(SkyPath(DefaultSky));

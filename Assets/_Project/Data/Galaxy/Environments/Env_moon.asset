@@ -24,3 +24,4 @@ MonoBehaviour:
   fogColor: {r: 0, g: 0, b: 0, a: 0}
   fogDensity: 0
   volumeProfile: {fileID: 0}
+  skybox: {fileID: 2100000, guid: da40aeeefe885b30bd0a03764caedc65, type: 2}

@@ -13,6 +13,7 @@ namespace DMI.Xenoarch.Galaxy
     public sealed class EnvironmentDirector : MonoBehaviour
     {
         public EnvironmentProfile Current { get; private set; }
+        Scene _ambientScaledScene; // scene instance already darkened (RenderSettings reset on each load)
         Volume _volume;
 
         // The skybox authored in the loaded scene (its open-space / default sky), captured before we swap anything.
@@ -51,12 +52,19 @@ namespace DMI.Xenoarch.Galaxy
             return cfg.defaultEnvironment;
         }
 
-        /// <summary>Aboard the ship: the orbited body's sky (Earth, Moon, Mars have one), anything else = the ship scene's
-        /// own skybox (open space). The body comes from the saved ship state, so the sky follows save/load.</summary>
+        /// <summary>Aboard the ship: the orbited body's sky (Earth, Moon, Mars have one); anything else = open space: the
+        /// system's own space sky, else the config default (the Milky Way), else the ship scene's authored sky. The body
+        /// comes from the saved ship state, so the sky follows save/load.</summary>
         public static Material ResolveShipSky(CelestialBodyDefinition body, Material sceneDefault, Material configFallback)
+            => ResolveShipSky(body, null, sceneDefault, configFallback, false);
+
+        /// <param name="preferOrbitViews">Bodies with an <see cref="OrbitViewDefinition"/> skip their painted orbit sky
+        /// (the planet is drawn as a sphere outside the window instead).</param>
+        public static Material ResolveShipSky(CelestialBodyDefinition body, StarSystemDefinition system, Material sceneDefault, Material configFallback, bool preferOrbitViews)
         {
-            if (body != null && body.orbitSkybox != null) return body.orbitSkybox;
-            return sceneDefault != null ? sceneDefault : configFallback;
+            if (body != null && body.orbitSkybox != null && !(preferOrbitViews && body.orbitView != null)) return body.orbitSkybox;
+            if (system != null && system.spaceSkybox != null) return system.spaceSkybox;
+            return configFallback != null ? configFallback : sceneDefault;
         }
 
         /// <summary>Sky for a scene: aboard the ship see <see cref="ResolveShipSky"/>; elsewhere the environment's sky if set.</summary>
@@ -66,7 +74,7 @@ namespace DMI.Xenoarch.Galaxy
             if (scene == SceneNames.ShipStarter)
             {
                 CaptureSceneSky(scene, false);
-                return ResolveShipSky(session.Exploration?.CurrentBody, _sceneDefaultSky, cfg.defaultSpaceSkybox);
+                return ResolveShipSky(session.Exploration?.CurrentBody, session.Exploration?.CurrentSystem, _sceneDefaultSky, cfg.defaultSpaceSkybox, cfg.preferOrbitViews);
             }
             var env = Resolve(cfg, scene);
             return env != null ? env.skybox : null;
@@ -89,6 +97,14 @@ namespace DMI.Xenoarch.Galaxy
                 if (f.GetComponent<Exploration.SurfaceScannerTool>() == null) f.gameObject.AddComponent<Exploration.SurfaceScannerTool>();
 
             ApplySky(session, scene);
+            // Darker space aboard the ship: scale the scene's own ambient (once per scene load; the scene asset is untouched).
+            var active = SceneManager.GetActiveScene();
+            if (scene == SceneNames.ShipStarter && _ambientScaledScene != active)
+            {
+                _ambientScaledScene = active;
+                float k = session.Config.shipAmbientScale;
+                RenderSettings.ambientLight *= k; RenderSettings.ambientSkyColor *= k; RenderSettings.ambientEquatorColor *= k; RenderSettings.ambientGroundColor *= k;
+            }
             var env = Resolve(session.Config, scene);
             Current = env;
             if (env == null) return;
