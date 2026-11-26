@@ -50,10 +50,7 @@ namespace DMI.Xenoarch.Ship
         public static bool Upgrade()
         {
             var s = XenoarchRuntime.Session;
-            if (s == null || s.Exploration.Ship.holdLevel >= MaxLevel) return false;
-            s.Exploration.Ship.holdLevel++;
-            foreach (var h in s.Holds.Values) h.SetCapacity(SlotsFor(s.Config.starterShip, s.Exploration.Ship.holdLevel));
-            return true;
+            return s != null && s.ApplyUpgrade(GameSession.UpgradeHold);
         }
 
         /// <summary>Move a stack (or unique instance) between inventories. Returns how many moved.</summary>

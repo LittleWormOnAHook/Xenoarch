@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d799ebf045304cf47ab127bbfc99b2fa, type: 3}
+  m_Name: Craft_circuit
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Crafting.CraftRecipe
+  id: craft.circuit
+  displayName: Circuit Board
+  description: Solder a control board with gold contacts.
+  category: 0
+  ingredients:
+  - itemId: item.component.wiring
+    count: 1
+  - itemId: material.gold_ingot
+    count: 1
+  outputItemId: item.component.circuit
+  outputAmount: 1
+  upgradeId: 
+  upgradeLevel: 0
+  craftSeconds: 4
+  station: 1
+  unlockFact: 

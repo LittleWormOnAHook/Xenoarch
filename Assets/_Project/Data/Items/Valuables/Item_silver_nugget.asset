@@ -15,7 +15,7 @@ MonoBehaviour:
   id: item.valuable.silver_nugget
   displayName: Silver Nugget
   description: A rounded lump of native silver.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1f8c6bb34f840d346be536a900ea005f, type: 3}
   category: 8
   maxStack: 20
   uniqueInstance: 0

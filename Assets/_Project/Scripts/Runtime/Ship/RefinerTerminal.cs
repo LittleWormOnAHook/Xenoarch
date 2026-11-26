@@ -74,14 +74,17 @@ namespace DMI.Xenoarch.Ship
 
             var cargoCol = ScrollCol(body, 2);
             Text(cargoCol, "MATERIALS ABOARD", "xa-term__h");
+            Text(cargoCol, "Backpack + ship crates. Inputs come from the backpack first; products go to the backpack, then a crate.", "xa-term__dim");
             int n = 0;
-            foreach (var id in inv.Slots.Where(s => !s.IsEmpty).Select(s => s.itemId).Distinct())
+            var stock = Session.Stock;
+            foreach (var id in stock.Ids().ToList())
             {
                 var md = m.Material(id);
                 if (md == null) continue;
                 n++;
-                string use = md.fuelValue > 0f ? $"fuel {md.fuelValue:0.#}" : md.reagentValue > 0 ? $"reagent {md.reagentValue}" : "refine";
-                Text(cargoCol, $"{md.DisplayNameOrId} x{inv.Count(id)}  ({use})");
+                string use = md.fuelValue > 0f ? $"fuel {md.fuelValue:0.#}" : md.reagentValue > 0 ? $"reagent {md.reagentValue}" : md.refined ? "refined" : "refine";
+                int bp = inv.Count(id), all = stock.Count(id);
+                Text(cargoCol, $"{md.DisplayNameOrId} x{all}  ({use})" + (all > bp ? $"  [{all - bp} in crates]" : ""));
             }
             if (n == 0) Text(cargoCol, "None. Collect deposits on planet surfaces (hold E).");
             Text(cargoCol, $"Lab reagents: {m.ReagentUnits()} units", "xa-term__dim");

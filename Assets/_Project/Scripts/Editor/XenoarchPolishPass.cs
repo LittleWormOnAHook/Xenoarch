@@ -153,11 +153,13 @@ namespace DMI.Xenoarch.EditorTools
             {
                 var all = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
                 var helms = all.Select(g => g.GetComponent<CockpitHelm>()).Where(h => h != null).ToList();
-                check(helms.Count == 1 && helms[0].gameObject.name.StartsWith(HelmHost) && helms[0].GetComponentInChildren<Collider>(true) != null,
-                    $"1B cockpit: one ship console (CockpitHelm) on {HelmHost} with a collider ({string.Join(", ", helms.Select(h => h.gameObject.name))})");
+                // Anthony may add more helm consoles / seats himself: require the main one, and every one clickable.
+                check(helms.Any(h => h.gameObject.name.StartsWith(HelmHost)) && helms.All(h => h.GetComponentInChildren<Collider>(true) != null),
+                    $"1B cockpit: ship console (CockpitHelm) on {HelmHost}, every console has a collider ({string.Join(", ", helms.Select(h => h.gameObject.name))})");
                 var seats = all.Select(g => g.GetComponent<CockpitSeat>()).Where(x => x != null).ToList();
-                check(seats.Count >= 2 && seats.All(x => x.gameObject.name.StartsWith(SeatHost) && x.console != null && x.GetComponentInChildren<Collider>(true) != null),
-                    $"1B cockpit: {seats.Count} seat(s) on {SeatHost}, each facing the console and clickable");
+                var badSeats = seats.Where(x => x.console == null || x.GetComponentInChildren<Collider>(true) == null).Select(x => x.gameObject.name).ToList();
+                check(seats.Count(x => x.gameObject.name.StartsWith(SeatHost)) >= 2 && badSeats.Count == 0,
+                    $"1B cockpit: {seats.Count} seat(s) ({string.Join(", ", seats.Select(x => x.gameObject.name).Distinct())}), each facing a console and clickable{(badSeats.Count > 0 ? " - no console/collider: " + string.Join(", ", badSeats) : "")}");
                 check(System.IO.File.ReadAllText(ship).Contains("m_SkyboxMaterial: {fileID: 2100000"), "1B sky: Ship_Starter has its own skybox (open-space default)");
             }
             finally { if (opened) EditorSceneManager.CloseScene(scene, true); }

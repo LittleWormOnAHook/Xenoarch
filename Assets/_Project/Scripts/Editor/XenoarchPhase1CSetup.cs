@@ -70,6 +70,7 @@ namespace DMI.Xenoarch.EditorTools
             }
             Kit(LabReagent, 8); Kit(FuelCell, 2);
 
+            XenoarchCraftingSetup.Run(config, log);
             var chain = Chain();
             if (!config.civilizations.Contains(civ)) config.civilizations.Add(civ);
             if (!config.discoveryChains.Contains(chain)) config.discoveryChains.Add(chain);
@@ -714,6 +715,7 @@ namespace DMI.Xenoarch.EditorTools
             XenoarchMapsSetup.Validate(check);
             XenoarchValuablesSetup.Validate(check);
             XenoarchShipHookup.Validate(check);
+            XenoarchCraftingSetup.Validate(check);
             check(DMI.Xenoarch.Scenes.SceneLoader.ReadyGates != null, "3A loading screen: ready gates available (shader compile, Digger replay)");
             ValidateDigging(check);
 

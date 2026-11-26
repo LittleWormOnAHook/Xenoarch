@@ -15,7 +15,7 @@ MonoBehaviour:
   id: material.regolith
   displayName: Regolith
   description: Loose surface rock and dust. Leach it into lab reagent at the refiner.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 02a6a0d7573af9a44840dd117e201f50, type: 3}
   category: 3
   maxStack: 50
   uniqueInstance: 0

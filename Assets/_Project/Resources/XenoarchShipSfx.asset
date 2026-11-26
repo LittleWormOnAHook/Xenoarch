@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bd93da2f7c54994cb9ad28e84ab16dd, type: 3}
   m_Name: XenoarchShipSfx
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Ship.ShipSfx
-  liftStart: {fileID: 0}
-  liftLoop: {fileID: 0}
-  liftStop: {fileID: 0}
+  liftStart: {fileID: 8300000, guid: 45e99b21f16484749b99d567b3d68627, type: 3}
+  liftLoop: {fileID: 8300000, guid: 5fc3751831851524cbe0fb03b020de9e, type: 3}
+  liftStop: {fileID: 8300000, guid: 45e99b21f16484749b99d567b3d68627, type: 3}

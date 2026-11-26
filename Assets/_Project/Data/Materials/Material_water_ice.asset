@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Water Ice
   description: Ice from shaded ground. Split it into fuel cells, or use it to make
     reagent from salts.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a3e5c79b9033b504fbf45c7a230e21bd, type: 3}
   category: 3
   maxStack: 50
   uniqueInstance: 0

@@ -42,6 +42,10 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
+        /// <summary>Backpack + the three ship crates as one stock (refiner and crafting take from it, backpack first).</summary>
+        public ItemPool Stock { get; }
+        public DMI.Xenoarch.Crafting.CraftingService Crafting { get; }
+        public bool AboardShip => Location != null && Location.sceneName == SceneNames.ShipStarter;
         public PlayerLocationState Location { get; internal set; } = new PlayerLocationState();
         public float PlaySeconds { get; set; }
 
@@ -72,10 +76,66 @@ namespace DMI.Xenoarch.Core
                 Holds[role] = hold;
                 Saves.Register(new DMI.Xenoarch.Ship.ShipHold.Section(role, hold, () => DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, Exploration.Ship.holdLevel)));
             }
+            Stock = new ItemPool(items, Inventory, HoldOrder);
+            Materials.Pool = Stock;
+            Crafting = new DMI.Xenoarch.Crafting.CraftingService(items, Stock, config.craftRecipes)
+            {
+                HasFact = k => Discovery.Has(k),
+                AboardShip = () => AboardShip,
+                UpgradeLevel = UpgradeLevel,
+                UpgradeMax = UpgradeMax,
+                ApplyUpgrade = ApplyUpgrade,
+            };
             Artifacts.HasReagents = n => Materials.ReagentUnits() >= n;
             Artifacts.PayReagents = n => Materials.PayReagents(n);
             Exploration.Gate = key => Discovery.Has(key);
             Exploration.SiteRevealed += (id, level) => Discovery.Publish(DMI.Xenoarch.Discovery.Facts.Site(id), level);
+        }
+
+        System.Collections.Generic.IEnumerable<(InventoryModel, Func<ItemCategory, bool>)> HoldOrder()
+        {
+            foreach (var role in new[] { DMI.Xenoarch.Ship.StorageRole.General, DMI.Xenoarch.Ship.StorageRole.Equipment, DMI.Xenoarch.Ship.StorageRole.Artifacts })
+            {
+                var r = role;
+                if (Holds.TryGetValue(r, out var h)) yield return (h, c => DMI.Xenoarch.Ship.ShipHold.Accepts(r, c));
+            }
+        }
+
+        public const string UpgradeHold = "ship.hold", UpgradeHandheldScanner = "scanner.handheld", UpgradeOrbitalScanner = "scanner.orbital";
+
+        public int UpgradeLevel(string id) => id switch
+        {
+            UpgradeHold => Exploration.Ship.holdLevel,
+            UpgradeHandheldScanner => Exploration.Ship.handheldScannerLevel,
+            UpgradeOrbitalScanner => Exploration.Ship.orbitalRangeLevel,
+            _ => 0,
+        };
+
+        static int Top(System.Array a) => a != null ? Math.Max(0, a.Length - 1) : 0;
+
+        public int UpgradeMax(string id) => id switch
+        {
+            UpgradeHold => Top(Config.starterShip?.holdSlotsByLevel),
+            UpgradeHandheldScanner => Top(Config.surfaceScanner?.rangeByLevel),
+            UpgradeOrbitalScanner => Top(Config.starterShip?.orbitalScanRadiusByLevel),
+            _ => 0,
+        };
+
+        /// <summary>Raises an upgrade one level (crafting / future trading). False at max or unknown.</summary>
+        public bool ApplyUpgrade(string id)
+        {
+            if (UpgradeLevel(id) >= UpgradeMax(id)) return false;
+            var s = Exploration.Ship;
+            switch (id)
+            {
+                case UpgradeHold:
+                    s.holdLevel++;
+                    foreach (var h in Holds.Values) h.SetCapacity(DMI.Xenoarch.Ship.ShipHold.SlotsFor(Config.starterShip, s.holdLevel));
+                    return true;
+                case UpgradeHandheldScanner: s.handheldScannerLevel++; return true;
+                case UpgradeOrbitalScanner: s.orbitalRangeLevel++; return true;
+            }
+            return false;
         }
 
         /// <summary>Resets every section and grants the starting kit. Does not load a scene.</summary>

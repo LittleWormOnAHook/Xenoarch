@@ -12,6 +12,8 @@ namespace DMI.Xenoarch.Galaxy
         public const string ShipScene = SceneNames.ShipStarter;
         public const string ShipSpawnBridge = PlayerSpawnIds.Default;
         public const string ShipSpawnAirlock = "airlock";
+        /// <summary>Beside the bay shuttle (a placed PlayerSpawnPoint with this id wins; otherwise ShuttleBayShuttle makes one).</summary>
+        public const string ShipSpawnShuttleBay = "shuttle_bay";
         /// <summary>Planet arrival spawn created beside the landed shuttle (ShuttleDirector).</summary>
         public const string ShuttleSpawn = "shuttle";
 
@@ -70,7 +72,7 @@ namespace DMI.Xenoarch.Galaxy
             var rt = XenoarchRuntime.Instance;
             if (rt == null) return false;
             Scenes.SceneLoader.NextTitle = "Returning to the ship";
-            return rt.Travel(ShipScene, ShipSpawnAirlock);
+            return rt.Travel(ShipScene, ShipSpawnShuttleBay + "|" + ShipSpawnAirlock); // bay, else the airlock
         }
 
         public static string LocationText(ExplorationService x)

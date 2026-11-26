@@ -36,6 +36,29 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0f9f52e8102d6b948a7ff528dc1e4326, type: 2}
   - {fileID: 11400000, guid: d61bab55597d5654792e01ad53c321f5, type: 2}
   - {fileID: 11400000, guid: a099d911c01a44c42b557c7b8d734d6a, type: 2}
+  - {fileID: 11400000, guid: 76e4f0245667465489045742b4e0d52f, type: 2}
+  - {fileID: 11400000, guid: 77f14072dd4039248acea9841c05ba4d, type: 2}
+  - {fileID: 11400000, guid: 12c3bcf73028879468700a85fb3a9a56, type: 2}
+  - {fileID: 11400000, guid: b0839785cc13bde4e80412b6eb93add4, type: 2}
+  strata:
+  - {fileID: 11400000, guid: aeadaeac54a7f6d4e92b10688e42bd31, type: 2}
+  - {fileID: 11400000, guid: e7ba8fd688b83bf40b9616a3045093c3, type: 2}
+  craftRecipes:
+  - {fileID: 11400000, guid: 84e9af93940600c4ca647d7702b9590e, type: 2}
+  - {fileID: 11400000, guid: c8b683ee6b0555f4487d01a730f09f42, type: 2}
+  - {fileID: 11400000, guid: c51fb726286a5994ea6433a4463823f1, type: 2}
+  - {fileID: 11400000, guid: d461d03096b1d6b488755f882f8b615f, type: 2}
+  - {fileID: 11400000, guid: 9a73b069b2f5935478a601a58e8e5f19, type: 2}
+  - {fileID: 11400000, guid: bccfb7f532fdc924d88a91d922676964, type: 2}
+  - {fileID: 11400000, guid: 616344ab86a1c3d43a852f874847fa86, type: 2}
+  - {fileID: 11400000, guid: e2322194d78bc65458726c22a25a5816, type: 2}
+  - {fileID: 11400000, guid: 4c873bd9ae6130b49a9be4d45f912166, type: 2}
+  - {fileID: 11400000, guid: a092de561dc03424d8b4eeee4adf6d76, type: 2}
+  - {fileID: 11400000, guid: 21c7513279d68a5429c5a077fce317f6, type: 2}
+  - {fileID: 11400000, guid: 01a32eef396bc8c46ab75d8031a1fa39, type: 2}
+  - {fileID: 11400000, guid: a0a226ba68059af4c80258dcd459bddb, type: 2}
+  - {fileID: 11400000, guid: ef53b369102c58d4887c22053d4532b6, type: 2}
+  - {fileID: 11400000, guid: 4f7a580e8bfc91947960be86ec44182f, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   defaultSpaceSkybox: {fileID: 2100000, guid: a01121a83277da848a2a5f4917888ed4, type: 2}
   firstGameplayScene: Ship_Starter

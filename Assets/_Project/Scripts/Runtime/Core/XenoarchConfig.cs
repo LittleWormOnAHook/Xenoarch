@@ -31,6 +31,8 @@ namespace DMI.Xenoarch.Core
         public List<DMI.Xenoarch.Discovery.DiscoveryChainDefinition> discoveryChains = new List<DMI.Xenoarch.Discovery.DiscoveryChainDefinition>();
         [Range(0.1f, 1f)] [Tooltip("Max translation the Mk I ship lab reaches (better translators raise it later).")] public float labTranslationCap = 0.6f;
         [Tooltip("Ship refiner recipes (Materials/RefineRecipe).")] public List<DMI.Xenoarch.Materials.RefineRecipe> refineRecipes = new List<DMI.Xenoarch.Materials.RefineRecipe>();
+        [Tooltip("Layered ground per body: depth bands of raw materials that digging yields (Materials/StrataProfile).")] public List<DMI.Xenoarch.Materials.StrataProfile> strata = new List<DMI.Xenoarch.Materials.StrataProfile>();
+        [Tooltip("Crafting recipes (Crafting/CraftRecipe).")] public List<DMI.Xenoarch.Crafting.CraftRecipe> craftRecipes = new List<DMI.Xenoarch.Crafting.CraftRecipe>();
         [Tooltip("Environment for scenes not tied to a body (fallback).")] public DMI.Xenoarch.Galaxy.EnvironmentProfile defaultEnvironment;
         [Tooltip("Deep-space sky used aboard the ship when the current body has no orbit skybox.")] public Material defaultSpaceSkybox;
 

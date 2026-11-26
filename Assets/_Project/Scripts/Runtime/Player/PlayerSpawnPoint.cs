@@ -7,8 +7,16 @@ namespace DMI.Xenoarch.Player
     {
         public string spawnId = Core.PlayerSpawnIds.Default;
 
+        /// <summary>Spawn by id; "a|b" tries a then b; falls back to "default" (or any spawn).</summary>
         public static PlayerSpawnPoint Find(string spawnId)
         {
+            if (spawnId != null && spawnId.IndexOf('|') >= 0)
+            {
+                var all = FindObjectsByType<PlayerSpawnPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                foreach (var id in spawnId.Split('|'))
+                    foreach (var p in all) if (p.spawnId == id) return p;
+                spawnId = Core.PlayerSpawnIds.Default;
+            }
             PlayerSpawnPoint fallback = null;
             foreach (var p in FindObjectsByType<PlayerSpawnPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             {

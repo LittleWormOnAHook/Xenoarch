@@ -60,6 +60,7 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.Exploration.ShuttleDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Valuables.ValuableSiteDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.MinimapHud>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.InventoryWindow>();
             gameObject.AddComponent<DMI.Xenoarch.Materials.MaterialsDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
@@ -83,7 +84,7 @@ namespace DMI.Xenoarch.Core
 
         void Update()
         {
-            if (_sessionActive && !_loader.IsLoading) { _session.PlaySeconds += Time.unscaledDeltaTime; _session.Artifacts.Tick(Time.deltaTime); _session.Materials.Tick(Time.deltaTime); }
+            if (_sessionActive && !_loader.IsLoading) { _session.PlaySeconds += Time.unscaledDeltaTime; _session.Artifacts.Tick(Time.deltaTime); _session.Materials.Tick(Time.deltaTime); _session.Crafting.Tick(Time.deltaTime); }
             if (!_session.Config.enableDebugHotkeys || _loader.IsLoading) return;
             var kb = Keyboard.current;
             if (kb == null) return;

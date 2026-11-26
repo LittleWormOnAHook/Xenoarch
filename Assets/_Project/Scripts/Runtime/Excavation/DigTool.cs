@@ -116,6 +116,7 @@ namespace DMI.Xenoarch.Excavation
                     _audio.pitch = Random.Range(0.85f, 1.15f);
                     _audio.PlayOneShot(_scrape);
                     if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
+                    StrataFinds(site, r);
                     if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Switch to the precision tool (3) or brush (4).");
                 }
                 else if (r.refused)
@@ -164,6 +165,26 @@ namespace DMI.Xenoarch.Excavation
         {
             var s = hit.collider.GetComponentInParent<ExcavationSite>();
             return s != null ? s : ExcavationSite.At(hit.point);
+        }
+
+        static readonly System.Random _strataRng = new System.Random();
+
+        /// <summary>Layered ground: the cells this stroke cut yield the materials of their depth band (into the backpack).</summary>
+        static void StrataFinds(ExcavationSite site, in StrokeResult r)
+        {
+            var s = XenoarchRuntime.Session;
+            if (s == null || site == null || site.Definition == null || r.cut == null || r.cut.Count == 0) return;
+            var profile = Materials.StrataProfile.For(s.Config.strata, site.Definition.bodyId);
+            if (profile == null) return;
+            float frac = r.removed / r.cut.Count;
+            var cuts = new System.Collections.Generic.List<(int, float)>();
+            foreach (var c in r.cut) cuts.Add((c.y, frac));
+            foreach (var (id, n) in Materials.StrataYield.Dig(s.Materials, profile, site.Definition.Id, site.Grid.cell, cuts, _strataRng))
+            {
+                int lost = s.Inventory.Add(id, n);
+                string name = s.Materials.Name(id);
+                UI.Toast.Show(lost >= n ? $"Backpack full: {name} left in the spoil" : $"+{n - lost} {name}");
+            }
         }
 
         void Flash(string text) { _flash = text; _flashUntil = Time.time + 2.5f; }
