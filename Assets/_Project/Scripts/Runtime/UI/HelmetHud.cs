@@ -130,6 +130,7 @@ namespace DMI.Xenoarch.UI
         void Update()
         {
             if (_doc == null) return;
+            if (_built && (_root == null || _root.panel == null)) { _built = false; _root?.RemoveFromHierarchy(); } // detached (t139u): rebuild
             if (!_built) Build();
             if (!_built) return;
 
