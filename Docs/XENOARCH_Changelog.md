@@ -67,3 +67,24 @@ All of this compiles cleanly. Nothing was played or tested.
   - added 923 external-object remaps that point every embedded material back to the same .mat asset it used before.
 - **Result:** 0 conflicts and 0 slot mismatches on re-verification. 832 reimports produced no MaterialLocation warnings.
 - **Not in git:** `Assets/_Creepy_Cat` is gitignored, so the changed .meta files live only on this machine. The tool is committed so the fix can be re-applied after a fresh vendor import. A backup of the original metas is at `C:\Users\Teabagger\cc_meta_backup`.
+
+## 2026-11-26 - ZEN-8 dig fixes, ZEN-9 menus / refined scanner / soil textures (compiled only, NOT played)
+
+- **Digging (943563e):** one full-strength Digger carve per stroke, sunk to the deepest new floor. Previously there was a partial-strength carve per cut cell, dozens per stroke, which flooded Digger's buffer. That caused lag, late holes and mostly-paint strokes. Carves left waiting are capped at 24, and at most 4 are retried per frame. The per-stroke list allocation is gone.
+- **Tool tiers are data** (`Resources/Excavation/DigTools/DigTool_*.asset`, `DigToolDefinition`): chunk size, rate, rated hardness, artifact-damage risk, crude flag and slot order.
+  - No tool has a depth cap; only bedrock stops digging.
+  - Bands harder than a tool's rating are dug slowly (squared falloff) instead of being refused.
+  - The shovel is about 3x faster (removal 2.0 at 5.6 strokes/s). The precision tool is about 1.5/s and the brush about 1.0/s.
+  - Keys 2-9 follow the slot order.
+- **HUD:** a persistent "HARD <band>: slow going ... <faster tool>" note, plus a bedrock note.
+- **Fence:** marked major sites get stakes every 2.5 m with an orange rope and a large ground circle. These are rebuilt from the reveal level on load. Caches are excluded.
+- **Deep sites:** standing on a site now always gives a weak reading. Before, a site deeper than the scanner's rating read "No signal", so it was never marked or fenced.
+- **Menus (7c43576):** an ASH-flow main menu (Continue / New / Load / Settings / Quit) and a pause menu (Esc: Resume / Save / Load / Settings / Main menu / Quit) in UITK.
+  - Slots: auto, quick, and slot1-6.
+  - Autosave runs on a timer (default 10 min), on landing/launch and on discoveries. All three are set in Settings (PlayerPrefs).
+- **Refined scanner (4b31153):** hold 1 for 0.6 s inside a fenced site; a tap still equips. Each pulse pinpoints the nearest unflagged buried find within 8 m and plants a red flag.
+  - Codes are the body's first 2 letters + site order + spot order (Ma11).
+  - Spot states: flagged, digging (flag pulled), unfinished (left the 3 m perimeter; flag replaced), done.
+  - New save section `digsites.maps`; old saves start empty.
+  - Maps window (N) has Surface and Dig Sites tabs.
+- **Soil textures (44b9401):** CC0 ambientCG Ground099, recoloured, on Mars_Soil / Moon_Soil. That is Digger texture 1, the "red layer" on dug walls. A normal map was added; see Data/Terrain/SOURCES.md. The main surface layer 0 (Creepy Cat) is unchanged.
