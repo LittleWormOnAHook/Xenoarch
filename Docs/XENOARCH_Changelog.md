@@ -1,5 +1,21 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - Free CC0 asset pack (Xenoarch_Free) + import defaults
+
+- Added about 232 MB / 883 files of CC0 assets in `Assets/!GET_MORE_ASSETS_FOR_FREE/Xenoarch_Free/`. That folder is **gitignored** (repo .gitignore line 74, and excluded from commits by standing rule), so the files are on Anthony's disk only. The source and licence list is committed as `Docs/XENOARCH_Free_Assets_SOURCES.md`. Contents:
+  - ambientCG 2K PBR sets: Rock064 / 058 / 035, Ground054 / 080, Gravel043, Ice002 / 004, Snow006, Lava004.
+  - Poly Haven moon_rock_01 / 03 / 05 / 07 and boulder_01 (FBX, 1K maps).
+  - Kenney Space Kit: 153 FBX.
+  - Kenney Sci-fi Sounds (73 OGG) and Interface Sounds (100 OGG).
+  - Kenney UI Pack Sci-fi (PNG + fonts).
+  - Kenney Game Icons (white 2x).
+- `XenoarchFreeAssetsImporter` (editor) sets first-import defaults for that folder only:
+  - normal maps as Normal Map; roughness / AO / height linear; PBR max 2048 with mipmaps
+  - UI PNGs as sprites without mipmaps
+  - audio as Vorbis (UI clips decompress on load, engine loops compressed in memory)
+  - models without cameras or lights
+- The original promo files (`DEV FREEDOM.txt`, `DevFreedom.club ... .url` and their metas) are untouched.
+
 ## 2026-11-26 (early) - t140u: Mars buried chamber; dev testing loadout off (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
