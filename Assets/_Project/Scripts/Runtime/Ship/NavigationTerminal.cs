@@ -179,7 +179,7 @@ namespace DMI.Xenoarch.Ship
             sysBtn.style.width = 130;
             if (x.GalaxyMapUnlocked) { var g = Btn(row, "Galaxy map", () => { _galaxy = true; Refresh(); }, !galaxy); g.style.width = 130; }
             var reset = Btn(row, "Reset view", () => { (galaxy ? _galView : _sysView).Reset(); if (galaxy) _galView.pitch = 50f; Refresh(); }); reset.style.width = 110;
-            Text(col, "RMB drag: rotate freely   Shift+RMB / Q E: roll   LMB drag: pan   Ctrl+LMB: depth   Wheel: zoom at cursor   Click: select   Double-click: focus   R: reset", "xa-term__dim");
+            Text(col, "LMB drag: rotate (all axes; near the edge rolls)   Q E / Shift+LMB: roll   RMB / MMB drag: pan   Ctrl+RMB: depth   Wheel: zoom at cursor   Click: select   Double-click: focus   R: reset", "xa-term__dim");
         }
 
         /// <summary>Map units: star at the origin, planets on log-scaled orbits (radius 0..1), moons around their parent.</summary>

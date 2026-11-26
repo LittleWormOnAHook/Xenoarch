@@ -7,9 +7,9 @@ namespace DMI.Xenoarch.UI
 {
     /// <summary>
     /// Interactive 3D map (system and galaxy maps): orthographic view that orbits a focus point, free in all directions.
-    /// RMB drag (or Alt+LMB) rotates trackball-style about the view's own axes (no clamps, no gimbal flip: you can go
-    /// over the top and underneath); Shift+RMB drag or Q/E rolls. LMB/MMB drag pans in screen space along the rotated
-    /// view (any direction); Ctrl+LMB drag moves the focus in depth. Wheel zooms smoothly toward the cursor over a wide
+    /// LMB drag is an arcball on all 3 axes: near the centre it tilts/turns about the view's own axes (no clamps, no
+    /// gimbal flip: over the top and underneath), and toward the edge circular motion rolls; Shift+LMB or Q/E = pure
+    /// roll. RMB/MMB drag pans in screen space along the rotated view (any direction); Ctrl+RMB/MMB moves the focus in depth. Wheel zooms smoothly toward the cursor over a wide
     /// range; double-click a body to fly the focus to it and orbit around it; click selects. View state lives in
     /// <see cref="ViewState"/> so it survives terminal rebuilds.
     /// </summary>
@@ -46,7 +46,7 @@ namespace DMI.Xenoarch.UI
         public event Action<string> Focused;
 
         readonly List<Label> _labels = new List<Label>();
-        Vector2 _downPos, _lastPos; int _button = -1; bool _dragged; bool _shift, _ctrl, _alt;
+        Vector2 _downPos, _lastPos; int _button = -1; bool _dragged; bool _shift, _ctrl;
         // Static: the terminal rebuilds the map on the first click, so a per-instance record would miss the second one.
         static string _lastClickId; static float _lastClickTime;
 
@@ -156,7 +156,7 @@ namespace DMI.Xenoarch.UI
         void OnDown(PointerDownEvent e)
         {
             _button = e.button; _downPos = _lastPos = (Vector2)e.localPosition; _dragged = false;
-            _shift = e.shiftKey; _ctrl = e.ctrlKey || e.commandKey; _alt = e.altKey;
+            _shift = e.shiftKey; _ctrl = e.ctrlKey || e.commandKey;
             this.CapturePointer(e.pointerId);
             Focus();
             e.StopPropagation();
@@ -169,14 +169,21 @@ namespace DMI.Xenoarch.UI
             if ((pos - _downPos).sqrMagnitude > 16f) _dragged = true;
             if (!_dragged) return;
             var cam = State.Cam;
-            if (_button == 1 && (_shift || e.shiftKey))
-                State.Cam = cam * Quaternion.AngleAxis(-d.x * 0.4f, Vector3.forward);               // roll
-            else if (_button == 1 || (_button == 0 && _alt))
-                State.Cam = cam * Quaternion.AngleAxis(d.x * 0.4f, Vector3.up) * Quaternion.AngleAxis(-d.y * 0.4f, Vector3.right); // trackball: own axes, unclamped
-            else if (_button == 0 && _ctrl)
+            if (_button == 0)
+            {
+                // Arcball: blend from tilt/turn (centre) to roll (outer ring) by the cursor's distance from the centre.
+                var c = Centre; float R = Mathf.Max(1f, 0.5f * Mathf.Min(contentRect.width, contentRect.height));
+                Vector2 a0 = pos - d - c, a1 = pos - c;
+                float w = (_shift || e.shiftKey) ? 1f : Mathf.Clamp01((a1.magnitude / R - 0.55f) / 0.4f);
+                float roll = (a0.sqrMagnitude > 4f && a1.sqrMagnitude > 4f) ? Vector2.SignedAngle(a0, a1) * w : 0f;
+                var dt = d * (1f - w);
+                State.Cam = cam * Quaternion.AngleAxis(dt.x * 0.4f, Vector3.up) * Quaternion.AngleAxis(-dt.y * 0.4f, Vector3.right)
+                                * Quaternion.AngleAxis(roll, Vector3.forward);
+            }
+            else if (_ctrl || e.ctrlKey)
                 { State.focus += cam * Vector3.forward * (-d.y / Mathf.Max(1e-6f, Scale)); State.focusAnim = false; } // depth
             else
-                { State.focus -= cam * new Vector3(d.x, -d.y, 0f) / Mathf.Max(1e-6f, Scale); State.focusAnim = false; } // screen-space pan
+                { State.focus -= cam * new Vector3(d.x, -d.y, 0f) / Mathf.Max(1e-6f, Scale); State.focusAnim = false; } // RMB/MMB: screen-space pan
             Rebuild();
         }
 
