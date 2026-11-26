@@ -57,7 +57,7 @@ namespace DMI.Xenoarch.Exploration
 
         void LandCore(Scene scene, bool arriving)
         {
-            Shuttle = null; _busy = false; _building = null;
+            Shuttle = null; _busy = false; _building = null; _preplaced = null;
             _landedOnce = true;
             var session = XenoarchRuntime.Session;
             if (session == null || !scene.IsValid()) return;
@@ -74,6 +74,12 @@ namespace DMI.Xenoarch.Exploration
             string siteId = x.Ship.shuttleSiteId ?? "";
             var site = string.IsNullOrEmpty(siteId) || x.Sites == null ? null : x.Sites.Get(siteId);
             if (site != null && site.sceneName != scene.name) { site = null; siteId = ""; }
+            _scene = scene; _terrain = terrain;
+
+            // Primary path: the scene's preplaced landing zones (shuttle + arrival spawn), switched on/off.
+            var set = LandingZoneSet.In(scene);
+            if (set != null && LandPreplaced(set, scene, siteId, arriving)) return;
+            Debug.LogWarning($"[Xenoarch] Shuttle: no preplaced landing zone in {scene.name} (run Tools/Xenoarch/Landing/Build Landing Zones); spawning one at runtime (fallback)");
 
             // Shuttle instance (inactive while measured and placed).
             GameObject holder = null; Bounds local = new Bounds(Vector3.zero, Vector3.one * 8f);
@@ -139,8 +145,10 @@ namespace DMI.Xenoarch.Exploration
                 holder.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f));
                 // Rest the landing gear (lowest parts) on the ground.
                 GroundOnGear(holder.transform, height);
+                foreach (var bay in holder.GetComponentsInChildren<ShuttleBayShuttle>(true)) DestroyImmediate(bay); // bay-only menu
                 holder.AddComponent<ShuttleInteractable>();
                 holder.SetActive(true);
+                GroundByBounds(holder.transform, height);
                 Shuttle = holder;
             }
 
@@ -160,6 +168,98 @@ namespace DMI.Xenoarch.Exploration
             // Direct play in the Editor: nothing teleports the player (they stay where you placed them).
             _scene = scene; _terrain = terrain; _rules = rules; _footprint = footprint; _yawOffset = def != null ? def.shuttleYawOffset : 0f;
             StartCoroutine(Settle(holder, height, arriving));
+        }
+
+        LandingZoneSet _preplaced;
+
+        /// <summary>Switches on the preplaced zone for the chosen site; false if the scene has none usable.</summary>
+        bool LandPreplaced(LandingZoneSet set, Scene scene, string siteId, bool arriving)
+        {
+            var slot = set.Activate(siteId);
+            if (slot == null || slot.shuttle == null) { _preplaced = null; return false; }
+            _preplaced = set;
+            UsePreplaced(slot);
+            LastPick = $"{scene.name}: preplaced landing zone '{slot.name}' ({(string.IsNullOrEmpty(slot.siteId) ? "base" : slot.siteId)}) for {(string.IsNullOrEmpty(siteId) ? "no site" : siteId)}";
+            Debug.Log($"[Xenoarch] {LastPick}");
+            StartCoroutine(SettlePreplaced(set, arriving));
+            return true;
+        }
+
+        void UsePreplaced(LandingZoneSlot slot)
+        {
+            var sh = slot.shuttle;
+            foreach (var bay in sh.GetComponentsInChildren<ShuttleBayShuttle>(true)) Destroy(bay); // the bay's flight menu, not ours
+            if (sh.GetComponentInChildren<ShuttleInteractable>(true) == null) sh.AddComponent<ShuttleInteractable>();
+            Shuttle = sh;
+        }
+
+        IEnumerator SettlePreplaced(LandingZoneSet set, bool arriving)
+        {
+            float t = 0f; int startFrame = Time.frameCount;
+            yield return null;
+            while (arriving && SceneLoader.PlacedFrame < startFrame && t < 5f) { t += Time.unscaledDeltaTime; yield return null; }
+            // A saved pose / Continue far from the chosen zone: use the zone nearest the player instead.
+            var rig = PlayerRigLocator.Find();
+            if (rig != null && Shuttle != null)
+            {
+                var p = rig.Root.position; var s = Shuttle.transform.position;
+                float d = Vector2.Distance(new Vector2(p.x, p.z), new Vector2(s.x, s.z));
+                if (d > maxPlayerDistance)
+                {
+                    var near = set.ActivateNearest(p);
+                    if (near != null && near.shuttle != null) { UsePreplaced(near); LastPick += $"; player {d:0} m away, switched to nearest zone '{near.name}'"; }
+                }
+            }
+            if (Shuttle != null) LogPlaced(Shuttle, "preplaced zone");
+            t = 0f;
+            while (SceneLoader.Busy && t < 240f) { t += Time.unscaledDeltaTime; yield return null; }
+            yield return new WaitForSecondsRealtime(0.5f);
+            if (_scene.IsValid() && _scene.isLoaded) Verify(LandingZonePicker.ForTerrain(_terrain));
+        }
+
+        /// <summary>Rest the lowest visible gear (or hull) renderer on the highest ground under the craft, measured from
+        /// world renderer bounds after activation (the old mesh-bounds estimate taken while inactive could be badly off).</summary>
+        void GroundByBounds(Transform holder, LandingZonePicker.HeightFn height)
+        {
+            if (holder == null) return;
+            if (!holder.gameObject.activeInHierarchy) { GroundOnGear(holder, height); return; }
+            float minY = float.PositiveInfinity;
+            foreach (var g in _gears) if (g != null) foreach (var r in g.GetComponentsInChildren<Renderer>()) if (r.enabled) minY = Mathf.Min(minY, r.bounds.min.y);
+            if (float.IsInfinity(minY)) foreach (var r in holder.GetComponentsInChildren<Renderer>()) if (r.enabled) minY = Mathf.Min(minY, r.bounds.min.y);
+            if (float.IsInfinity(minY)) { GroundOnGear(holder, height); return; }
+            var p = holder.position; float ground = float.NegativeInfinity;
+            if (height(p.x, p.z, out float gy, out _)) ground = gy;
+            foreach (var g in _gears) if (g != null) { var gp = g.position; if (height(gp.x, gp.z, out float y, out _)) ground = Mathf.Max(ground, y); }
+            if (float.IsInfinity(ground)) return;
+            holder.position = p + Vector3.up * (ground - minY);
+        }
+
+        void Update()
+        {
+            // Dev: F7 brings the shuttle beside the player (lands one if it is missing).
+            var cfg = XenoarchRuntime.Session?.Config;
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (cfg == null || !cfg.enableDebugHotkeys || kb == null || SceneLoader.Busy || !kb.f7Key.wasPressedThisFrame) return;
+            Summon();
+        }
+
+        /// <summary>Dev summon: moves the active shuttle next to the player (runtime only; the scene is untouched).</summary>
+        public void Summon()
+        {
+            var rig = PlayerRigLocator.Find();
+            if (rig == null) return;
+            if (Shuttle == null) { Land(SceneManager.GetActiveScene(), false); if (Shuttle == null) { Debug.LogWarning("[Xenoarch] Summon shuttle: nothing to summon in this scene"); return; } }
+            if (_terrain == null) foreach (var r in SceneManager.GetActiveScene().GetRootGameObjects()) { _terrain = r.GetComponentInChildren<Terrain>(); if (_terrain != null) break; }
+            var height = LandingZonePicker.ForTerrain(_terrain);
+            var fwd = rig.Root.forward; fwd.y = 0f; if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
+            float fp = _footprint > 0f ? _footprint : 8f;
+            var pos = rig.Root.position + fwd.normalized * (fp + 4f);
+            if (height(pos.x, pos.z, out float gy, out _)) pos.y = gy;
+            Shuttle.SetActive(true);
+            Shuttle.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rig.Root.eulerAngles.y + 90f, 0f));
+            GroundByBounds(Shuttle.transform, height);
+            LogPlaced(Shuttle, "dev summon (F7)");
+            UI.Toast.Show("Shuttle summoned (dev F7).", 2.5f);
         }
 
         readonly List<Transform> _gears = new List<Transform>();
@@ -209,7 +309,7 @@ namespace DMI.Xenoarch.Exploration
             while (arriving && SceneLoader.PlacedFrame < startFrame && t < 5f) { t += Time.unscaledDeltaTime; yield return null; }
             t = 0f;
             while (ExcavationSite.BusyStatus() != null && t < 20f) { t += Time.unscaledDeltaTime; yield return null; }
-            if (holder != null) { EnsureNearPlayer(holder, height); GroundOnGear(holder.transform, height); }
+            if (holder != null) { EnsureNearPlayer(holder, height); GroundByBounds(holder.transform, height); }
             _busy = false;
             if (holder != null) LogPlaced(holder, "after load");
             // Watchdog: once the loading screen is gone, check the shuttle is still there, visible, grounded and near the
@@ -228,6 +328,12 @@ namespace DMI.Xenoarch.Exploration
         void Verify(LandingZonePicker.HeightFn height)
         {
             var holder = Shuttle;
+            if (_preplaced != null)
+            {
+                if (holder == null) { Debug.LogWarning("[Xenoarch] Shuttle watchdog: the preplaced shuttle was destroyed; using the runtime fallback"); _preplaced = null; Land(_scene, false); return; }
+                if (!holder.activeInHierarchy) { _preplaced.Active?.gameObject.SetActive(true); holder.SetActive(true); LogPlaced(holder, "watchdog: re-enabled the preplaced shuttle"); }
+                return;
+            }
             if (holder == null)
             {
                 Debug.LogWarning("[Xenoarch] Shuttle watchdog: the landed shuttle was destroyed; landing it again");
@@ -246,7 +352,7 @@ namespace DMI.Xenoarch.Exploration
                 if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(s.x, s.z)) > maxPlayerDistance) { EnsureNearPlayer(holder, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "moved to the player"; }
             }
             if (height(holder.transform.position.x, holder.transform.position.z, out float gy, out _) && holder.transform.position.y < gy + _groundOffset - 1.5f)
-            { GroundOnGear(holder.transform, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "re-grounded"; }
+            { GroundByBounds(holder.transform, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "re-grounded"; }
             if (fixedWhat != null) LogPlaced(holder, "watchdog: " + fixedWhat);
         }
 

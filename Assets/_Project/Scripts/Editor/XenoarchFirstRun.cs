@@ -93,6 +93,20 @@ namespace DMI.Xenoarch.EditorTools
                 File.Delete(XenoarchTerrainSurface.Trigger);
                 XenoarchTerrainSurface.Run();
             }
+            if (File.Exists(XenoarchLandingZonesBuilder.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                string arg = File.ReadAllText(XenoarchLandingZonesBuilder.Trigger).Trim();
+                File.Delete(XenoarchLandingZonesBuilder.Trigger);
+                var allow = arg.StartsWith("allow-dirty:") ? new System.Collections.Generic.HashSet<string>(arg.Substring(12).Split(',')) : null;
+                XenoarchLandingZonesBuilder.Run(allow);
+            }
+            if (File.Exists(XenoarchShaderWarmup.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(XenoarchShaderWarmup.Trigger);
+                var log = new System.Text.StringBuilder();
+                XenoarchShaderWarmup.Run(log);
+                UnityEngine.Debug.Log("[Xenoarch] " + log.ToString().TrimEnd());
+            }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 File.Delete(SmokeTrigger);
