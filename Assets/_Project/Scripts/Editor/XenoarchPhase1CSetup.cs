@@ -85,6 +85,9 @@ namespace DMI.Xenoarch.EditorTools
                 var sb = new StringBuilder();
                 XenoarchShipSceneBuilder.SwapStation<ResearchTerminal>(all, LabName, LabName, sb);
                 PlaceRefiner(all, sb);
+                foreach (var helm in all.Select(g => g.GetComponent<DMI.Xenoarch.Ship.CockpitHelm>()).Where(h => h != null))
+                    if (helm.GetComponent<DMI.Xenoarch.Ship.ShipFtlSequence>() == null)
+                    { Undo.AddComponent<DMI.Xenoarch.Ship.ShipFtlSequence>(helm.gameObject); sb.AppendLine($"FTL: ShipFtlSequence added to '{helm.gameObject.name}' (tune jump time, streak swirl and tunnel there)"); }
                 log.Append(sb);
                 return true;
             });
@@ -415,6 +418,19 @@ namespace DMI.Xenoarch.EditorTools
             log.AppendLine($"Refiner: placeholder pillar added next to the Research Laboratory at {go.transform.position} (parent '{(go.transform.parent != null ? go.transform.parent.name : "scene root")}')");
         }
 
+        public static void ValidateFtl(System.Action<bool, string> check)
+        {
+            var go = new GameObject("ftl probe") { hideFlags = HideFlags.HideAndDontSave };
+            try
+            {
+                var f = go.AddComponent<DMI.Xenoarch.Ship.ShipFtlSequence>();
+                float moon = f.JumpSecondsFor(0.003f), mars = f.JumpSecondsFor(0.6f), jup = f.JumpSecondsFor(4.2f), far = f.JumpSecondsFor(40f);
+                check(moon >= 5f && moon < 5.5f && mars > moon && jup > mars && far <= f.maxJumpSeconds + 0.01f && f.JumpSecondsFor(0f) >= 5f,
+                    $"1C FTL: jump time scales with distance, min 5 s (Moon {moon:0.0}s, Mars {mars:0.0}s, Jupiter {jup:0.0}s, 40 AU {far:0.0}s)");
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         public static void ValidateMaterials(System.Action<bool, string> check, XenoarchConfig config)
         {
             var mats = config.itemRegistry.Entries.OfType<MaterialDefinition>().ToList();
@@ -668,6 +684,7 @@ namespace DMI.Xenoarch.EditorTools
                 $"1C sites: data-driven dig site styles ({string.Join(", ", styled.Select(x => x.style.displayName).Distinct())})");
 
             ValidateMaterials(check, config);
+            ValidateFtl(check);
 
             // Grid rules
             var grid = ExcavationGrid.ForSite(3f, 1.2f, 0.25f);

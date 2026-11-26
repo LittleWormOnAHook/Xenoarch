@@ -93,11 +93,12 @@ namespace DMI.Xenoarch.Ship
                 bool station = sel.kind == CelestialKind.Station;
                 bool down = x.Ship.landed || x.Ship.docked;
                 if (down) Text(right, station ? "Docked. Use the airlock to go aboard the station." : "Landed. Use the airlock to go outside.", "xa-term__good");
+                bool busy = ShipLanding.Running;
+                if (busy) Text(right, "Manoeuvre in progress...", "xa-term__warn");
                 Btn(right, station ? (down ? "Undock" : "Dock") : (down ? "Take off" : "Land"), () =>
                 {
-                    if (down) { x.SetLanded(false, false); _message = "Back in orbit."; Refresh(); }
-                    else { x.SetLanded(!station, station); _message = station ? "Docked. Airlock unsealed." : "Landed at the survey zone. Airlock unsealed."; Refresh(); }
-                });
+                    if (ShipLanding.Begin(sel, !down, station)) { _message = null; Close(); }
+                }, !busy);
             }
             else Text(right, "In orbit. No surveyed landing zone here yet.", "xa-term__dim");
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__good");

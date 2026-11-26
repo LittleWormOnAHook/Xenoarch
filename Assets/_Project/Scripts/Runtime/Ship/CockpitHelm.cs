@@ -73,7 +73,7 @@ namespace DMI.Xenoarch.Ship
             Status.text = $"{ShipTravel.LocationText(x)}   |   Fuel {x.Ship.fuel:0.#} / {x.Ship.fuelCapacity:0}" + (to != null ? $"   |   Course: {to.displayName}" : "");
 
             // --- helm
-            var helm = Col(body);
+            var helm = ScrollCol(body, 0);
             Text(helm, "HELM", "xa-term__h");
             if (to == null)
             {
@@ -85,14 +85,19 @@ namespace DMI.Xenoarch.Ship
                 Text(helm, $"Course: {to.displayName}");
                 Text(helm, $"Distance {x.DistanceAU(x.CurrentBody, to):0.##} AU   |   Fuel cost {x.FuelCost(to):0.#}");
                 bool can = x.CanTravel(to, out var why);
+                if (can && ShipLanding.Running) { can = false; why = "Finish the landing manoeuvre first."; }
                 if (!can) Text(helm, why, "xa-term__warn");
                 Btn(helm, $"Engage drive: {to.displayName}", () => Press(() => Engage()), can);
                 Btn(helm, "Clear course", () => { x.ClearCourse(); _message = "Course cleared."; Refresh(); }).AddToClassList("xa-term__btn--ghost");
             }
             Btn(helm, "Navigation map", () => SwitchTo<NavigationTerminal>("navigation terminal"));
+            // Same scanner as the standalone Orbital Scanning terminal (which stays aboard); this is just another route to it.
+            bool hasScanner = FindAnyObjectByType<OrbitalScannerTerminal>() != null;
+            Btn(helm, "Orbital scanner", () => SwitchTo<OrbitalScannerTerminal>("orbital scanner"), hasScanner);
+            if (!hasScanner) Text(helm, "No orbital scanner terminal aboard.", "xa-term__dim");
 
             // --- ship status
-            var stat = Col(body);
+            var stat = ScrollCol(body, 1);
             Text(stat, "SHIP STATUS", "xa-term__h");
             Text(stat, ShipTravel.LocationText(x));
             Text(stat, $"Fuel {x.Ship.fuel:0.#} / {x.Ship.fuelCapacity:0}");
@@ -104,10 +109,9 @@ namespace DMI.Xenoarch.Ship
                 var bd = x.Body(here.Id);
                 Text(stat, $"Orbital scan passes on {here.displayName}: {bd.orbitalScanPasses} / {x.MaxOrbitalPasses}", "xa-term__dim");
             }
-            Btn(stat, "Orbital scanner", () => SwitchTo<OrbitalScannerTerminal>("orbital scanner"));
 
             // --- crew
-            var crew = Col(body);
+            var crew = ScrollCol(body, 2);
             Text(crew, "PILOT", "xa-term__h");
             Text(crew, CockpitSeat.Occupied != null ? "Seated at the helm." : "Standing.", "xa-term__dim");
             if (CockpitSeat.Occupied != null) Btn(crew, "Stand up", () => { Close(); CockpitSeat.Occupied?.Stand(); }).AddToClassList("xa-term__btn--ghost");
@@ -151,8 +155,9 @@ namespace DMI.Xenoarch.Ship
         {
             var x = X; var to = x?.PlottedBody;
             var rig = PlayerRigLocator.Find();
-            if (to == null || Busy || rig == null || !x.CanTravel(to, out _)) return false;
+            if (to == null || Busy || ShipLanding.Running || rig == null || !x.CanTravel(to, out _)) return false;
             Close();
+            if (_seq == null) _seq = GetComponent<ShipFtlSequence>();
             if (_seq == null) _seq = gameObject.AddComponent<ShipFtlSequence>();
             Vector3 dir = viewTarget != null ? viewTarget.position - rig.ViewCamera.transform.position : windowDirection;
             return _seq.Play(rig, to, dir);

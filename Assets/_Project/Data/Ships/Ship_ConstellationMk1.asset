@@ -30,6 +30,8 @@ MonoBehaviour:
   exteriorPrefab: {fileID: 3198018136977382735, guid: 81c71b9da00451b4da51657e307b823f, type: 3}
   interiorPrefab: {fileID: 8058210074484244086, guid: c683c5eab30515d48a8380e659f63621, type: 3}
   ftlDustPrefab: {fileID: 1599007116556178, guid: 508acd946045443888ccce7dcb52ac55, type: 3}
-  ftlSpoolPrefab: {fileID: 114328, guid: dd2635513c2114f14a60ec3c4d233301, type: 3}
+  ftlSpoolPrefab: {fileID: 0}
   ftlStreakMaterial: {fileID: 2100000, guid: 26568f110ba24435dbc3ab112f90ee3f, type: 2}
   ftlAudio: {fileID: 0}
+  landingSeconds: 8
+  takeoffSeconds: 5

@@ -137,7 +137,8 @@ namespace DMI.Xenoarch.EditorTools
             if (ship.exteriorPrefab == null) ship.exteriorPrefab = FindPrefab(CreepyShips, "fake");
             if (ship.interiorPrefab == null) ship.interiorPrefab = FindPrefab(CreepyShips, "stand");
             if (ship.ftlDustPrefab == null) ship.ftlDustPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CreepyFx + "/Particle_Dust_Space.prefab");
-            if (ship.ftlSpoolPrefab == null) ship.ftlSpoolPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CreepyFx + "/Particle_Afterburner_Small.prefab");
+            // Spool glow retired (Phase 1C-2d): Particle_Afterburner_Small's Flare material is URP/Lit with no texture and drew grey quads.
+            if (ship.ftlSpoolPrefab != null && ship.ftlSpoolPrefab.name == "Particle_Afterburner_Small") ship.ftlSpoolPrefab = null;
             if (ship.ftlStreakMaterial == null)
             {
                 var stars = AssetDatabase.LoadAssetAtPath<GameObject>(CreepyFx + "/Particle_StarsZone_01.prefab");
@@ -401,7 +402,7 @@ namespace DMI.Xenoarch.EditorTools
             check(mapOk, "1B sky: ship sky resolves Earth/Moon/Mars to their orbit skies, others (Jupiter, TradeHub, none) to the scene's sky");
 
             check(new[] { CcA2018Path, CcA2017Path, CcB2017Path }.All(pth => AssetDatabase.LoadAssetAtPath<VolumeProfile>(pth) is VolumeProfile v && v.Has<Bloom>() && v.Has<Tonemapping>()), "1B polish: Creepy Cat PP profiles recreated as URP Volume profiles (A_2018, A_2017, B_2017)");
-            check(ship.ftlDustPrefab != null && ship.ftlSpoolPrefab != null, $"1B polish: FTL FX linked (dust={(ship.ftlDustPrefab ? ship.ftlDustPrefab.name : "none")}, spool={(ship.ftlSpoolPrefab ? ship.ftlSpoolPrefab.name : "none")}, streak mat={(ship.ftlStreakMaterial ? ship.ftlStreakMaterial.name : "runtime")})");
+            check(ship.ftlDustPrefab != null && ship.ftlSpoolPrefab == null, $"1B polish: FTL FX linked (dust={(ship.ftlDustPrefab ? ship.ftlDustPrefab.name : "none")}, spool={(ship.ftlSpoolPrefab ? ship.ftlSpoolPrefab.name : "none")}, streak mat={(ship.ftlStreakMaterial ? ship.ftlStreakMaterial.name : "runtime")})");
 
             // Rules (pure C#, in-memory save storage)
             var session = new GameSession(config, config.itemRegistry, new DMI.Xenoarch.Save.MemorySaveStorage());

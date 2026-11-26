@@ -24,8 +24,10 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Walkable interior prefab used in Ship_Starter.")] public GameObject interiorPrefab;
         [Header("FTL sequence")]
         [Tooltip("Optional particle prefab shown through the cockpit window during the jump (Creepy Cat Particle_Dust_Space).")] public GameObject ftlDustPrefab;
-        [Tooltip("Optional engine glow prefab during spool-up (Creepy Cat Particle_Afterburner_Small).")] public GameObject ftlSpoolPrefab;
+        [Tooltip("Unused since Phase 1C-2d (the swirl tunnel replaces the spool glow). Kept for save/asset compatibility.")] public GameObject ftlSpoolPrefab;
         [Tooltip("Material for the star streaks (URP Particles). Empty = runtime additive material.")] public Material ftlStreakMaterial;
         public AudioClip ftlAudio;
+        [Tooltip("Seconds for the descent from orbit to the landing zone (and docking). Shown as a timer bar with beeps and a touchdown chime.")] public float landingSeconds = 8f;
+        [Tooltip("Seconds to lift off / undock back to orbit.")] public float takeoffSeconds = 5f;
     }
 }
