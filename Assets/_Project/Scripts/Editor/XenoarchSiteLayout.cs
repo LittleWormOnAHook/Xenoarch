@@ -14,7 +14,8 @@ using UnityEngine.SceneManagement;
 namespace DMI.Xenoarch.EditorTools
 {
     /// <summary>
-    /// Tools/Xenoarch/Landing/Spread Sites and Landing Zones: on every surface scene with landing zone markers, moves each
+    /// Tools/Xenoarch/Landing/Spread Sites and Landing Zones: on every body's landing scene (galaxy data), creates any
+    /// missing landing zone markers (base on the default spawn, one per dig site), then moves each
     /// dig site (its definition position) to flat, open ground well apart from the others and from the base zone
     /// (XenoarchConfig.siteLayout), and moves the site's LandingZone marker - with its LandingZone_ child (shuttle +
     /// arrival spawn) - beside it, re-grounding the shuttle. The base zone is never moved. Then re-bakes the surface maps
@@ -41,10 +42,8 @@ namespace DMI.Xenoarch.EditorTools
             sb.AppendLine($"config: dig yield x{cfg.digYieldMultiplier:0.##}, resource nodes x{cfg.resourceNodeMultiplier:0.##} ({cfg.resourceNodesNearZones:P0} near zones)");
             var def = cfg.starterShip;
 
-            foreach (var name in new[] { SceneNames.MarsExcavation01, SceneNames.MoonExcavation01 })
+            foreach (var (name, path) in SurfaceScenes(cfg))
             {
-                string path = XenoarchSetup.ScenePath(name);
-                if (!File.Exists(path)) { sb.AppendLine($"{name}: missing"); continue; }
                 var open = SceneManager.GetSceneByPath(path);
                 bool wasOpen = open.IsValid() && open.isLoaded;
                 if (wasOpen && open.isDirty && (allowDirty == null || !allowDirty.Contains(name))) { sb.AppendLine($"{name}: open with unsaved changes - skipped (save it, then run again)"); continue; }
@@ -56,10 +55,35 @@ namespace DMI.Xenoarch.EditorTools
                 finally { if (!wasOpen) EditorSceneManager.CloseScene(scene, true); }
             }
             AssetDatabase.SaveAssets();
+            // New markers (new bodies / sites) get their shuttle + arrival spawn from the landing zone builder (additive).
+            XenoarchLandingZonesBuilder.Run(allowDirty);
+            if (File.Exists("Logs/xenoarch_landing.txt")) sb.AppendLine("landing zones:").AppendLine(File.ReadAllText("Logs/xenoarch_landing.txt").Trim());
             var maps = new StringBuilder();
             XenoarchMapsSetup.Run(maps);
             sb.AppendLine("maps:").Append(maps);
             Finish(sb);
+        }
+
+        /// <summary>Every galaxy body with a landing scene (data: CelestialBodyDefinition.sceneName), found in the build
+        /// settings or the project's Scenes folder. New planets / systems are picked up with no per-scene code.</summary>
+        public static List<(string name, string path)> SurfaceScenes(XenoarchConfig cfg)
+        {
+            var list = new List<(string, string)>();
+            if (cfg == null || cfg.galaxy == null) return list;
+            foreach (var sys in cfg.galaxy.systems)
+            {
+                if (sys == null) continue;
+                foreach (var b in sys.bodies)
+                {
+                    if (b == null || string.IsNullOrEmpty(b.sceneName) || list.Any(e => e.Item1 == b.sceneName)) continue;
+                    string path = EditorBuildSettings.scenes.Select(e => e.path).FirstOrDefault(p => Path.GetFileNameWithoutExtension(p) == b.sceneName);
+                    if (string.IsNullOrEmpty(path) || !File.Exists(path)) path = XenoarchSetup.ScenePath(b.sceneName);
+                    if (!File.Exists(path)) continue;
+                    if (!File.ReadAllText(path).Contains("m_TerrainData")) continue; // surface scenes only (ships / stations have no terrain)
+                    list.Add((b.sceneName, path));
+                }
+            }
+            return list;
         }
 
         static void Finish(StringBuilder sb)
@@ -80,7 +104,39 @@ namespace DMI.Xenoarch.EditorTools
             var markers = roots.SelectMany(r => r.GetComponentsInChildren<LandingZone>(true)).ToList();
             var baseZone = markers.FirstOrDefault(m => string.IsNullOrEmpty(m.siteId));
             var sites = cfg.siteRegistry.Entries.Where(s => s != null && s.sceneName == scene.name).OrderBy(s => s.Id).ToList();
-            if (terrain == null || terrain.terrainData == null || baseZone == null || sites.Count == 0) { sb.AppendLine($"{scene.name}: no terrain / base zone / sites - skipped"); return false; }
+            if (terrain == null || terrain.terrainData == null || sites.Count == 0) { sb.AppendLine($"{scene.name}: no terrain / sites - skipped"); return false; }
+            bool created = false;
+            Transform holder = null;
+            Transform Holder()
+            {
+                if (holder != null) return holder;
+                if (markers.Count > 0 && markers[0].transform.parent != null) return holder = markers[0].transform.parent;
+                var go = roots.FirstOrDefault(r => r.name == "LandingZones") ?? new GameObject("LandingZones");
+                if (go.scene != scene) SceneManager.MoveGameObjectToScene(go, scene);
+                return holder = go.transform;
+            }
+            if (baseZone == null)
+            {
+                // New body: the base zone goes on the default player spawn (the scene's arrival point).
+                var spawn = roots.SelectMany(r => r.GetComponentsInChildren<PlayerSpawnPoint>(true)).FirstOrDefault(p => p.spawnId == PlayerSpawnIds.Default);
+                if (spawn == null) { sb.AppendLine($"{scene.name}: no base LandingZone and no default PlayerSpawnPoint - skipped"); return false; }
+                var go = new GameObject("LandingZone (base)");
+                go.transform.SetParent(Holder(), true);
+                var p = spawn.transform.position; p.y = Height(terrain, p) ?? p.y;
+                go.transform.SetPositionAndRotation(p, Quaternion.Euler(0f, spawn.transform.eulerAngles.y, 0f));
+                baseZone = go.AddComponent<LandingZone>(); baseZone.siteId = "";
+                markers.Add(baseZone); created = true;
+                sb.AppendLine($"{scene.name}: created base landing zone at the default spawn ({p.x:0}, {p.z:0})");
+            }
+            foreach (var site in sites)
+            {
+                if (markers.Any(m => m.siteId == site.Id)) continue;
+                var go = new GameObject($"LandingZone ({site.displayName})");
+                go.transform.SetParent(Holder(), true);
+                var lz = go.AddComponent<LandingZone>(); lz.siteId = site.Id;
+                markers.Add(lz); created = true;
+                sb.AppendLine($"{scene.name}: created landing zone marker for {site.Id}");
+            }
             Physics.SyncTransforms();
             var height = LandingZonePicker.ForTerrain(terrain);
             var basePos = baseZone.transform.position;
@@ -96,7 +152,7 @@ namespace DMI.Xenoarch.EditorTools
                 if (FlatDist(sites[i].position, basePos) < ls.spacing * 0.5f) done = false;
                 for (int j = 0; j < i; j++) if (FlatDist(sites[i].position, sites[j].position) < ls.spacing * 0.5f) done = false;
             }
-            if (done) { sb.AppendLine($"{scene.name}: already laid out - left as is"); Report(sites, markers, basePos, sb); return false; }
+            if (done) { sb.AppendLine($"{scene.name}: already laid out - left as is"); Report(sites, markers, basePos, sb); return created; }
 
             // Exclude his scene objects (anything with a collider that is not terrain / our zones) from the footprints.
             bool Blocked(Vector3 p, float r)
@@ -182,7 +238,7 @@ namespace DMI.Xenoarch.EditorTools
                 changed = true;
             }
             Report(sites, markers, basePos, sb);
-            return changed;
+            return changed || created;
         }
 
         delegate bool FlatFn(Vector3 p, float r, float slopeMax, float reliefMax, out float y, out float score);

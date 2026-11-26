@@ -43,11 +43,11 @@ namespace DMI.Xenoarch.EditorTools
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
             if (config == null || config.galaxy == null) { log.AppendLine("Maps: config/galaxy missing"); return; }
             XenoarchSetup.EnsureFolder(MapsFolder);
-            foreach (var name in new[] { SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
+            foreach (var (name, scenePath) in XenoarchSiteLayout.SurfaceScenes(config)) // every body with a landing scene (data)
             {
                 var body = config.galaxy.FindBodyByScene(name);
                 if (body == null) { log.AppendLine($"Maps: no body lands in {name}"); continue; }
-                XenoarchPhase1CSetup.WithScene(name, log, s => { Bake(s, body, config, log); return false; }, readOnly: true); // bake only reads the scene
+                XenoarchPhase1CSetup.WithScene(name, log, s => { Bake(s, body, config, log); return false; }, readOnly: true, path: scenePath); // bake only reads the scene
             }
             Systems(config.galaxy, log);
             AssetDatabase.SaveAssets();
@@ -199,7 +199,7 @@ namespace DMI.Xenoarch.EditorTools
                 "3C nav: real star facts for Proxima Centauri, Barnard's Star, Epsilon Eridani (candidates flagged)");
             check(navData && navUnlockFact, "3C nav: system dropdown lists Sol (default), Proxima Centauri, Barnard's Star, Epsilon Eridani");
 
-            foreach (var name in new[] { SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
+            foreach (var (name, scenePath) in XenoarchSiteLayout.SurfaceScenes(config)) // every body with a landing scene (data)
             {
                 var body = g != null ? g.FindBodyByScene(name) : null;
                 bool ok = body != null && body.surfaceMap != null && body.surfaceMapRect.width >= 100f;

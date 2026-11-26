@@ -105,9 +105,9 @@ namespace DMI.Xenoarch.EditorTools
 
         // ------------------------------------------------------------------ scenes
         /// <param name="readOnly">Work only reads the scene (never saves it), so an open scene with unsaved changes is used as is.</param>
-        internal static void WithScene(string name, StringBuilder log, System.Func<Scene, bool> work, bool readOnly = false)
+        internal static void WithScene(string name, StringBuilder log, System.Func<Scene, bool> work, bool readOnly = false, string path = null)
         {
-            string path = XenoarchSetup.ScenePath(name);
+            if (string.IsNullOrEmpty(path)) path = XenoarchSetup.ScenePath(name);
             if (!File.Exists(path)) { log.AppendLine($"{name}: scene missing"); return; }
             var scene = SceneManager.GetSceneByPath(path);
             bool opened = false;
