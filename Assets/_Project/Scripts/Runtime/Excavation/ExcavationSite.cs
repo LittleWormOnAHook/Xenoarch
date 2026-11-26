@@ -531,6 +531,29 @@ namespace DMI.Xenoarch.Excavation
             _pieces.Remove(piece);
             XenoarchRuntime.Session?.Excavation.Store(Definition.Id, Grid, instanceId, piece.Grid.index);
             _dirty = false;
+            if (UpdateCleared()) DMI.Xenoarch.UI.Toast.Show($"{Definition.displayName}: every find recovered. Site cleared; the scanner will not ping it any more.", 5f);
+        }
+
+        /// <summary>ZEN-26: marks a dig site (not a cache) cleared once it had finds and all are recovered. True when it
+        /// was cleared just now. Also run by the scanner, so sites cleared in older saves catch up.</summary>
+        public bool UpdateCleared()
+        {
+            if (IsCache || Grid == null || Definition == null || Grid.artifacts.Count == 0) return false;
+            foreach (var a in Grid.artifacts) if (!a.recovered) return false;
+            var x = XenoarchRuntime.Session?.Exploration;
+            if (x == null || x.IsCleared(Definition.Id)) return false;
+            x.MarkCleared(Definition.Id);
+            return true;
+        }
+
+        /// <summary>ZEN-26: site cleared (saved flag, or a loaded site whose finds are all recovered).</summary>
+        public static bool IsCleared(ArchaeologicalSiteDefinition def)
+        {
+            var x = XenoarchRuntime.Session?.Exploration;
+            if (def == null || x == null) return false;
+            if (x.IsCleared(def.Id)) return true;
+            var s = Find(def.Id);
+            return s != null && s.UpdateCleared();
         }
 
         readonly Queue<(Vector3 pos, float rad, int tex)> _pendingCarves = new Queue<(Vector3, float, int)>();

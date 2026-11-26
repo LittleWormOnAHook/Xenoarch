@@ -101,9 +101,123 @@ namespace DMI.Xenoarch.Exploration
                 }
                 _keyDownAt = -1f;
             }
+            if (!Equipped || !Refined) StopSweep();
             if (!Equipped) return;
+            if (Refined) { UpdateDetector(mouse, gp); return; }
             bool fire = (mouse != null && mouse.leftButton.wasPressedThisFrame) || (gp != null && gp.rightTrigger.wasPressedThisFrame);
             if (fire && Time.time >= _cooldownUntil) Pulse();
+        }
+
+        // ------------------------------------------------------------------ detector sweep (ZEN-26)
+        // Refined mode only. Tap LMB / RT = the refined pulse (pinpoint + red flag) on release; hold it past
+        // SweepHoldSeconds = metal-detector sweep at the aim point: buried finds of the fenced site within detectRadius of
+        // the aim glow faintly through the ground (Xenoarch/XRayGlow, ZTest Always) and a tick repeats faster and higher
+        // the closer the aim is. Release stops it. No new UI panel (the grid display waits on mockup approval).
+        public const float SweepHoldSeconds = 0.25f;
+        [Header("Detector sweep (refined mode, hold LMB)")]
+        [Tooltip("Aim reach of the sweep (m).")] public float sweepReach = 10f;
+        [Tooltip("Finds within this horizontal distance of the aim point are detected (m).")] public float detectRadius = 2.5f;
+        float _lmbDownAt = -1f, _nextTick, _sweepText;
+        bool _sweeping;
+        readonly System.Collections.Generic.List<DMI.Xenoarch.Excavation.BuriedArtifact> _sweepTargets = new System.Collections.Generic.List<DMI.Xenoarch.Excavation.BuriedArtifact>();
+        static Material _glowMat; static AudioClip _tick, _close;
+        MaterialPropertyBlock _glowProps;
+        Camera _cam;
+        static readonly RaycastHit[] _sweepHits = new RaycastHit[12];
+
+        void UpdateDetector(Mouse mouse, Gamepad gp)
+        {
+            bool down = (mouse != null && mouse.leftButton.wasPressedThisFrame) || (gp != null && gp.rightTrigger.wasPressedThisFrame);
+            bool held = (mouse != null && mouse.leftButton.isPressed) || (gp != null && gp.rightTrigger.isPressed);
+            if (down) { _lmbDownAt = Time.time; }
+            if (_lmbDownAt >= 0f && held && !_sweeping && Time.time - _lmbDownAt >= SweepHoldSeconds) StartSweep();
+            if (_sweeping && held) Sweep();
+            if (_lmbDownAt >= 0f && !held)
+            {
+                if (!_sweeping && Time.time >= _cooldownUntil) Pulse();   // tap: refined pulse, flags the find
+                StopSweep();
+                _lmbDownAt = -1f;
+            }
+        }
+
+        void StartSweep()
+        {
+            var site = RefinedSite();
+            if (site == null) { Refined = false; SetText("Left the fenced site: back to normal scanning."); Beep(0.5f, 1); _lmbDownAt = -1f; return; }
+            _sweeping = true; _nextTick = 0f; _sweepText = 0f;
+            _sweepTargets.Clear();
+            foreach (var a in FindObjectsByType<DMI.Xenoarch.Excavation.BuriedArtifact>(FindObjectsSortMode.None))
+                if (a != null && a.Site == site && a.Grid != null && !a.Grid.recovered) _sweepTargets.Add(a);
+            if (_glowMat == null) _glowMat = Resources.Load<Material>("Excavation/XRayGlow");
+            if (_tick == null) _tick = Resources.Load<AudioClip>("Audio/Scanner/detector_tick");
+            if (_close == null) _close = Resources.Load<AudioClip>("Audio/Scanner/detector_close");
+            _glowProps ??= new MaterialPropertyBlock();
+            if (arms != null) arms.RaiseTemporarily(hand, 0.5f);
+            SetText("DETECTOR SWEEP: move the aim over the ground. The tick speeds up near a find.", false);
+        }
+
+        void StopSweep()
+        {
+            if (!_sweeping) return;
+            _sweeping = false;
+            _sweepTargets.Clear();
+            SetText(ReadyText, false);
+        }
+
+        void Sweep()
+        {
+            if (_cam == null) _cam = PlayerRigLocator.Find()?.ViewCamera ?? Camera.main;
+            if (_cam == null) return;
+            if (arms != null && Time.frameCount % 20 == 0) arms.RaiseTemporarily(hand, 0.5f);
+            // Aim point: nearest hit that is not the player, a trigger or a buried find.
+            int n = Physics.RaycastNonAlloc(_cam.transform.position, _cam.transform.forward, _sweepHits, sweepReach, ~0, QueryTriggerInteraction.Ignore);
+            float bd = float.MaxValue; Vector3 aim = default;
+            for (int i = 0; i < n; i++)
+            {
+                var h = _sweepHits[i];
+                if (h.collider == null || h.distance >= bd || h.collider.transform.IsChildOf(transform.root)) continue;
+                if (h.collider.GetComponentInParent<DMI.Xenoarch.Excavation.BuriedArtifact>() != null) continue;
+                bd = h.distance; aim = h.point;
+            }
+            bool aimed = bd < float.MaxValue;
+            float best = 0f; DMI.Xenoarch.Excavation.BuriedArtifact nearest = null; float nearestD = 0f;
+            float pulse = 0.75f + 0.25f * Mathf.Sin(Time.time * 6f);
+            for (int i = _sweepTargets.Count - 1; i >= 0; i--)
+            {
+                var a = _sweepTargets[i];
+                if (a == null || a.Grid == null || a.Grid.recovered) { _sweepTargets.RemoveAt(i); continue; }
+                if (!aimed) continue;
+                var d = a.transform.position - aim; d.y = 0f;
+                float dist = d.magnitude;
+                if (dist > detectRadius) continue;
+                float c = 1f - dist / detectRadius;
+                if (c > best) { best = c; nearest = a; nearestD = dist; }
+                DrawGlow(a, Mathf.Lerp(0.12f, 0.5f, c) * pulse);
+            }
+            // Tick: interval 0.8 s at the edge of the radius down to 0.07 s right over it; pitch rises with it.
+            if (nearest != null && Time.time >= _nextTick && _audio != null)
+            {
+                _nextTick = Time.time + Mathf.Lerp(0.8f, 0.07f, best);
+                _audio.pitch = Mathf.Lerp(0.9f, 1.8f, best);
+                var clip = best > 0.85f && _close != null ? _close : (_tick != null ? _tick : _beep);
+                _audio.PlayOneShot(clip, Mathf.Lerp(0.5f, 1f, best));
+            }
+            if (Time.time >= _sweepText)
+            {
+                _sweepText = Time.time + 0.2f;
+                SetText(nearest != null
+                    ? $"DETECTOR: signal {Mathf.RoundToInt(best * 100f)}%   ~{nearestD:0.0} m from the aim point\nTap LMB / RT to pinpoint and flag it."
+                    : aimed ? "DETECTOR SWEEP: no signal here. Sweep the aim over the ground." : "DETECTOR SWEEP: aim at the ground (within " + sweepReach.ToString("0") + " m).", false);
+            }
+        }
+
+        void DrawGlow(DMI.Xenoarch.Excavation.BuriedArtifact a, float alpha)
+        {
+            if (_glowMat == null) return;
+            _glowProps.SetFloat("_Alpha", Mathf.Clamp01(alpha));
+            var rp = new RenderParams(_glowMat) { matProps = _glowProps, layer = 0, shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off, receiveShadows = false };
+            foreach (var mf in a.GetComponentsInChildren<MeshFilter>(true))
+                if (mf != null && mf.sharedMesh != null) Graphics.RenderMesh(rp, mf.sharedMesh, 0, mf.transform.localToWorldMatrix);
         }
 
         // ------------------------------------------------------------------ refined scanner (ZEN-9B)
@@ -112,7 +226,7 @@ namespace DMI.Xenoarch.Exploration
         /// <summary>Refined mode: pulses pinpoint individual finds of the fenced site you stand in and flag them.</summary>
         public bool Refined { get; private set; }
         float _keyDownAt = -1f; bool _holdHandled;
-        string ReadyText => Refined ? "REFINED SCAN ready. Pulse to pinpoint finds (LMB / RT). Hold 1 for normal scan." : "Ready. Pulse to scan (LMB / RT). Hold 1 at a fenced site: refined scan.";
+        string ReadyText => Refined ? "REFINED SCAN ready. Tap LMB / RT: pinpoint + flag the nearest find. Hold LMB / RT: sweep like a metal detector. Hold 1 for normal scan." : "Ready. Pulse to scan (LMB / RT). Hold 1 at a fenced site: refined scan.";
 
         /// <summary>The fenced (marked) major dig site the player stands in or next to (6 m), if any.</summary>
         DMI.Xenoarch.Excavation.ExcavationSite RefinedSite()
@@ -190,6 +304,7 @@ namespace DMI.Xenoarch.Exploration
                 bool onSite = dist <= site.radius;
                 if (dist > range + site.radius || (site.depth > maxDepth && !onSite)) continue;
                 if (!string.IsNullOrEmpty(site.gateFact) && x.Gate != null && !x.Gate(site.gateFact)) continue; // chain-gated sites stay hidden
+                if (DMI.Xenoarch.Excavation.ExcavationSite.IsCleared(site)) continue;                            // ZEN-26: all finds recovered
                 float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (range + site.radius))) * Mathf.Max(0.15f, 1f - 0.5f * site.depth / Mathf.Max(0.1f, maxDepth));
                 if (score > bestScore) { best = site; bestScore = score; bestDist = dist; }
             }
@@ -378,6 +493,7 @@ namespace DMI.Xenoarch.Exploration
             foreach (var site in x.SitesInScene(SceneManager.GetActiveScene().name))
             {
                 if (!string.IsNullOrEmpty(site.gateFact) && x.Gate != null && !x.Gate(site.gateFact)) continue;
+                if (DMI.Xenoarch.Excavation.ExcavationSite.IsCleared(site)) continue;   // ZEN-26
                 var f = site.position - from; f.y = 0f;
                 float d = f.magnitude;
                 if (d < bd) { bd = d; best = site; }

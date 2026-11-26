@@ -50,6 +50,7 @@ namespace DMI.Xenoarch.Galaxy
         public int revealLevel;
         public bool surveyed;
         [Tooltip("Phase 1C stub.")] public float excavationProgress;
+        [Tooltip("ZEN-26: every find recovered; the scanner no longer pings or points at it.")] public bool cleared;
     }
 
     [Serializable]
@@ -192,6 +193,11 @@ namespace DMI.Xenoarch.Galaxy
         }
 
         public bool IsDiscovered(string bodyId) => Body(bodyId).discovered;
+
+        /// <summary>ZEN-26: all finds of the site recovered (saved in world.discovery).</summary>
+        public bool IsCleared(string siteId) { foreach (var s in Discovery.sites) if (s.siteId == siteId) return s.cleared; return false; }
+
+        public void MarkCleared(string siteId) { var s = Site(siteId); if (s.cleared) return; s.cleared = true; Changed?.Invoke(); }
 
         public SiteState Site(string siteId)
         {

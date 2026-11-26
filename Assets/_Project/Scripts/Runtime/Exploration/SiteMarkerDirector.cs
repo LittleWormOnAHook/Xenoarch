@@ -44,7 +44,7 @@ namespace DMI.Xenoarch.Exploration
             if (x == null) return;
             foreach (var site in x.SitesInScene(SceneManager.GetActiveScene().name))
             {
-                if (site.Id != siteId) continue;
+                if (site.Id != siteId || DMI.Xenoarch.Excavation.ExcavationSite.IsCleared(site)) continue;   // ZEN-26: cleared sites stay quiet
                 if (_markers.TryGetValue(site.Id, out var old) && old != null) Destroy(old);
                 var go = Spawn(site);
                 _markers[site.Id] = go;
