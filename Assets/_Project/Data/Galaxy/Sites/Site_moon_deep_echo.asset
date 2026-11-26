@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Deep Echo
   bodyId: body.sol.moon
   sceneName: Moon_Excavation_01
-  position: {x: -70, y: 0, z: 60}
+  position: {x: -340, y: 0, z: 60}
   radius: 5
   depth: 4.5
   difficulty: 3
@@ -38,5 +38,5 @@ MonoBehaviour:
     cell: {x: 27, y: 15, z: 13}
     footprint: 1
   gateFact: 
-  landingHint: {x: -93.700775, y: -1.6785736, z: 47.92386}
+  landingHint: {x: -311.52203, y: -1.707222, z: 54.015457}
   hasLandingHint: 1

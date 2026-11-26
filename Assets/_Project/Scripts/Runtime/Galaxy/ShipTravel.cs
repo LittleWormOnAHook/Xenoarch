@@ -32,7 +32,7 @@ namespace DMI.Xenoarch.Galaxy
             x.Body(body.Id).visited = true;
             var site = string.IsNullOrEmpty(siteId) || x.Sites == null ? null : x.Sites.Get(siteId);
             var st = site != null ? x.Site(site.Id) : null;
-            string where = site == null ? "base landing zone" : st != null && st.revealLevel >= (int)SiteRevealLevel.Pinpointed ? site.displayName : "orbital signature";
+            string where = site == null ? "base landing zone" : st != null && st.revealLevel >= (int)SiteRevealLevel.Pinpointed ? site.displayName : st != null && st.revealLevel <= 0 ? "selected landing zone" : "orbital signature";
             Scenes.SceneLoader.NextTitle = $"Shuttle descent: {body.displayName}";
             Scenes.SceneLoader.NextSubtitle = $"Landing near the {where}";
             Debug.Log($"[Xenoarch] Shuttle to {body.displayName} ({(site != null ? site.Id : "base zone")})");

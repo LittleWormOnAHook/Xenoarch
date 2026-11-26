@@ -28,15 +28,15 @@ MonoBehaviour:
   seed: 34618
   mapColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
   orbitSkybox: {fileID: 2100000, guid: 70c66f8e662d2034abf88156c458b743, type: 2}
+  orbitView: {fileID: 11400000, guid: 481dae741b68502bab49b57bc66613a1, type: 2}
   description: Training ground for licensed xenoarchaeologists. Several old survey
     anomalies remain unexplained.
   surfaceMap: {fileID: 2800000, guid: b686669c75b2e704bb55d39e531eb4c8, type: 3}
   surfaceMapRect:
     serializedVersion: 2
-    x: -263.3266
-    y: -250.02379
-    width: 500
-    height: 500
+    x: -509.2837
+    y: -264
+    width: 684.44794
+    height: 684.44794
   baseLanding: {x: -21.398771, y: -0.3940735, z: -6.9528847}
   hasBaseLanding: 1
-  orbitView: {fileID: 11400000, guid: 481dae741b68502bab49b57bc66613a1, type: 2}

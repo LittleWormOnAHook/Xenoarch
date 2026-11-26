@@ -65,6 +65,17 @@ namespace DMI.Xenoarch.Core
         [Tooltip("Shadowless fill light inside a dug pit (0 = off), so pit walls in the sun's shadow stay readable.")]
         [Range(0f, 3f)] public float pitFillIntensity = 0.8f;
 
+        [Header("Resources")]
+        [Tooltip("Scales materials found while digging (strata bands). 0.4 = 60% less; fractions carry over between strokes.")]
+        [Range(0f, 2f)] public float digYieldMultiplier = 0.4f;
+        [Tooltip("Scales each material's nodesPerScene (resource nodes spread over the whole surface map).")]
+        [Range(0f, 10f)] public float resourceNodeMultiplier = 3f;
+        [Tooltip("Share of resource nodes placed around landing zones (rest spread over the surface map).")]
+        [Range(0f, 1f)] public float resourceNodesNearZones = 0.35f;
+
+        [Header("Site layout (editor: Tools/Xenoarch/Landing/Spread Sites and Landing Zones)")]
+        public DMI.Xenoarch.Exploration.SiteLayoutSettings siteLayout = new DMI.Xenoarch.Exploration.SiteLayoutSettings();
+
         [Header("Development")]
         [Tooltip("F5 quick save, F9 quick load in gameplay scenes.")]
         public bool enableDebugHotkeys = true;

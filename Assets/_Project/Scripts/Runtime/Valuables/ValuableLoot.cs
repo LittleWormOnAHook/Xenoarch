@@ -60,7 +60,9 @@ namespace DMI.Xenoarch.Valuables
         [Tooltip("Keep this far from dig grids and landing zones (m).")] public float clearance;
         public float minDepth, maxDepth;
         [Tooltip("Steepest ground a cache may be buried under (deg).")] public float maxSlope;
-        public static ValuableSiteSettings Default => new ValuableSiteSettings { perBody = 9, spacing = 40f, clearance = 18f, minDepth = 0.5f, maxDepth = 1.0f, maxSlope = 28f };
+        [Tooltip("Extra caches around each landing zone (on top of perBody, which spreads over the whole surface map).")] public int perLandingZone;
+        [Tooltip("Ring around a landing zone for its caches (min, max m).")] public Vector2 zoneRing;
+        public static ValuableSiteSettings Default => new ValuableSiteSettings { perBody = 7, spacing = 40f, clearance = 18f, minDepth = 0.5f, maxDepth = 1.0f, maxSlope = 28f, perLandingZone = 1, zoneRing = new Vector2(30f, 110f) };
     }
 
     /// <summary>One generated cache: deterministic from (body, galaxy seed, index) and the terrain.</summary>
@@ -90,7 +92,7 @@ namespace DMI.Xenoarch.Valuables
 
         /// <summary>Spread caches over a region on walkable ground, away from dig grids / landing zones and each other.</summary>
         public static List<ValuableSite> Generate(string bodyId, int galaxySeed, Rect region, ValuableSiteSettings s,
-            Exploration.LandingZonePicker.HeightFn height, IList<(Vector3 centre, float radius)> avoid)
+            Exploration.LandingZonePicker.HeightFn height, IList<(Vector3 centre, float radius)> avoid, IList<Vector3> zones = null)
         {
             var list = new List<ValuableSite>();
             if (s.perBody <= 0 || region.width < 10f) return list;
@@ -110,6 +112,30 @@ namespace DMI.Xenoarch.Valuables
                 if (ok && avoid != null) foreach (var a in avoid) if ((Flat(a.centre) - Flat(p)).magnitude < a.radius + s.clearance) { ok = false; break; }
                 if (!ok) continue;
                 list.Add(new ValuableSite { id = $"cache.{bodyId?.Replace("body.", "")}.{list.Count:00}", position = p, depth = depth, seed = cacheSeed });
+            }
+            // Around each landing zone (ids continue after the map-wide ones; same spacing / clearance rules).
+            if (zones != null && s.perLandingZone > 0)
+            {
+                float rMin = Mathf.Max(s.clearance, s.zoneRing.x), rMax = Mathf.Max(rMin + 5f, s.zoneRing.y);
+                foreach (var zc in zones)
+                {
+                    int want = s.perLandingZone, got = 0;
+                    for (int tries = 0; tries < want * 60 && got < want; tries++)
+                    {
+                        float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = Mathf.Lerp(rMin, rMax, (float)rng.NextDouble());
+                        float depth = Mathf.Lerp(s.minDepth, s.maxDepth, (float)rng.NextDouble());
+                        int cacheSeed = rng.Next();
+                        float x = zc.x + Mathf.Cos(a) * r, z = zc.z + Mathf.Sin(a) * r;
+                        if (!height(x, z, out float y, out var n) || Vector3.Angle(n, Vector3.up) > s.maxSlope) continue;
+                        var p = new Vector3(x, y, z);
+                        bool ok = true;
+                        foreach (var c in list) if ((Flat(c.position) - Flat(p)).sqrMagnitude < s.spacing * s.spacing) { ok = false; break; }
+                        if (ok && avoid != null) foreach (var av in avoid) if ((Flat(av.centre) - Flat(p)).magnitude < av.radius + s.clearance) { ok = false; break; }
+                        if (!ok) continue;
+                        list.Add(new ValuableSite { id = $"cache.{bodyId?.Replace("body.", "")}.{list.Count:00}", position = p, depth = depth, seed = cacheSeed });
+                        got++;
+                    }
+                }
             }
             return list;
         }

@@ -43,8 +43,10 @@ namespace DMI.Xenoarch.Valuables
             _body = body;
             var avoid = new List<(Vector3, float)>();
             foreach (var s in x.SitesInScene(scene.name)) avoid.Add((s.position, s.radius * 1.42f));
-            foreach (var z in FindObjectsByType<LandingZone>()) avoid.Add((z.transform.position, z.footprint));
-            Sites.AddRange(ValuableService.Generate(body.Id, x.Galaxy != null ? x.Galaxy.seed : 0, body.surfaceMapRect, session.Config.valuableSites, LandingZonePicker.ForTerrain(terrain), avoid));
+            var zones = new List<Vector3>();
+            foreach (var z in FindObjectsByType<LandingZone>()) if (z.gameObject.scene == scene) { avoid.Add((z.transform.position, z.footprint)); zones.Add(z.transform.position); }
+            zones.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.z.CompareTo(b.z)); // deterministic order
+            Sites.AddRange(ValuableService.Generate(body.Id, x.Galaxy != null ? x.Galaxy.seed : 0, body.surfaceMapRect, session.Config.valuableSites, LandingZonePicker.ForTerrain(terrain), avoid, zones));
             int revealed = 0;
             foreach (var v in Sites) if (session.Valuables.IsRevealed(v.id)) { MakeDig(v); revealed++; }
             Debug.Log($"[Xenoarch] Valuables: {Sites.Count} hidden cache(s) on {body.displayName}, {revealed} already found");

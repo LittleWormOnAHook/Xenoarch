@@ -212,7 +212,7 @@ namespace DMI.Xenoarch.Excavation
             float frac = r.removed / r.cut.Count;
             var cuts = new System.Collections.Generic.List<(int, float)>();
             foreach (var c in r.cut) cuts.Add((c.y, frac));
-            foreach (var (id, n) in Materials.StrataYield.Dig(s.Materials, profile, site.Definition.Id, site.Grid.cell, cuts, _strataRng))
+            foreach (var (id, n) in Materials.StrataYield.Dig(s.Materials, profile, site.Definition.Id, site.Grid.cell, cuts, _strataRng, s.Config.digYieldMultiplier))
             {
                 int lost = s.Inventory.Add(id, n);
                 string name = s.Materials.Name(id);

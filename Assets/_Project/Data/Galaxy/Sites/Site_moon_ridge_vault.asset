@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Ridge Vault
   bodyId: body.sol.moon
   sceneName: Moon_Excavation_01
-  position: {x: 45, y: 0, z: -38}
+  position: {x: -228, y: 0, z: -164}
   radius: 4
   depth: 2.4
   difficulty: 2
@@ -41,5 +41,5 @@ MonoBehaviour:
     cell: {x: 24, y: 2, z: 24}
     footprint: 1
   gateFact: 
-  landingHint: {x: 67.04759, y: 11.170113, z: -60.04759}
+  landingHint: {x: -205.96378, y: -1.5564957, z: -147.24925}
   hasLandingHint: 1

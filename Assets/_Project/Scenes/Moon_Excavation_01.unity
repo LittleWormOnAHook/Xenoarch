@@ -268,8 +268,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 28231424}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.38268346, z: -0, w: 0.9238795}
-  m_LocalPosition: {x: 67.04759, y: 11.170113, z: -60.04759}
+  m_LocalRotation: {x: -0, y: 0.89586747, z: -0, w: -0.44432145}
+  m_LocalPosition: {x: -205.96378, y: -1.5564957, z: -147.24925}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -291,10 +291,10 @@ MonoBehaviour:
   siteId: site.moon.ridge_vault
   footprint: 12.5
   playerOffset: {x: 0, y: 0, z: 0}
-  siteHint: {x: 45, y: 0, z: -38}
+  siteHint: {x: -228, y: -1.2693634, z: -164}
   autoPlaced: 1
   relaxedPick: 0
-  autoPosition: {x: 67.04759, y: 11.170113, z: -60.04759}
+  autoPosition: {x: -205.96378, y: -1.5564957, z: -147.24925}
   hasSiteHint: 1
 --- !u!1 &119791747
 GameObject:
@@ -498,7 +498,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4910607585486082096, guid: a82e2fcd0b717284cbf3e14ab9fae8de, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.5576544
+      value: 1.5361319
       objectReference: {fileID: 0}
     - target: {fileID: 4910607585486082096, guid: a82e2fcd0b717284cbf3e14ab9fae8de, type: 3}
       propertyPath: m_LocalPosition.z
@@ -767,8 +767,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 428935246}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.809017, z: -0, w: 0.5877853}
-  m_LocalPosition: {x: 19.743935, y: 0.49495697, z: 16.415192}
+  m_LocalRotation: {x: -0, y: -0.76465046, z: -0, w: 0.64444524}
+  m_LocalPosition: {x: 5.88056, y: 10.285049, z: 320.44794}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -790,10 +790,10 @@ MonoBehaviour:
   siteId: site.moon.tranquility_cache
   footprint: 12.5
   playerOffset: {x: 0, y: 0, z: 0}
-  siteHint: {x: 0, y: 0, z: 10}
+  siteHint: {x: -20, y: 10.412254, z: 316}
   autoPlaced: 1
   relaxedPick: 0
-  autoPosition: {x: 19.743935, y: 0.49495697, z: 16.415192}
+  autoPosition: {x: 5.88056, y: 10.285049, z: 320.44794}
   hasSiteHint: 1
 --- !u!1 &467753206
 GameObject:
@@ -865,8 +865,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 661561529}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.021438628, z: -0, w: 0.99977016}
-  m_LocalPosition: {x: 0.70255184, y: 0.16885066, z: 10.226107}
+  m_LocalRotation: {x: -0, y: -0.018602164, z: -0, w: 0.99982697}
+  m_LocalPosition: {x: 0.70255303, y: -0.04560399, z: 10.226107}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -910,8 +910,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 684484732}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.047618717, z: -0, w: 0.9988656}
-  m_LocalPosition: {x: 0.98215985, y: -0.17949218, z: 10.482391}
+  m_LocalRotation: {x: -0, y: -0.03107974, z: -0, w: 0.99951696}
+  m_LocalPosition: {x: 0.98214954, y: 0.14275837, z: 10.482393}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1727,8 +1727,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1462502749}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.00000047683716, y: 0.19556141, z: 9.492652}
+  m_LocalRotation: {x: -0, y: 0.00000014901161, z: -0, w: 1}
+  m_LocalPosition: {x: -0.00000667572, y: 0.020100355, z: 9.492659}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2182,8 +2182,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2025629770}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.52249867, z: -0, w: 0.8526401}
-  m_LocalPosition: {x: -93.700775, y: -1.6785736, z: 47.92386}
+  m_LocalRotation: {x: -0, y: -0.6302164, z: -0, w: 0.7764195}
+  m_LocalPosition: {x: -311.52203, y: -1.707222, z: 54.015457}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2205,10 +2205,10 @@ MonoBehaviour:
   siteId: site.moon.deep_echo
   footprint: 12.5
   playerOffset: {x: 0, y: 0, z: 0}
-  siteHint: {x: -70, y: 0, z: 60}
+  siteHint: {x: -340, y: -1.1804962, z: 60}
   autoPlaced: 1
   relaxedPick: 0
-  autoPosition: {x: -93.700775, y: -1.6785736, z: 47.92386}
+  autoPosition: {x: -311.52203, y: -1.707222, z: 54.015457}
   hasSiteHint: 1
 --- !u!1 &2062902515
 GameObject:
@@ -2334,7 +2334,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4910607585486082096, guid: a82e2fcd0b717284cbf3e14ab9fae8de, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.5361319
+      value: 1.5366812
       objectReference: {fileID: 0}
     - target: {fileID: 4910607585486082096, guid: a82e2fcd0b717284cbf3e14ab9fae8de, type: 3}
       propertyPath: m_LocalPosition.z

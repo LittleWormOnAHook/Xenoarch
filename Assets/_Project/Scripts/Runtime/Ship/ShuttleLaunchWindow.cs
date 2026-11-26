@@ -41,17 +41,24 @@ namespace DMI.Xenoarch.Ship
 
             Text(left, $"LANDING ZONES: {b.displayName.ToUpperInvariant()}", "xa-term__h");
             Zone(left, "", "Base landing zone", "Surveyed flat ground near the survey beacon.");
-            int n = 0;
+            int n = 0, zonesOnly = 0;
             foreach (var site in x.SitesOnBody(b.Id))
             {
                 var st = x.Site(site.Id);
-                if (st.revealLevel <= 0) continue;
+                if (st.revealLevel <= 0)
+                {
+                    // Every surveyed landing zone can be picked; the dig site near it stays unknown until scanned.
+                    if (!site.hasLandingHint) continue;
+                    zonesOnly++;
+                    Zone(left, site.Id, $"Landing zone {zonesOnly} (unsurveyed)", $"{Dist(b, site.landingHint):0} m from base. No signature yet");
+                    continue;
+                }
                 n++;
                 string what = st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : $"Unresolved anomaly {n}";
                 string where = st.revealLevel >= 3 ? "pinpointed" : $"+/- {ExplorationService.Uncertainty(st.revealLevel):0} m";
                 Zone(left, site.Id, $"Near: {what}", $"Signature {where}");
             }
-            if (n == 0) Text(left, "No signatures yet. Run an orbital scan to land near a dig site.", "xa-term__dim");
+            if (n == 0) Text(left, "No signatures yet. Run an orbital scan to find the dig sites near these zones.", "xa-term__dim");
 
             Text(right, "SHUTTLE", "xa-term__h");
             var map = new SurfaceMapView(b.surfaceMap, b.surfaceMapRect);
@@ -59,7 +66,11 @@ namespace DMI.Xenoarch.Ship
             foreach (var site in x.SitesOnBody(b.Id))
             {
                 var st = x.Site(site.Id);
-                if (st.revealLevel <= 0) continue;
+                if (st.revealLevel <= 0)
+                {
+                    if (site.hasLandingHint) map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Landing, world = new Vector2(site.landingHint.x, site.landingHint.z), label = "Landing zone", selected = site.Id == _selected });
+                    continue;
+                }
                 var est = site.position + ExplorationService.EstimateOffset(site, st.revealLevel);
                 map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Site, world = new Vector2(est.x, est.z), uncertainty = ExplorationService.Uncertainty(st.revealLevel), selected = site.Id == _selected });
                 if (site.hasLandingHint) map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Landing, world = new Vector2(site.landingHint.x, site.landingHint.z), label = "Landing site", selected = site.Id == _selected });
@@ -67,7 +78,8 @@ namespace DMI.Xenoarch.Ship
             map.Clicked += id => { _selected = id; Refresh(); };
             right.Add(map);
             var sel = string.IsNullOrEmpty(_selected) || x.Sites == null ? null : x.Sites.Get(_selected);
-            Text(right, sel == null ? "Destination: base landing zone" : $"Destination: semi-flat ground near the selected signature");
+            bool unsurveyed = sel != null && x.Site(sel.Id).revealLevel <= 0;
+            Text(right, sel == null ? "Destination: base landing zone" : unsurveyed ? "Destination: the selected landing zone (no signature scanned there yet)" : "Destination: semi-flat ground near the selected signature");
             Text(right, "The shuttle sets down on the flattest clear ground close to the site. You step out beside it. Board it again (E) to return to the ship.", "xa-term__dim");
             Btn(right, $"Take Shuttle to {b.displayName}", () =>
             {
@@ -75,6 +87,12 @@ namespace DMI.Xenoarch.Ship
                 Close();
             });
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__warn");
+        }
+
+        static float Dist(DMI.Xenoarch.Galaxy.CelestialBodyDefinition b, Vector3 p)
+        {
+            if (b == null || !b.hasBaseLanding) return 0f;
+            var d = p - b.baseLanding; d.y = 0f; return d.magnitude;
         }
 
         void Zone(VisualElement parent, string id, string title, string detail)

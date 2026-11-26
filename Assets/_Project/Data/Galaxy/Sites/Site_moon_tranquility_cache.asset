@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Tranquility Cache
   bodyId: body.sol.moon
   sceneName: Moon_Excavation_01
-  position: {x: 0, y: 0, z: 10}
+  position: {x: -20, y: 0, z: 316}
   radius: 3
   depth: 1.2
   difficulty: 1
@@ -41,5 +41,5 @@ MonoBehaviour:
     cell: {x: 9, y: 3, z: 6}
     footprint: 1
   gateFact: 
-  landingHint: {x: 19.743935, y: 0.49495697, z: 16.415192}
+  landingHint: {x: 5.88056, y: 10.285049, z: 320.44794}
   hasLandingHint: 1

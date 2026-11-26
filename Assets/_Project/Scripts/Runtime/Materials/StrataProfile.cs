@@ -47,11 +47,11 @@ namespace DMI.Xenoarch.Materials
     public static class StrataYield
     {
         /// <summary>Applies dug cells (y index + removed fraction) at a site; returns materials found (id, count).</summary>
-        public static List<(string id, int n)> Dig(MaterialsService m, StrataProfile profile, string siteId, float cell, IEnumerable<(int y, float frac)> cuts, System.Random rng)
+        public static List<(string id, int n)> Dig(MaterialsService m, StrataProfile profile, string siteId, float cell, IEnumerable<(int y, float frac)> cuts, System.Random rng, float yieldMultiplier = 1f)
         {
             var found = new List<(string, int)>();
             if (m == null || profile == null || cuts == null) return found;
-            float vol = cell * cell * cell;
+            float vol = cell * cell * cell * Mathf.Max(0f, yieldMultiplier); // scaled volume accumulates, so fractions carry over
             var gained = new Dictionary<string, int>();
             foreach (var (y, frac) in cuts)
             {
