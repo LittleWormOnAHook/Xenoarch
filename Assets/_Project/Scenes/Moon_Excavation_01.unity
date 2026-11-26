@@ -592,7 +592,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 1545379112}
   guid: 2b6610628038300488ea1a33e0a3359f
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Moon_Excavation_01\2b6610628038300488ea1a33e0a3359f
   cutter: {fileID: 868134396}
   heightmapScale: {x: 0.24414062, y: 1, z: 0.24414062}
@@ -606,8 +606,9 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 5b77f912231726a479464b8ca1b5c2dd, type: 2}
   materialType: 2
   terrainTextures:
-  - {fileID: 2800000, guid: 3cf49f5e7a0561742866551654f22a9c, type: 3}
-  - {fileID: 2800000, guid: e356684a29a4caa4ca68b8802d50c84b, type: 3}
+  - {fileID: 2800000, guid: 2ad315257f7fede49a2dd05a91b568c5, type: 3}
+  - {fileID: 2800000, guid: ec8517733f03e31479d9b9229430108e, type: 3}
+  - {fileID: 2800000, guid: 9dc7ec68744981649a97961e58ae8e4c, type: 3}
   chunksInStreamingAssets: []
   persistenceSubPath: 
   ShowDebug: 0
@@ -1300,6 +1301,7 @@ MonoBehaviour:
   digger: {fileID: 0}
   brush: 0
   bufferSize: 512
+  runtimeVoxelHeight: 0.1
 --- !u!114 &1774220443
 MonoBehaviour:
   m_ObjectHideFlags: 0

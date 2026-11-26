@@ -7,10 +7,10 @@ TerrainLayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Mars_Soil
-  m_DiffuseTexture: {fileID: 2800000, guid: 8f7542b40fc484244b624e6b5a41c695, type: 3}
-  m_NormalMapTexture: {fileID: 2800000, guid: 809f8795b9fdb4348bc55423ed5036f8, type: 3}
-  m_MaskMapTexture: {fileID: 0}
-  m_TileSize: {x: 4, y: 4}
+  m_DiffuseTexture: {fileID: 2800000, guid: b701f800b1113fa4786047283d15b57b, type: 3}
+  m_NormalMapTexture: {fileID: 2800000, guid: 3b23750d53255f446b6c8511889f74a5, type: 3}
+  m_MaskMapTexture: {fileID: 2800000, guid: 2e38cbafd7e149b45bd76ab328fcbd8b, type: 3}
+  m_TileSize: {x: 2.5, y: 2.5}
   m_TileOffset: {x: 0, y: 0}
   m_Specular: {r: 0, g: 0, b: 0, a: 0}
   m_Metallic: 0
@@ -19,5 +19,5 @@ TerrainLayer:
   m_DiffuseRemapMin: {x: 0, y: 0, z: 0, w: 0}
   m_DiffuseRemapMax: {x: 1, y: 1, z: 1, w: 1}
   m_MaskMapRemapMin: {x: 0, y: 0, z: 0, w: 0}
-  m_MaskMapRemapMax: {x: 1, y: 1, z: 1, w: 1}
+  m_MaskMapRemapMax: {x: 0, y: 1, z: 1, w: 0.2}
   m_SmoothnessSource: 1

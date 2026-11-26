@@ -12,6 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _MASKMAP
   - _NORMALMAP
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -33,66 +34,66 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask0:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 9e3ccad0a254ebe499b586501d4fd6d5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask1:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 2e38cbafd7e149b45bd76ab328fcbd8b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask2:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d57bac09906cb8144ae9e639a29e84a0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask3:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ec49bc811ef773f4da0b9a8b98ddab14, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal0:
-        m_Texture: {fileID: 2800000, guid: 463adb8f1b59fb0448ae875f8bb5ae50, type: 3}
+        m_Texture: {fileID: 2800000, guid: c6b3dab8e94f16545a42d1b1f726bace, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal1:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 3b23750d53255f446b6c8511889f74a5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal2:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: dcf621324ea2f504080b32a0cf6de1f2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal3:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 9b9cdfe55109052498d6ed3330710c94, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Splat0:
-        m_Texture: {fileID: 2800000, guid: 00b76d6737351744687902ca5624044d, type: 3}
-        m_Scale: {x: 0.0002, y: 0.0002}
+        m_Texture: {fileID: 2800000, guid: f5e38232e7ee14f4d97a3d975479c2a7, type: 3}
+        m_Scale: {x: 0.2, y: 0.2}
         m_Offset: {x: 0, y: 0}
     - _Splat1:
-        m_Texture: {fileID: 2800000, guid: 8f7542b40fc484244b624e6b5a41c695, type: 3}
-        m_Scale: {x: 0.25, y: 0.25}
+        m_Texture: {fileID: 2800000, guid: b701f800b1113fa4786047283d15b57b, type: 3}
+        m_Scale: {x: 0.4, y: 0.4}
         m_Offset: {x: 0, y: 0}
     - _Splat2:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: 41665b831439d6749875df4cf2e39a5d, type: 3}
+        m_Scale: {x: 0.11111111, y: 0.11111111}
         m_Offset: {x: 0, y: 0}
     - _Splat3:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: 9da517596d271fb4d9604563e2ed8b07, type: 3}
+        m_Scale: {x: 0.14285715, y: 0.14285715}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BaryContrast: 20
     - _EnableHeightBlend: 0
     - _HeightTransition: 0
-    - _LayerHasMask0: 0
-    - _LayerHasMask1: 0
-    - _LayerHasMask2: 0
-    - _LayerHasMask3: 0
+    - _LayerHasMask0: 1
+    - _LayerHasMask1: 1
+    - _LayerHasMask2: 1
+    - _LayerHasMask3: 1
     - _Metallic0: -0.2
     - _Metallic1: -0.2
-    - _Metallic2: 0
-    - _Metallic3: 0
+    - _Metallic2: -0.2
+    - _Metallic3: -0.2
     - _NormalScale0: 1
     - _NormalScale1: 1
     - _NormalScale2: 1
@@ -100,8 +101,8 @@ Material:
     - _NumLayersCount: 1
     - _Smoothness0: 0
     - _Smoothness1: 0
-    - _Smoothness2: 0.5
-    - _Smoothness3: 0.5
+    - _Smoothness2: 0
+    - _Smoothness3: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _DiffuseRemapScale0: {r: 1, g: 1, b: 1, a: 1}
@@ -112,9 +113,9 @@ Material:
     - _MaskMapRemapOffset1: {r: 0, g: 0, b: 0, a: 0}
     - _MaskMapRemapOffset2: {r: 0, g: 0, b: 0, a: 0}
     - _MaskMapRemapOffset3: {r: 0, g: 0, b: 0, a: 0}
-    - _MaskMapRemapScale0: {r: 1, g: 1, b: 1, a: 1}
-    - _MaskMapRemapScale1: {r: 1, g: 1, b: 1, a: 1}
-    - _MaskMapRemapScale2: {r: 1, g: 1, b: 1, a: 1}
-    - _MaskMapRemapScale3: {r: 1, g: 1, b: 1, a: 1}
+    - _MaskMapRemapScale0: {r: 0, g: 1, b: 1, a: 0.3}
+    - _MaskMapRemapScale1: {r: 0, g: 1, b: 1, a: 0.2}
+    - _MaskMapRemapScale2: {r: 0, g: 1, b: 1, a: 0.35}
+    - _MaskMapRemapScale3: {r: 0, g: 1, b: 1, a: 0.28}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

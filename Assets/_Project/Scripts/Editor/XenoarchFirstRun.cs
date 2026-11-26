@@ -88,6 +88,11 @@ namespace DMI.Xenoarch.EditorTools
                 File.Delete(SystemsTrigger);
                 XenoarchMapsSetup.EnsureSystems();
             }
+            if (File.Exists(XenoarchTerrainSurface.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(XenoarchTerrainSurface.Trigger);
+                XenoarchTerrainSurface.Run();
+            }
             if (File.Exists(SmokeTrigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 File.Delete(SmokeTrigger);
