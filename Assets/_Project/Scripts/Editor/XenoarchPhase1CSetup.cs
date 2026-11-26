@@ -82,6 +82,7 @@ namespace DMI.Xenoarch.EditorTools
             foreach (var scene in new[] { SceneNames.MoonExcavation01, SceneNames.MarsExcavation01 })
                 WithScene(scene, log, s => TerrainPass(s, config.siteRegistry, log));
             XenoarchShuttleSetup.Run(log);
+            XenoarchMapsSetup.Run(log);
             WithScene(SceneNames.ShipStarter, log, s =>
             {
                 var all = s.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
@@ -707,6 +708,7 @@ namespace DMI.Xenoarch.EditorTools
             XenoarchDigRingSetup.Validate(check);
             XenoarchShaderWarmup.Validate(check);
             XenoarchShuttleSetup.Validate(check);
+            XenoarchMapsSetup.Validate(check);
             check(DMI.Xenoarch.Scenes.SceneLoader.ReadyGates != null, "3A loading screen: ready gates available (shader compile, Digger replay)");
             ValidateDigging(check);
 

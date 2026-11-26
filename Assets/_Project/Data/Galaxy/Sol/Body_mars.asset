@@ -29,3 +29,12 @@ MonoBehaviour:
   mapColor: {r: 0.85, g: 0.42, b: 0.25, a: 1}
   orbitSkybox: {fileID: 2100000, guid: 4aeb5b51beddfa54c9e46610b708b1f6, type: 2}
   description: Dust-buried structures predate every human mission.
+  surfaceMap: {fileID: 2800000, guid: 5ef63418563ff4a4ba47995d073eedb3, type: 3}
+  surfaceMapRect:
+    serializedVersion: 2
+    x: -147.5
+    y: -85.462776
+    width: 300
+    height: 300
+  baseLanding: {x: -16.190956, y: -24.436295, z: 102.225746}
+  hasBaseLanding: 1

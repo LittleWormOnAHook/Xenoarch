@@ -41,3 +41,5 @@ MonoBehaviour:
     cell: {x: 22, y: 2, z: 22}
     footprint: 1
   gateFact: chain.moon_mars.mars_coords
+  landingHint: {x: -16.329088, y: -24.584938, z: 105.895935}
+  hasLandingHint: 1

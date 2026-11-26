@@ -13,6 +13,8 @@ namespace DMI.Xenoarch.Galaxy
         public string stellarClass = "G2V";
         public int seed;
         public bool knownByDefault = true;
+        [Tooltip("Discovery fact that reveals this system on the galaxy map (e.g. decoded coordinates). Empty = known by default flag only.")] public string revealFact;
+        [Tooltip("Galaxy map note once revealed.")] [TextArea] public string revealNote;
         [Tooltip("FTL range (ly) needed to jump here from a neighbouring system.")] public float minFtlRangeLy;
         [Range(0f, 1f)] public float archaeologicalPotential;
         public List<CelestialBodyDefinition> bodies = new List<CelestialBodyDefinition>();

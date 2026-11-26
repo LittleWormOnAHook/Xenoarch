@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d902145354624439874e2eda5a07add7, type: 3}
+  m_Name: System_epsilon_eridani
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.StarSystemDefinition
+  id: sys.epsilon_eridani
+  displayName: Epsilon Eridani
+  galacticPosition: {x: 6.2, y: 8.3, z: -1.7}
+  stellarClass: K2V
+  seed: 1255206308
+  knownByDefault: 1
+  revealFact: 
+  revealNote: 
+  minFtlRangeLy: 10.498571
+  archaeologicalPotential: 0.1
+  bodies: []

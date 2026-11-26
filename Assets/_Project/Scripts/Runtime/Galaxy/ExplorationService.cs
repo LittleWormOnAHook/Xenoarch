@@ -109,6 +109,21 @@ namespace DMI.Xenoarch.Galaxy
 
         // ------------------------------------------------------------------ queries
 
+        /// <summary>A system shows on the galaxy map when known by default or its reveal fact has been found.</summary>
+        public static bool SystemKnown(StarSystemDefinition s, Func<string, bool> gate) =>
+            s != null && (string.IsNullOrEmpty(s.revealFact) ? s.knownByDefault : gate != null && gate(s.revealFact));
+
+        /// <summary>The galaxy map unlocks once any fact-gated system has been revealed (Phase 1: the decoded navigation core).</summary>
+        public static bool GalaxyUnlocked(GalaxyDefinition g, Func<string, bool> gate)
+        {
+            if (g == null || gate == null) return false;
+            foreach (var s in g.systems) if (s != null && !string.IsNullOrEmpty(s.revealFact) && gate(s.revealFact)) return true;
+            return false;
+        }
+
+        public bool GalaxyMapUnlocked => GalaxyUnlocked(Galaxy, Gate);
+        public bool IsSystemKnown(StarSystemDefinition s) => SystemKnown(s, Gate);
+
         public CelestialBodyDefinition CurrentBody => Galaxy != null ? Galaxy.FindBody(Ship.currentBodyId) : null;
         public StarSystemDefinition CurrentSystem => Galaxy != null ? Galaxy.FindSystem(Ship.currentSystemId) : null;
 

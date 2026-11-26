@@ -38,3 +38,5 @@ MonoBehaviour:
     cell: {x: 27, y: 15, z: 13}
     footprint: 1
   gateFact: 
+  landingHint: {x: -93.700775, y: -1.6785736, z: 47.92386}
+  hasLandingHint: 1

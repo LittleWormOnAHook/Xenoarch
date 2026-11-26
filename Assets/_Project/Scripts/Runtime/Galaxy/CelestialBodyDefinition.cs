@@ -26,6 +26,11 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Sky seen from the ship while parked in orbit of / docked at this body (empty = galaxy default deep space).")]
         public Material orbitSkybox;
         [TextArea] public string description;
+        [Header("Surface map (baked by setup from the landing scene's terrain)")]
+        [Tooltip("Top-down relief map of the landing region (orbit scan view, minimap).")] public Texture2D surfaceMap;
+        [Tooltip("World x/z rectangle covered by the surface map (x, z, width, depth).")] public Rect surfaceMapRect;
+        [Tooltip("Base landing zone position (from the scene's LandingZone marker).")] public Vector3 baseLanding;
+        public bool hasBaseLanding;
 
         public bool HasLanding => !string.IsNullOrEmpty(sceneName);
     }

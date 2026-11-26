@@ -30,3 +30,12 @@ MonoBehaviour:
   orbitSkybox: {fileID: 2100000, guid: 70c66f8e662d2034abf88156c458b743, type: 2}
   description: Training ground for licensed xenoarchaeologists. Several old survey
     anomalies remain unexplained.
+  surfaceMap: {fileID: 2800000, guid: b686669c75b2e704bb55d39e531eb4c8, type: 3}
+  surfaceMapRect:
+    serializedVersion: 2
+    x: -173.70078
+    y: -160.39796
+    width: 320.74835
+    height: 320.74835
+  baseLanding: {x: -21.398771, y: -0.3940735, z: -6.9528847}
+  hasBaseLanding: 1

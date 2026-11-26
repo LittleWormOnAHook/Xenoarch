@@ -18,10 +18,12 @@ namespace DMI.Xenoarch.Ship
         float _scanT = -1f;
         VisualElement _fill;
         string _message;
+        string _selectedSite;
+        SurfaceMapView _surface;
 
         void Reset() => terminalName = "Orbital Scanning Terminal";
 
-        protected override void OnOpened() { _message = null; _scanT = -1f; }
+        protected override void OnOpened() { _message = null; _landMsg = null; _scanT = -1f; }
         protected override void OnClosed() { _scanT = -1f; }
 
         protected override void Tick()
@@ -29,6 +31,7 @@ namespace DMI.Xenoarch.Ship
             if (_scanT < 0f) return;
             _scanT += Time.unscaledDeltaTime;
             if (_fill != null) _fill.style.width = Length.Percent(Mathf.Clamp01(_scanT / passSeconds) * 100f);
+            if (_surface != null) { _surface.Sweep = Mathf.Clamp01(_scanT / passSeconds); _surface.MarkDirtyRepaint(); }
             if (_scanT < passSeconds) return;
             _scanT = -1f;
             int n = Session.Exploration.OrbitalScanPass();
@@ -66,24 +69,65 @@ namespace DMI.Xenoarch.Ship
             if (!string.IsNullOrEmpty(_message)) Text(left, _message, "xa-term__good");
 
             Text(right, "SIGNATURES", "xa-term__h");
-            var list = new ScrollView(); list.AddToClassList("xa-term__list"); right.Add(list);
+            var scroll = new ScrollView(ScrollViewMode.Vertical); scroll.style.flexGrow = 1; scroll.style.minHeight = 0; right.Add(scroll);
+            var col = scroll.contentContainer;
+            _surface = new SurfaceMapView(b.surfaceMap, b.surfaceMapRect);
+            if (_scanT >= 0f) _surface.Sweep = Mathf.Clamp01(_scanT / passSeconds);
+            col.Add(_surface);
+            string shuttleSite = x.Ship.shuttleSiteId ?? "";
+            if (b.hasBaseLanding) _surface.Markers.Add(new SurfaceMapView.Marker { id = "landing:", kind = SurfaceMapView.Kind.Base, world = new Vector2(b.baseLanding.x, b.baseLanding.z), label = "Base", selected = shuttleSite == "" });
             int hidden = 0, shown = 0;
+            var rows = new VisualElement();
+            ArchaeologicalSiteDefinition sel = null;
             foreach (var site in x.SitesOnBody(b.Id))
             {
                 var st = x.Site(site.Id);
                 if (st.revealLevel <= 0) { hidden++; continue; }
                 shown++;
                 var est = site.position + ExplorationService.EstimateOffset(site, st.revealLevel);
-                string what = st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : "Unresolved anomaly";
+                string what = st.revealLevel >= 3 ? site.displayName : st.revealLevel == 2 ? $"Subsurface structure ({site.displayName})" : $"Unresolved anomaly {shown}";
                 string where = st.revealLevel >= 3 ? $"marked at ({site.position.x:0}, {site.position.z:0})" : $"near ({est.x:0}, {est.z:0}) +/- {ExplorationService.Uncertainty(st.revealLevel):0} m";
-                var row = new VisualElement(); row.AddToClassList("xa-term__row");
-                row.Add(new Label($"{what}"));
+                bool isSel = site.Id == _selectedSite;
+                if (isSel) sel = site;
+                _surface.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Site, world = new Vector2(est.x, est.z), uncertainty = ExplorationService.Uncertainty(st.revealLevel), label = isSel ? what : null, selected = isSel });
+                if (site.hasLandingHint)
+                    _surface.Markers.Add(new SurfaceMapView.Marker { id = "landing:" + site.Id, kind = SurfaceMapView.Kind.Landing, world = new Vector2(site.landingHint.x, site.landingHint.z), label = "Landing site", selected = shuttleSite == site.Id });
+                var id = site.Id;
+                var row = new Button(() => { _selectedSite = id; Refresh(); }) { text = "" };
+                row.AddToClassList("xa-term__row");
+                if (isSel) row.AddToClassList("xa-term__row--sel");
+                row.Add(new Label((shuttleSite == id ? "[shuttle] " : "") + what));
                 row.Add(new Label($"{where}  |  depth ~{(st.revealLevel >= 2 ? $"{site.depth:0.#} m" : "?")}"));
-                list.Add(row);
+                rows.Add(row);
             }
-            if (shown == 0) Text(list, bd.orbitalScanPasses == 0 ? "No scan data. Run an orbital scan." : "No anomalies resolved.", "xa-term__dim");
-            if (hidden > 0 && bd.orbitalScanPasses > 0) Text(right, "Faint signals remain below the resolution threshold.", "xa-term__dim");
-            Text(right, "Positions are landing-zone coordinates. Use the handheld scanner on the surface to pinpoint.", "xa-term__dim");
+            _surface.Clicked += id =>
+            {
+                if (id.StartsWith("landing:")) { SetShuttleSite(id.Substring(8)); return; }
+                _selectedSite = id; Refresh();
+            };
+            Text(col, "Red: dig-site signatures (circle = position uncertainty). Green: shuttle landing sites; click one to set the shuttle's destination.", "xa-term__dim");
+            if (sel != null)
+            {
+                Text(col, $"Selected: {(x.Site(sel.Id).revealLevel >= 3 ? sel.displayName : "signature")}", "xa-term__h");
+                bool already = shuttleSite == sel.Id;
+                Btn(col, already ? "Shuttle will land here" : "Land the shuttle near this site", () => SetShuttleSite(sel.Id), !already);
+            }
+            if (!string.IsNullOrEmpty(_landMsg)) Text(col, _landMsg, "xa-term__good");
+            col.Add(rows);
+            if (shown == 0) Text(col, bd.orbitalScanPasses == 0 ? "No scan data. Run an orbital scan." : "No anomalies resolved.", "xa-term__dim");
+            if (hidden > 0 && bd.orbitalScanPasses > 0) Text(col, "Faint signals remain below the resolution threshold.", "xa-term__dim");
+            Text(col, "Positions are landing-zone coordinates. Use the handheld scanner on the surface to pinpoint.", "xa-term__dim");
+        }
+
+        string _landMsg;
+
+        void SetShuttleSite(string siteId)
+        {
+            var x = Session.Exploration;
+            x.Ship.shuttleSiteId = siteId ?? "";
+            _landMsg = string.IsNullOrEmpty(siteId) ? "Shuttle set to the base landing zone." : "Shuttle landing site set. Take the shuttle at the airlock.";
+            if (!string.IsNullOrEmpty(siteId)) _selectedSite = siteId;
+            Refresh();
         }
     }
 }

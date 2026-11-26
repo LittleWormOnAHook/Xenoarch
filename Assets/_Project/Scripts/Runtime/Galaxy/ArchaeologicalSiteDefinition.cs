@@ -29,5 +29,8 @@ namespace DMI.Xenoarch.Galaxy
         public List<SiteArtifactSpawn> artifacts = new List<SiteArtifactSpawn>();
         [Tooltip("Discovery fact needed before scans can reveal this site (chain gating). Empty = always revealable.")]
         public string gateFact;
+        [Tooltip("Shuttle landing spot near this site (copied by setup from the scene's LandingZone marker; shown on the orbit scan map).")]
+        public Vector3 landingHint;
+        public bool hasLandingHint;
     }
 }

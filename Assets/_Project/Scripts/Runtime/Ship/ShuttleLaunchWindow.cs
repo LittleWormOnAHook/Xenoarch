@@ -54,6 +54,18 @@ namespace DMI.Xenoarch.Ship
             if (n == 0) Text(left, "No signatures yet. Run an orbital scan to land near a dig site.", "xa-term__dim");
 
             Text(right, "SHUTTLE", "xa-term__h");
+            var map = new SurfaceMapView(b.surfaceMap, b.surfaceMapRect);
+            if (b.hasBaseLanding) map.Markers.Add(new SurfaceMapView.Marker { id = "", kind = SurfaceMapView.Kind.Base, world = new Vector2(b.baseLanding.x, b.baseLanding.z), label = "Base", selected = string.IsNullOrEmpty(_selected) });
+            foreach (var site in x.SitesOnBody(b.Id))
+            {
+                var st = x.Site(site.Id);
+                if (st.revealLevel <= 0) continue;
+                var est = site.position + ExplorationService.EstimateOffset(site, st.revealLevel);
+                map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Site, world = new Vector2(est.x, est.z), uncertainty = ExplorationService.Uncertainty(st.revealLevel), selected = site.Id == _selected });
+                if (site.hasLandingHint) map.Markers.Add(new SurfaceMapView.Marker { id = site.Id, kind = SurfaceMapView.Kind.Landing, world = new Vector2(site.landingHint.x, site.landingHint.z), label = "Landing site", selected = site.Id == _selected });
+            }
+            map.Clicked += id => { _selected = id; Refresh(); };
+            right.Add(map);
             var sel = string.IsNullOrEmpty(_selected) || x.Sites == null ? null : x.Sites.Get(_selected);
             Text(right, sel == null ? "Destination: base landing zone" : $"Destination: semi-flat ground near the selected signature");
             Text(right, "The shuttle sets down on the flattest clear ground close to the site. Board it again (E) to return to the ship's airlock bay.", "xa-term__dim");

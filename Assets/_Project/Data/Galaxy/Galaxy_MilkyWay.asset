@@ -16,3 +16,8 @@ MonoBehaviour:
   seed: 1337
   systems:
   - {fileID: 11400000, guid: b8c56fd361dd5e748be5cb3f0fc3432b, type: 2}
+  - {fileID: 11400000, guid: b9cc2312625f7154693918fc557d1e4f, type: 2}
+  - {fileID: 11400000, guid: 21056b7ab9285974d9b8f96d73da269f, type: 2}
+  - {fileID: 11400000, guid: 50e9269bf8aeef0478751abbf938e1ee, type: 2}
+  - {fileID: 11400000, guid: 98db17d5a39e3b6448f16c1d7a129ea2, type: 2}
+  - {fileID: 11400000, guid: 02b09ff9c53dacf4296874f668bc9d1e, type: 2}
