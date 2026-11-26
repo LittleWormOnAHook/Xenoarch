@@ -78,7 +78,7 @@ namespace DMI.Xenoarch.UI
         {
             if (!IsOpen) return;
             Tick();
-            if (Time.unscaledTime - _openedAt < 0.2f) return;
+            if (Time.unscaledTime - _openedAt < 0.2f || JournalReader.Blocking) return; // a note open on top handles its own keys
             var kb = Keyboard.current; var gp = Gamepad.current;
             if ((kb != null && (kb.escapeKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)) || (gp != null && gp.buttonEast.wasPressedThisFrame)) Close();
         }

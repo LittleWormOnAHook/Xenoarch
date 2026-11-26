@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_ship_logs
+  m_EditorClassIdentifier: 
+  id: journal.ship_logs
+  title: "Keep Your Logs Current"
+  author: "Quartermaster L. Abiodun"
+  dateLine: "Ship log 2187.03.04"
+  category: 0
+  body: "The ship's recorder takes care of itself: it writes an autosave every ten minutes (adjustable in the settings), whenever you land or launch, and after a discovery. Don't trust it with anything you can't afford to lose.\n\nF5 writes a quick save. The pause menu (Esc) has six manual slots for the moments that matter, such as before you lift something irreplaceable out of the ground."
+  placement: 1
+  bodyId: 
+  siteIndex: 0
+  order: 2

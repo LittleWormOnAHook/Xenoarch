@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_star_map
+  m_EditorClassIdentifier: 
+  id: journal.star_map
+  title: "Pieces of Something Bigger"
+  author: "Dr. H. Mensah, Xenoarchaeology"
+  dateLine: "Field note, landing zone 3"
+  category: 3
+  body: "Some of the fragments we've lifted don't make sense on their own. They have edges that look like they're meant to meet other pieces.\n\nIf you're holding two or more pieces like that, right-click one in the inventory and choose \"Combine with other artifact\". The reconstruction board shows the slots that still need filling. I won't tell you what it turns into. Keep digging."
+  placement: 4
+  bodyId: 
+  siteIndex: 2
+  order: 32

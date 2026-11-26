@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_ship_shuttle
+  m_EditorClassIdentifier: 
+  id: journal.ship_shuttle
+  title: "The Only Way Down (and Back)"
+  author: "Flight Officer D. Marchetti"
+  dateLine: "Ship log 2187.03.02"
+  category: 4
+  body: "New crew keep asking where the landing craft is. The airlock is your shuttle bay: walk up to it, use it, and choose Take Shuttle. The console lists every surveyed landing zone on the body below. The base zone is the default; the others sit beside dig sites, and you can pick any of them.\n\nThe ship stays in orbit. The shuttle stays where it set you down, and it is your only ride home. Walk back to it and use it (\"Board shuttle\") to return to the ship. Before you wander off across the dunes, take a good look at where you parked it.\n\nThe Orbital Scanning Terminal only works while we are in orbit. Each pass firms up the anomalies below, so scan before you fly down."
+  placement: 1
+  bodyId: 
+  siteIndex: 0
+  order: 1

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_scan_pulse
+  m_EditorClassIdentifier: 
+  id: journal.scan_pulse
+  title: "Reading the Pulse"
+  author: "Survey Lead A. Kovacs"
+  dateLine: "Field note, base zone"
+  category: 2
+  body: "The handheld scanner sits on key 1; pulse it with the left mouse button. A pulse reports the strongest archaeological signal in range: its strength, roughly how far away it is, its bearing and its depth. Early readings are rough.\n\nDon't stand in one spot pulsing at the sand. Pulse, walk a good distance sideways, and pulse again: the fix tightens as you triangulate. Get close enough and the site pinpoints and gets marked. While the scanner is out, a gold chevron at the edge of your crosshair points to the nearest site.\n\nA reading of VALUABLE SIGNATURE is a cache, not a dig site. More on those elsewhere."
+  placement: 2
+  bodyId: 
+  siteIndex: 0
+  order: 11

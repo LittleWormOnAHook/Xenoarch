@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_dig_flags
+  m_EditorClassIdentifier: 
+  id: journal.dig_flags
+  title: "Flags in the Fence"
+  author: "Survey Lead A. Kovacs"
+  dateLine: "Field note, first site"
+  category: 2
+  body: "Once a site is pinpointed it gets fenced. Stand inside the fence and hold 1: the scanner switches to refined mode.\n\nA refined pulse picks out individual buried finds within about eight metres and plants a red flag over each one. Each flag gets a spot code: the first two letters of the body, the site number, then the spot number. Ma11 is Mars, site 1, spot 1.\n\nWhile you dig a spot, its flag comes out of the ground. Walk away before you finish and the flag goes back in, and the spot is marked unfinished on the dig site map (N). Use that to keep track of half-dug holes across a big site."
+  placement: 3
+  bodyId: 
+  siteIndex: 0
+  order: 20

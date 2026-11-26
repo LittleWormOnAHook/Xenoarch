@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_dig_hardness
+  m_EditorClassIdentifier: 
+  id: journal.dig_hardness
+  title: "Hard Ground"
+  author: "Senior Excavator P. Sandoval"
+  dateLine: "Field note, first site"
+  category: 1
+  body: "The ground here is layered, and the deeper bands are harder. The bar at the top of your view shows the layer you're aiming at, how hard it is, and whether your tool cuts it cleanly or slowly.\n\nOn this world the shovel and the precision tool will get through every band; they just slow right down in the hard stuff. A powered drill (key 5) chews through rock much faster, but it is as crude as the shovel and just as dangerous to finds. Only bedrock stops every tool.\n\nIf a lump of ground sticks up inside your pit, aim straight at it and keep working: you can level it off."
+  placement: 3
+  bodyId: 
+  siteIndex: 0
+  order: 21

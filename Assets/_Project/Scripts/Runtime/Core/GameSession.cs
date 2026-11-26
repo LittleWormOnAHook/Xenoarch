@@ -39,6 +39,7 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Discovery.DiscoveryService Discovery { get; }
         /// <summary>Random valuable caches on planets (handheld-scanner finds, not part of the discovery chain).</summary>
         public DMI.Xenoarch.Valuables.ValuableService Valuables { get; }
+        public DMI.Xenoarch.Journals.JournalService Journals { get; }
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
         /// <summary>Fragment puzzles (e.g. the Vael star map that reveals Proxima Centauri).</summary>
         public DMI.Xenoarch.Artifacts.ArtifactPuzzleService Puzzles { get; }
@@ -81,6 +82,7 @@ namespace DMI.Xenoarch.Core
             DigMaps = new DMI.Xenoarch.Excavation.DigSiteMapsService(Saves);
             Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
             Valuables = new DMI.Xenoarch.Valuables.ValuableService(Saves);
+            Journals = new DMI.Xenoarch.Journals.JournalService(Saves) { Clock = () => PlaySeconds };
             foreach (DMI.Xenoarch.Ship.StorageRole role in System.Enum.GetValues(typeof(DMI.Xenoarch.Ship.StorageRole)))
             {
                 var hold = new InventoryModel(items, DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, 0));

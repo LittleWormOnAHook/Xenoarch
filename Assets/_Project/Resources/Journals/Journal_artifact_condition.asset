@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_artifact_condition
+  m_EditorClassIdentifier: 
+  id: journal.artifact_condition
+  title: "Condition Is Value"
+  author: "Dr. H. Mensah, Xenoarchaeology"
+  dateLine: "Field note, landing zone 2"
+  category: 3
+  body: "What a find is worth depends on what it is, how rare it is, and the condition it came out of the ground in. A cracked piece is worth a fraction of an intact one, and no amount of lab work makes up the difference. That's the real reason for the shovel rule.\n\nBring what you recover back to the ship's research lab. Cleaning, identification, analysis, restoration and translation each add to what we know about a piece, and translation is how its story gets told."
+  placement: 4
+  bodyId: 
+  siteIndex: 1
+  order: 31

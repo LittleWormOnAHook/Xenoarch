@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06704ac343b4479eb2f2243dc61b2635, type: 3}
+  m_Name: Journal_mars_gravity
+  m_EditorClassIdentifier: 
+  id: journal.mars_gravity
+  title: "Heavier Than the Moon, Lighter Than Home"
+  author: "Suit Tech M. Varga"
+  dateLine: "Field note, Mars base zone"
+  category: 5
+  body: "Mars pulls at a bit under two-fifths of Earth gravity: more than the Moon, still light enough to catch you out on a jump. The dust haze also flattens distances, so trust your scanner over your eyes."
+  placement: 2
+  bodyId: body.sol.mars
+  siteIndex: 0
+  order: 51

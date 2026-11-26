@@ -1,5 +1,17 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (night) - t131 (ZEN-15): survey journals - datapad pickups, note reader, inventory Journals (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- Data: `JournalEntry` assets in `Resources/Journals` (title, author, date line, category, body, placement, optional body id / site index, order). 14 entries that teach real mechanics only (shuttle, saves, helmet, shovel damage vs precision/brush, scanner pulse, backpack/hotbar/crates, refined flags, hardness/drill, maps, condition/lab, star map pieces, caches, Moon and Mars gravity).
+- Pickup: `JournalPickup` datapad (code-built slate with a glowing teal screen and a soft light), E "Read journal: <title>". Picking it up adds it to the Journals list and opens the reader; a collected entry hides its copies everywhere.
+- Reader: `JournalReader` (UITK datapad: header, title, author | date, scrolling body). Frees the cursor and pauses; E / Esc close; Q / R or arrows (and Prev / Next) page through the collected list. Opening marks an entry read.
+- Inventory: JOURNALS section with count, unread count and NEW tags; click to read.
+- Save: new key `journals.collected` (id, read, time). Older saves load with none collected.
+- Placement: `Tools/Xenoarch/Journals/Place Journals` (trigger `Temp/xenoarch_journals.trigger`, log `Logs/xenoarch_journals.txt`) puts `XA_JournalPickup` prefab instances under a `Journals` root in every landing scene from the galaxy data: BaseLanding (ring 11 m around the base zone), FirstDigSite (just outside the nearest site's fence), SiteLanding (11 m from the Nth site's zone). Additive and rerunnable; skips scenes with unsaved changes. The site layout menu runs it too, so future planets get journals. Ship entries spawn at runtime in front of the default ship spawn (Ship_Starter is not edited); NearCache entries spawn at runtime near the cache closest to the base zone; any entry missing from a scene is spawned at runtime as a fallback.
+- Add more: create a JournalEntry asset in `Resources/Journals`, set placement (and bodyId / siteIndex if needed) and order, then run Place Journals (or rely on the runtime fallback).
+
 ## 2026-11-26 (night) - t135-t136 (ZEN-13): M map hid the minimap, hotbar shift, no inventory on the Moon; minimap to the corner (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.

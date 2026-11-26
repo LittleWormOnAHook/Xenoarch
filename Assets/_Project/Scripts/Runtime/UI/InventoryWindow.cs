@@ -31,13 +31,14 @@ namespace DMI.Xenoarch.UI
             bool wasOpen = IsOpen;
             base.Update();
             var s = Session;
-            if (wasOpen && IsOpen && Time.unscaledTime - _openTime > 0.2f && Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame) Close();
+            if (wasOpen && IsOpen && !JournalReader.Blocking && Time.unscaledTime - _openTime > 0.2f && Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame) Close();
             if (s == null) return;
             if (!_hooked)
             {
                 _hooked = true;
                 s.Crafting.Crafted += r => { Toast.Show(r.IsUpgrade ? $"Installed: {r.Title}" : $"Crafted {r.outputAmount}x {s.Crafting.Name(r.outputItemId)}"); _message = null; Refresh(); };
                 s.Crafting.Failed += (r, why) => { _message = $"{r?.Title}: {why}"; Refresh(); };
+                s.Journals.Changed += Refresh; // NEW tags clear as notes are read
             }
             if (IsOpen || UIState.BlocksGameplay || Time.frameCount == _closedFrame) return;
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -86,6 +87,20 @@ namespace DMI.Xenoarch.UI
                 var line = Text(left, $"{kv.Key} crate: {used}/{h.Capacity} slots" + (used > 0 ? $"  ({string.Join(", ", top)}{(h.Slots.Count(x => !x.IsEmpty) > 4 ? ", ..." : "")})" : "") + "   [drop here]", "xa-term__dim");
                 var role = kv.Key; var hold = h;
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToCrate(role, hold, p));
+            }
+
+            // Journals: survey notes picked up along the way (click to read; prev / next inside).
+            var journals = s.Journals.Collected.ToList();
+            int unread = s.Journals.UnreadCount;
+            Text(left, $"JOURNALS ({journals.Count}{(unread > 0 ? $", {unread} unread" : "")})", "xa-term__h");
+            if (journals.Count == 0) Text(left, "No journals yet. Survey crews left datapads near landing zones and dig sites.", "xa-term__dim");
+            var ids = journals.Select(j => j.Id).ToList();
+            foreach (var j in journals)
+            {
+                var id = j.Id; bool read = s.Journals.IsRead(id);
+                var b = Btn(left, $"{(read ? "" : "NEW  ")}{j.title}  ({j.category})", () => JournalReader.Show(id, ids));
+                b.style.unityTextAlign = TextAnchor.MiddleLeft;
+                if (!read) { b.style.borderLeftWidth = 4; b.style.borderLeftColor = XenoarchPalette.Highlight; }
             }
 
             // ---------------- details

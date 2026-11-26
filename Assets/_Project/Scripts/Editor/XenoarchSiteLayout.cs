@@ -61,6 +61,8 @@ namespace DMI.Xenoarch.EditorTools
             var maps = new StringBuilder();
             XenoarchMapsSetup.Run(maps);
             sb.AppendLine("maps:").Append(maps);
+            var jr = new StringBuilder(); XenoarchJournals.Run(allowDirty, jr); // layout standard: journals on every surface
+            sb.AppendLine("journals:").Append(jr);
             Finish(sb);
         }
 
