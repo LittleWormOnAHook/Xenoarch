@@ -21,7 +21,7 @@ namespace DMI.Xenoarch.UI
         public static string IdlePrompt;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetStatics() => IdlePrompt = null;
 
-        VisualElement _root, _crosshair, _prompt, _holdTrack, _holdFill, _strip;
+        VisualElement _root, _crosshair, _prompt, _holdTrack, _holdFill, _strip, _bottom;
         Label _promptText, _hints;
         InventoryModel _boundInventory; Hotbar _boundHotbar;
         bool _stripDirty = true;
@@ -40,6 +40,7 @@ namespace DMI.Xenoarch.UI
             _holdTrack = r.Q("hold-track");
             _holdFill = r.Q("hold-fill");
             _strip = r.Q("inventory-strip");
+            _bottom = r.Q("bottom");
             _hints = r.Q<Label>("hints");
             if (_hints != null) _hints.text = "WASD move   Shift sprint   Space jump   E interact   F5 quick save   F9 quick load";
             _stripDirty = true;
@@ -70,6 +71,13 @@ namespace DMI.Xenoarch.UI
             float hold = targeted ? interactor.HoldProgress01 : 0f;
             XenoarchUI.Show(_holdTrack, hold > 0f);
             if (_holdFill != null) _holdFill.style.width = Length.Percent(hold * 100f);
+
+            // Helmet visor up: lift the hotbar above the suit pod and in from the curved frame.
+            if (_bottom != null)
+            {
+                _bottom.style.bottom = Length.Percent(HudLayout.BottomInset * 100f);
+                _bottom.style.paddingLeft = HudLayout.BottomInset > 0f ? Length.Percent(7f) : new StyleLength(StyleKeyword.Null);
+            }
 
             var inv = XenoarchRuntime.Session?.Inventory;
             if (inv != _boundInventory)

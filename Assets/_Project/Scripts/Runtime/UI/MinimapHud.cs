@@ -77,6 +77,7 @@ namespace DMI.Xenoarch.UI
         {
             if (_frame == null) return;
             bool show = !UIState.BlocksGameplay && !(DMI.Xenoarch.Scenes.SceneLoader.Busy);
+            _frame.style.top = HudLayout.TopStart;
             XenoarchUI.Show(_frame, show);
             HudLayout.TopRightBottom = show && !float.IsNaN(_frame.layout.yMax) && _frame.layout.height > 1f ? _frame.layout.yMax : 0f;
             if (!show) return;

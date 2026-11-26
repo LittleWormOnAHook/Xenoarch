@@ -64,6 +64,7 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.Exploration.ShuttleDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Valuables.ValuableSiteDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.MinimapHud>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.HelmetHud>();
             gameObject.AddComponent<DMI.Xenoarch.UI.InventoryWindow>();
             gameObject.AddComponent<DMI.Xenoarch.Materials.MaterialsDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.PauseMenu>();

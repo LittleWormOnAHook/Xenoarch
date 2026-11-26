@@ -15,10 +15,16 @@ namespace DMI.Xenoarch.UI
         public const float Gap = 14f;
         /// <summary>Bottom edge (px from the top) of whatever occupies the top-right corner (the minimap), 0 = free.</summary>
         public static float TopRightBottom;
+        /// <summary>Helmet visor up: fraction of the screen height kept free at the top (pods) / bottom (suit pod).</summary>
+        public static float TopInset, BottomInset;
+        /// <summary>Reference panel height (PanelSettings 1920x1080).</summary>
+        public const float RefHeight = 1080f;
+        /// <summary>Top of the top-right column (below the helmet pods when the visor is up).</summary>
+        public static float TopStart => Mathf.Max(Margin, TopInset * RefHeight);
         /// <summary>Top for the next panel in the top-right column.</summary>
-        public static float NextTopRight => TopRightBottom > 1f ? TopRightBottom + Gap : Margin;
+        public static float NextTopRight => TopRightBottom > 1f ? TopRightBottom + Gap : TopStart;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => TopRightBottom = 0f;
+        static void ResetStatics() { TopRightBottom = 0f; TopInset = 0f; BottomInset = 0f; }
     }
 }
