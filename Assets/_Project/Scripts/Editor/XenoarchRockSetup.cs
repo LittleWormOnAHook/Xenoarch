@@ -51,14 +51,14 @@ namespace DMI.Xenoarch.EditorTools
                 {
                     if (prefabs[i] == null) continue;
                     bool boulder = Names[i].StartsWith("boulder");
-                    profile.rocks.Add(new RockScatterProfile.RockKind { prefab = prefabs[i], weight = boulder ? 0.1f : 1f, size = boulder ? new Vector2(1.4f, 3.6f) : new Vector2(0.35f, 2f) });
+                    profile.rocks.Add(new RockScatterProfile.RockKind { prefab = prefabs[i], weight = boulder ? 0.1f : 1f, size = boulder ? new Vector2(1.4f, 3.6f) : new Vector2(0.35f, 2f), largeOnly = boulder });
                 }
-                profile.bodies.Add(new RockScatterProfile.BodyRocks { bodyId = "body.sol.moon", count = 180, clusterShare = 0.4f, tint = new Color(0.86f, 0.86f, 0.88f), maxSlope = 32f });
-                profile.bodies.Add(new RockScatterProfile.BodyRocks { bodyId = "body.sol.mars", count = 160, clusterShare = 0.35f, tint = new Color(1f, 0.6f, 0.43f), maxSlope = 30f });
+                profile.bodies.Add(new RockScatterProfile.BodyRocks { bodyId = "body.sol.moon", count = 480, clusterShare = 0.4f, tint = new Color(0.86f, 0.86f, 0.88f), maxSlope = 32f, slopeClusters = 45 });
+                profile.bodies.Add(new RockScatterProfile.BodyRocks { bodyId = "body.sol.mars", count = 440, clusterShare = 0.35f, tint = new Color(1f, 0.6f, 0.43f), maxSlope = 30f, slopeClusters = 40 });
                 XenoarchSetup.EnsureFolder(Path.GetDirectoryName(ProfilePath).Replace('\\', '/'));
                 AssetDatabase.CreateAsset(profile, ProfilePath);
                 AssetDatabase.SaveAssets();
-                log.AppendLine($"created {ProfilePath} ({profile.rocks.Count} rock kinds, Moon 180, Mars 160, fallback {profile.fallback.count})");
+                log.AppendLine($"created {ProfilePath} ({profile.rocks.Count} rock kinds, Moon 480, Mars 440, fallback {profile.fallback.count})");
             }
             else log.AppendLine($"kept existing {ProfilePath}");
         }

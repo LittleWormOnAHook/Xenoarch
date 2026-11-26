@@ -16,38 +16,84 @@ MonoBehaviour:
   - prefab: {fileID: 5230315179006870318, guid: ce22481a1606bf34fb1a8189abffb677, type: 3}
     weight: 1
     size: {x: 0.35, y: 2}
+    largeOnly: 0
   - prefab: {fileID: 8064884412861654083, guid: c1d838e844fdc914298f65814cba77e2, type: 3}
     weight: 1
     size: {x: 0.35, y: 2}
+    largeOnly: 0
   - prefab: {fileID: 388687877161976484, guid: a111fdcb8e1e4c842b60994592257193, type: 3}
     weight: 1
     size: {x: 0.35, y: 2}
+    largeOnly: 0
   - prefab: {fileID: 8582926878848350182, guid: 5056777b5fcb14d4491980b6f506602d, type: 3}
     weight: 1
     size: {x: 0.35, y: 2}
+    largeOnly: 0
   - prefab: {fileID: 8941310798929041186, guid: d833d779d18d3a843be3fe445facbb36, type: 3}
     weight: 0.1
     size: {x: 1.4, y: 3.6}
+    largeOnly: 1
+  sizeClasses:
+  - name: Large
+    weight: 0.06
+    size: {x: 2.2, y: 3.8}
+    collider: 1
+    cullScreenSize: 0.008
+    sink: 0.25
+    allowLargeModels: 1
+  - name: Medium
+    weight: 0.2
+    size: {x: 1, y: 2.2}
+    collider: 1
+    cullScreenSize: 0.012
+    sink: 0.22
+    allowLargeModels: 0
+  - name: Small
+    weight: 0.34
+    size: {x: 0.4, y: 1}
+    collider: 1
+    cullScreenSize: 0.02
+    sink: 0.2
+    allowLargeModels: 0
+  - name: Tiny
+    weight: 0.4
+    size: {x: 0.12, y: 0.4}
+    collider: 0
+    cullScreenSize: 0.035
+    sink: 0.15
+    allowLargeModels: 0
   bodies:
   - bodyId: body.sol.moon
-    count: 180
+    count: 480
     clusterShare: 0.4
     tint: {r: 0.86, g: 0.86, b: 0.88, a: 1}
     sizeMultiplier: 1
     maxSlope: 32
+    slopeClusters: 45
+    clusterRocks: {x: 4, y: 8}
+    cliffSlope: 38
+    clusterMaxSlope: 45
   - bodyId: body.sol.mars
-    count: 160
+    count: 440
     clusterShare: 0.35
     tint: {r: 1, g: 0.6, b: 0.43, a: 1}
     sizeMultiplier: 1
     maxSlope: 30
+    slopeClusters: 40
+    clusterRocks: {x: 4, y: 8}
+    cliffSlope: 38
+    clusterMaxSlope: 45
   fallback:
     bodyId: '*'
-    count: 140
+    count: 380
     clusterShare: 0.35
     tint: {r: 1, g: 1, b: 1, a: 1}
     sizeMultiplier: 1
     maxSlope: 30
+    slopeClusters: 35
+    clusterRocks: {x: 4, y: 8}
+    cliffSlope: 38
+    clusterMaxSlope: 45
   fallbackTintFromMap: 0.5
   siteClearance: 8
   zoneClearance: 12

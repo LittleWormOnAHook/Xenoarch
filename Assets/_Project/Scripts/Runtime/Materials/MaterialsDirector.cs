@@ -36,11 +36,13 @@ namespace DMI.Xenoarch.Materials
             foreach (var r in scene.GetRootGameObjects()) { ctx.terrain = r.GetComponentInChildren<Terrain>(); if (ctx.terrain != null) break; }
             foreach (var z in FindObjectsByType<Exploration.LandingZone>()) if (z.gameObject.scene == scene) ctx.zones.Add(z);
             ctx.zones.Sort((a, b) => string.CompareOrdinal(a.siteId ?? "", b.siteId ?? ""));
-            int made = 0;
+            int made = 0, nearSites = 0;
+            var bodyMats = new List<MaterialDefinition>();
             float mult = Mathf.Max(0f, session.Config.resourceNodeMultiplier);
             foreach (var item in session.Config.itemRegistry.Entries)
             {
                 if (!(item is MaterialDefinition m) || m.refined || !m.bodies.Contains(body.Id)) continue;
+                bodyMats.Add(m);
                 int count = Mathf.RoundToInt(m.nodesPerScene * mult);
                 for (int i = 0; i < count; i++)
                 {
@@ -54,7 +56,27 @@ namespace DMI.Xenoarch.Materials
                     _nodes.Add(node); made++;
                 }
             }
-            if (made > 0) Debug.Log($"[Xenoarch] Materials: {made} resource node(s) in {scene.name}");
+            // ZEN-25: more nodes around each dig site, spread round the fence perimeter, never inside the dig area or a zone.
+            int perSite = session.Config.resourceNodesPerSite;
+            if (perSite > 0 && bodyMats.Count > 0)
+                foreach (var site in sites)
+                {
+                    if (site == null) continue;
+                    int start = StableHash(site.Id) % bodyMats.Count;
+                    for (int i = 0; i < perSite; i++)
+                    {
+                        var m = bodyMats[(start + i) % bodyMats.Count];
+                        string id = $"node.{scene.name}.site.{site.Id}.{i}";
+                        if (!PlaceNearSite(id, i, perSite, site, ctx, out var pos)) continue;
+                        ctx.placed.Add(pos);
+                        var rng = new System.Random(StableHash(id) ^ 0x5bd1);
+                        int units = rng.Next(m.unitsPerNode.x, Mathf.Max(m.unitsPerNode.x, m.unitsPerNode.y) + 1);
+                        var node = ResourceNode.Spawn(m, id, units, pos, (float)rng.NextDouble() * 360f, scene);
+                        node.SetAvailable(session.Materials.NodeAvailable(id, session.PlaySeconds, m.respawnSeconds));
+                        _nodes.Add(node); made++; nearSites++;
+                    }
+                }
+            if (made > 0) Debug.Log($"[Xenoarch] Materials: {made} resource node(s) in {scene.name} ({nearSites} around dig sites)");
         }
 
         void Update()
@@ -103,6 +125,42 @@ namespace DMI.Xenoarch.Materials
                 foreach (var s in c.sites) { var d = s.position - p; d.y = 0f; if (d.magnitude < s.radius + 4f) { clear = false; break; } }
                 if (clear) foreach (var z in c.zones) { var d = z.transform.position - p; d.y = 0f; if (d.magnitude < z.footprint + 4f) { clear = false; break; } }
                 if (clear) foreach (var q in c.placed) { var d = q - p; d.y = 0f; if (d.sqrMagnitude < NodeSpacing * NodeSpacing) { clear = false; break; } }
+                if (!clear) continue;
+                if (c.terrain != null && c.terrain.terrainData != null)
+                {
+                    var tp = c.terrain.transform.position; var size = c.terrain.terrainData.size;
+                    float u = (p.x - tp.x) / size.x, v = (p.z - tp.z) / size.z;
+                    if (u < 0.01f || v < 0.01f || u > 0.99f || v > 0.99f) continue;
+                    if (Vector3.Angle(c.terrain.terrainData.GetInterpolatedNormal(u, v), Vector3.up) > MaxNodeSlope) continue;
+                }
+                var h = ExcavationSite.TerrainHeight(p);
+                if (h.HasValue) p.y = h.Value;
+                else if (Physics.Raycast(p + Vector3.up * 300f, Vector3.down, out var hit, 600f, ~0, QueryTriggerInteraction.Ignore)) p.y = hit.point.y;
+                else continue;
+                pos = p;
+                return true;
+            }
+            pos = default;
+            return false;
+        }
+
+        const float SiteNodeSpacing = 5f;
+
+        /// <summary>A spot on a ring round the site fence (fence = radius x 1.42 for the square corners): evenly spread by
+        /// index with jitter, 3-16 m out, clear of every site area, landing zone and other node, on walkable ground.</summary>
+        static bool PlaceNearSite(string id, int index, int count, DMI.Xenoarch.Galaxy.ArchaeologicalSiteDefinition site, PlaceCtx c, out Vector3 pos)
+        {
+            var rng = new System.Random(StableHash(id));
+            float fence = site.radius * 1.42f;
+            for (int tries = 0; tries < 20; tries++)
+            {
+                float a = (index + (float)rng.NextDouble() * 0.8f) / Mathf.Max(1, count) * Mathf.PI * 2f + StableHash(site.Id) * 0.001f;
+                float r = fence + Mathf.Lerp(3f, 16f, (float)rng.NextDouble());
+                var p = site.position + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r); p.y = 0f;
+                bool clear = true;
+                foreach (var s in c.sites) { var d = s.position - p; d.y = 0f; if (d.magnitude < s.radius * 1.42f + 2f) { clear = false; break; } }
+                if (clear) foreach (var z in c.zones) { var d = z.transform.position - p; d.y = 0f; if (d.magnitude < z.footprint + 4f) { clear = false; break; } }
+                if (clear) foreach (var q in c.placed) { var d = q - p; d.y = 0f; if (d.sqrMagnitude < SiteNodeSpacing * SiteNodeSpacing) { clear = false; break; } }
                 if (!clear) continue;
                 if (c.terrain != null && c.terrain.terrainData != null)
                 {

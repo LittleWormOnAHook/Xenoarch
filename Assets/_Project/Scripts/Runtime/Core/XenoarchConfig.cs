@@ -73,6 +73,8 @@ namespace DMI.Xenoarch.Core
         [Range(0f, 10f)] public float resourceNodeMultiplier = 3f;
         [Tooltip("Share of resource nodes placed around landing zones (rest spread over the surface map).")]
         [Range(0f, 1f)] public float resourceNodesNearZones = 0.35f;
+        [Tooltip("ZEN-25: extra resource nodes around each dig site, spread round the fence perimeter (outside the digging area and the landing zones), using the body's own node materials.")]
+        [Range(0, 20)] public int resourceNodesPerSite = 6;
 
         [Header("Site layout (editor: Tools/Xenoarch/Landing/Spread Sites and Landing Zones)")]
         public DMI.Xenoarch.Exploration.SiteLayoutSettings siteLayout = new DMI.Xenoarch.Exploration.SiteLayoutSettings();
