@@ -23,3 +23,4 @@ MonoBehaviour:
   minFtlRangeLy: 10.498571
   archaeologicalPotential: 0.1
   bodies: []
+  arrivalOrbitView: {fileID: 11400000, guid: 7cad362865fe52428bd752ef5545b3c7, type: 2}

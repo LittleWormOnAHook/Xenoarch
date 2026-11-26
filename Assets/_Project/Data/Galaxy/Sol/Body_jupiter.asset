@@ -28,3 +28,4 @@ MonoBehaviour:
   seed: 95196
   mapColor: {r: 0.85, g: 0.7, b: 0.55, a: 1}
   description: Gas giant. Orbit only.
+  orbitView: {fileID: 11400000, guid: 1751e30c846f5bbc83c77932fa041fe0, type: 2}

@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_Planet_earth5
+  m_Shader: {fileID: 4800000, guid: bd204a32b7ec5bc4a6f325956cc219db, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: ff9ebf2a8585b164c8d8628c1fd1f7ca, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 95bc40f5cbd0b584cb4dc06d2e5fcc82, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Glossiness:
+        m_Texture: {fileID: 2800000, guid: aeee311852eca6b48ad905c775aefcab, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AOMap:
+        m_Texture: {fileID: 2800000, guid: cead4237d3e1f194ab20ad3c46a5b2f0, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterMask:
+        m_Texture: {fileID: 2800000, guid: c6c142b84ef30f149963d0f4e35fa76a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CloudTex:
+        m_Texture: {fileID: 2800000, guid: 23845eab3f0d69947abbc733d3b92058, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BumpScale: 0.25
+    - _SmoothnessShift: 0.05
+    - _AOintensity: 1.21
+    - _CloudOpacity: 0.85
+    - _CloudSpeed: 0.0008
+    - _RimPower: 4
+    - _RimIntensity: 0.8
+    - _Ambient: 0.01
+    - _Exposure: 1.2
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _RimColor: {r: 0.35, g: 0.55, b: 1, a: 1}
+    - _WaterChannel: {r: 1, g: 0, b: 0, a: 0}
+    - _CloudChannel: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

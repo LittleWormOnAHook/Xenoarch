@@ -38,3 +38,4 @@ MonoBehaviour:
     height: 500
   baseLanding: {x: -16.190956, y: -24.436295, z: 102.225746}
   hasBaseLanding: 1
+  orbitView: {fileID: 11400000, guid: 28b71279b5c452d491f5df95a47f6822, type: 2}
