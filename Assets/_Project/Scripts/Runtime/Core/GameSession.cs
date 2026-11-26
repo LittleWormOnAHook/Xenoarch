@@ -33,6 +33,8 @@ namespace DMI.Xenoarch.Core
         public SaveService Saves { get; }
         public ExplorationService Exploration { get; }
         public DMI.Xenoarch.Discovery.DiscoveryService Discovery { get; }
+        /// <summary>Random valuable caches on planets (handheld-scanner finds, not part of the discovery chain).</summary>
+        public DMI.Xenoarch.Valuables.ValuableService Valuables { get; }
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
@@ -59,6 +61,7 @@ namespace DMI.Xenoarch.Core
             Artifacts = new DMI.Xenoarch.Artifacts.ArtifactService(items, config.civilizations, Discovery, Saves) { Clock = () => PlaySeconds, TranslationCap = config.labTranslationCap };
             Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
             Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
+            Valuables = new DMI.Xenoarch.Valuables.ValuableService(Saves);
             Artifacts.HasReagents = n => Materials.ReagentUnits() >= n;
             Artifacts.PayReagents = n => Materials.PayReagents(n);
             Exploration.Gate = key => Discovery.Has(key);

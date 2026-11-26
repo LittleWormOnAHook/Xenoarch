@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: CacheLoot
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Valuables:LootTableDefinition
+  id: loot.valuable_cache
+  tiers:
+  - tier: 0
+    weight: 60
+    items:
+    - itemId: item.valuable.copper_nugget
+      min: 1
+      max: 3
+    - itemId: item.valuable.meteoric_iron
+      min: 1
+      max: 3
+    extraRolls: 1
+  - tier: 1
+    weight: 28
+    items:
+    - itemId: item.valuable.silver_nugget
+      min: 1
+      max: 2
+    - itemId: item.valuable.quartz_geode
+      min: 1
+      max: 2
+    extraRolls: 0
+  - tier: 2
+    weight: 10
+    items:
+    - itemId: item.valuable.gold_nugget
+      min: 1
+      max: 2
+    - itemId: item.valuable.platinum_nugget
+      min: 1
+      max: 1
+    - itemId: item.valuable.vael_coin
+      min: 1
+      max: 1
+    extraRolls: 0
+  - tier: 3
+    weight: 2
+    items:
+    - itemId: item.valuable.iridium_core
+      min: 1
+      max: 1
+    - itemId: item.valuable.starstone
+      min: 1
+      max: 1
+    extraRolls: 0

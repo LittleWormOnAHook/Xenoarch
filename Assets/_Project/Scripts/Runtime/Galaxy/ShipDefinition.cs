@@ -15,6 +15,7 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Minimum fuel for any hop (orbit changes, moons).")] public float minimumHopFuel = 1f;
         public float ftlRangeLy = 0f;
         [Tooltip("Orbital scanner level: max orbital reveal passes / resolution.")] public int scannerLevel = 1;
+        [Tooltip("Upgradable orbital scan radius (m around the landing region) per orbital range level (0 = base).")] public float[] orbitalScanRadiusByLevel = { 400f, 700f, 1000f, 1500f };
         public int moduleSlots = 4;
         public int cargoSlots = 12;
         public List<string> startingModules = new List<string>();

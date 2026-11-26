@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09279cd3c0c068449bd35968827ab664, type: 3}
+  m_Name: Item_starstone
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Items.ItemDefinition
+  id: item.valuable.starstone
+  displayName: Vael Starstone
+  description: A cut crystal that holds a faint light of its own. Nobody knows what
+    it was for.
+  icon: {fileID: 0}
+  category: 8
+  maxStack: 20
+  uniqueInstance: 0
+  mass: 0.3
+  baseValue: 1200
+  worldPrefab: {fileID: 0}

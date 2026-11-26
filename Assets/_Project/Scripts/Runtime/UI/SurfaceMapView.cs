@@ -12,13 +12,18 @@ namespace DMI.Xenoarch.UI
     /// </summary>
     public sealed class SurfaceMapView : VisualElement
     {
-        public enum Kind { Site, Landing, Base, Shuttle, Player }
-        public struct Marker { public string id, label; public Kind kind; public Vector2 world; public float uncertainty; public bool selected; }
+        public enum Kind { Site, Landing, Base, Shuttle, Player, Cache }
+        public struct Marker { public string id, label; public Kind kind; public Vector2 world; public float uncertainty, heading; public bool selected; }
 
         public readonly List<Marker> Markers = new List<Marker>();
         public Rect WorldRect;
         /// <summary>0..1 while a scan sweeps the map, negative when idle.</summary>
         public float Sweep = -1f;
+        /// <summary>Keep the element square (terminal maps). The minimap sizes itself.</summary>
+        public bool AutoSquare = true;
+        public bool ShowLabels = true;
+        /// <summary>Scan radius ring (world centre x/z, radius m); radius 0 = none.</summary>
+        public Vector2 ScanCentre; public float ScanRadius;
         public event Action<string> Clicked;
         readonly List<Label> _labels = new List<Label>();
 
@@ -36,7 +41,7 @@ namespace DMI.Xenoarch.UI
             RegisterCallback<GeometryChangedEvent>(e =>
             {
                 float w = resolvedStyle.width;
-                if (!float.IsNaN(w) && w > 10f && Mathf.Abs(resolvedStyle.height - w) > 1f) style.height = Mathf.Min(w, 340f);
+                if (AutoSquare && !float.IsNaN(w) && w > 10f && Mathf.Abs(resolvedStyle.height - w) > 1f) style.height = Mathf.Min(w, 340f);
                 Relayout();
             });
             RegisterCallback<PointerUpEvent>(OnClick);
@@ -56,7 +61,7 @@ namespace DMI.Xenoarch.UI
             int li = 0;
             foreach (var m in Markers)
             {
-                if (string.IsNullOrEmpty(m.label) || (m.kind == Kind.Landing && !m.selected)) continue;
+                if (!ShowLabels || string.IsNullOrEmpty(m.label) || (m.kind == Kind.Landing && !m.selected)) continue;
                 if (li >= _labels.Count) { var l = new Label { pickingMode = PickingMode.Ignore }; l.AddToClassList("xa-map-label"); _labels.Add(l); Add(l); }
                 var lbl = _labels[li++]; var p = ToPx(m.world);
                 lbl.text = m.label; lbl.style.left = p.x + 9f; lbl.style.top = p.y - 18f;
@@ -90,6 +95,12 @@ namespace DMI.Xenoarch.UI
                 }
                 p.lineWidth = 1f;
             }
+            if (ScanRadius > 0.5f)
+            {
+                p.strokeColor = new Color(0.4f, 0.9f, 1f, 0.55f); p.lineWidth = 1.5f;
+                p.BeginPath(); p.Arc(ToPx(ScanCentre), ScanRadius * MetresToPx, 0f, 360f); p.Stroke();
+                p.fillColor = new Color(0.4f, 0.9f, 1f, 0.06f); p.BeginPath(); p.Arc(ToPx(ScanCentre), ScanRadius * MetresToPx, 0f, 360f); p.Fill();
+            }
             foreach (var m in Markers)
             {
                 var c = ToPx(m.world);
@@ -116,7 +127,14 @@ namespace DMI.Xenoarch.UI
                         p.fillColor = LandingGreen; p.BeginPath(); p.MoveTo(c + new Vector2(0, -7)); p.LineTo(c + new Vector2(5, 6)); p.LineTo(c + new Vector2(-5, 6)); p.ClosePath(); p.Fill();
                         break;
                     case Kind.Player:
-                        p.fillColor = Amber; p.BeginPath(); p.Arc(c, 4f, 0f, 360f); p.Fill();
+                    {
+                        float a = m.heading * Mathf.Deg2Rad; var f = new Vector2(Mathf.Sin(a), -Mathf.Cos(a)); var rt = new Vector2(-f.y, f.x);
+                        p.fillColor = Amber; p.BeginPath(); p.MoveTo(c + f * 8f); p.LineTo(c - f * 5f + rt * 5f); p.LineTo(c - f * 2f); p.LineTo(c - f * 5f - rt * 5f); p.ClosePath(); p.Fill();
+                        break;
+                    }
+                    case Kind.Cache:
+                        p.fillColor = new Color(1f, 0.82f, 0.25f); p.BeginPath(); p.MoveTo(c + new Vector2(0, -6)); p.LineTo(c + new Vector2(5, 0)); p.LineTo(c + new Vector2(0, 6)); p.LineTo(c + new Vector2(-5, 0)); p.ClosePath(); p.Fill();
+                        if (m.selected) { p.strokeColor = new Color(0.4f, 1f, 0.55f); p.lineWidth = 1.5f; p.BeginPath(); p.Arc(c, 8f, 0f, 360f); p.Stroke(); }
                         break;
                 }
             }

@@ -24,6 +24,8 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Galaxy.ShipDefinition starterShip;
         public DMI.Xenoarch.Galaxy.SiteRegistry siteRegistry;
         public DMI.Xenoarch.Galaxy.SurfaceScannerDefinition surfaceScanner;
+        [Tooltip("Loot tiers for random valuable caches (common .. super rare).")] public DMI.Xenoarch.Valuables.LootTableDefinition valuableLoot;
+        public DMI.Xenoarch.Valuables.ValuableSiteSettings valuableSites = DMI.Xenoarch.Valuables.ValuableSiteSettings.Default;
         [Header("Artifacts and discovery (Phase 1C)")]
         public List<DMI.Xenoarch.Artifacts.CivilizationDefinition> civilizations = new List<DMI.Xenoarch.Artifacts.CivilizationDefinition>();
         public List<DMI.Xenoarch.Discovery.DiscoveryChainDefinition> discoveryChains = new List<DMI.Xenoarch.Discovery.DiscoveryChainDefinition>();

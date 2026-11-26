@@ -69,7 +69,7 @@ namespace DMI.Xenoarch.EditorTools
             if (spawn != null) pts.Add(spawn.transform.position);
             if (pts.Count == 0) pts.Add(tp + td.size * 0.5f);
             float minX = pts.Min(p => p.x), maxX = pts.Max(p => p.x), minZ = pts.Min(p => p.z), maxZ = pts.Max(p => p.z);
-            float size = Mathf.Min(Mathf.Max(300f, Mathf.Max(maxX - minX, maxZ - minZ) + 160f), Mathf.Min(td.size.x, td.size.z));
+            float size = Mathf.Min(Mathf.Max(500f, Mathf.Max(maxX - minX, maxZ - minZ) + 200f), Mathf.Min(td.size.x, td.size.z));
             float cx = Mathf.Clamp((minX + maxX) * 0.5f, tp.x + size * 0.5f, tp.x + td.size.x - size * 0.5f);
             float cz = Mathf.Clamp((minZ + maxZ) * 0.5f, tp.z + size * 0.5f, tp.z + td.size.z - size * 0.5f);
             var rect = new Rect(cx - size * 0.5f, cz - size * 0.5f, size, size);

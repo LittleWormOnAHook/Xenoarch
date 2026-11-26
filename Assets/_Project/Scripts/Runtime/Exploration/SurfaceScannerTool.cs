@@ -100,20 +100,22 @@ namespace DMI.Xenoarch.Exploration
             var x = s.Exploration;
             string scene = SceneManager.GetActiveScene().name;
             Vector3 me = transform.position;
+            float range = ScannerStats.HandheldRange();
             ArchaeologicalSiteDefinition best = null; float bestScore = 0f, bestDist = 0f;
+            string cacheLine = CacheReading(me, range);
             foreach (var site in x.SitesInScene(scene))
             {
                 Vector3 flat = site.position - me; flat.y = 0f;
                 float dist = flat.magnitude;
-                if (dist > d.range + site.radius || site.depth > d.maxDepth) continue;
-                float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (d.range + site.radius))) * (1f - 0.5f * site.depth / Mathf.Max(0.1f, d.maxDepth));
+                if (dist > range + site.radius || site.depth > d.maxDepth) continue;
+                float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (range + site.radius))) * (1f - 0.5f * site.depth / Mathf.Max(0.1f, d.maxDepth));
                 if (score > bestScore) { best = site; bestScore = score; bestDist = dist; }
             }
 
             if (best == null)
             {
-                SetText($"No signal within {d.range:0} m (max depth {d.maxDepth:0.#} m).");
-                Beep(0.6f, 1);
+                SetText(cacheLine ?? $"No signal within {range:0} m (max depth {d.maxDepth:0.#} m).");
+                Beep(cacheLine != null ? 1.8f : 0.6f, cacheLine != null ? 2 : 1);
                 return;
             }
 
@@ -129,10 +131,23 @@ namespace DMI.Xenoarch.Exploration
             x.Reveal(best.Id, pin ? (int)SiteRevealLevel.Pinpointed : (int)SiteRevealLevel.SurfaceSignal);
             if (pin) { SiteMarkerDirector.Instance?.Refresh(); SiteMarkerDirector.Instance?.Ping(best.Id); }
 
-            SetText(pin
+            SetText((pin
                 ? $"PINPOINTED: {best.displayName}\nDepth ~{depthShown:0.0} m. Site marked."
-                : $"Signal {Mathf.RoundToInt(bestScore * 100f)}%   ~{distShown:0} m {Direction(rel)}\nDepth ~{depthShown:0.0} m");
+                : $"Signal {Mathf.RoundToInt(bestScore * 100f)}%   ~{distShown:0} m {Direction(rel)}\nDepth ~{depthShown:0.0} m") + (cacheLine != null ? "\n" + cacheLine : ""));
             Beep(1f + bestScore * 1.5f, pin ? 3 : 1 + Mathf.RoundToInt(bestScore * 3f));
+        }
+
+        /// <summary>Random valuable caches: a pulse reveals the nearest uncollected cache within the scan radius (marked
+        /// with a gold border, dig it out with the shovel).</summary>
+        string CacheReading(Vector3 me, float range)
+        {
+            var dir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
+            if (dir == null || !dir.Nearest(me, range, false, out var v, out float dist)) return null;
+            bool isNew = !XenoarchRuntime.Session.Valuables.IsRevealed(v.id);
+            dir.Reveal(v);
+            var to = v.position - me; to.y = 0f;
+            float rel = Mathf.DeltaAngle(transform.eulerAngles.y, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg);
+            return $"VALUABLE SIGNATURE ~{dist:0} m {Direction(rel)}{(isNew ? ". Marked." : "")}";
         }
 
         static string Direction(float rel)
@@ -242,32 +257,39 @@ namespace DMI.Xenoarch.Exploration
             return best;
         }
 
+        static ArchaeologicalSiteDefinition _placeholder;
+        static ArchaeologicalSiteDefinition Placeholder => _placeholder != null ? _placeholder : (_placeholder = ScriptableObject.CreateInstance<ArchaeologicalSiteDefinition>());
+
         void UpdateIndicator()
         {
             if (_dirPivot == null) return;
             var d = Def;
             bool show = directionIndicator && Equipped && d != null && !UIState.BlocksGameplay;
             ArchaeologicalSiteDefinition site = null; float dist = 0f;
-            if (show) site = NearestSite(transform.position, d.range * Mathf.Max(1f, indicatorRangeMult), out dist);
+            if (show) site = NearestSite(transform.position, ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), out dist);
+            bool cache = false; Vector3 targetPos = site != null ? site.position : Vector3.zero; float targetRadius = site != null ? site.radius : 0f; int targetSeed = site != null ? site.seed : 0;
+            var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
+            if (show && vdir != null && vdir.Nearest(transform.position, site != null ? dist : ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), true, out var cv, out float cd))
+            { cache = true; dist = cd; targetPos = cv.position; targetRadius = 0.9f; targetSeed = cv.seed; site = site ?? Placeholder; }
             if (site == null) { XenoarchUI.Show(_dirPivot, false); XenoarchUI.Show(_dirLabel, show); if (show) _dirLabel.text = "NO SITE IN RANGE"; _dirHasAngle = false; return; }
-            bool onSite = dist <= site.radius;
+            bool onSite = dist <= targetRadius;
             XenoarchUI.Show(_dirPivot, !onSite); XenoarchUI.Show(_dirLabel, true);
 
             var cam = Camera.main; float yaw = cam != null ? cam.transform.eulerAngles.y : transform.eulerAngles.y;
-            var to = site.position - transform.position;
+            var to = targetPos - transform.position;
             float err = 1f - d.accuracy;
-            float wobble = (Mathf.PerlinNoise(Time.time * 0.6f, site.seed * 0.013f) * 2f - 1f) * err * 35f; // "general direction"
+            float wobble = (Mathf.PerlinNoise(Time.time * 0.6f, targetSeed * 0.013f) * 2f - 1f) * err * 35f; // "general direction"
             float rel = Mathf.DeltaAngle(yaw, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + wobble);
             _dirAngle = _dirHasAngle ? Mathf.LerpAngle(_dirAngle, rel, 1f - Mathf.Exp(-Time.deltaTime * 8f)) : rel; _dirHasAngle = true;
             _dirPivot.style.rotate = new Rotate(new Angle(_dirAngle, AngleUnit.Degree));
 
             // Blink like the pulse ring: faster when closer.
-            float near = 1f - Mathf.Clamp01(dist / (d.range * Mathf.Max(1f, indicatorRangeMult)));
+            float near = 1f - Mathf.Clamp01(dist / (ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult)));
             _dirBlink += Time.deltaTime * Mathf.Lerp(1.2f, 5f, near);
             float a = 0.35f + 0.65f * (0.5f + 0.5f * Mathf.Cos(_dirBlink * Mathf.PI * 2f));
             _dirArrow.style.opacity = a;
             float shown = Mathf.Max(5f, Mathf.Round(dist * (1f + err * 0.3f) / 5f) * 5f);
-            _dirLabel.text = onSite ? "ON SITE" : $"SITE ~{shown:0} m";
+            _dirLabel.text = onSite ? (cache ? "DIG HERE" : "ON SITE") : $"{(cache ? "CACHE" : "SITE")} ~{shown:0} m";
             _dirLabel.style.opacity = onSite ? 1f : Mathf.Lerp(0.6f, 1f, a);
         }
 

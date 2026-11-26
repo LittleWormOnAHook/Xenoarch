@@ -83,6 +83,7 @@ namespace DMI.Xenoarch.EditorTools
                 WithScene(scene, log, s => TerrainPass(s, config.siteRegistry, log));
             XenoarchShuttleSetup.Run(log);
             XenoarchMapsSetup.Run(log);
+            XenoarchValuablesSetup.Run(log);
             WithScene(SceneNames.ShipStarter, log, s =>
             {
                 var all = s.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => t.gameObject).ToList();
@@ -709,6 +710,7 @@ namespace DMI.Xenoarch.EditorTools
             XenoarchShaderWarmup.Validate(check);
             XenoarchShuttleSetup.Validate(check);
             XenoarchMapsSetup.Validate(check);
+            XenoarchValuablesSetup.Validate(check);
             check(DMI.Xenoarch.Scenes.SceneLoader.ReadyGates != null, "3A loading screen: ready gates available (shader compile, Digger replay)");
             ValidateDigging(check);
 

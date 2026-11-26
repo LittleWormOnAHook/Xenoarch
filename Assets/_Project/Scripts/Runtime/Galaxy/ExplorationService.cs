@@ -23,6 +23,8 @@ namespace DMI.Xenoarch.Galaxy
         public bool docked;
         [Tooltip("Course plotted on the navigation terminal, flown from the cockpit helm.")] public string plottedBodyId;
         [Tooltip("Dig site the shuttle was sent to (empty = base landing zone).")] public string shuttleSiteId = "";
+        [Tooltip("Upgrade level of the orbital scan radius (index into ShipDefinition.orbitalScanRadiusByLevel).")] public int orbitalRangeLevel;
+        [Tooltip("Upgrade level of the handheld scanner radius (index into SurfaceScannerDefinition.rangeByLevel).")] public int handheldScannerLevel;
     }
 
     [Serializable]
@@ -228,6 +230,8 @@ namespace DMI.Xenoarch.Galaxy
 
         // ------------------------------------------------------------------ scanning
 
+        /// <summary>Orbital scan coverage (m) around the landing region; sites further out need a radius upgrade.</summary>
+        public float OrbitalScanRadius => ScannerStats.Pick(ShipDefinition != null ? ShipDefinition.orbitalScanRadiusByLevel : null, Ship.orbitalRangeLevel, 400f);
         public int MaxOrbitalPasses => Mathf.Clamp(1 + Ship.scannerLevel, 1, 4);
 
         /// <summary>One orbital scan pass over the current body. Returns how many sites gained reveal level.</summary>
@@ -238,8 +242,11 @@ namespace DMI.Xenoarch.Galaxy
             var bd = Body(body.Id);
             if (bd.orbitalScanPasses < MaxOrbitalPasses) bd.orbitalScanPasses++;
             int changed = 0;
+            float radius = OrbitalScanRadius;
+            var centre = body.surfaceMapRect.width > 1f ? body.surfaceMapRect.center : (Vector2?)null;
             foreach (var site in SitesOnBody(body.Id))
             {
+                if (centre.HasValue && (new Vector2(site.position.x, site.position.z) - centre.Value).magnitude > radius) continue; // beyond scan coverage
                 int target = 0;
                 if (bd.orbitalScanPasses >= site.orbitalPassesNeeded) target = (int)SiteRevealLevel.OrbitalAnomaly;
                 if (bd.orbitalScanPasses >= site.orbitalPassesNeeded + 1 && Ship.scannerLevel >= site.difficulty - 1) target = (int)SiteRevealLevel.SurfaceSignal;

@@ -17,6 +17,14 @@ MonoBehaviour:
   starterShip: {fileID: 11400000, guid: ac0311128b5f4c74988913c0d2a56446, type: 2}
   siteRegistry: {fileID: 11400000, guid: 1b679ded134abbf49bfd0cce9772f8a2, type: 2}
   surfaceScanner: {fileID: 11400000, guid: b49a5fd836d440a4a875840d9c5826e6, type: 2}
+  valuableLoot: {fileID: 11400000, guid: 19e3e134203c5dd448e27c1472cc119e, type: 2}
+  valuableSites:
+    perBody: 9
+    spacing: 40
+    clearance: 18
+    minDepth: 0.5
+    maxDepth: 1
+    maxSlope: 28
   civilizations:
   - {fileID: 11400000, guid: 24616c20fc2f11649915297b6d5e5d7a, type: 2}
   discoveryChains:

@@ -58,6 +58,8 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.Exploration.SiteMarkerDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Excavation.ExcavationDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Exploration.ShuttleDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Valuables.ValuableSiteDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.MinimapHud>();
             gameObject.AddComponent<DMI.Xenoarch.Materials.MaterialsDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");

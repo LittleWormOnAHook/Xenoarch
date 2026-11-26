@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DMI.Xenoarch.Items
 {
-    public enum ItemCategory { Tool, Equipment, Artifact, Resource, Consumable, ShipModule, DataRecord, Misc }
+    public enum ItemCategory { Tool, Equipment, Artifact, Resource, Consumable, ShipModule, DataRecord, Misc, Valuable }
 
     /// <summary>
     /// Static item definition. Artifacts (Phase 1C) will get their own definition type with richer data; they still

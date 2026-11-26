@@ -35,6 +35,10 @@ namespace DMI.Xenoarch.Scenes
         static bool _warmed;
 
         public bool IsLoading { get; private set; }
+        /// <summary>True while any loader is loading or covering the scene.</summary>
+        public static bool Busy => _instance != null && _instance.IsLoading;
+        static SceneLoader _instance;
+        void OnEnable() => _instance = this;
         public event Action<string> LoadStarted;
         public event Action<string> LoadCompleted;
 

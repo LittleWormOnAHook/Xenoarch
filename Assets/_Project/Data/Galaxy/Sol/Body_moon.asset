@@ -33,9 +33,9 @@ MonoBehaviour:
   surfaceMap: {fileID: 2800000, guid: b686669c75b2e704bb55d39e531eb4c8, type: 3}
   surfaceMapRect:
     serializedVersion: 2
-    x: -173.70078
-    y: -160.39796
-    width: 320.74835
-    height: 320.74835
+    x: -263.3266
+    y: -250.02379
+    width: 500
+    height: 500
   baseLanding: {x: -21.398771, y: -0.3940735, z: -6.9528847}
   hasBaseLanding: 1
