@@ -4,14 +4,14 @@ using UnityEngine;
 namespace DMI.Xenoarch.EditorTools
 {
     /// <summary>
-    /// First-import defaults for the CC0 pack in Assets/!GET_MORE_ASSETS_FOR_FREE/Xenoarch_Free (see its SOURCES.md):
+    /// First-import defaults for the CC0 pack in Assets/Xenoarch_Free (see its SOURCES.md):
     /// normal maps as Normal Map, roughness / AO / displacement linear, PBR textures max 2048 with mipmaps, UI PNGs as
     /// sprites without mipmaps, audio Vorbis (long engine loops streamed), models without camera/light import.
     /// Only runs when an asset has no import settings yet, so later hand changes are kept.
     /// </summary>
     public sealed class XenoarchFreeAssetsImporter : AssetPostprocessor
     {
-        const string Root = "Assets/!GET_MORE_ASSETS_FOR_FREE/Xenoarch_Free/";
+        const string Root = "Assets/Xenoarch_Free/";
         bool Mine => assetPath.StartsWith(Root) && assetImporter.importSettingsMissing;
 
         void OnPreprocessTexture()

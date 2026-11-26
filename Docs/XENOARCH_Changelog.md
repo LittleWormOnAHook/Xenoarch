@@ -1,5 +1,11 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (morning) - Xenoarch_Free asset pack moved and added to git
+
+- Anthony moved the CC0 pack to `Assets/Xenoarch_Free/` and deleted the old `Assets/!GET_MORE_ASSETS_FOR_FREE` promo folder. Planet Forge is cleared for use (Anthony, t147u).
+- The pack (about 235 MB, 1814 files with .meta; the largest file is under 10 MB) is now committed. The stale .gitignore lines for the promo folder are removed.
+- `XenoarchFreeAssetsImporter` now targets `Assets/Xenoarch_Free/`. Both SOURCES files point at the new path.
+
 ## 2026-11-26 (early) - Free CC0 asset pack (Xenoarch_Free) + import defaults
 
 - Added about 232 MB / 883 files of CC0 assets in `Assets/!GET_MORE_ASSETS_FOR_FREE/Xenoarch_Free/`. That folder is **gitignored** (repo .gitignore line 74, and excluded from commits by standing rule), so the files are on Anthony's disk only. The source and licence list is committed as `Docs/XENOARCH_Free_Assets_SOURCES.md`. Contents:

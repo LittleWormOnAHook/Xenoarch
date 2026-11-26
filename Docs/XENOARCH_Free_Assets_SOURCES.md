@@ -1,6 +1,6 @@
-# Xenoarch_Free asset pack: sources and licences (copy of Assets/!GET_MORE_ASSETS_FOR_FREE/Xenoarch_Free/SOURCES.md; that folder is gitignored)
+# Xenoarch_Free asset pack: sources and licences (copy of Assets/Xenoarch_Free/SOURCES.md)
 
-Downloaded 2026-11-26 for Xenoarch. Every item here is CC0 1.0 (public domain dedication): free for commercial use, no attribution required (credit given anyway). Nothing in the parent folder (`!GET_MORE_ASSETS_FOR_FREE`, a DevFreedom.club promo stub) was changed.
+Downloaded 2026-11-26 for Xenoarch. Every item here is CC0 1.0 (public domain dedication): free for commercial use, no attribution required (credit given anyway). Lives at `Assets/Xenoarch_Free/` and is tracked in git.
 Import defaults are applied on first import by `Assets/_Project/Scripts/Editor/XenoarchFreeAssetsImporter.cs`.
 
 | Folder | What | Source | Licence |
