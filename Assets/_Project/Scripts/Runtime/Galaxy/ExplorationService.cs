@@ -27,6 +27,8 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Upgrade level of the handheld scanner radius (index into SurfaceScannerDefinition.rangeByLevel).")] public int handheldScannerLevel;
         [Tooltip("Depth Probe upgrade tier (index into DepthProbeDefinition.tiers). Missing in older saves = 0.")] public int depthProbeLevel;
         [Tooltip("Upgrade level of the ship hold (index into ShipDefinition.holdSlotsByLevel).")] public int holdLevel;
+        [Tooltip("ZEN-17: seed of the current arrival's orbit view placement (0 = older save: derived from the body).")] public int arrivalSeed;
+        [Tooltip("ZEN-17: play time (s) of the current arrival; drives the orbit view's real-time motion.")] public float arrivalPlaySeconds;
     }
 
     [Serializable]
@@ -77,6 +79,8 @@ namespace DMI.Xenoarch.Galaxy
         public event Action<string, int> SiteRevealed;
         /// <summary>Discovery fact check for gated sites (set by the session). Null = no gating.</summary>
         public Func<string, bool> Gate;
+        /// <summary>Play-time clock (s), set by GameSession; stamps arrivals for the orbit view motion.</summary>
+        public Func<float> Clock;
 
         public ExplorationService(GalaxyDefinition galaxy, ShipDefinition ship, SiteRegistry sites, SaveService saves)
         {
@@ -249,6 +253,8 @@ namespace DMI.Xenoarch.Galaxy
             if (!CanTravel(to, out reason)) return false;
             Ship.fuel = Mathf.Max(0f, Ship.fuel - FuelCost(to));
             Ship.currentBodyId = to.Id;
+            Ship.arrivalSeed = UnityEngine.Random.Range(1, int.MaxValue);
+            Ship.arrivalPlaySeconds = Clock != null ? Clock() : 0f;
             var sys = Galaxy != null ? Galaxy.SystemOf(to.Id) : null;
             if (sys != null) Ship.currentSystemId = sys.Id;
             Ship.landed = false; Ship.docked = false;

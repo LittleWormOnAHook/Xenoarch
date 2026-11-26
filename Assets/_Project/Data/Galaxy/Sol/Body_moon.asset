@@ -19,6 +19,7 @@ MonoBehaviour:
   orbitAU: 0.00257
   orbitPeriodDays: 27.3
   radiusKm: 1737
+  rotationPeriodHours: 655.72
   gravityG: 0.165
   environment: {fileID: 11400000, guid: 513d6f583b460ec4a8a84ae674ea89a5, type: 2}
   sceneName: Moon_Excavation_01

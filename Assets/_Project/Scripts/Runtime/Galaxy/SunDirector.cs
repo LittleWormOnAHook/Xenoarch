@@ -62,7 +62,7 @@ namespace DMI.Xenoarch.Galaxy
             var scene = SceneManager.GetActiveScene();
             if (_sun != null) Destroy(_sun);
             if (_ownsLight && _light != null) Destroy(_light.gameObject);
-            _sun = null; _light = null; _ownsLight = false; _flare = null; _disc = null;
+            _sun = null; _light = null; _ownsLight = false; _flare = null; _disc = null; _helmWindow = null;
             var session = XenoarchRuntime.Session;
             if (session == null || scene.name == SceneNames.Bootstrap || scene.name == SceneNames.MainMenu) return;
 
@@ -140,11 +140,17 @@ namespace DMI.Xenoarch.Galaxy
 
         Vector3 ShipSunDirection()
         {
-            Vector3 w = Vector3.forward;
-            var helm = FindAnyObjectByType<Ship.CockpitHelm>();
-            if (helm != null && helm.windowDirection.sqrMagnitude > 0.01f) w = helm.windowDirection;
-            w.y = 0f; if (w.sqrMagnitude < 0.01f) w = Vector3.forward; w.Normalize();
-            return Quaternion.LookRotation(w, Vector3.up) * Quaternion.Euler(-shipSunOffsetDeg.y, shipSunOffsetDeg.x, 0f) * Vector3.forward;
+            if (_helmWindow == null)
+            {
+                Vector3 w = Vector3.forward;
+                var helm = FindAnyObjectByType<Ship.CockpitHelm>();
+                if (helm != null && helm.windowDirection.sqrMagnitude > 0.01f) w = helm.windowDirection;
+                w.y = 0f; if (w.sqrMagnitude < 0.01f) w = Vector3.forward; w.Normalize();
+                _helmWindow = w;
+            }
+            // ZEN-17: the orbit view adds a per-arrival sun angle (terminator) and a slow drift; the light, disc and flare follow.
+            var o = shipSunOffsetDeg + (OrbitViewDirector.HasSunOffset ? OrbitViewDirector.SunOffsetExtraDeg : Vector2.zero);
+            return Quaternion.LookRotation(_helmWindow.Value, Vector3.up) * Quaternion.Euler(-o.y, o.x, 0f) * Vector3.forward;
         }
 
         static Light FindSceneSun(Scene scene)
@@ -157,9 +163,12 @@ namespace DMI.Xenoarch.Galaxy
             return best;
         }
 
+        Vector3? _helmWindow;
+
         void LateUpdate()
         {
             if (_sun == null || _light == null) return;
+            if (_ownsLight && OrbitViewDirector.HasSunOffset) _light.transform.rotation = Quaternion.LookRotation(-ShipSunDirection(), Vector3.up);
             var cam = Camera.main;
             Vector3 toSun = -_light.transform.forward;
             _sun.transform.rotation = _light.transform.rotation;

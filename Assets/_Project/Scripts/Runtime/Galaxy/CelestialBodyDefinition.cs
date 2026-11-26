@@ -15,6 +15,7 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Map layout / travel distance only: mean distance from the star in AU (moons: offset from parent).")] public float orbitAU;
         public float orbitPeriodDays;
         public float radiusKm;
+        [Tooltip("Sidereal rotation period in hours (0 = unknown: the orbit view uses its own spin). Negative = retrograde.")] public float rotationPeriodHours;
         [Tooltip("Surface gravity in g (informational; the environment profile drives the player).")] public float gravityG = 1f;
         public EnvironmentProfile environment;
         [Tooltip("Landing / docking scene (empty = no landing zone yet: orbit only).")] public string sceneName;

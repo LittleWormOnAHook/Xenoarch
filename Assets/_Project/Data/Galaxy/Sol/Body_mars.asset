@@ -19,6 +19,7 @@ MonoBehaviour:
   orbitAU: 1.52
   orbitPeriodDays: 687
   radiusKm: 3390
+  rotationPeriodHours: 24.62
   gravityG: 0.38
   environment: {fileID: 11400000, guid: b02cce457f81af1408e290c3886509e4, type: 2}
   sceneName: Mars_Excavation_01

@@ -8,8 +8,9 @@ namespace DMI.Xenoarch.Galaxy
     /// <summary>
     /// Aboard the ship: shows the orbited planet outside the window when the body (or, with no body, the system on
     /// arrival) has an <see cref="OrbitViewDefinition"/> and no painted orbit skybox. A lat-long UV sphere with the
-    /// PlanetPack02-derived URP materials, sized to the definition's apparent diameter, lit by the sun light. Static
-    /// for now (the ship does not move); real orbits / travel can move it later. Rebuilt on scene load and FTL arrival.
+    /// PlanetPack02-derived URP materials, sized to the definition's apparent diameter, lit by the sun light. ZEN-17:
+    /// each arrival gets a seeded, saved variation (see <see cref="OrbitViewMotionSettings"/>) and the planet turns and
+    /// drifts slowly while parked. Rebuilt on scene load and FTL arrival.
     /// </summary>
     public sealed class OrbitViewDirector : MonoBehaviour
     {
@@ -33,38 +34,103 @@ namespace DMI.Xenoarch.Galaxy
             return sys != null ? sys.arrivalOrbitView : null;
         }
 
+        // ZEN-17 placement (per arrival, seeded) and motion state
+        Vector3 _eye, _window;
+        Vector2 _baseOffset, _sunJitter;
+        float _dist, _spin, _tilt, _face, _phase, _sunPhase;
+        OrbitViewMotionSettings _m;
+
+        /// <summary>Extra sun yaw / pitch (deg) on top of SunDirector.shipSunOffsetDeg: arrival jitter + drift. Ship only.</summary>
+        public static Vector2 SunOffsetExtraDeg { get; private set; }
+        public static bool HasSunOffset { get; private set; }
+
         void Build()
         {
             if (_root != null) Destroy(_root);
-            _root = null; _planet = null; _def = null;
+            _root = null; _planet = null; _def = null; HasSunOffset = false; SunOffsetExtraDeg = Vector2.zero;
             var scene = SceneManager.GetActiveScene();
             var session = XenoarchRuntime.Session;
             if (session == null || scene.name != SceneNames.ShipStarter || session.Exploration == null) return;
-            var def = Resolve(session.Exploration.CurrentBody, session.Exploration.CurrentSystem, session.Config == null || session.Config.preferOrbitViews);
+            var x = session.Exploration;
+            var body = x.CurrentBody;
+            var def = Resolve(body, x.CurrentSystem, session.Config == null || session.Config.preferOrbitViews);
             if (def == null || def.planetMaterial == null) return;
             _def = def;
+            _m = session.Config != null && session.Config.orbitViewMotion != null ? session.Config.orbitViewMotion : new OrbitViewMotionSettings();
+            bool vary = _m.enabled;
 
-            Vector3 w = Vector3.forward, eye = Vector3.zero;
+            // Seed: saved per arrival; older saves (0) fall back to the body / system id so it is still stable.
+            int seed = x.Ship.arrivalSeed != 0 ? x.Ship.arrivalSeed : StableHash((body != null ? body.Id : x.Ship.currentSystemId) ?? "orbit");
+            var rng = new System.Random(seed);
+            float R(float range) => vary ? ((float)rng.NextDouble() * 2f - 1f) * range : 0f;
+            var jitter = new Vector2(R(_m.placementJitterDeg.x), R(_m.placementJitterDeg.y));
+            float sizeK = 1f + R(_m.sizeJitter);
+            _sunJitter = new Vector2(R(_m.sunJitterDeg.x), R(_m.sunJitterDeg.y));
+            _face = vary ? (float)rng.NextDouble() * _m.faceRandomDeg : 0f;
+            _tilt = def.tiltDeg + R(_m.tiltJitterDeg);
+            _phase = vary ? (float)rng.NextDouble() * Mathf.PI * 2f : 0f;
+            _sunPhase = _phase + 1.3f;
+            _baseOffset = def.windowOffsetDeg + jitter;
+
+            // Spin from the body's real rotation period, sped up; else the view's own spin.
+            _spin = def.spinDegPerSec;
+            if (vary && body != null && Mathf.Abs(body.rotationPeriodHours) > 0.01f)
+            {
+                float s = 360f / (Mathf.Abs(body.rotationPeriodHours) * 3600f) * _m.spinSpeedup;
+                _spin = Mathf.Clamp(s, _m.spinClampDegPerSec.x, _m.spinClampDegPerSec.y) * Mathf.Sign(body.rotationPeriodHours);
+            }
+
+            _window = Vector3.forward; _eye = Vector3.zero;
             var helm = FindAnyObjectByType<Ship.CockpitHelm>();
-            if (helm != null) { eye = helm.transform.position; if (helm.windowDirection.sqrMagnitude > 0.01f) w = helm.windowDirection; }
-            w.y = 0f; if (w.sqrMagnitude < 0.01f) w = Vector3.forward; w.Normalize();
-            Vector3 dir = Quaternion.LookRotation(w, Vector3.up) * Quaternion.Euler(-def.windowOffsetDeg.y, def.windowOffsetDeg.x, 0f) * Vector3.forward;
+            if (helm != null) { _eye = helm.transform.position; if (helm.windowDirection.sqrMagnitude > 0.01f) _window = helm.windowDirection; }
+            _window.y = 0f; if (_window.sqrMagnitude < 0.01f) _window = Vector3.forward; _window.Normalize();
 
             var cam = Camera.main;
             float far = cam != null ? cam.farClipPlane : 1000f;
-            float radius0 = Mathf.Sin(def.apparentDiameterDeg * 0.5f * Mathf.Deg2Rad);
+            float diameter = Mathf.Clamp(def.apparentDiameterDeg * sizeK, 2f, 120f);
+            float radius0 = Mathf.Sin(diameter * 0.5f * Mathf.Deg2Rad);
             // centre distance so the far side of the atmosphere stays inside the far clip plane
-            float dist = Mathf.Min(6000f, far * 0.85f / (1f + radius0 * def.atmosphereScale));
-            float radius = dist * radius0;
+            _dist = Mathf.Min(6000f, far * 0.85f / (1f + radius0 * def.atmosphereScale));
+            float radius = _dist * radius0;
 
             _root = new GameObject("[Orbit View]");
             SceneManager.MoveGameObjectToScene(_root, scene);
-            _root.transform.position = eye + dir * dist;
-            _root.transform.rotation = Quaternion.Euler(0f, 0f, def.tiltDeg);
-
             _planet = MakeSphere("Planet", def.planetMaterial, radius);
             if (def.atmosphereMaterial != null) MakeSphere("Atmosphere", def.atmosphereMaterial, radius * def.atmosphereScale);
-            Debug.Log($"[Xenoarch] Orbit view: {def.name} ({def.apparentDiameterDeg:0}° at {dist:0} m)");
+            Place(Elapsed(session));
+            Debug.Log($"[Xenoarch] Orbit view: {def.name} ({diameter:0.#}° at {_dist:0} m, offset {_baseOffset.x:0.#}/{_baseOffset.y:0.#}°, face {_face:0}°, spin {_spin:0.###}°/s, seed {seed})");
+        }
+
+        float Elapsed(GameSession s)
+        {
+            float t = s.PlaySeconds - s.Exploration.Ship.arrivalPlaySeconds;
+            return t >= 0f ? t : s.PlaySeconds;
+        }
+
+        /// <summary>Position, tilt and spin at <paramref name="t"/> seconds since arrival (saved clock, so a reload matches).</summary>
+        void Place(float t)
+        {
+            if (_root == null || _def == null) return;
+            float w = _m != null && _m.enabled && _m.driftPeriodSec > 1f ? Mathf.PI * 2f / _m.driftPeriodSec : 0f;
+            var drift = w > 0f ? new Vector2(Mathf.Sin(t * w + _phase) * _m.driftDeg.x, Mathf.Sin(t * w * 0.7f + _phase * 1.7f) * _m.driftDeg.y) : Vector2.zero;
+            var off = _baseOffset + drift;
+            if (_m != null)
+            {
+                // Keep it framed: never further from the window direction than the authored offset + a margin.
+                float limit = Mathf.Min(_m.maxOffsetDeg, _def.windowOffsetDeg.magnitude + _m.maxExtraOffsetDeg);
+                if (off.magnitude > limit) off = off.normalized * limit;
+            }
+            Vector3 dir = Quaternion.LookRotation(_window, Vector3.up) * Quaternion.Euler(-off.y, off.x, 0f) * Vector3.forward;
+            _root.transform.position = _eye + dir * _dist;
+            _root.transform.rotation = Quaternion.Euler(0f, 0f, _tilt);
+            float spinAngle = _face - _spin * t;
+            foreach (Transform c in _root.transform) c.localRotation = Quaternion.Euler(0f, spinAngle, 0f);
+
+            if (_m != null && _m.enabled)
+            {
+                var sunDrift = w > 0f ? new Vector2(Mathf.Sin(t * w + _sunPhase) * _m.sunDriftDeg.x, Mathf.Sin(t * w * 0.7f + _sunPhase) * _m.sunDriftDeg.y) : Vector2.zero;
+                SunOffsetExtraDeg = _sunJitter + sunDrift; HasSunOffset = true;
+            }
         }
 
         Transform MakeSphere(string name, Material m, float radius)
@@ -82,8 +148,14 @@ namespace DMI.Xenoarch.Galaxy
 
         void Update()
         {
-            if (_root == null || _def == null || _def.spinDegPerSec == 0f) return;
-            foreach (Transform t in _root.transform) t.Rotate(0f, -_def.spinDegPerSec * Time.deltaTime, 0f, Space.Self);
+            var s = XenoarchRuntime.Session;
+            if (_root == null || _def == null || s == null) return;
+            Place(Elapsed(s));
+        }
+
+        static int StableHash(string str)
+        {
+            unchecked { int h = 23; foreach (char ch in str) h = h * 31 + ch; return h == 0 ? 1 : h; }
         }
 
         /// <summary>Unit UV sphere with lat-long UVs (u = longitude, v = latitude) and tangents, matching PlanetPack02 maps.</summary>

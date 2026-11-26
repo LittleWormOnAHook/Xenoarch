@@ -19,6 +19,7 @@ MonoBehaviour:
   orbitAU: 5.2
   orbitPeriodDays: 4333
   radiusKm: 69911
+  rotationPeriodHours: 9.93
   gravityG: 2.53
   environment: {fileID: 11400000, guid: dae5847469d624746bd7e1e0b982df98, type: 2}
   sceneName: 

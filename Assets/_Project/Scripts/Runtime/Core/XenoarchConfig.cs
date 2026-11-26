@@ -37,6 +37,7 @@ namespace DMI.Xenoarch.Core
         [Tooltip("Deep-space sky used aboard the ship when the current body has no orbit skybox.")] public Material defaultSpaceSkybox;
         [Tooltip("Aboard the ship, bodies with an Orbit View show the real planet sphere outside the window under the Milky Way sky instead of their painted orbit skybox (off = the kit's orbit skyboxes as before).")]
         public bool preferOrbitViews = true;
+        [Tooltip("ZEN-17: per-arrival placement and real-time motion of the orbit view.")] public DMI.Xenoarch.Galaxy.OrbitViewMotionSettings orbitViewMotion = new DMI.Xenoarch.Galaxy.OrbitViewMotionSettings();
         [Tooltip("Aboard the ship: multiplier on the scene's authored ambient light (darker space; 1 = as authored).")]
         [Range(0.2f, 1.5f)] public float shipAmbientScale = 0.7f;
         [Tooltip("Base post-processing look (tonemapping, bloom, colour, vignette) for scenes without their own global Volume " +

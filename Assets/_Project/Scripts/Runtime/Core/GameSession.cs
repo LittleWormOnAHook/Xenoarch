@@ -75,6 +75,7 @@ namespace DMI.Xenoarch.Core
             Saves.Register(new JsonStateSection<HotbarData>(Hotbar.Key, 0, () => Hotbar.Data, v => Hotbar.Set(v)));
             Saves.Register(World);
             Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
+            Exploration.Clock = () => PlaySeconds;
             Discovery = new DMI.Xenoarch.Discovery.DiscoveryService(config.discoveryChains, Exploration, Saves) { Clock = () => PlaySeconds };
             Artifacts = new DMI.Xenoarch.Artifacts.ArtifactService(items, config.civilizations, Discovery, Saves) { Clock = () => PlaySeconds, TranslationCap = config.labTranslationCap };
             Puzzles = new DMI.Xenoarch.Artifacts.ArtifactPuzzleService(Artifacts, Discovery, Saves) { Clock = () => PlaySeconds };

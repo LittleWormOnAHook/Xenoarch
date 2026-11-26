@@ -1,5 +1,15 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (night) - t134 (ZEN-17): orbit view varies per arrival and moves in real time (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- Cause: the orbit view placed the planet at the fixed `windowOffsetDeg` / size of its OrbitViewDefinition with a constant spin, and the ship sun at a fixed offset, so every arrival looked identical.
+- Each arrival (FTL or in-system travel, `ExplorationService.CommitTravel`) stores a random `Ship.arrivalSeed` and `arrivalPlaySeconds` (saved; older saves derive the seed from the body id). The seed picks a small yaw/pitch offset from the authored framing, a size change, a random visible face, a tilt change and a sun angle change (different day/night line).
+- While parked: the planet spins from the body's new `rotationPeriodHours` (Moon 655.7 h, Mars 24.6, Earth 23.9, Jupiter 9.9) sped up x600 and clamped to 0.01-0.4 deg/s; the planet and the sun drift slowly (sine, 15 min cycle); the ship sun light, disc and flare follow. Driven by play time since arrival, so a reload looks the same.
+- Framing: the offset never exceeds the authored offset + 8 deg (max 45 deg) from the helm window direction. Cockpit objects are not touched (runtime objects only). Tunables: `XenoarchConfig.orbitViewMotion`.
+- Not done: moons are not drawn in the orbit view yet (only the orbited planet and the sun), so there is no moon drift.
+
 ## 2026-11-26 (night) - t132-t133 (ZEN-16): Depth Probe - third scanner, upgradable to 3 tracked objects (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
