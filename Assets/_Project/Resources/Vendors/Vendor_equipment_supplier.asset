@@ -63,4 +63,21 @@ MonoBehaviour:
     price: 500
     minRank: 2
     unique: 1
+  upgrades:
+  - upgradeId: ship.hold
+    label: Ship storage
+    priceByLevel: 2003000040060000800c0000
+    minRank: 0
+  - upgradeId: scanner.handheld
+    label: Handheld scanner range
+    priceByLevel: 58020000b004000060090000
+    minRank: 1
+  - upgradeId: scanner.orbital
+    label: Orbital scan radius
+    priceByLevel: 8403000008070000100e0000
+    minRank: 1
+  - upgradeId: scanner.depth_probe
+    label: Depth probe
+    priceByLevel: bc02000078050000
+    minRank: 2
   fuelPricePerUnit: 0

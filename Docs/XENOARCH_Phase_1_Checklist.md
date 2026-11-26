@@ -37,13 +37,13 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 | 10 | Research and partially translate | ◐ (ship lab; rules in smoke; not yet played) |
 | 11 | Discover Mars coordinates | ◐ (chain: tablet translation 35% reveals the Mars canyon site; smoke) |
 | 12 | Visit trade hub | ◐ debug pad only |
-| 13 | Sell ordinary artifacts | ☐ |
-| 14 | Purchase improved equipment | ☐ |
+| 13 | Sell ordinary artifacts | ◐ (1D-1: Artifact Buyer at the Trade Hub; not yet played) |
+| 14 | Purchase improved equipment | ◐ (1D: Equipment Supplier stock + upgrades for credits; not yet played) |
 | 15 | Travel to Mars | ◐ debug pad only |
 | 16 | Locate/investigate related site | ☐ |
 | 17 | Recover functional alien tech | ☐ |
 | 18 | Research and install it | ☐ |
-| 19 | Earn notoriety | ☐ |
+| 19 | Earn notoriety | ◐ (1D-1: notoriety ranks + awards; not yet played) |
 | 20 | Discover extrasolar coordinates | ☐ |
 | 21 | Save/reload without loss or duplication | ◐ foundation (inventory, location, consumed world objects) |
 
@@ -87,3 +87,10 @@ First playable slice, batch 1C-1 (compiled clean 17:21 ET, smoke 114/0). Nothing
 - ☐ Refiner placed in Ship_Starter: waiting on Ship_Starter being saved (the pass skips scenes with unsaved changes). It will swap a "Refiner" station placeholder if Anthony places one, otherwise it adds a pillar 1.6 m right of the Research Laboratory.
 - ☐ Mars buried chamber (walls/tunnels) for the Canyon Relay: design decision pending.
 
+## Phase 1D: Economy and progression (started 2026-11-26)
+- ◐ Credits wallet (`player.wallet`, transaction log; old saves get the 500 cr start) and notoriety (`progression.notoriety`, 6 ranks, one-off awards for recoveries, pinpointed sites, civ identification, translation, research, caches, sales). Toast on rank up; credits + rank on the inventory status line. Not yet played.
+- ◐ Trade Hub vendors (data in Resources/Vendors, runtime terminals on the existing placeholder stations): Artifact Buyer, Equipment Supplier (stock with rank gates, ship/scanner/probe upgrades for credits), Refuelling Service (4 cr/unit). Not yet played.
+- ☐ Recoverable alien tech (sensor module) on Mars, research + install.
+- ☐ Discovery journal UI.
+- ☐ Notoriety unlocks beyond vendor rank gates (Barnard's / Epsilon coordinates wait on Anthony's decision).
+- Prices, award points and rank thresholds are placeholders (`XenoarchConfig.economy`, vendor assets) for the cost pass.

@@ -17,6 +17,15 @@ namespace DMI.Xenoarch.Economy
         [Tooltip("Sold once per game (recorded in the wallet).")] public bool unique;
     }
 
+    [Serializable]
+    public sealed class VendorUpgrade
+    {
+        [Tooltip("GameSession upgrade id (ship.hold, scanner.handheld, scanner.orbital, scanner.depth_probe).")] public string upgradeId;
+        public string label;
+        [Tooltip("Price of the next level, indexed by the current level (last entry repeats).")] public int[] priceByLevel = { 500 };
+        public int minRank;
+    }
+
     /// <summary>
     /// Phase 1D vendor (data in Resources/Vendors). The <see cref="VendorDirector"/> turns the scene object named
     /// <see cref="anchorName"/> in <see cref="sceneName"/> into a <see cref="VendorTerminal"/> at runtime (no scene edits),
@@ -38,6 +47,7 @@ namespace DMI.Xenoarch.Economy
         [Tooltip("Extra paid per notoriety rank (fraction).")] [Range(0f, 0.2f)] public float bonusPerRank = 0.03f;
         [Header("Selling to the player")]
         public List<VendorStock> stock = new List<VendorStock>();
+        [Tooltip("Ship / equipment upgrades for credits (the same upgrades the workshop crafts).")] public List<VendorUpgrade> upgrades = new List<VendorUpgrade>();
         [Header("Services")]
         [Tooltip("Credits per unit of ship fuel (0 = no refuelling).")] [Min(0)] public float fuelPricePerUnit;
 

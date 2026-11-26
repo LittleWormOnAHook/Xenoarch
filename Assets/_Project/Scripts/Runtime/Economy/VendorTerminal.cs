@@ -81,6 +81,18 @@ namespace DMI.Xenoarch.Economy
             Refresh();
         }
 
+        int UpgradePrice(VendorUpgrade u, int level) => u.priceByLevel == null || u.priceByLevel.Length == 0 ? 0 : u.priceByLevel[Mathf.Min(level, u.priceByLevel.Length - 1)];
+
+        void BuyUpgrade(VendorUpgrade u)
+        {
+            int lvl = Session.UpgradeLevel(u.upgradeId), price = UpgradePrice(u, lvl);
+            if (price <= 0 || !Eco.CanAfford(price) || lvl >= Session.UpgradeMax(u.upgradeId)) return;
+            if (!Session.ApplyUpgrade(u.upgradeId)) { _message = "Upgrade could not be fitted."; Refresh(); return; }
+            Eco.Spend(price, "upgrade", vendor.Id, u.upgradeId, 1);
+            _message = $"Fitted {u.label} level {lvl + 2} for {price} cr.";
+            Refresh();
+        }
+
         void Refuel(float units)
         {
             var ship = Session.Exploration.Ship;
@@ -139,6 +151,20 @@ namespace DMI.Xenoarch.Economy
                     if (Eco.Rank < s.minRank) { Text(mid, $"{d.DisplayNameOrId}: needs rank {Eco.RankNameOf(s.minRank)}", "xa-term__dim"); continue; }
                     var st = s;
                     Btn(mid, $"{d.DisplayNameOrId}: {s.price} cr" + (s.unique ? "  (one only)" : ""), () => Buy(st), Eco.CanAfford(s.price));
+                }
+            }
+            if (vendor.upgrades.Count > 0)
+            {
+                Text(mid, "UPGRADES", "xa-term__h");
+                foreach (var u in vendor.upgrades)
+                {
+                    if (string.IsNullOrEmpty(u.upgradeId)) continue;
+                    int lvl = Session.UpgradeLevel(u.upgradeId), max = Session.UpgradeMax(u.upgradeId);
+                    if (max <= 0) continue;
+                    if (lvl >= max) { Text(mid, $"{u.label}: level {lvl + 1} (max)", "xa-term__dim"); continue; }
+                    if (Eco.Rank < u.minRank) { Text(mid, $"{u.label}: needs rank {Eco.RankNameOf(u.minRank)}", "xa-term__dim"); continue; }
+                    int price = UpgradePrice(u, lvl); var uu = u;
+                    Btn(mid, $"{u.label} level {lvl + 1} -> {lvl + 2}: {price} cr", () => BuyUpgrade(uu), price > 0 && Eco.CanAfford(price));
                 }
             }
             if (vendor.fuelPricePerUnit > 0f)

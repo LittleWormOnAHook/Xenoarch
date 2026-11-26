@@ -1,5 +1,12 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - Phase 1D batch 2: upgrades for credits; roadmap/checklist updated (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- The Equipment Supplier also sells the workshop upgrades for credits: ship storage (800/1600/3200), handheld scanner range (600/1200/2400, rank 1), orbital scan radius (900/1800/3600, rank 1), depth probe (700/1400, rank 2). Same upgrade levels as crafting, so either route works and the max level is shared. Prices are placeholders.
+- Roadmap: 1D marked in progress. Phase 1 checklist: criteria 13, 14 and 19 marked in code / not yet played; new Phase 1D section.
+
 ## 2026-11-26 (early) - Phase 1D batch 1: credits, notoriety and Trade Hub vendors (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.

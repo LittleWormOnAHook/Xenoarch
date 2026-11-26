@@ -7,7 +7,7 @@ _Status legend: Planned · Implemented · Tested · Incomplete._
 | **1A Foundation** | Reuse audit, architecture, docs, folder structure, asmdefs, bootstrap + scene management with fades, controller adapter (vendor FPC pending), interaction, stable-id item definitions, inventory, versioned save, 6 placeholder scenes, smoke check + EditMode tests, git | Implemented — **awaiting Editor compile/verification and Anthony's review** |
 | 1B Exploration | Celestial body + star system definitions (Sol), environment profiles + gravity, navigation terminal UI, travel via ship state, ship interior stations wired, orbital scan + handheld surface scan, archaeological site definitions; vendor FPC integration | Planned (do not start until 1A review) |
 | 1C Excavation & research | Layered-cell diggable volume (see Excavation Design), artifact definitions (~30) and instances, condition/damage, research + translation, civilization, discovery chain evaluator, Moon→Mars chain | Planned |
-| 1D Economy & progression | Credits, vendors, trade hub, equipment + ship upgrade purchases, fuel, notoriety + unlocks, recoverable alien tech (sensor module), discovery journal UI | Planned |
+| 1D Economy & progression | Credits, vendors, trade hub, equipment + ship upgrade purchases, fuel, notoriety + unlocks, recoverable alien tech (sensor module), discovery journal UI | In progress (2026-11-26): credits, notoriety, Trade Hub vendors, refuelling and upgrade purchases in code, not yet played. Alien tech module and journal UI next |
 | 1E Integration | Full loop playthrough (21 acceptance criteria), persistence validation, scene transition tests, compile clean, limitations doc | Planned |
 
 ## Recommended order inside 1B

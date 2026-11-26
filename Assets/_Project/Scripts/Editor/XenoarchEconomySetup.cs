@@ -62,6 +62,20 @@ namespace DMI.Xenoarch.EditorTools
                 v.greeting = "Docking-bay refuelling, billed per unit.";
                 v.fuelPricePerUnit = 4f;
             }, log);
+            // Batch 1D-2: upgrades for credits on the Equipment Supplier (added once; hand edits kept).
+            var eq = AssetDatabase.LoadAssetAtPath<VendorDefinition>(Folder + "/Vendor_equipment_supplier.asset");
+            if (eq != null && (eq.upgrades == null || eq.upgrades.Count == 0))
+            {
+                eq.upgrades = new List<VendorUpgrade>
+                {
+                    new VendorUpgrade { upgradeId = "ship.hold", label = "Ship storage", priceByLevel = new[] { 800, 1600, 3200 }, minRank = 0 },
+                    new VendorUpgrade { upgradeId = "scanner.handheld", label = "Handheld scanner range", priceByLevel = new[] { 600, 1200, 2400 }, minRank = 1 },
+                    new VendorUpgrade { upgradeId = "scanner.orbital", label = "Orbital scan radius", priceByLevel = new[] { 900, 1800, 3600 }, minRank = 1 },
+                    new VendorUpgrade { upgradeId = "scanner.depth_probe", label = "Depth probe", priceByLevel = new[] { 700, 1400 }, minRank = 2 },
+                };
+                EditorUtility.SetDirty(eq);
+                log.AppendLine("added 4 upgrades to Vendor_equipment_supplier");
+            }
             AssetDatabase.SaveAssets();
         }
 
