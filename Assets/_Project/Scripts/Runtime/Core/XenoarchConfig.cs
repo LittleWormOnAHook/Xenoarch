@@ -39,6 +39,10 @@ namespace DMI.Xenoarch.Core
         public bool preferOrbitViews = true;
         [Tooltip("Aboard the ship: multiplier on the scene's authored ambient light (darker space; 1 = as authored).")]
         [Range(0.2f, 1.5f)] public float shipAmbientScale = 0.7f;
+        [Tooltip("Base post-processing look (tonemapping, bloom, colour, vignette) for scenes without their own global Volume " +
+                 "(planet surfaces, stations). Editable asset; empty = built-in defaults. Per-body fog/volumes come from the environment profile.")]
+        public UnityEngine.Rendering.VolumeProfile basePostProfile;
+        public bool basePostEnabled = true;
 
         [Header("New game")]
         public string firstGameplayScene = SceneNames.ShipStarter;

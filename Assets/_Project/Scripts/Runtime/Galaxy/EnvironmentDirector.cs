@@ -14,7 +14,8 @@ namespace DMI.Xenoarch.Galaxy
     {
         public EnvironmentProfile Current { get; private set; }
         Scene _ambientScaledScene; // scene instance already darkened (RenderSettings reset on each load)
-        Volume _volume;
+        Volume _volume, _baseVolume;
+        static VolumeProfile _fallbackPost;
 
         // The skybox authored in the loaded scene (its open-space / default sky), captured before we swap anything.
         static string _defaultSkyScene;
@@ -88,6 +89,29 @@ namespace DMI.Xenoarch.Galaxy
             DynamicGI.UpdateEnvironment();
         }
 
+        /// <summary>Base post stack for scenes that have no global Volume of their own (the ship keeps its authored one).</summary>
+        void ApplyBasePost(XenoarchConfig cfg, Scene scene)
+        {
+            bool sceneHasVolume = false;
+            foreach (var v in FindObjectsByType<Volume>())
+                if (v != _volume && v != _baseVolume && v.isGlobal && v.enabled && v.gameObject.scene == scene) { sceneHasVolume = true; break; }
+            bool on = cfg.basePostEnabled && !sceneHasVolume;
+            if (on && _baseVolume == null)
+            {
+                var go = new GameObject("[Base Post Volume]");
+                go.transform.SetParent(transform, false);
+                _baseVolume = go.AddComponent<Volume>();
+                _baseVolume.isGlobal = true;
+                _baseVolume.priority = -20f; // below the environment volume and anything in the scene
+            }
+            if (_baseVolume != null)
+            {
+                _baseVolume.sharedProfile = cfg.basePostProfile != null ? cfg.basePostProfile : (_fallbackPost != null ? _fallbackPost : (_fallbackPost = XenoarchPostStack.BuildDefault()));
+                _baseVolume.enabled = on;
+            }
+            if (on) XenoarchPostStack.EnableCameraPost();
+        }
+
         public void Apply(string scene)
         {
             var session = XenoarchRuntime.Session;
@@ -105,6 +129,7 @@ namespace DMI.Xenoarch.Galaxy
                 float k = session.Config.shipAmbientScale;
                 RenderSettings.ambientLight *= k; RenderSettings.ambientSkyColor *= k; RenderSettings.ambientEquatorColor *= k; RenderSettings.ambientGroundColor *= k;
             }
+            ApplyBasePost(session.Config, active);
             var env = Resolve(session.Config, scene);
             Current = env;
             if (env == null) return;
