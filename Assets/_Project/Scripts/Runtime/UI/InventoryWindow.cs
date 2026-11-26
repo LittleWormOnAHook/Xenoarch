@@ -130,15 +130,51 @@ namespace DMI.Xenoarch.UI
                 right.Add(row);
                 if (id != _selRecipe) continue;
                 if (!string.IsNullOrEmpty(r.description)) Text(right, r.description, "xa-term__dim");
+                Text(right, "REQUIRES (backpack + ship crates)", "xa-term__dim");
                 foreach (var i in r.ingredients)
                 {
                     int have = s.Stock.Count(i.itemId);
-                    Text(right, $"  {c.Name(i.itemId)}  {have}/{i.count}", have >= i.count ? "xa-term__text" : "xa-term__warn");
+                    string src = have >= i.count ? "" : Source(s, i.itemId);
+                    Text(right, $"  {c.Name(i.itemId)}  {have}/{i.count}" + (string.IsNullOrEmpty(src) ? "" : $"   ({src})"), have >= i.count ? "xa-term__text" : "xa-term__warn");
                 }
-                Text(right, r.IsUpgrade ? $"Installs: {r.Title} (level {r.upgradeLevel + 1})" : $"Makes: {r.outputAmount}x {c.Name(r.outputItemId)}   |   {r.craftSeconds:0.#} s" + (r.station == CraftStation.Ship ? "   |   ship workshop" : ""), "xa-term__dim");
+                if (r.IsUpgrade)
+                {
+                    int lvl = c.UpgradeLevel(r.upgradeId), max = c.UpgradeMax(r.upgradeId);
+                    Text(right, $"Upgrade: {r.Title}   level {lvl} -> {r.upgradeLevel} (max {max})", "xa-term__dim");
+                    string fx = UpgradeEffect(s, r.upgradeId, lvl, r.upgradeLevel);
+                    if (!string.IsNullOrEmpty(fx)) Text(right, fx, "xa-term__good");
+                }
+                else Text(right, $"Makes: {r.outputAmount}x {c.Name(r.outputItemId)}   |   {r.craftSeconds:0.#} s" + (r.station == CraftStation.Ship ? "   |   ship workshop" : ""), "xa-term__dim");
                 Btn(right, why == null ? "Craft" : why, () => { _message = null; c.TryCraft(r); Refresh(); }, why == null);
             }
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__warn");
+        }
+
+        /// <summary>Where a missing ingredient comes from: a Refiner recipe or a crafting recipe that makes it.</summary>
+        static string Source(GameSession s, string itemId)
+        {
+            var refine = s.Materials.Recipes.FirstOrDefault(rr => rr.outputs.Any(o => o.itemId == itemId));
+            if (refine != null) return $"Refiner: {refine.displayName}";
+            var craft = s.Crafting.Recipes.FirstOrDefault(cr => cr.outputItemId == itemId && s.Crafting.Known(cr));
+            if (craft != null) return $"craft: {craft.Title}";
+            return s.Materials.Name(itemId) != itemId ? "dig it at a site" : null;
+        }
+
+        /// <summary>What an upgrade actually changes, from the same tables the game uses.</summary>
+        static string UpgradeEffect(GameSession s, string upgradeId, int from, int to)
+        {
+            var ship = s.Config.starterShip; var sc = s.Config.surfaceScanner;
+            switch (upgradeId)
+            {
+                case GameSession.UpgradeHandheldScanner when sc != null:
+                    float r0 = Mathf.Max(sc.range, DMI.Xenoarch.Galaxy.ScannerStats.Pick(sc.rangeByLevel, from, sc.range)), r1 = Mathf.Max(sc.range, DMI.Xenoarch.Galaxy.ScannerStats.Pick(sc.rangeByLevel, to, sc.range));
+                    return $"Scan range {r0:0} -> {r1:0} m, accuracy {Mathf.Min(0.95f, sc.accuracy + 0.06f * from):P0} -> {Mathf.Min(0.95f, sc.accuracy + 0.06f * to):P0}, depth {sc.maxDepth + 0.5f * from:0.#} -> {sc.maxDepth + 0.5f * to:0.#} m";
+                case GameSession.UpgradeOrbitalScanner when ship != null:
+                    return $"Orbital scan radius {DMI.Xenoarch.Galaxy.ScannerStats.Pick(ship.orbitalScanRadiusByLevel, from, 400f):0} -> {DMI.Xenoarch.Galaxy.ScannerStats.Pick(ship.orbitalScanRadiusByLevel, to, 400f):0} m";
+                case GameSession.UpgradeHold when ship != null && ship.holdSlotsByLevel != null && ship.holdSlotsByLevel.Length > 0:
+                    return $"Crate slots {ship.holdSlotsByLevel[Mathf.Clamp(from, 0, ship.holdSlotsByLevel.Length - 1)]} -> {ship.holdSlotsByLevel[Mathf.Clamp(to, 0, ship.holdSlotsByLevel.Length - 1)]}";
+            }
+            return null;
         }
 
         VisualElement Tile(ItemStack st)
