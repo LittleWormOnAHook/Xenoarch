@@ -64,10 +64,44 @@ namespace DMI.Xenoarch.Excavation
                 if (d < best) { best = d; find = a; }
             }
             if (find == null) return false;
-            float lx = (find.x + find.footprint * 0.5f) * site.Grid.cell, lz = (find.z + find.footprint * 0.5f) * site.Grid.cell;
-            spot = maps.AddSpot(map, find.index, lx, lz);
+            spot = AddSpotFor(site, map, find);
             Sync(site, map, spot);
             return true;
+        }
+
+        DigSpot AddSpotFor(ExcavationSite site, DigSiteMap map, GridArtifact find)
+        {
+            float lx = (find.x + find.footprint * 0.5f) * site.Grid.cell, lz = (find.z + find.footprint * 0.5f) * site.Grid.cell;
+            return Maps.AddSpot(map, find.index, lx, lz);
+        }
+
+        /// <summary>t178u: flag one specific find (detector sweep held on it). False if it already has a spot.</summary>
+        public bool TryFlag(ExcavationSite site, GridArtifact find, out DigSiteMap map, out DigSpot spot)
+        {
+            map = null; spot = null;
+            var maps = Maps;
+            if (maps == null || site == null || site.IsCache || find == null || find.recovered) return false;
+            map = maps.Find(site.Definition.Id);
+            if (map == null) { SiteFenced(site); map = maps.Find(site.Definition.Id); }
+            if (map == null || map.SpotFor(find.index) != null) return false;
+            spot = AddSpotFor(site, map, find);
+            Sync(site, map, spot);
+            return true;
+        }
+
+        /// <summary>t179u: a find uncovered by digging without a refined-scan flag still goes on the dig site map
+        /// (state Digging; leaving it unfinished then plants its flag like any other spot).</summary>
+        void MarkUncovered(ExcavationSite site, DigSiteMap map)
+        {
+            foreach (var a in site.Grid.artifacts)
+            {
+                if (a.recovered || map.SpotFor(a.index) != null) continue;
+                if (site.Exposure(a) < 0.05f) continue;
+                var s = AddSpotFor(site, map, a);
+                Maps.SetState(s, DigSpotState.Digging);
+                Sync(site, map, s);
+                DMI.Xenoarch.UI.Toast.Show($"Find uncovered: marked {map.SpotCode(s)} on the dig site map (N).", 3.5f);
+            }
         }
 
         /// <summary>A dig stroke landed at <paramref name="point"/>: pull the flag of a flagged/unfinished spot there.</summary>
@@ -89,13 +123,16 @@ namespace DMI.Xenoarch.Excavation
         {
             if (Time.unscaledTime < _next) return;
             _next = Time.unscaledTime + 0.25f;
-            var maps = Maps; if (maps == null || maps.Sites.Count == 0) return;
+            var maps = Maps; if (maps == null) return;
             var rig = PlayerRigLocator.Find();
             Vector3? me = rig != null ? rig.Root.position : (Vector3?)null;
             foreach (var site in ExcavationSite.Active)
             {
                 if (site == null || site.IsCache) continue;
-                var map = maps.Find(site.Definition.Id); if (map == null) continue;
+                var map = maps.Find(site.Definition.Id);
+                if (map == null && site.BorderVisible) { SiteFenced(site); map = maps.Find(site.Definition.Id); }
+                if (map == null) continue;
+                if (me.HasValue && Vector3.Distance(site.transform.position, me.Value) < site.Grid.SizeX + site.Grid.SizeZ + 30f) MarkUncovered(site, map);
                 foreach (var s in map.spots)
                 {
                     var a = Artifact(site, s.artifact);

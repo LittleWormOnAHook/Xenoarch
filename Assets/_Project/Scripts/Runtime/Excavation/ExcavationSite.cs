@@ -388,7 +388,56 @@ namespace DMI.Xenoarch.Excavation
             Debug.Log($"[Xenoarch] Dig site {Definition.Id}: replayed {ops} carve op(s) into the terrain");
         }
 
-        public float Exposure(GridArtifact a) => Grid.Exposure(a);
+        /// <summary>Uncovered share of a find: the grid's count or, on a Digger surface, what the player can actually see,
+        /// whichever is higher (t177u). Digger's smallest carve (~0.9 m across) strips the soil round a small find long
+        /// before the grid cells over it are dug, which left finds sitting bare with no pickup prompt and no map mark.</summary>
+        public float Exposure(GridArtifact a)
+        {
+            float g = Grid.Exposure(a);
+            if (_surface == null || a == null || a.recovered || g >= BuriedArtifact.SafeExposure) return g;
+            return Mathf.Max(g, VisualExposure(a));
+        }
+
+        readonly Dictionary<GridArtifact, (float at, float value)> _visual = new Dictionary<GridArtifact, (float, float)>();
+        static readonly RaycastHit[] _exposeHits = new RaycastHit[8];
+
+        /// <summary>Visible share of a find: five rays down over it (centre and four points round it) measure how far
+        /// below the find's top the ground there now is. Cached for 0.2 s.</summary>
+        float VisualExposure(GridArtifact a)
+        {
+            if (_visual.TryGetValue(a, out var c) && Time.time - c.at < 0.2f) return c.value;
+            float v = 0f;
+            BuriedArtifact piece = null;
+            foreach (var p in _pieces) if (p != null && p.Grid == a) { piece = p; break; }
+            var r = piece != null ? piece.GetComponentInChildren<Renderer>() : null;
+            if (r != null)
+            {
+                var b = r.bounds;
+                float top = b.max.y, h = Mathf.Max(0.05f, b.size.y), reach = 3f + h * 2f + 1f;
+                var rig = DMI.Xenoarch.Player.PlayerRigLocator.Find();
+                var me = rig != null ? rig.Root : null;
+                float ex = b.extents.x * 0.7f, ez = b.extents.z * 0.7f, sum = 0f;
+                for (int i = 0; i < 5; i++)
+                {
+                    var o = b.center + (i == 1 ? new Vector3(ex, 0f, 0f) : i == 2 ? new Vector3(-ex, 0f, 0f) : i == 3 ? new Vector3(0f, 0f, ez) : i == 4 ? new Vector3(0f, 0f, -ez) : Vector3.zero);
+                    o.y = top + 3f;
+                    int n = Physics.RaycastNonAlloc(o, Vector3.down, _exposeHits, reach, ~0, QueryTriggerInteraction.Ignore);
+                    float ground = float.NegativeInfinity;
+                    for (int k = 0; k < n; k++)
+                    {
+                        var hit = _exposeHits[k];
+                        if (hit.collider == null || (me != null && hit.collider.transform.IsChildOf(me))) continue;
+                        if (hit.collider.GetComponentInParent<BuriedArtifact>() != null) continue;
+                        if (hit.point.y > ground) ground = hit.point.y;
+                    }
+                    // Highest surface over this point; nothing within reach means an open pit under it.
+                    sum += float.IsNegativeInfinity(ground) ? 1f : Mathf.Clamp01((top - ground) / h);
+                }
+                v = sum / 5f;
+            }
+            _visual[a] = (Time.time, v);
+            return v;
+        }
 
         // ------------------------------------------------------------------ border
         /// <summary>Square outline around the site footprint, following the ground.</summary>

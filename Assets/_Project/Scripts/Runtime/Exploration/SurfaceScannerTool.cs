@@ -145,7 +145,9 @@ namespace DMI.Xenoarch.Exploration
         // SweepHoldSeconds = metal-detector sweep at the aim point: buried finds of the fenced site within detectRadius of
         // the aim glow faintly through the ground (Xenoarch/XRayGlow, ZTest Always) and a tick repeats faster and higher
         // the closer the aim is. Release stops it. DetectorSweepHud (t169u/t170u) shows the half-disc while sweeping.
-        public const float SweepHoldSeconds = 0.25f;
+        public const float SweepHoldSeconds = 0.35f;
+        /// <summary>Sweep signal (1 = right over it) at which a find is flagged automatically (0.6 = within 1 m at 2.5 m radius).</summary>
+        public const float SweepFlagSignal = 0.6f;
         [Header("Detector sweep (refined mode, hold LMB)")]
         [Tooltip("Aim reach of the sweep (m).")] public float sweepReach = 10f;
         [Tooltip("Finds within this horizontal distance of the aim point are detected (m).")] public float detectRadius = 2.5f;
@@ -167,6 +169,7 @@ namespace DMI.Xenoarch.Exploration
             if (_lmbDownAt >= 0f && !held)
             {
                 if (!_sweeping && Time.time >= _cooldownUntil) Pulse();   // tap: refined pulse, flags the find
+                else if (!_sweeping) { SetText($"Scanner recharging: tap again in {Mathf.Max(0.1f, _cooldownUntil - Time.time):0.0} s."); Beep(0.6f, 1); }
                 StopSweep();
                 _lmbDownAt = -1f;
             }
@@ -250,6 +253,14 @@ namespace DMI.Xenoarch.Exploration
                 var b = _blips[closestIdx];
                 _blips[closestIdx] = new SweepBlip(b.headingDeg, b.rangeM, b.signal01, b.inBeam, true);
             }
+            // t178u: holding the sweep on a find (aim within ~1 m) flags it too, like a tap.
+            var flags = DMI.Xenoarch.Excavation.DigSiteFlags.Instance;
+            if (nearest != null && best >= SweepFlagSignal && flags != null && flags.TryFlag(nearest.Site, nearest.Grid, out var fmap, out var fspot))
+            {
+                if (_audio != null) { _audio.pitch = 1.2f; _audio.PlayOneShot(_lock ??= MakeLock(), 0.9f); }
+                SetText($"FIND FLAGGED: {fmap.SpotCode(fspot)}. Red flag placed; marked on the dig site map (N).", false);
+                _sweepText = Time.time + 1.5f;
+            }
             SweepAimed = aimed;
             SweepSignal = best;
             SweepDistance = nearestD;
@@ -265,7 +276,7 @@ namespace DMI.Xenoarch.Exploration
             {
                 _sweepText = Time.time + 0.2f;
                 SetText(nearest != null
-                    ? $"DETECTOR: signal {Mathf.RoundToInt(best * 100f)}%   ~{nearestD:0.0} m from the aim point\nTap LMB / RT to pinpoint and flag it."
+                    ? $"DETECTOR: signal {Mathf.RoundToInt(best * 100f)}%   ~{nearestD:0.0} m from the aim point\nHold the aim over it (or tap LMB / RT) to flag it."
                     : aimed ? "DETECTOR SWEEP: no signal here. Sweep the aim over the ground." : "DETECTOR SWEEP: aim at the ground (within " + sweepReach.ToString("0") + " m).", false);
             }
         }
