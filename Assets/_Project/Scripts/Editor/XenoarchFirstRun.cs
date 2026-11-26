@@ -114,6 +114,11 @@ namespace DMI.Xenoarch.EditorTools
                 var allow = arg.StartsWith("allow-dirty:") ? new System.Collections.Generic.HashSet<string>(arg.Substring(12).Split(',')) : null;
                 XenoarchJournals.RunFromTrigger(allow);
             }
+            if (File.Exists(XenoarchEconomySetup.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                File.Delete(XenoarchEconomySetup.Trigger);
+                XenoarchEconomySetup.RunFromTrigger();
+            }
             if (File.Exists(XenoarchDepthProbeSetup.Trigger) && !EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 File.Delete(XenoarchDepthProbeSetup.Trigger);

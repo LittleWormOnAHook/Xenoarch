@@ -88,7 +88,9 @@ namespace DMI.Xenoarch.Valuables
         public bool IsRevealed(string id) { foreach (var c in Data.caches) if (c.id == id) return c.revealed; return false; }
         public bool IsCollected(string id) { foreach (var c in Data.caches) if (c.id == id) return c.collected; return false; }
         public void Reveal(string id) { var s = State(id); if (s.revealed) return; s.revealed = true; Changed?.Invoke(); }
-        public void Collect(string id, LootTier tier) { var s = State(id); s.collected = true; s.tier = (int)tier; Changed?.Invoke(); }
+        public void Collect(string id, LootTier tier) { var s = State(id); bool first = !s.collected; s.collected = true; s.tier = (int)tier; Changed?.Invoke(); if (first) Collected?.Invoke(id); }
+        /// <summary>Phase 1D: first collection of a cache (notoriety hook).</summary>
+        public event Action<string> Collected;
 
         /// <summary>Spread caches over a region on walkable ground, away from dig grids / landing zones and each other.</summary>
         public static List<ValuableSite> Generate(string bodyId, int galaxySeed, Rect region, ValuableSiteSettings s,

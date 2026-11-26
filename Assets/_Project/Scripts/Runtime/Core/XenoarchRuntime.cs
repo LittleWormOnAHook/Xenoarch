@@ -73,6 +73,7 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.JournalReader>();
             gameObject.AddComponent<DMI.Xenoarch.Journals.JournalDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
+            gameObject.AddComponent<DMI.Xenoarch.Economy.VendorDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
             _session.Discovery.JournalAdded += e => DMI.Xenoarch.UI.Toast.Show($"Journal: {e.text}", 8f);

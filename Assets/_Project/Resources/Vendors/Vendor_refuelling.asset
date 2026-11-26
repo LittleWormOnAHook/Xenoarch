@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdb0e717ee58485b8441963bb6338715, type: 3}
+  m_Name: Vendor_refuelling
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Economy.VendorDefinition
+  id: vendor.sol.refuelling
+  displayName: Refuelling Service
+  kind: 2
+  greeting: Docking-bay refuelling, billed per unit.
+  sceneName: TradeHub_Sol
+  anchorName: Refuelling Service
+  buys: 
+  buyMultiplier: 0.8
+  bonusPerRank: 0.03
+  stock: []
+  fuelPricePerUnit: 4

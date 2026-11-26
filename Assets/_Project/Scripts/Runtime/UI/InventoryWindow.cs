@@ -63,7 +63,7 @@ namespace DMI.Xenoarch.UI
             _menu = null;
             if (!_menuHooked) { _menuHooked = true; body.RegisterCallback<PointerDownEvent>(e => { if (_menu != null && !_menu.worldBound.Contains(e.position)) HideMenu(); }); }
             var s = Session; var inv = s.Inventory;
-            Status.text = $"Backpack {inv.Capacity - inv.FreeSlots}/{inv.Capacity}   |   Ship storage level {s.Exploration.Ship.holdLevel + 1}" + (s.AboardShip ? "   |   Aboard: ship workshop available" : "");
+            Status.text = $"Backpack {inv.Capacity - inv.FreeSlots}/{inv.Capacity}   |   {s.Economy.Credits:N0} cr   |   {s.Economy.RankName} ({s.Economy.Score})   |   Ship storage level {s.Exploration.Ship.holdLevel + 1}" + (s.AboardShip ? "   |   Aboard: ship workshop available" : "");
             Hint.text = "I / Tab / Esc: close   |   Move items in and out of the ship crates at the crates";
 
             // ---------------- backpack grid + ship crates

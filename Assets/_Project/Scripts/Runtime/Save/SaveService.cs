@@ -135,17 +135,18 @@ namespace DMI.Xenoarch.Save
     /// <summary>Convenience section for a plain serializable state object.</summary>
     public sealed class JsonStateSection<T> : ISaveSection where T : class, new()
     {
-        readonly Func<T> _get; readonly Action<T> _set;
+        readonly Func<T> _get; readonly Action<T> _set; readonly Func<T> _fresh;
         public string Key { get; }
         public int RestoreOrder { get; }
 
-        public JsonStateSection(string key, int restoreOrder, Func<T> get, Action<T> set)
+        /// <param name="fresh">Optional new-game value (also used for saves without this key); default new T().</param>
+        public JsonStateSection(string key, int restoreOrder, Func<T> get, Action<T> set, Func<T> fresh = null)
         {
-            Key = key; RestoreOrder = restoreOrder; _get = get; _set = set;
+            Key = key; RestoreOrder = restoreOrder; _get = get; _set = set; _fresh = fresh;
         }
 
         public string CaptureJson() => JsonUtility.ToJson(_get() ?? new T());
         public void RestoreJson(string json) => _set(JsonUtility.FromJson<T>(json) ?? new T());
-        public void ResetToNewGame() => _set(new T());
+        public void ResetToNewGame() => _set(_fresh != null ? _fresh() : new T());
     }
 }

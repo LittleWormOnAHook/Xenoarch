@@ -76,6 +76,7 @@ namespace DMI.Xenoarch.Core
 
         [Header("Site layout (editor: Tools/Xenoarch/Landing/Spread Sites and Landing Zones)")]
         public DMI.Xenoarch.Exploration.SiteLayoutSettings siteLayout = new DMI.Xenoarch.Exploration.SiteLayoutSettings();
+        [Tooltip("Phase 1D: starting credits, notoriety ranks and what earns notoriety.")] public DMI.Xenoarch.Economy.EconomySettings economy = new DMI.Xenoarch.Economy.EconomySettings();
 
         [Header("Development")]
         [Tooltip("F5 quick save, F9 quick load in gameplay scenes.")]

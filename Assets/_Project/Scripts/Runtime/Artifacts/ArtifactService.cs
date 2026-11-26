@@ -65,6 +65,8 @@ namespace DMI.Xenoarch.Artifacts
         public Func<float> Clock = () => 0f;
         public event Action Changed;
         public event Action<ArtifactInstance, ResearchOp, string> ResearchCompleted;
+        /// <summary>Phase 1D: a new artifact was recovered (notoriety hook).</summary>
+        public event Action<ArtifactInstance, ArtifactDefinition> Recovered;
 
         public ArtifactService(IItemLookup items, IEnumerable<CivilizationDefinition> civs, DiscoveryService discovery, SaveService saves)
         {
@@ -122,6 +124,7 @@ namespace DMI.Xenoarch.Artifacts
             if (!string.IsNullOrEmpty(def.setId)) _discovery?.Publish(Facts.SetProgress(def.setId), DistinctFound(d => d.setId == def.setId));
             if (!string.IsNullOrEmpty(def.fragmentOf)) _discovery?.Publish(Facts.Fragments(def.fragmentOf), DistinctFound(d => d.fragmentOf == def.fragmentOf));
             Changed?.Invoke();
+            Recovered?.Invoke(a, def);
             return a;
         }
 

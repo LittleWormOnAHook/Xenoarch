@@ -105,7 +105,27 @@ namespace DMI.Xenoarch.Core
             Artifacts.PayReagents = n => Materials.PayReagents(n);
             Exploration.Gate = key => Discovery.Has(key);
             Exploration.SiteRevealed += (id, level) => Discovery.Publish(DMI.Xenoarch.Discovery.Facts.Site(id), level);
+
+            // Phase 1D: credits + notoriety, and the deeds that earn notoriety (each one-off, keyed).
+            Economy = new DMI.Xenoarch.Economy.EconomyService(config.economy, Saves) { Clock = () => PlaySeconds };
+            var eco = config.economy ?? new DMI.Xenoarch.Economy.EconomySettings();
+            Artifacts.Recovered += (a, d) =>
+            {
+                var r = eco.recoverByRarity; int i = (int)d.rarity;
+                Economy.Award(r != null && r.Length > 0 ? r[Math.Min(i, r.Length - 1)] : 0, "recover:" + a.instanceId, "recovered " + d.DisplayNameOrId);
+            };
+            Artifacts.ResearchCompleted += (a, op, msg) =>
+            {
+                if (a == null) return;
+                if (op == DMI.Xenoarch.Artifacts.ResearchOp.CivilizationIdentification) Economy.Award(eco.civilizationIdentified, "civ:" + a.instanceId, "civilization identified");
+                else if (op == DMI.Xenoarch.Artifacts.ResearchOp.Translation) Economy.Award(eco.translationPass, null, "translation");
+                else Economy.Award(eco.researchOp, "op:" + op + ":" + a.instanceId, op.ToString());
+            };
+            Exploration.SiteRevealed += (id, level) => { if (level >= 3) Economy.Award(eco.sitePinpointed, "site:" + id, "site pinpointed " + id); };
+            Valuables.Collected += id => Economy.Award(eco.cacheCollected, "cache:" + id, "cache " + id);
         }
+
+        public DMI.Xenoarch.Economy.EconomyService Economy { get; private set; }
 
         System.Collections.Generic.IEnumerable<(InventoryModel, Func<ItemCategory, bool>)> HoldOrder()
         {

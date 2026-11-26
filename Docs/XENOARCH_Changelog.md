@@ -1,5 +1,18 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - Phase 1D batch 1: credits, notoriety and Trade Hub vendors (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- Credits: new `EconomyService` (save key `player.wallet`: credits, a transaction log of the last 200 deals, one-off purchases). New games and saves from before 1D start with `XenoarchConfig.economy.startingCredits` (500). `JsonStateSection` got an optional new-game factory for this (existing sections unchanged).
+- Notoriety (`progression.notoriety`): ranks Unknown Explorer -> Independent Excavator (25) -> Recognized Archaeologist (75) -> Renowned Explorer (200) -> Galactic Authority (450) -> Legendary Discoverer (1000). Earned once per deed: recovering an artifact (2-40 by rarity), pinpointing a site (5), identifying a civilization (15), each translation pass (3), other research ops (1), first collection of a cache (2), selling an artifact (1). Rank-up shows a toast. Credits and rank are on the inventory status line. All values are placeholders in `XenoarchConfig.economy`.
+- Vendors: `VendorDefinition` assets in Resources/Vendors (created by Tools > Xenoarch > Setup > Economy). On loading TradeHub_Sol, `VendorDirector` replaces the three "offline" placeholder stations with working vendor terminals (runtime only; the scene file is unchanged):
+  - Artifact Buyer: buys artifacts at 80% of their appraised value (condition, research and rarity count) and valuables at 80% of base value, +3% per notoriety rank.
+  - Equipment Supplier: sells sample containers, reagents, fuel cells, components, the precision tool, depth probe (rank 1, once) and powered drill (rank 2, once); buys resources at 50%.
+  - Refuelling Service: 4 cr per unit of ship fuel (buy 10 or fill the tank).
+- Sold artifacts are removed from the backpack and marked Sold. Bought items go to the backpack (refused if it is full).
+- Prices and rank gates are placeholders for the recipe/cost pass.
+
 ## 2026-11-26 (night) - t134 (ZEN-17): orbit view varies per arrival and moves in real time (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.

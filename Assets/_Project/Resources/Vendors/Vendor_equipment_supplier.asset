@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdb0e717ee58485b8441963bb6338715, type: 3}
+  m_Name: Vendor_equipment_supplier
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Economy.VendorDefinition
+  id: vendor.sol.equipment_supplier
+  displayName: Equipment Supplier
+  kind: 1
+  greeting: Field gear, parts and consumables. Some stock is only offered to explorers
+    with a reputation.
+  sceneName: TradeHub_Sol
+  anchorName: Equipment Supplier (vendor)
+  buys: 03000000
+  buyMultiplier: 0.5
+  bonusPerRank: 0.02
+  stock:
+  - itemId: item.consumable.sample_container
+    price: 15
+    minRank: 0
+    unique: 0
+  - itemId: material.lab_reagent
+    price: 20
+    minRank: 0
+    unique: 0
+  - itemId: material.fuel_cell
+    price: 60
+    minRank: 0
+    unique: 0
+  - itemId: item.component.alloy_plate
+    price: 40
+    minRank: 0
+    unique: 0
+  - itemId: item.component.wiring
+    price: 35
+    minRank: 0
+    unique: 0
+  - itemId: item.component.circuit
+    price: 90
+    minRank: 1
+    unique: 0
+  - itemId: item.component.sensor_array
+    price: 180
+    minRank: 2
+    unique: 0
+  - itemId: item.tool.precision_tool
+    price: 250
+    minRank: 1
+    unique: 0
+  - itemId: item.tool.depth_probe
+    price: 400
+    minRank: 1
+    unique: 1
+  - itemId: item.tool.powered_drill
+    price: 500
+    minRank: 2
+    unique: 1
+  fuelPricePerUnit: 0
