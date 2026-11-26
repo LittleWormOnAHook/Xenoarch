@@ -52,6 +52,8 @@ namespace DMI.Xenoarch.Discovery
         public static string Civilization(string civId) => "civ.identified:" + civId;
         public static string Site(string siteId) => "site.revealed:" + siteId;
         public static string Visited(string bodyId) => "body.visited:" + bodyId;
+        /// <summary>Phase 1D: a functional alien device was fitted (artifact definition id).</summary>
+        public static string Installed(string artifactId) => "tech.installed:" + artifactId;
         /// <summary>Distinct members of a collectible artifact set recovered (value = count).</summary>
         public static string SetProgress(string setId) => "artifact.set:" + setId;
         /// <summary>Distinct pieces of a fragment group recovered (value = count).</summary>

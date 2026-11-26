@@ -122,6 +122,8 @@ namespace DMI.Xenoarch.Core
                 else Economy.Award(eco.researchOp, "op:" + op + ":" + a.instanceId, op.ToString());
             };
             Exploration.SiteRevealed += (id, level) => { if (level >= 3) Economy.Award(eco.sitePinpointed, "site:" + id, "site pinpointed " + id); };
+            Artifacts.Installed += (a, d) => Economy.Award(eco.techInstalled, "installed:" + a.instanceId, "installed " + d.DisplayNameOrId);
+            Exploration.OrbitalTechBonus = () => Artifacts.TechBonus(DMI.Xenoarch.Artifacts.TechInstallTarget.OrbitalScanner);
             Valuables.Collected += id => Economy.Award(eco.cacheCollected, "cache:" + id, "cache " + id);
         }
 

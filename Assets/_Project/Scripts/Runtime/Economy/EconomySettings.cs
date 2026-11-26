@@ -18,6 +18,7 @@ namespace DMI.Xenoarch.Economy
         [Tooltip("Each completed translation pass.")] public int translationPass = 3;
         [Tooltip("Any other completed research operation.")] public int researchOp = 1;
         [Tooltip("Digging up a valuable cache.")] public int cacheCollected = 2;
+        [Tooltip("Installing a functional alien device.")] public int techInstalled = 20;
         [Tooltip("Selling an artifact to a buyer (small: museums pay in reputation too).")] public int artifactSold = 1;
     }
 }

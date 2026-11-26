@@ -128,6 +128,45 @@ namespace DMI.Xenoarch.Artifacts
             return a;
         }
 
+        // ------------------------------------------------------------------ functional tech (Phase 1D)
+        public event Action<ArtifactInstance, ArtifactDefinition> Installed;
+
+        public bool CanInstall(ArtifactInstance a, out string reason)
+        {
+            reason = null;
+            var d = Definition(a);
+            if (a == null || d == null || d.installTarget == TechInstallTarget.None) { reason = "Not a functional device."; return false; }
+            if (a.location == ArtifactLocation.Installed) { reason = "Already installed."; return false; }
+            if (a.location != ArtifactLocation.Held) { reason = "Not in your possession."; return false; }
+            if (!a.Done(ResearchOp.TechnologyAnalysis)) { reason = "Run Technology analysis first."; return false; }
+            return true;
+        }
+
+        /// <summary>Marks the device installed (the caller removes it from the inventory) and publishes tech.installed.</summary>
+        public bool Install(ArtifactInstance a, out string reason)
+        {
+            if (!CanInstall(a, out reason)) return false;
+            var d = Definition(a);
+            a.location = ArtifactLocation.Installed;
+            _discovery?.Publish(Facts.Installed(d.Id));
+            Changed?.Invoke();
+            Installed?.Invoke(a, d);
+            return true;
+        }
+
+        /// <summary>Total tiers added to <paramref name="target"/> by installed devices.</summary>
+        public int TechBonus(TechInstallTarget target)
+        {
+            int n = 0;
+            foreach (var a in State.instances)
+            {
+                if (a.location != ArtifactLocation.Installed) continue;
+                var d = Definition(a);
+                if (d != null && d.installTarget == target) n += d.installBonus;
+            }
+            return n;
+        }
+
         /// <summary>Distinct artifact definitions recovered that match <paramref name="match"/>.</summary>
         public int DistinctFound(Func<ArtifactDefinition, bool> match)
         {

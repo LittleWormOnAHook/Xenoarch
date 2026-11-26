@@ -76,6 +76,13 @@ namespace DMI.Xenoarch.Ship
             Text(lab, $"Lab reagents in cargo: {Session.Materials.ReagentUnits()} units (refine more at the refiner)", "xa-term__dim");
             if (!string.IsNullOrEmpty(_message)) Text(lab, _message);
 
+            var installed = arts.State.instances.Where(i => i.location == ArtifactLocation.Installed).ToList();
+            if (installed.Count > 0)
+            {
+                Text(lab, "INSTALLED TECH", "xa-term__h");
+                foreach (var i in installed) { var idef = arts.Definition(i); Text(lab, $"{arts.DisplayName(i)}: {idef?.installTarget} +{idef?.installBonus}", "xa-term__dim"); }
+            }
+
             Text(lab, "JOURNAL", "xa-term__h");
             var journal = Session.Discovery.State.journal;
             if (journal.Count == 0) Text(lab, "No entries yet.");
@@ -104,6 +111,19 @@ namespace DMI.Xenoarch.Ship
                 Text(col, $"Translation {a.translation:P0} (lab limit {arts.TranslationCap:P0})");
                 Bar(col, a.translation);
                 foreach (var seg in arts.RevealedText(a)) Text(col, $"\"{seg.text}\"");
+            }
+
+            if (d.installTarget != TechInstallTarget.None)
+            {
+                Text(col, "FUNCTIONAL DEVICE", "xa-term__h");
+                string target = d.installTarget == TechInstallTarget.HandheldScanner ? "handheld scanner" : "orbital scanner";
+                bool can = arts.CanInstall(a, out var why);
+                Btn(col, $"Install in the {target} (+{d.installBonus} tier{(d.installBonus == 1 ? "" : "s")}; the device is used up)" + (can ? "" : $"\n{why}"), () =>
+                {
+                    if (arts.Install(a, out var r)) { Session.Inventory.RemoveInstance(a.instanceId); _message = $"Installed {arts.DisplayName(a)} in the {target}."; Toast.Show(_message, 6f); _selected = null; }
+                    else _message = r;
+                    Refresh();
+                }, can);
             }
 
             Text(col, "OPERATIONS", "xa-term__h");

@@ -1,5 +1,14 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - Phase 1D batch 3: recoverable alien tech, research and install (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- The Vael Sensor Lattice (Mars, Canyon Relay dig site; already placed there) is now a functional device. After **Technology analysis** at the ship's research lab, its page shows **Install in the handheld scanner**. Installing uses the artifact up (marked Installed, removed from the backpack) and adds +1 handheld scanner tier: more range, accuracy and max depth. On a fully upgraded scanner, extra tiers add 15% range each.
+- Data-driven: `ArtifactDefinition.installTarget` (HandheldScanner / OrbitalScanner) and `installBonus`; fact `tech.installed:<artifact id>` for chains; +20 notoriety (`economy.techInstalled`). The lab's LAB column lists installed tech.
+- Moon-Mars chain: "Analyse the sensor module" no longer grants +1 ship scanner level by itself (it only logs that the lattice can be fitted). The new optional node "Install the sensor module" logs the install. Saves that already analysed the lattice keep the old +1 ship scanner level.
+- Data changes are made by Tools > Xenoarch > Setup > Economy (rerunnable).
+
 ## 2026-11-26 (early) - Phase 1D batch 2: upgrades for credits; roadmap/checklist updated (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.

@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace DMI.Xenoarch.Artifacts
 {
+    /// <summary>Phase 1D: what a functional alien device can be fitted to once Technology analysis is done.</summary>
+    public enum TechInstallTarget { None, HandheldScanner, OrbitalScanner }
+
     /// <summary>Static artifact data. Derives from ItemDefinition so it enters the inventory as item id + instance id.</summary>
     [CreateAssetMenu(menuName = "Xenoarch/Artifacts/Artifact Definition", fileName = "Artifact_")]
     public sealed class ArtifactDefinition : ItemDefinition
@@ -31,6 +34,9 @@ namespace DMI.Xenoarch.Artifacts
         public string setId;
         [Tooltip("Fragment group (a broken object split into pieces, e.g. \"frag.star_map\"). Each distinct piece recovered raises artifact.fragments:<group>; a discovery-chain node with that threshold can reward the joined object, a site or a system.")]
         public string fragmentOf;
+        [Header("Functional tech (Phase 1D)")]
+        [Tooltip("Fitted at the research lab after Technology analysis; the artifact is used up (location Installed).")] public TechInstallTarget installTarget = TechInstallTarget.None;
+        [Tooltip("Tiers added to the target while installed.")] [Min(0)] public int installBonus = 1;
         [Header("Placeholder visual")]
         public ArtifactShape shape = ArtifactShape.Shard;
         public Color tint = new Color(0.6f, 0.62f, 0.66f);

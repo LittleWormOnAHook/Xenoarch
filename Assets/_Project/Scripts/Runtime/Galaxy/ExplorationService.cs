@@ -287,7 +287,9 @@ namespace DMI.Xenoarch.Galaxy
         // ------------------------------------------------------------------ scanning
 
         /// <summary>Orbital scan coverage (m) around the landing region; sites further out need a radius upgrade.</summary>
-        public float OrbitalScanRadius => ScannerStats.Pick(ShipDefinition != null ? ShipDefinition.orbitalScanRadiusByLevel : null, Ship.orbitalRangeLevel, 400f);
+        public float OrbitalScanRadius => ScannerStats.PickExtended(ShipDefinition != null ? ShipDefinition.orbitalScanRadiusByLevel : null, Ship.orbitalRangeLevel + (OrbitalTechBonus != null ? OrbitalTechBonus() : 0), 400f);
+        /// <summary>Phase 1D: orbital scanner tiers from installed alien tech (wired by GameSession).</summary>
+        public Func<int> OrbitalTechBonus;
         public int MaxOrbitalPasses => Mathf.Clamp(1 + Ship.scannerLevel, 1, 4);
 
         /// <summary>One orbital scan pass over the current body. Returns how many sites gained reveal level.</summary>

@@ -76,7 +76,50 @@ namespace DMI.Xenoarch.EditorTools
                 EditorUtility.SetDirty(eq);
                 log.AppendLine("added 4 upgrades to Vendor_equipment_supplier");
             }
+            AlienTech(log);
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Phase 1D alien tech: the Vael Sensor Lattice (Mars, Canyon Relay) becomes an installable handheld-scanner device
+        /// (+1 tier). The Moon-Mars chain's "Analyse the sensor module" node no longer grants the tier itself; a new
+        /// "Install the sensor module" node (fact tech.installed) logs it. Rerunnable.
+        /// </summary>
+        static void AlienTech(StringBuilder log)
+        {
+            const string LatticeId = "artifact.mars_sensor_lattice";
+            var lattice = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Artifacts.ArtifactDefinition>(XenoarchSetup.Root + "/Data/Artifacts/Artifact_mars_sensor_lattice.asset");
+            if (lattice == null) { log.AppendLine("sensor lattice asset not found"); return; }
+            if (lattice.installTarget != DMI.Xenoarch.Artifacts.TechInstallTarget.HandheldScanner)
+            {
+                lattice.installTarget = DMI.Xenoarch.Artifacts.TechInstallTarget.HandheldScanner; lattice.installBonus = 1;
+                lattice.researchedDescription = "Adaptable sensor lattice. Install it at the research lab to add +1 handheld scanner tier (range, accuracy and depth).";
+                if (!lattice.researchOps.Contains(DMI.Xenoarch.Artifacts.ResearchOp.TechnologyAnalysis)) lattice.researchOps.Add(DMI.Xenoarch.Artifacts.ResearchOp.TechnologyAnalysis);
+                EditorUtility.SetDirty(lattice);
+                log.AppendLine("sensor lattice: installable in the handheld scanner (+1)");
+            }
+            var chain = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Discovery.DiscoveryChainDefinition>(XenoarchSetup.Root + "/Data/Discovery/Chain_MoonMars.asset");
+            if (chain == null) { log.AppendLine("Chain_MoonMars not found"); return; }
+            var tech = chain.nodes.Find(n => n.id == "sensor_tech");
+            if (tech != null && tech.reward != null && tech.reward.scannerLevelBonus != 0)
+            {
+                tech.reward.scannerLevelBonus = 0;
+                tech.reward.journal = "Sensor lattice analysed: it can be fitted to the handheld scanner at the research lab.";
+                EditorUtility.SetDirty(chain);
+                log.AppendLine("chain: sensor_tech no longer grants the scanner tier");
+            }
+            if (!chain.nodes.Exists(n => n.id == "sensor_install"))
+            {
+                chain.nodes.Add(new DMI.Xenoarch.Discovery.DiscoveryNode
+                {
+                    id = "sensor_install", title = "Install the sensor module",
+                    factKey = DMI.Xenoarch.Discovery.Facts.Installed(LatticeId), threshold = 1f,
+                    prerequisites = new List<string> { "sensor_tech" }, optional = true,
+                    reward = new DMI.Xenoarch.Discovery.DiscoveryReward { journal = "Sensor lattice installed: handheld scanner tier +1." },
+                });
+                EditorUtility.SetDirty(chain);
+                log.AppendLine("chain: added sensor_install node");
+            }
         }
 
         static void Make(string file, string id, System.Action<VendorDefinition> fill, StringBuilder log)
