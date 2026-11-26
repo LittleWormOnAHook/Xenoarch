@@ -72,7 +72,7 @@ namespace DMI.Xenoarch.Exploration
             _busy = true;
             var def = session.Config.starterShip;
             string siteId = x.Ship.shuttleSiteId ?? "";
-            var site = string.IsNullOrEmpty(siteId) || x.Sites == null ? null : x.Sites.Get(siteId);
+            var site = string.IsNullOrEmpty(siteId) ? null : x.SiteDef(siteId);
             if (site != null && site.sceneName != scene.name) { site = null; siteId = ""; }
             _scene = scene; _terrain = terrain;
 

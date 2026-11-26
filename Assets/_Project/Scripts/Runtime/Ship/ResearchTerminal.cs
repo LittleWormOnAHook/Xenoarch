@@ -116,11 +116,11 @@ namespace DMI.Xenoarch.Ship
             if (d.installTarget != TechInstallTarget.None)
             {
                 Text(col, "FUNCTIONAL DEVICE", "xa-term__h");
-                string target = d.installTarget == TechInstallTarget.HandheldScanner ? "handheld scanner" : "orbital scanner";
+                string target = d.installTarget == TechInstallTarget.HandheldScanner ? "handheld scanner" : d.installTarget == TechInstallTarget.NavigationDrive ? "ship's navigation drive" : "orbital scanner";
                 bool can = arts.CanInstall(a, out var why);
                 Btn(col, $"Install in the {target} (+{d.installBonus} tier{(d.installBonus == 1 ? "" : "s")}; the device is used up)" + (can ? "" : $"\n{why}"), () =>
                 {
-                    if (arts.Install(a, out var r)) { Session.Inventory.RemoveInstance(a.instanceId); _message = $"Installed {arts.DisplayName(a)} in the {target}."; Toast.Show(_message, 6f); _selected = null; }
+                    if (arts.Install(a, out var r)) { Session.Inventory.RemoveInstance(a.instanceId); _message = $"Installed {arts.DisplayName(a)} in the {target}." + (d.installTarget == TechInstallTarget.NavigationDrive ? " Interstellar jumps can now be plotted at the Nav terminal." : ""); Toast.Show(_message, 6f); _selected = null; }
                     else _message = r;
                     Refresh();
                 }, can);

@@ -11,30 +11,45 @@ namespace DMI.Xenoarch.Galaxy
         protected override string DefaultIdPrefix => "galaxy.";
         public int seed = 1337;
         public List<StarSystemDefinition> systems = new List<StarSystemDefinition>();
+        /// <summary>t186u: systems generated at runtime from the galaxy seed (<see cref="ProceduralGalaxy"/>). Never serialized.</summary>
+        [System.NonSerialized] public List<StarSystemDefinition> generatedSystems = new List<StarSystemDefinition>();
+        /// <summary>Authored systems, then generated ones.</summary>
+        public IEnumerable<StarSystemDefinition> AllSystems
+        {
+            get
+            {
+                if (systems != null) foreach (var s in systems) if (s != null) yield return s;
+                if (generatedSystems != null) foreach (var s in generatedSystems) if (s != null) yield return s;
+            }
+        }
+        /// <summary>t186u: several generated planets share one landing scene; scene lookups prefer this body (the ship's current body).</summary>
+        public static System.Func<string> BodyHint;
 
         public StarSystemDefinition FindSystem(string id)
         {
-            foreach (var s in systems) if (s != null && s.Id == id) return s;
+            foreach (var s in AllSystems) if (s.Id == id) return s;
             return null;
         }
 
         public CelestialBodyDefinition FindBody(string id)
         {
             if (string.IsNullOrEmpty(id)) return null;
-            foreach (var s in systems) { var b = s != null ? s.FindBody(id) : null; if (b != null) return b; }
+            foreach (var s in AllSystems) { var b = s.FindBody(id); if (b != null) return b; }
             return null;
         }
 
         public StarSystemDefinition SystemOf(string bodyId)
         {
-            foreach (var s in systems) if (s != null && s.FindBody(bodyId) != null) return s;
+            foreach (var s in AllSystems) if (s.FindBody(bodyId) != null) return s;
             return null;
         }
 
         public CelestialBodyDefinition FindBodyByScene(string sceneName)
         {
             if (string.IsNullOrEmpty(sceneName)) return null;
-            foreach (var s in systems) if (s != null) foreach (var b in s.bodies) if (b != null && b.sceneName == sceneName) return b;
+            string hint = BodyHint != null ? BodyHint() : null;
+            if (!string.IsNullOrEmpty(hint)) { var hb = FindBody(hint); if (hb != null && hb.sceneName == sceneName) return hb; }
+            foreach (var s in AllSystems) foreach (var b in s.AllBodies) if (b.sceneName == sceneName) return b;
             return null;
         }
 

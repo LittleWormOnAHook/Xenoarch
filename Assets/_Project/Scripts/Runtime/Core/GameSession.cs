@@ -41,6 +41,18 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Valuables.ValuableService Valuables { get; }
         public DMI.Xenoarch.Journals.JournalService Journals { get; }
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
+        /// <summary>t186u: artifacts that may be buried at generated sites: common to rare, no device, fragment or set role.</summary>
+        static System.Collections.Generic.List<string> ProceduralArtifactPool(IItemLookup items)
+        {
+            var l = new System.Collections.Generic.List<string>();
+            if (items is DMI.Xenoarch.Items.ItemRegistry reg && reg.Entries != null)
+                foreach (var e in reg.Entries)
+                    if (e is DMI.Xenoarch.Artifacts.ArtifactDefinition a && a.rarity <= DMI.Xenoarch.Artifacts.ArtifactRarity.Rare
+                        && a.installTarget == DMI.Xenoarch.Artifacts.TechInstallTarget.None && string.IsNullOrEmpty(a.fragmentOf) && string.IsNullOrEmpty(a.setId))
+                        l.Add(a.Id);
+            return l;
+        }
+
         /// <summary>Fragment puzzles (e.g. the Vael star map that reveals Proxima Centauri).</summary>
         public DMI.Xenoarch.Artifacts.ArtifactPuzzleService Puzzles { get; }
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
@@ -124,6 +136,21 @@ namespace DMI.Xenoarch.Core
             Exploration.SiteRevealed += (id, level) => { if (level >= 3) Economy.Award(eco.sitePinpointed, "site:" + id, "site pinpointed " + id); };
             Artifacts.Installed += (a, d) => Economy.Award(eco.techInstalled, "installed:" + a.instanceId, "installed " + d.DisplayNameOrId);
             Exploration.OrbitalTechBonus = () => Artifacts.TechBonus(DMI.Xenoarch.Artifacts.TechInstallTarget.OrbitalScanner);
+
+            // t186u: procedural systems / planets (runtime only, deterministic from the galaxy seed) and the navigation
+            // drive (the decoded Vael navigation core, fitted at the research lab) that opens jumps beyond Sol.
+            DMI.Xenoarch.Galaxy.ProceduralGalaxy.Ensure(config.galaxy, ProceduralArtifactPool(items));
+            Artifacts.InstallBlock = (a, d) =>
+            {
+                var spec = string.IsNullOrEmpty(d.fragmentOf) ? null : DMI.Xenoarch.Artifacts.ArtifactPuzzleService.Spec(d.fragmentOf);
+                return spec != null && !Puzzles.IsSolved(d.fragmentOf) ? $"Assemble the {spec.title} first: this device is one of its pieces." : null;
+            };
+            Exploration.NavDriveTiers = () => Artifacts.TechBonus(DMI.Xenoarch.Artifacts.TechInstallTarget.NavigationDrive);
+            Artifacts.Installed += (a, d) =>
+            {
+                if (d.installTarget == DMI.Xenoarch.Artifacts.TechInstallTarget.NavigationDrive)
+                    Discovery.Publish(DMI.Xenoarch.Galaxy.ProceduralGalaxy.NavDriveFact);
+            };
             Economy.Changed += ApplyRankUnlocks;   // also after a load (restore raises Changed)
             Valuables.Collected += id => Economy.Award(eco.cacheCollected, "cache:" + id, "cache " + id);
         }

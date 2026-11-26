@@ -112,7 +112,7 @@ namespace DMI.Xenoarch.EditorTools
 
             // ---- project setup
             var scenes = EditorBuildSettings.scenes;
-            Check(scenes.Length == SceneNames.All.Length, $"Build Settings has {scenes.Length}/{SceneNames.All.Length} scenes");
+            Check(scenes.Length >= SceneNames.All.Length, $"Build Settings has {scenes.Length}/{SceneNames.All.Length} scenes");
             Check(scenes.Length > 0 && scenes[0].path.EndsWith("/Bootstrap.unity"), "Bootstrap is build index 0");
             foreach (var n in SceneNames.All) Check(File.Exists(XenoarchSetup.ScenePath(n)), $"Scene file {n}");
             CheckWorldIds();

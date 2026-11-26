@@ -30,7 +30,7 @@ namespace DMI.Xenoarch.Galaxy
             if (!UsesShuttle(body)) { reason = body == null ? "Nothing in range" : "No surveyed landing zone"; return false; }
             x.Ship.shuttleSiteId = siteId ?? "";
             x.Body(body.Id).visited = true;
-            var site = string.IsNullOrEmpty(siteId) || x.Sites == null ? null : x.Sites.Get(siteId);
+            var site = string.IsNullOrEmpty(siteId) ? null : x.SiteDef(siteId);
             var st = site != null ? x.Site(site.Id) : null;
             string where = site == null ? "base landing zone" : st != null && st.revealLevel >= (int)SiteRevealLevel.Pinpointed ? site.displayName : st != null && st.revealLevel <= 0 ? "selected landing zone" : "orbital signature";
             Scenes.SceneLoader.NextTitle = $"Shuttle descent: {body.displayName}";

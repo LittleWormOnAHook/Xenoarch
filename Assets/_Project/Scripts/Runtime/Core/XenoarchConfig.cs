@@ -97,6 +97,10 @@ namespace DMI.Xenoarch.Core
         public const string MarsExcavation01 = "Mars_Excavation_01";
 
         public static readonly string[] All = { Bootstrap, MainMenu, ShipStarter, TradeHubSol, MoonExcavation01, MarsExcavation01 };
+        /// <summary>t186u: shared landing scene of every generated planet (terrain built at runtime).</summary>
+        public const string ProceduralSurface = "Surface_Procedural";
+        /// <summary>Scenes added by later setup passes (kept in Build Settings, never rebuilt as placeholders).</summary>
+        public static readonly string[] Extra = { ProceduralSurface };
     }
 
     public static class PlayerSpawnIds

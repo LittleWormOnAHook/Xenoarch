@@ -86,6 +86,7 @@ namespace DMI.Xenoarch.Galaxy
         public ExplorationService(GalaxyDefinition galaxy, ShipDefinition ship, SiteRegistry sites, SaveService saves)
         {
             Galaxy = galaxy; ShipDefinition = ship; Sites = sites;
+            GalaxyDefinition.BodyHint = () => Ship != null ? Ship.currentBodyId : null;   // t186u: shared procedural landing scene
             ResetToNewGame();
             saves.Register(new ShipSection(this));
             saves.Register(new DiscoverySection(this));
@@ -110,7 +111,7 @@ namespace DMI.Xenoarch.Galaxy
             Discovery = new DiscoveryData();
             if (Galaxy != null)
                 foreach (var sys in Galaxy.systems)
-                    if (sys != null) foreach (var b in sys.bodies)
+                    if (sys != null) foreach (var b in sys.bodies)   // authored only; generated bodies get entries on demand
                         if (b != null) Discovery.bodies.Add(new BodyDiscovery { bodyId = b.Id, discovered = b.discoveredByDefault && sys.knownByDefault });
             Body(Ship.currentBodyId).visited = true;
             Changed?.Invoke();
@@ -126,7 +127,7 @@ namespace DMI.Xenoarch.Galaxy
         public static bool GalaxyUnlocked(GalaxyDefinition g, Func<string, bool> gate)
         {
             if (g == null || gate == null) return false;
-            foreach (var s in g.systems) if (s != null && !string.IsNullOrEmpty(s.revealFact) && gate(s.revealFact)) return true;
+            foreach (var s in g.AllSystems) if (!string.IsNullOrEmpty(s.revealFact) && gate(s.revealFact)) return true;
             return false;
         }
 
@@ -160,8 +161,13 @@ namespace DMI.Xenoarch.Galaxy
             var list = new List<(string, string)>(NavSystems);
             foreach (var e in _extraNav) list.Add(e);
             if (Galaxy != null)
-                foreach (var s in Galaxy.systems)
-                    if (s != null && s.navDestination && !list.Exists(l => l.Item1 == s.Id)) list.Add((s.Id, s.displayName));
+                foreach (var s in Galaxy.AllSystems)
+                    if (s.navDestination && !list.Exists(l => l.Item1 == s.Id)) list.Add((s.Id, s.displayName));
+            // t186u: with the navigation drive fitted, decoded / catalogued systems (Tau Ceti expedition, uncharted
+            // systems) become Nav destinations too.
+            if (Galaxy != null && NavDriveInstalled)
+                foreach (var s in Galaxy.AllSystems)
+                    if (!string.IsNullOrEmpty(s.revealFact) && IsSystemKnown(s) && !list.Exists(l => l.Item1 == s.Id)) list.Add((s.Id, s.displayName));
             return list;
         }
 
@@ -177,8 +183,11 @@ namespace DMI.Xenoarch.Galaxy
         {
             if (string.IsNullOrEmpty(systemId)) return false;
             if (systemId == NavSystems[0].id || systemId == Ship.currentSystemId) return true;
-            if (Galaxy == null || Galaxy.FindSystem(systemId) == null) return false;
-            return Gate != null && Gate(NavUnlockFact(systemId));
+            var sys = Galaxy != null ? Galaxy.FindSystem(systemId) : null;
+            if (sys == null) return false;
+            if (Gate != null && Gate(NavUnlockFact(systemId))) return true;
+            // t186u: the fitted navigation drive opens every known system (the locked "future expedition" included).
+            return NavDriveInstalled && IsSystemKnown(sys);
         }
 
         public CelestialBodyDefinition CurrentBody => Galaxy != null ? Galaxy.FindBody(Ship.currentBodyId) : null;
@@ -209,14 +218,43 @@ namespace DMI.Xenoarch.Galaxy
 
         public IEnumerable<ArchaeologicalSiteDefinition> SitesOnBody(string bodyId)
         {
-            if (Sites == null) yield break;
-            foreach (var s in Sites.Entries) if (s != null && s.bodyId == bodyId) yield return s;
+            if (Sites != null) foreach (var s in Sites.Entries) if (s != null && s.bodyId == bodyId) yield return s;
+            foreach (var s in ProceduralGalaxy.Sites) if (s.bodyId == bodyId) yield return s;
         }
 
         public IEnumerable<ArchaeologicalSiteDefinition> SitesInScene(string sceneName)
         {
-            if (Sites == null) yield break;
-            foreach (var s in Sites.Entries) if (s != null && s.sceneName == sceneName) yield return s;
+            if (Sites != null) foreach (var s in Sites.Entries) if (s != null && s.sceneName == sceneName) yield return s;
+            // Generated planets share one landing scene: only the current body's sites are in it.
+            foreach (var s in ProceduralGalaxy.Sites) if (s.sceneName == sceneName && s.bodyId == Ship.currentBodyId) yield return s;
+        }
+
+        /// <summary>Site definition by id: authored registry, then generated sites.</summary>
+        public ArchaeologicalSiteDefinition SiteDef(string siteId)
+        {
+            if (string.IsNullOrEmpty(siteId)) return null;
+            var d = Sites != null ? Sites.Get(siteId) : null;
+            return d != null ? d : ProceduralGalaxy.Site(siteId);
+        }
+
+        // ------------------------------------------------------------------ interstellar (t186u)
+
+        /// <summary>Tiers of fitted navigation drives (installed Vael navigation devices; wired by GameSession).</summary>
+        public Func<int> NavDriveTiers;
+        public bool NavDriveInstalled => NavDriveTiers != null && NavDriveTiers() > 0;
+        /// <summary>Jump range: the ship's own drive plus <see cref="ShipDefinition.navDriveRangeLy"/> per fitted navigation drive.</summary>
+        public float FtlRangeLy => Ship.ftlRangeLy + (NavDriveTiers != null ? NavDriveTiers() : 0) * (ShipDefinition != null ? ShipDefinition.navDriveRangeLy : 15f);
+        public bool IsInterstellar(CelestialBodyDefinition to)
+        {
+            var sys = to != null && Galaxy != null ? Galaxy.SystemOf(to.Id) : null;
+            return sys != null && !string.IsNullOrEmpty(Ship.currentSystemId) && sys.Id != Ship.currentSystemId;
+        }
+        /// <summary>Light years between the ship's system and <paramref name="to"/>'s system (0 inside one system).</summary>
+        public float DistanceLy(CelestialBodyDefinition to)
+        {
+            var here = CurrentSystem; var sys = to != null && Galaxy != null ? Galaxy.SystemOf(to.Id) : null;
+            if (here == null || sys == null || here == sys) return 0f;
+            return Vector3.Distance(here.galacticPosition, sys.galacticPosition);
         }
 
         /// <summary>Map distance in AU (moons/stations: parent distance + own offset).</summary>
@@ -234,6 +272,7 @@ namespace DMI.Xenoarch.Galaxy
         {
             var from = CurrentBody;
             if (to == null || from == to) return 0f;
+            if (IsInterstellar(to)) return Mathf.Round(DistanceLy(to) * (ShipDefinition != null ? ShipDefinition.fuelPerLy : 3f) * 10f) / 10f;
             float perAU = ShipDefinition != null ? ShipDefinition.fuelPerAU : 10f;
             float min = ShipDefinition != null ? ShipDefinition.minimumHopFuel : 1f;
             return Mathf.Max(min, Mathf.Round(DistanceAU(from, to) * perAU * 10f) / 10f);
@@ -245,9 +284,14 @@ namespace DMI.Xenoarch.Galaxy
             if (to == null) { reason = "No destination"; return false; }
             if (to.Id == Ship.currentBodyId) { reason = "Already here"; return false; }
             if (to.kind == CelestialKind.Star) { reason = "Too close to the star"; return false; }
-            if (!IsDiscovered(to.Id)) { reason = "Unknown destination"; return false; }
             var sys = Galaxy != null ? Galaxy.SystemOf(to.Id) : null;
-            if (sys != null && sys.Id != Ship.currentSystemId && Ship.ftlRangeLy < sys.minFtlRangeLy) { reason = "Out of FTL range"; return false; }
+            bool interstellar = IsInterstellar(to);
+            if (interstellar)
+            {
+                if (!IsNavSystemUnlocked(sys.Id)) { reason = "System locked: no navigation data"; return false; }
+                if (FtlRangeLy + 0.001f < Mathf.Max(sys.minFtlRangeLy, DistanceLy(to))) { reason = FtlRangeLy <= 0f ? "Needs a long-range drive (fit a navigation drive at the research lab)" : $"Out of FTL range ({DistanceLy(to):0.0} ly, drive {FtlRangeLy:0.#} ly)"; return false; }
+            }
+            else if (!IsDiscovered(to.Id)) { reason = "Unknown destination"; return false; }
             float cost = FuelCost(to);
             if (cost > Ship.fuel + 0.001f) { reason = $"Not enough fuel ({cost:0.#} needed)"; return false; }
             return true;
@@ -262,6 +306,8 @@ namespace DMI.Xenoarch.Galaxy
             Ship.arrivalSeed = UnityEngine.Random.Range(1, int.MaxValue);
             Ship.arrivalPlaySeconds = Clock != null ? Clock() : 0f;
             var sys = Galaxy != null ? Galaxy.SystemOf(to.Id) : null;
+            if (sys != null && sys.Id != Ship.currentSystemId)
+                foreach (var ob in sys.AllBodies) Body(ob.Id).discovered = true;   // arrival sweep charts the new system
             if (sys != null) Ship.currentSystemId = sys.Id;
             Ship.landed = false; Ship.docked = false;
             if (Ship.plottedBodyId == to.Id) Ship.plottedBodyId = "";
@@ -324,7 +370,7 @@ namespace DMI.Xenoarch.Galaxy
         {
             var s = Site(siteId);
             if (level <= s.revealLevel) return false;
-            var def = Sites != null ? Sites.Get(siteId) : null;
+            var def = SiteDef(siteId);
             if (def != null && !string.IsNullOrEmpty(def.gateFact) && Gate != null && !Gate(def.gateFact)) return false;
             s.revealLevel = Mathf.Clamp(level, 0, (int)SiteRevealLevel.Pinpointed);
             SiteRevealed?.Invoke(siteId, s.revealLevel);

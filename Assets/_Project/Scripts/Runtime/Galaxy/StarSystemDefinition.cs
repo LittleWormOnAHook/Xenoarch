@@ -24,10 +24,22 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Deep-space sky aboard the ship in this system when the body has no orbit sky (empty = config default, the Milky Way).")] public Material spaceSkybox;
         [Tooltip("Planet shown outside the ship window on arrival when no body is selected (e.g. an exoplanet). Optional.")] public OrbitViewDefinition arrivalOrbitView;
         public List<CelestialBodyDefinition> bodies = new List<CelestialBodyDefinition>();
+        /// <summary>t186u: bodies generated at runtime from the seed (<see cref="ProceduralGalaxy"/>). Never serialized.</summary>
+        [System.NonSerialized] public List<CelestialBodyDefinition> generatedBodies = new List<CelestialBodyDefinition>();
+        /// <summary>Authored bodies, then generated ones.</summary>
+        public IEnumerable<CelestialBodyDefinition> AllBodies
+        {
+            get
+            {
+                if (bodies != null) foreach (var b in bodies) if (b != null) yield return b;
+                if (generatedBodies != null) foreach (var b in generatedBodies) if (b != null) yield return b;
+            }
+        }
+        public int BodyCount { get { int n = 0; foreach (var _ in AllBodies) n++; return n; } }
 
         public CelestialBodyDefinition FindBody(string id)
         {
-            foreach (var b in bodies) if (b != null && b.Id == id) return b;
+            foreach (var b in AllBodies) if (b.Id == id) return b;
             return null;
         }
     }

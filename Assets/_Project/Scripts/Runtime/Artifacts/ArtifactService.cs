@@ -139,8 +139,13 @@ namespace DMI.Xenoarch.Artifacts
             if (a.location == ArtifactLocation.Installed) { reason = "Already installed."; return false; }
             if (a.location != ArtifactLocation.Held) { reason = "Not in your possession."; return false; }
             if (!a.Done(ResearchOp.TechnologyAnalysis)) { reason = "Run Technology analysis first."; return false; }
+            var block = InstallBlock?.Invoke(a, d);
+            if (!string.IsNullOrEmpty(block)) { reason = block; return false; }
             return true;
         }
+
+        /// <summary>Optional extra install rule (returns a reason to refuse, or null). t186u: fragment pieces wait for their puzzle.</summary>
+        public Func<ArtifactInstance, ArtifactDefinition, string> InstallBlock;
 
         /// <summary>Marks the device installed (the caller removes it from the inventory) and publishes tech.installed.</summary>
         public bool Install(ArtifactInstance a, out string reason)

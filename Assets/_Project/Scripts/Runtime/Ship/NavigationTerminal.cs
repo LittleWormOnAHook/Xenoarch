@@ -89,7 +89,11 @@ namespace DMI.Xenoarch.Ship
                 var sb = sys.FindBody(_selectedId);
                 if (sb != null) InfoSection(right, BodyInfo(x, sys, sb), 0, "xa-term__dim");
                 else InfoSection(right, SystemInfo(x, cur ?? sys, sys), 0, "xa-term__dim");
-                Text(right, $"Viewing {sys.displayName}. Interstellar travel arrives in a later phase.", "xa-term__dim");
+                // t186u: interstellar jump to a body of the viewed system (flown from the helm like any course).
+                var target = sb != null && sb.kind != CelestialKind.Star ? sb : ProceduralGalaxy.ArrivalBody(sys);
+                if (target != null) PlotRow(right, x, target, true);
+                else Text(right, $"No charted destination in {sys.displayName} yet.", "xa-term__dim");
+                if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__good");
                 Btn(right, $"Back to {(cur != null ? cur.displayName : "current system")}", () => { _viewSystemId = null; _selectedId = x.Ship.currentBodyId; Refresh(); });
                 return;
             }
@@ -99,19 +103,7 @@ namespace DMI.Xenoarch.Ship
             bool here = sel.Id == x.Ship.currentBodyId;
             if (!here)
             {
-                float cost = x.FuelCost(sel);
-                bool can = x.CanTravel(sel, out var why);
-                Text(right, $"Fuel cost {cost:0.#}"); // distance from the ship is in the info above
-                if (!can) Text(right, why, "xa-term__warn");
-                bool plotted = x.Ship.plottedBodyId == sel.Id;
-                if (plotted) Text(right, "Course plotted. Engage the drive at the cockpit helm.", "xa-term__good");
-                Btn(right, plotted ? "Clear course" : "Plot course", () =>
-                {
-                    if (plotted) { x.ClearCourse(); _message = null; }
-                    else if (x.PlotCourse(sel, out var r)) _message = $"Course to {sel.displayName} plotted. Go to the cockpit helm.";
-                    else _message = r;
-                    Refresh();
-                }, can || plotted);
+                PlotRow(right, x, sel, false);
             }
             else if (sel.HasLanding)
             {
@@ -131,6 +123,25 @@ namespace DMI.Xenoarch.Ship
             }
             else Text(right, "In orbit. No surveyed landing zone here yet.", "xa-term__dim");
             if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__good");
+        }
+
+        /// <summary>Fuel cost, reason it can't be flown, and Plot / Clear course (in-system hop or interstellar jump).</summary>
+        void PlotRow(VisualElement right, ExplorationService x, CelestialBodyDefinition sel, bool interstellar)
+        {
+            float cost = x.FuelCost(sel);
+            bool can = x.CanTravel(sel, out var why);
+            if (interstellar || x.IsInterstellar(sel)) Text(right, $"Interstellar jump: {x.DistanceLy(sel):0.0} ly   |   drive range {x.FtlRangeLy:0.#} ly   |   fuel cost {cost:0.#}");
+            else Text(right, $"Fuel cost {cost:0.#}"); // distance from the ship is in the info above
+            if (!can) Text(right, why, "xa-term__warn");
+            bool plotted = x.Ship.plottedBodyId == sel.Id;
+            if (plotted) Text(right, "Course plotted. Engage the drive at the cockpit helm.", "xa-term__good");
+            Btn(right, plotted ? "Clear course" : (x.IsInterstellar(sel) ? $"Plot jump: {sel.displayName}" : "Plot course"), () =>
+            {
+                if (plotted) { x.ClearCourse(); _message = null; }
+                else if (x.PlotCourse(sel, out var r)) _message = $"Course to {sel.displayName} plotted. Go to the cockpit helm.";
+                else _message = r;
+                Refresh();
+            }, can || plotted);
         }
 
         /// <summary>Right-panel details for the selected body / system: title, info lines and description in a
@@ -176,7 +187,7 @@ namespace DMI.Xenoarch.Ship
             {
                 $"Star class {s.stellarClass}",
                 s == here ? "Current system" : $"Distance {Vector3.Distance(here.galacticPosition, s.galacticPosition):0.0} ly",
-                $"Known bodies: {(s.bodies != null ? s.bodies.Count : 0)}",
+                $"Known bodies: {s.BodyCount}",
                 $"Archaeological potential: {Potential(s.archaeologicalPotential)}",
                 $"Status: {(s == here ? "explored" : !string.IsNullOrEmpty(s.revealFact) ? "located from decoded Vael data" : "charted")}",
             };
@@ -198,13 +209,13 @@ namespace DMI.Xenoarch.Ship
         static List<CelestialBodyDefinition> Ordered(StarSystemDefinition sys)
         {
             var roots = new List<CelestialBodyDefinition>();
-            if (sys.bodies != null) foreach (var b in sys.bodies) if (b != null && string.IsNullOrEmpty(b.parentId)) roots.Add(b);
+            foreach (var b in sys.AllBodies) if (string.IsNullOrEmpty(b.parentId)) roots.Add(b);
             roots.Sort((a, c) => a.orbitAU.CompareTo(c.orbitAU));
             var result = new List<CelestialBodyDefinition>();
             foreach (var r in roots)
             {
                 result.Add(r);
-                foreach (var b in sys.bodies) if (b != null && b.parentId == r.Id) result.Add(b);
+                foreach (var b in sys.AllBodies) if (b.parentId == r.Id) result.Add(b);
             }
             return result;
         }
@@ -263,7 +274,7 @@ namespace DMI.Xenoarch.Ship
             map.Extent = 1.08f;
             float maxAU = 0.1f;
             bool hasStar = false;
-            if (sys.bodies != null) foreach (var b in sys.bodies) if (b != null) { if (string.IsNullOrEmpty(b.parentId)) maxAU = Mathf.Max(maxAU, b.orbitAU); if (b.kind == CelestialKind.Star) hasStar = true; }
+            foreach (var b in sys.AllBodies) { if (string.IsNullOrEmpty(b.parentId)) maxAU = Mathf.Max(maxAU, b.orbitAU); if (b.kind == CelestialKind.Star) hasStar = true; }
             if (!hasStar) // unsurveyed system: its star (the only clickable item) plus any published planets, display-only
             {
                 map.Items.Add(new MapView3D.Item { id = sys.Id, pos = Vector3.zero, label = sys.displayName, color = StarColor(sys.stellarClass), size = 22f, alwaysLabel = true, selected = _selectedId == sys.Id });
@@ -298,7 +309,7 @@ namespace DMI.Xenoarch.Ship
                 else
                 {
                     placed.TryGetValue(b.parentId, out var pp);
-                    int idx = 0; foreach (var s in sys.bodies) { if (s == b) break; if (s != null && s.parentId == b.parentId) idx++; }
+                    int idx = 0; foreach (var s in sys.AllBodies) { if (s == b) break; if (s.parentId == b.parentId) idx++; }
                     float ang = idx * 2.1f + 0.6f, rr = 0.035f + idx * 0.012f;
                     p = pp + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * rr;
                     map.Rings.Add(new MapView3D.Ring { centre = pp, radius = rr, color = XenoarchPalette.A(XenoarchPalette.Secondary, 0.08f*2f) });
@@ -323,7 +334,7 @@ namespace DMI.Xenoarch.Ship
             // Core destinations (Sol, Proxima Centauri, Barnard's Star, Epsilon Eridani + DLC extras); legacy charted systems
             // (Alpha Centauri, Sirius) stay in the data for old saves but are not shown; a chain-revealed signal source
             // (Tau Ceti) still appears as a marker once its fact is decoded.
-            foreach (var s in g.systems)
+            foreach (var s in g.AllSystems)
                 if (s == here || (x.IsSystemKnown(s) && (x.IsNavDestination(s.Id) || !string.IsNullOrEmpty(s.revealFact)))) known.Add(s);
             _selectedSystemId ??= here.Id;
 
@@ -351,7 +362,7 @@ namespace DMI.Xenoarch.Ship
             foreach (var s in known) ext = Mathf.Max(ext, (s.galacticPosition - here.galacticPosition).magnitude);
             map.Extent = ext * 1.1f;
             for (float r = 5f; r <= ext + 0.01f; r += 5f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = r, color = XenoarchPalette.A(XenoarchPalette.Secondary, 0.12f*2f) });
-            if (x.Ship.ftlRangeLy > 0f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = x.Ship.ftlRangeLy, color = XenoarchPalette.A(XenoarchPalette.Highlight, 0.45f) });
+            if (x.FtlRangeLy > 0f) map.Rings.Add(new MapView3D.Ring { centre = Vector3.zero, radius = x.FtlRangeLy, color = XenoarchPalette.A(XenoarchPalette.Highlight, 0.45f) });
             foreach (var s in known)
             {
                 var p = s.galacticPosition - here.galacticPosition;
@@ -372,8 +383,12 @@ namespace DMI.Xenoarch.Ship
             if (sel != here)
             {
                 float need = Mathf.Max(sel.minFtlRangeLy, Vector3.Distance(here.galacticPosition, sel.galacticPosition));
-                Text(right, x.Ship.ftlRangeLy >= need ? "Within FTL range." : $"Out of range: needs a long-range drive ({need:0.0} ly, this ship {x.Ship.ftlRangeLy:0.#} ly).", "xa-term__warn");
-                Text(right, "Interstellar jumps arrive in a later phase.", "xa-term__dim");
+                Text(right, x.FtlRangeLy >= need ? "Within FTL range." : $"Out of range: needs a long-range drive ({need:0.0} ly, this ship {x.FtlRangeLy:0.#} ly).", "xa-term__warn");
+                // t186u: interstellar jump to the system's arrival planet.
+                var target = ProceduralGalaxy.ArrivalBody(sel);
+                if (!x.IsNavSystemUnlocked(sel.Id)) Text(right, "Locked: fit the decoded navigation core at the research lab to plot jumps beyond Sol.", "xa-term__dim");
+                else if (target != null) PlotRow(right, x, target, true);
+                if (!string.IsNullOrEmpty(_message)) Text(right, _message, "xa-term__good");
             }
         }
 

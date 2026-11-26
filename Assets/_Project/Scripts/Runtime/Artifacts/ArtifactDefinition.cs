@@ -7,7 +7,8 @@ using UnityEngine;
 namespace DMI.Xenoarch.Artifacts
 {
     /// <summary>Phase 1D: what a functional alien device can be fitted to once Technology analysis is done.</summary>
-    public enum TechInstallTarget { None, HandheldScanner, OrbitalScanner }
+    /// <summary>NavigationDrive (t186u): the decoded Vael navigation core fitted to the ship; opens jumps beyond Sol.</summary>
+    public enum TechInstallTarget { None, HandheldScanner, OrbitalScanner, NavigationDrive }
 
     /// <summary>Static artifact data. Derives from ItemDefinition so it enters the inventory as item id + instance id.</summary>
     [CreateAssetMenu(menuName = "Xenoarch/Artifacts/Artifact Definition", fileName = "Artifact_")]

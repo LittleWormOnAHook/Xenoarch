@@ -176,6 +176,7 @@ namespace DMI.Xenoarch.EditorTools
                 if (File.Exists(p)) list.Add(new EditorBuildSettingsScene(p, true));
                 else Debug.LogWarning($"[Xenoarch] Setup: missing scene {p}");
             }
+            foreach (var n in SceneNames.Extra) { var p = ScenePath(n); if (File.Exists(p)) list.Add(new EditorBuildSettingsScene(p, true)); }
             EditorBuildSettings.scenes = list.ToArray();
             Debug.Log($"[Xenoarch] Setup: Build Settings = {string.Join(", ", SceneNames.All)} ({list.Count} scenes, Bootstrap first)");
         }

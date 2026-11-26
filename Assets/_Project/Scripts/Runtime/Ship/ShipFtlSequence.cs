@@ -55,6 +55,16 @@ namespace DMI.Xenoarch.Ship
             return Mathf.Max(5f, Mathf.Lerp(minJumpSeconds, Mathf.Max(minJumpSeconds, maxJumpSeconds), c));
         }
 
+        [Header("Interstellar jump (t186u: a longer version of the same sequence)")]
+        [Tooltip("Spool multiplier for a jump to another star system.")] public float interstellarSpoolScale = 2.5f;
+        [Tooltip("Jump time for the nearest star systems.")] public float interstellarMinSeconds = 25f;
+        [Tooltip("Jump time at interstellarFarLy and beyond.")] public float interstellarMaxSeconds = 45f;
+        public float interstellarFarLy = 15f;
+
+        /// <summary>Hyperspace seconds for a jump between star systems (always longer than any in-system hop).</summary>
+        public float InterstellarSecondsFor(float ly) =>
+            Mathf.Lerp(interstellarMinSeconds, Mathf.Max(interstellarMinSeconds, interstellarMaxSeconds), Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(ly / Mathf.Max(0.1f, interstellarFarLy))));
+
         public bool Running { get; private set; }
         public const string PanelId = "ftl";
 
@@ -76,9 +86,11 @@ namespace DMI.Xenoarch.Ship
             if (windowDir.sqrMagnitude < 0.01f) windowDir = cam.transform.forward;
             windowDir.y = 0f; windowDir.Normalize();
 
-            float au = x.DistanceAU(x.CurrentBody, to);
-            float jumpSeconds = JumpSecondsFor(au);
-            Debug.Log($"[Xenoarch] FTL: {au:0.###} AU -> {jumpSeconds:0.0}s jump");
+            bool interstellar = x.IsInterstellar(to);
+            float au = x.DistanceAU(x.CurrentBody, to), ly = interstellar ? x.DistanceLy(to) : 0f;
+            float jumpSeconds = interstellar ? InterstellarSecondsFor(ly) : JumpSecondsFor(au);
+            float spool = interstellar ? spoolSeconds * Mathf.Max(1f, interstellarSpoolScale) : spoolSeconds;
+            Debug.Log(interstellar ? $"[Xenoarch] FTL: interstellar {ly:0.##} ly -> {jumpSeconds:0.0}s jump" : $"[Xenoarch] FTL: {au:0.###} AU -> {jumpSeconds:0.0}s jump");
 
             rig.SetInputEnabled(false);
             var root = new GameObject("[FTL Sequence]");
@@ -112,9 +124,9 @@ namespace DMI.Xenoarch.Ship
             var startRot = rig.Root.rotation;
             bool seated = rig is IPlayerSeat st && st.Seated; // in a cockpit chair already facing the window: don't turn
             var faceRot = Quaternion.LookRotation(windowDir, Vector3.up);
-            for (float t = 0f; t < spoolSeconds; t += Time.deltaTime)
+            for (float t = 0f; t < spool; t += Time.deltaTime)
             {
-                float k = t / spoolSeconds;
+                float k = t / spool;
                 if (!seated) rig.Teleport(rig.Root.position, Quaternion.Slerp(startRot, faceRot, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(k * 1.5f))));
                 audio.volume = k * 0.35f; audio.pitch = 0.6f + k * 0.3f;
                 vol.weight = k * 0.25f;
@@ -125,7 +137,7 @@ namespace DMI.Xenoarch.Ship
             }
 
             // Jump
-            var hud = CountdownHud.Show($"FTL: {to.displayName}", jumpSeconds, hum: false); // arrival countdown (beeps + chime)
+            var hud = CountdownHud.Show(interstellar ? $"INTERSTELLAR JUMP: {to.displayName}" : $"FTL: {to.displayName}", jumpSeconds, hum: false); // arrival countdown (beeps + chime)
             streaks.Play();
             DMI.Xenoarch.Galaxy.SunDirector.Hidden = true; // no sun / lens flare inside the tunnel
             if (dust != null) dust.SetActive(true);

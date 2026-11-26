@@ -26,7 +26,7 @@ namespace DMI.Xenoarch.Ship
         {
             if (string.IsNullOrEmpty(id)) return true;
             var x = Session.Exploration; var b = x.CurrentBody;
-            var s = x.Sites != null ? x.Sites.Get(id) : null;
+            var s = x.SiteDef(id);
             return s != null && b != null && s.bodyId == b.Id && x.Site(id).revealLevel > 0;
         }
 
@@ -78,7 +78,7 @@ namespace DMI.Xenoarch.Ship
             }
             map.Clicked += id => { _selected = id; Refresh(); };
             right.Add(map);
-            var sel = string.IsNullOrEmpty(_selected) || x.Sites == null ? null : x.Sites.Get(_selected);
+            var sel = string.IsNullOrEmpty(_selected) ? null : x.SiteDef(_selected);
             bool unsurveyed = sel != null && x.Site(sel.Id).revealLevel <= 0;
             Text(right, sel == null ? "Destination: base landing zone" : unsurveyed ? "Destination: the selected landing zone (no signature scanned there yet)" : "Destination: semi-flat ground near the selected signature");
             Text(right, "The shuttle sets down on the flattest clear ground close to the site. You step out beside it. Board it again (E) to return to the ship.", "xa-term__dim");
