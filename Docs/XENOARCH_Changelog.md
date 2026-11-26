@@ -1,5 +1,16 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (early) - Phase 1D batch 4: discovery journal screen (J) (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
+
+- New **J** window (pauses like the maps window; J or Esc closes). It has four tabs:
+  - **Discoveries:** each discovery chain with its steps (done, open, or "???" while prerequisites are missing) and the full discovery log, newest first.
+  - **Finds:** every artifact ever recovered (name, rarity once identified, condition, carried / stored / sold / installed, site, estimated value), identified civilizations with language knowledge, and installed tech.
+  - **Notes:** collected datapad journals (new ones flagged); clicking one opens the note reader with prev / next.
+  - **Standing:** credits, notoriety score and rank ladder, and the last 25 deals.
+- Read-only. Nothing in saves changes.
+
 ## 2026-11-26 (early) - Phase 1D batch 3: recoverable alien tech, research and install (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. Compiles in the open Editor.
