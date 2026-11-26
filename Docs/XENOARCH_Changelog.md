@@ -1,5 +1,40 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (later) - t108-t111: digging, shuttle, maps, HUD, drag & drop, post, helmet, Sol terrain (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Everything compiles in the open Editor with no `_Project` CS errors.
+
+### Digging (88236ff)
+- Root cause of shallow/spiky holes: Digger Master voxel height 1 m against ~4.6 cm horizontal voxels. `DiggerExcavationSurface` now sets a 0.1 m voxel height at runtime before Digger initialises (scenes untouched; there was no saved voxel data) and enforces a minimum carve radius. Start logs `[Xenoarch] Digger voxels: ...`.
+- Hard bands: the shovel and precision tool cut every Sol layer. Hardness above the tool rating now slows digging linearly (was squared) with a guaranteed minimum bite, so progress is always visible; the drill is faster. `SoilLayer.minToolRating` (0 = any tool) lets future sites require better tools; the HUD says which tool is needed.
+- DEV/TESTING: `XenoarchConfig.devTestingLoadout` (on) gives every dig tool and the scanner on New Game, Continue and Load. Untick for release.
+
+### Shuttle (861260e)
+- Landing is exception-safe (a failure still finishes the load), logs `[Xenoarch] Shuttle placed at ...` and a watchdog re-checks it 3x after loading (re-lands, re-enables, re-grounds or moves it near the player). The original cause was not confirmed (no play log); the new log line will show it.
+
+### Nav, maps, HUD (c98bdd5)
+- Nav terminal: no "Land" on planets; landing is from the shuttle only. Stations still dock/undock.
+- M opens the big map (Nav-terminal size), cursor shown, game paused (timeScale 0) and restored on close. Tabs: Surface (M) and Dig Sites (N) with per-site dig maps and spot codes.
+- `HudLayout`: minimap top-right, scanner panel stacked under it with a gap (no overlap at any resolution).
+
+### Inventory drag & drop (5a63d23)
+- New saved hotbar (`player.hotbar`, 8 slots, keys 1-8; old saves get the old default 1 scanner, 2 shovel, 3 precision, 4 brush, 5 drill). Drag backpack items onto hotbar slots 2-8, drag hotbar slots to swap or drag them off to clear. The HUD strip shows the hotbar.
+- Drag within the backpack swaps slots. Storage crates: drag stacks between the backpack and crate columns (clicking still works); in the inventory window, drop a backpack item on a crate line while aboard.
+
+### Post-processing (6d3fb70, e2cd06c)
+- Like ASH's runtime post stack: a global base volume (ACES tonemapping, gentle bloom, colour adjustments, subtle vignette) in scenes without their own global volume (surfaces, stations); the ship keeps its authored volume. Editable profile `Data/Rendering/VP_Xenoarch_Base.asset` (created once by the editor, assigned to `XenoarchConfig.basePostProfile`; `basePostEnabled` toggle). Fog stays per body in the environment profiles: Mars light dust haze (exp2 0.004), Moon none.
+
+### Helmet visor (6e1ca88)
+- UITK overlay using the supplied reference art (`Resources/UI/Helmet_Visor.png`, baked bars removed; original in `Art/UI/Helmet`). Live pods: OXYGEN, NITROGEN (top-left), ENVIRONMENT (temperature, gravity, atmosphere) and CO2 (top-right), SUIT INTEGRITY (bottom). On outdoors where the air is not breathable, off aboard the ship and in stations, `H` toggles. Minimap/scanner move below the pods and the hotbar lifts above the suit pod while it is up.
+- Readings are display-only for now: O2/N2 drain slowly outside and refill aboard, CO2 rises with sprinting, suit integrity stays 100% (no damage system yet). Not saved.
+
+### Sol terrain surfaces (2308231)
+- CC0 4K PBR sets (ambientCG / TextureCan, copied from Genesis' `Terrain_HiRes_4K`), regraded to Mars rust and Moon grey at 2048 px with URP masks (AO, height, smoothness): `Art/Terrain/SolPBR`. Licences in `Data/Terrain/SOURCES.md`.
+- `Tools/Xenoarch/Terrain/Apply Sol PBR Surface Layers`: slot 0 regolith, rock on slopes (20-34 deg), Mars cracked-crust patches, PBR dig-wall soil, then Digger's own Sync & Refresh. First application only; re-running keeps your painting. TerrainLayer assets in `Data/Terrain/Layers` are created once and never overwritten.
+- Editing: the terrains are normal Unity Terrains with TerrainData and TerrainLayer assets in `Data/Terrain`; no runtime or setup code writes them (the Phase 1C setup only builds a terrain when none exists). After changing layers, textures or heights, run Digger's sync: select the Digger Master and press "Sync with terrain(s) & Refresh", or `Tools/Xenoarch/Terrain/Resync Digger (open scenes)`, then save the scene.
+- Applied this pass: Mars [0 TL_Mars_Regolith, 1 Mars_Soil (dig walls, unchanged index), 2 TL_Mars_Rock, 3 TL_Mars_CrackedCrust]; Moon [0 TL_Moon_Regolith, 1 Moon_Soil, 2 TL_Moon_Rock]. Digger synced (its sync re-imports its URP shaders and logs "Shader Unsupported ... All subshaders removed" import warnings for Digger's own shaders).
+- Note: the new texture import rule (first import only, SolPBR folder) made Unity re-import project textures once after the deploy (several minutes).
+
 ## 2026-11-26 - Loading/shuttle fixes, space visuals, FTL tunnel (UNTESTED)
 
 Nothing here has been run in Play Mode or tested. It compiles cleanly in the Editor, with no shader import errors.
