@@ -28,7 +28,7 @@ namespace DMI.Xenoarch.Exploration
         VisualElement _panel, _pulse;
         Label _text;
         AudioSource _audio;
-        AudioClip _beep;
+        AudioClip _beep, _lock;
         int _pulseCount;
 
         [Header("Direction indicator")]
@@ -99,42 +99,56 @@ namespace DMI.Xenoarch.Exploration
 
             var x = s.Exploration;
             string scene = SceneManager.GetActiveScene().name;
+            ScanTriangulation.ResetIfSceneChanged(scene);
             Vector3 me = transform.position;
-            float range = ScannerStats.HandheldRange();
+            float range = ScannerStats.HandheldRange(), maxDepth = ScannerStats.HandheldMaxDepth();
             ArchaeologicalSiteDefinition best = null; float bestScore = 0f, bestDist = 0f;
             string cacheLine = CacheReading(me, range);
             foreach (var site in x.SitesInScene(scene))
             {
                 Vector3 flat = site.position - me; flat.y = 0f;
                 float dist = flat.magnitude;
-                if (dist > range + site.radius || site.depth > d.maxDepth) continue;
-                float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (range + site.radius))) * (1f - 0.5f * site.depth / Mathf.Max(0.1f, d.maxDepth));
+                if (dist > range + site.radius || site.depth > maxDepth) continue;
+                if (!string.IsNullOrEmpty(site.gateFact) && x.Gate != null && !x.Gate(site.gateFact)) continue; // chain-gated sites stay hidden
+                float score = site.signalStrength * (1f - Mathf.Clamp01(dist / (range + site.radius))) * (1f - 0.5f * site.depth / Mathf.Max(0.1f, maxDepth));
                 if (score > bestScore) { best = site; bestScore = score; bestDist = dist; }
             }
 
             if (best == null)
             {
-                SetText(cacheLine ?? $"No signal within {range:0} m (max depth {d.maxDepth:0.#} m).");
+                SetText(cacheLine ?? $"No signal within {range:0} m (max depth {maxDepth:0.#} m).");
                 Beep(cacheLine != null ? 1.8f : 0.6f, cacheLine != null ? 2 : 1);
                 return;
             }
 
+            // Triangulation: distinct scan positions (and the angle between them) tighten every estimate.
+            bool wasPinned = x.Site(best.Id).revealLevel >= (int)SiteRevealLevel.Pinpointed;
+            var fix = ScanTriangulation.Observe(best.Id, me, best.position);
             var rng = new System.Random(best.seed ^ (_pulseCount * 7919));
-            float err = (1f - d.accuracy);
-            float distShown = Mathf.Max(0f, bestDist * (1f + err * ((float)rng.NextDouble() * 2f - 1f) * 0.5f));
+            float err = (1f - ScannerStats.HandheldAccuracy()) * ScanTriangulation.ErrorScale(fix.quality);
+            float distErr = bestDist * err * 0.5f;
+            float distShown = Mathf.Max(0f, bestDist + distErr * ((float)rng.NextDouble() * 2f - 1f));
             Vector3 to = best.position - me; to.y = 0f;
             float bearing = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + err * ((float)rng.NextDouble() * 2f - 1f) * 40f;
             float rel = Mathf.DeltaAngle(transform.eulerAngles.y, bearing);
-            float depthShown = best.depth * (1f + err * ((float)rng.NextDouble() * 2f - 1f) * 0.4f);
+            float depthErr = best.depth * err * 0.4f;
+            float depthShown = best.depth + depthErr * ((float)rng.NextDouble() * 2f - 1f);
 
-            bool pin = bestDist <= d.pinpointRadius + best.radius * 0.25f;
+            bool close = bestDist <= d.pinpointRadius + best.radius * 0.25f;
+            bool triangulated = fix.quality >= ScanTriangulation.PinpointFix;
+            bool pin = close || triangulated;
             x.Reveal(best.Id, pin ? (int)SiteRevealLevel.Pinpointed : (int)SiteRevealLevel.SurfaceSignal);
             if (pin) { SiteMarkerDirector.Instance?.Refresh(); SiteMarkerDirector.Instance?.Ping(best.Id); }
 
-            SetText((pin
-                ? $"PINPOINTED: {best.displayName}\nDepth ~{depthShown:0.0} m. Site marked."
-                : $"Signal {Mathf.RoundToInt(bestScore * 100f)}%   ~{distShown:0} m {Direction(rel)}\nDepth ~{depthShown:0.0} m") + (cacheLine != null ? "\n" + cacheLine : ""));
-            Beep(1f + bestScore * 1.5f, pin ? 3 : 1 + Mathf.RoundToInt(bestScore * 3f));
+            string fixLine = $"Fix {Mathf.RoundToInt(fix.quality * 100f)}%  {ScanTriangulation.Advice(fix)}";
+            string body = pin
+                ? $"PINPOINTED{(triangulated && !close ? " (triangulated)" : "")}: {best.displayName}\n~{distShown:0} m {Direction(rel)}   depth {depthShown:0.0} m ±{Mathf.Max(0.1f, depthErr):0.0}\n{(wasPinned ? "Site already marked." : "Site marked.")}"
+                : $"Signal {Mathf.RoundToInt(bestScore * 100f)}%   ~{distShown:0} m ±{Mathf.Max(1f, distErr):0} {Direction(rel)}\nDepth ~{depthShown:0.0} m ±{Mathf.Max(0.1f, depthErr):0.0}\n{fixLine}";
+            SetText(body + (cacheLine != null ? "\n" + cacheLine : ""));
+            if (_pulse != null) _pulse.style.borderTopColor = _pulse.style.borderBottomColor = _pulse.style.borderLeftColor = _pulse.style.borderRightColor = pin ? XenoarchPalette.Bar : XenoarchPalette.Highlight;
+            // Audio: pitch rises with signal and fix; a pinpoint lock plays a quick rising triple.
+            if (pin && !wasPinned && _audio != null) { _audio.pitch = 1f; _audio.PlayOneShot(_lock ??= MakeLock(), 0.9f); }
+            else Beep(1f + bestScore * 1.2f + fix.quality * 0.6f, pin ? 2 : 1 + Mathf.RoundToInt(bestScore * 3f));
         }
 
         /// <summary>Random valuable caches: a pulse reveals the nearest uncollected cache within the scan radius (marked
@@ -206,7 +220,7 @@ namespace DMI.Xenoarch.Exploration
             BuildIndicator(fill);
             var title = new Label("SURFACE SCANNER"); title.AddToClassList("xa-scan__title"); _panel.Add(title);
             _text = new Label(); _text.AddToClassList("xa-scan__text"); _panel.Add(_text);
-            var hint = new Label("LMB/RT pulse   1/D-pad up holster"); hint.AddToClassList("xa-hint"); _panel.Add(hint);
+            var hint = new Label("LMB/RT pulse   scan from different spots to triangulate   1/D-pad up holster"); hint.AddToClassList("xa-hint"); _panel.Add(hint);
             XenoarchUI.Show(_panel, false);
         }
 
@@ -277,7 +291,7 @@ namespace DMI.Xenoarch.Exploration
 
             var cam = Camera.main; float yaw = cam != null ? cam.transform.eulerAngles.y : transform.eulerAngles.y;
             var to = targetPos - transform.position;
-            float err = 1f - d.accuracy;
+            float err = (1f - ScannerStats.HandheldAccuracy()) * (cache ? 1f : ScanTriangulation.ErrorScale(ScanTriangulation.Quality(site.Id)));
             float wobble = (Mathf.PerlinNoise(Time.time * 0.6f, targetSeed * 0.013f) * 2f - 1f) * err * 35f; // "general direction"
             float rel = Mathf.DeltaAngle(yaw, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + wobble);
             _dirAngle = _dirHasAngle ? Mathf.LerpAngle(_dirAngle, rel, 1f - Mathf.Exp(-Time.deltaTime * 8f)) : rel; _dirHasAngle = true;
@@ -291,6 +305,17 @@ namespace DMI.Xenoarch.Exploration
             float shown = Mathf.Max(5f, Mathf.Round(dist * (1f + err * 0.3f) / 5f) * 5f);
             _dirLabel.text = onSite ? (cache ? "DIG HERE" : "ON SITE") : $"{(cache ? "CACHE" : "SITE")} ~{shown:0} m";
             _dirLabel.style.opacity = onSite ? 1f : Mathf.Lerp(0.6f, 1f, a);
+        }
+
+        /// <summary>Pinpoint lock: three quick rising tones.</summary>
+        static AudioClip MakeLock()
+        {
+            const int rate = 22050; int seg = rate / 14, n = seg * 3;
+            var data = new float[n]; float[] f = { 990f, 1320f, 1760f };
+            for (int i = 0; i < n; i++) { int k = i / seg; float t = (i % seg) / (float)rate; data[i] = Mathf.Sin(2f * Mathf.PI * f[k] * t) * Mathf.Exp(-t * 30f) * 0.55f; }
+            var clip = AudioClip.Create("ScannerLock", n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
 
         static AudioClip MakeBeep()

@@ -61,6 +61,7 @@ namespace DMI.Xenoarch.Excavation
         public int index, x, y, z, footprint = 1, height = 1;
         public float fragility = 0.5f, condition = 1f;
         public bool recovered;
+
     }
 
     public struct StrokeResult
@@ -71,6 +72,11 @@ namespace DMI.Xenoarch.Excavation
         public SoilLayer layer;
         public float damageDealt;
         public GridArtifact damaged;
+        /// <summary>A crude stroke cut right above a still-hidden find (jarring it) or within two cells of it (warning).</summary>
+        public GridArtifact hiddenBelow;
+        public bool jarred;
+        /// <summary>Finds that became visible with this stroke (first glimpse).</summary>
+        public List<GridArtifact> emerged;
         public List<Vector3Int> cut;    // cells cut by this stroke (drives Digger)
     }
 
@@ -229,11 +235,30 @@ namespace DMI.Xenoarch.Excavation
                             hit.condition = Mathf.Max(0.05f, hit.condition - dmg);
                             r.damageDealt += dmg; r.damaged = hit;
                         }
+                        // Careless digging: a crude tool cutting just above a find that is still hidden jars it (15% of
+                        // the visible-cut damage); one cell further up only warns. Fine tools are always safe.
+                        if (hit == null && tool.crude && tool.damage > 0f)
+                        {
+                            var below1 = y + 1 < ny ? ArtifactAt(x, y + 1, z) : null;
+                            var below2 = below1 == null && y + 2 < ny ? ArtifactAt(x, y + 2, z) : null;
+                            if (below1 != null && !visibleBefore.Contains(below1))
+                            {
+                                float dmg = 0.15f * tool.damage * below1.fragility * take;
+                                below1.condition = Mathf.Max(0.05f, below1.condition - dmg);
+                                r.damageDealt += dmg; r.damaged = below1; r.hiddenBelow = below1; r.jarred = true;
+                            }
+                            else if (below2 != null && !visibleBefore.Contains(below2) && r.hiddenBelow == null) r.hiddenBelow = below2;
+                        }
                         if (hit != null) break;      // never cut through a find in one stroke
                         if (fill[i] > 0) break;      // cell not finished: stop here
                     }
                 }
-            if (r.accepted) strokes++;
+            if (r.accepted)
+            {
+                strokes++;
+                foreach (var a in artifacts)
+                    if (!a.recovered && !visibleBefore.Contains(a) && Exposure(a) > 0.001f) (r.emerged ??= new List<GridArtifact>()).Add(a);
+            }
             return r;
         }
 

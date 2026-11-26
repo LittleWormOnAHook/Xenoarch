@@ -744,12 +744,12 @@ namespace DMI.Xenoarch.EditorTools
             var g3 = ExcavationGrid.ForSite(3f, 1.2f, 0.25f);
             var a3 = new GridArtifact { index = 0, x = 10, z = 10, y = 1, fragility = 1f, condition = 0.9f };
             g3.artifacts.Add(a3);
-            g3.Stroke(lx, lz, g3.TopDepth(10, 10), DigTools.Shovel);                                // clears layer 0 (dust)
-            float e3 = g3.Exposure(a3);
+            var r3a = g3.Stroke(lx, lz, g3.TopDepth(10, 10), DigTools.Shovel);                      // clears layer 0 (dust) right above the find: jars it lightly
+            float e3 = g3.Exposure(a3), jarred = a3.condition;
             var r3 = g3.Stroke(lx, lz, g3.TopDepth(10, 10), DigTools.Shovel);                       // first cut into the hidden find's cell
-            bool hiddenSafe = e3 == 0f && r3.accepted && Mathf.Approximately(a3.condition, 0.9f) && g3.Exposure(a3) > 0f;
+            bool hiddenLight = e3 == 0f && r3a.jarred && jarred < 0.9f && jarred >= 0.8f && r3.accepted && Mathf.Approximately(a3.condition, jarred) && g3.Exposure(a3) > 0f;
             g3.Stroke(lx, lz, g3.TopDepth(10, 10), DigTools.Shovel);                               // now visible: crude tool damages
-            check(hiddenSafe && a3.condition < 0.9f, $"1C dig: no damage while the find is hidden, shovel damages once it shows (condition {a3.condition:P0})");
+            check(hiddenLight && a3.condition < jarred, $"1C dig: a shovel right above a hidden find only jars it ({jarred:P0}), and damages it once it shows (condition {a3.condition:P0})");
             // Multi-cell find: one cleared column shows part of it
             var g4 = ExcavationGrid.ForSite(3f, 1.2f, 0.25f);
             var a4 = new GridArtifact { index = 0, x = 10, z = 10, y = 1, footprint = 2, height = 2, fragility = 0.5f, condition = 0.9f };

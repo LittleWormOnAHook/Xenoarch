@@ -106,10 +106,19 @@ namespace DMI.Xenoarch.Excavation
         {
             float e = Exposure;
             string name = Definition != null ? Definition.unidentifiedName : "object";
-            return e >= SafeExposure ? $"Recover {name}" : $"Pry out {name} ({e:P0} exposed, may damage it)";
+            if (e >= SafeExposure) return $"Recover {name} (condition {Grid.condition:P0})";
+            return $"Pry out {name} ({e:P0} exposed, about -{PryLoss(e):P0} condition; brush to {SafeExposure:P0} for a clean lift)";
         }
 
-        public float GetHoldDuration(in InteractionContext c) => 1.2f;
+        /// <summary>Condition lost by prying a find out before it is safely exposed (scaled by fragility).</summary>
+        float PryLoss(float e) => Definition == null || e >= SafeExposure ? 0f : 0.25f * Definition.fragility * (SafeExposure - e) / (SafeExposure - MinExposure);
+
+        /// <summary>Deliberate recovery: a clean lift takes 1.2 s; prying a half-buried find takes up to 2.5 s.</summary>
+        public float GetHoldDuration(in InteractionContext c)
+        {
+            float e = Exposure;
+            return 1.2f + 1.3f * Mathf.Clamp01((SafeExposure - e) / (SafeExposure - MinExposure));
+        }
 
         public bool TryInteract(in InteractionContext c)
         {
@@ -119,12 +128,13 @@ namespace DMI.Xenoarch.Excavation
             if (e < MinExposure) return false;
             if (s.Inventory.FreeSlots <= 0) { Toast.Show("Inventory full."); return false; }
             float cond = Grid.condition;
-            if (e < SafeExposure) cond = Mathf.Max(0.05f, cond - 0.25f * Definition.fragility * (SafeExposure - e) / (SafeExposure - MinExposure));
+            if (e < SafeExposure) cond = Mathf.Max(0.05f, cond - PryLoss(e));
             Grid.condition = cond;
             var inst = s.Artifacts.Recover(Definition, cond, Site.Definition.Id, Site.Definition.bodyId);
             if (inst == null || !s.Inventory.AddInstance(Definition.Id, inst.instanceId)) { Debug.LogWarning("[Xenoarch] Recovery failed (inventory)"); return false; }
             Site.OnRecovered(this, inst.instanceId);
-            Toast.Show($"Recovered: {Definition.unidentifiedName} (condition {cond:P0}). Research it in the ship's lab.");
+            string quality = cond >= 0.9f ? "pristine" : cond >= 0.7f ? "good" : cond >= 0.4f ? "worn" : "badly damaged";
+            Toast.Show($"RECOVERED: {Definition.unidentifiedName} ({quality}, condition {cond:P0}). Research it in the ship's lab.", 5f);
             Debug.Log($"[Xenoarch] Recovered {Definition.Id} as {inst.instanceId} at {e:P0} exposure, condition {cond:F2}");
             Destroy(gameObject);
             return true;

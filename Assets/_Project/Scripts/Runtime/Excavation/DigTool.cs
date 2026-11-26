@@ -117,13 +117,20 @@ namespace DMI.Xenoarch.Excavation
                     _audio.PlayOneShot(_scrape);
                     if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
                     StrataFinds(site, r);
-                    if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Switch to the precision tool (3) or brush (4).");
+                    if (r.emerged != null)
+                    {
+                        Toast.Show("Something is emerging from the soil! Switch to the precision tool (3) or brush (4).", 4f);
+                        _audio.pitch = 1.6f; _audio.PlayOneShot(_clunk, 0.7f);
+                    }
+                    if (r.jarred) Flash($"The {tool.name.ToLowerInvariant()} jarred something buried just below! Condition {r.damaged.condition:P0}. Go gently: precision tool (3) or brush (4).");
+                    else if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Switch to the precision tool (3) or brush (4).");
+                    else if (r.hiddenBelow != null && tool.crude) Flash("The soil feels different here: something solid below. Slow down with the precision tool (3).");
                 }
                 else if (r.refused)
                 {
                     refusedHere = true;
                     _audio.PlayOneShot(_clunk);
-                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {tool.name.ToLowerInvariant()} ({r.layer.label}). {(r.layer.hardness > 2f ? "Use the drill." : "Try the precision tool or drill.")}");
+                    Flash(r.material == SoilMaterial.Bedrock ? "Bedrock: the site floor. Nothing below." : $"Too hard for the {tool.name.ToLowerInvariant()} ({r.layer.label}, hardness {r.layer.hardness:0.#}). {ToolsFor(r.layer.hardness)}");
                 }
             }
             if (_ring != null)
@@ -187,6 +194,21 @@ namespace DMI.Xenoarch.Excavation
             }
         }
 
+        /// <summary>Which tools can cut this hardness, split into owned and not yet owned (crafting hint).</summary>
+        static string ToolsFor(float hardness)
+        {
+            string owned = null, missing = null;
+            for (int i = 0; i < DigTools.All.Length; i++)
+            {
+                var t = DigTools.All[i];
+                if (t.maxHardness < hardness) continue;
+                string n = $"{t.name.ToLowerInvariant()} ({i + 2})";
+                if (Has(t.itemId)) owned = owned == null ? n : owned + " or " + n; else missing = missing == null ? t.name.ToLowerInvariant() : missing + ", " + t.name.ToLowerInvariant();
+            }
+            if (owned != null) return $"Use the {owned}.";
+            return missing != null ? $"Needs the {missing} (craft it from the inventory, I)." : "No tool can cut this.";
+        }
+
         void Flash(string text) { _flash = text; _flashUntil = Time.time + 2.5f; }
 
         public static string Label(SoilMaterial m) => m switch { SoilMaterial.Dust => "surface dust", SoilMaterial.Loose => "loose regolith", SoilMaterial.Compacted => "compacted layer", SoilMaterial.Ice => "ice", SoilMaterial.Rock => "rock", _ => "bedrock" };
@@ -194,7 +216,7 @@ namespace DMI.Xenoarch.Excavation
         void UpdateHud(ExcavationSite site, RaycastHit hit)
         {
             if (_line1 == null) return;
-            string l1 = $"{Current.name}   [hold LMB to dig]   2 shovel  3 precision  4 brush  5 drill";
+            string l1 = $"{Current.name}   [hold LMB to dig]   1 scanner  {ToolKeys()}";
             string l2;
             if (site == null) l2 = "Aim at a dig site within 3 m.";
             else
@@ -211,10 +233,34 @@ namespace DMI.Xenoarch.Excavation
                     float d = Vector3.Distance(site.CellCentre(a.x, a.y, a.z), hit.point);
                     if (d < best && site.Exposure(a) > 0.01f) { best = d; near = a; }
                 }
-                if (near != null) l2 += $"   |   find {site.Exposure(near):P0} exposed, condition {near.condition:P0}";
+                if (near != null)
+                {
+                    float e = site.Exposure(near);
+                    string state = e >= BuriedArtifact.SafeExposure ? "READY: hold E to recover"
+                        : e >= BuriedArtifact.MinExposure ? $"can pry out (E), safe at {BuriedArtifact.SafeExposure:P0}"
+                        : $"recoverable at {BuriedArtifact.MinExposure:P0}";
+                    l2 += $"   |   find {Bar(e)} {e:P0} exposed, condition {near.condition:P0}, {state}";
+                }
             }
             if (_flash != null && Time.time < _flashUntil) l2 = _flash;
             _line1.text = l1; _line2.text = l2;
+        }
+
+        /// <summary>Tool keys; tools not in the inventory are marked "(none)".</summary>
+        static string ToolKeys()
+        {
+            var sb = new System.Text.StringBuilder();
+            string[] shortNames = { "shovel", "precision", "brush", "drill" };
+            for (int i = 0; i < DigTools.All.Length; i++)
+                sb.Append($"{i + 2} {shortNames[Mathf.Min(i, shortNames.Length - 1)]}{(Has(DigTools.All[i].itemId) ? "" : " (none)")}  ");
+            return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>Ten-step text progress bar.</summary>
+        static string Bar(float f)
+        {
+            int n = Mathf.Clamp(Mathf.RoundToInt(f * 10f), 0, 10);
+            return "[" + new string('|', n) + new string('.', 10 - n) + "]";
         }
 
         void BuildUi()
