@@ -37,7 +37,27 @@ namespace DMI.Xenoarch.Exploration
 
         void Land(Scene scene, bool arriving)
         {
-            Shuttle = null; _busy = false;
+            // Never leave a half-built (inactive) shuttle or a stuck loading gate behind if anything below throws.
+            try { LandCore(scene, arriving); }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[Xenoarch] Shuttle landing failed: {e}");
+                _busy = false;
+                if (_building != null)
+                {
+                    _building.SetActive(true);
+                    Shuttle = _building;
+                    StartCoroutine(Settle(_building, LandingZonePicker.ForTerrain(_terrain), arriving));
+                }
+            }
+            _building = null;
+        }
+
+        GameObject _building;
+
+        void LandCore(Scene scene, bool arriving)
+        {
+            Shuttle = null; _busy = false; _building = null;
             _landedOnce = true;
             var session = XenoarchRuntime.Session;
             if (session == null || !scene.IsValid()) return;
@@ -62,6 +82,7 @@ namespace DMI.Xenoarch.Exploration
                 holder = new GameObject("Shuttle (landed)");
                 SceneManager.MoveGameObjectToScene(holder, scene);
                 holder.SetActive(false);
+                _building = holder; _terrain = terrain;
                 var inst = Instantiate(def.shuttlePrefab, holder.transform, false);
                 inst.name = def.shuttlePrefab.name;
                 // Instance-only fix: the vendor model has convex hull colliders that Unity can't build fully ("partial
@@ -190,6 +211,52 @@ namespace DMI.Xenoarch.Exploration
             while (ExcavationSite.BusyStatus() != null && t < 20f) { t += Time.unscaledDeltaTime; yield return null; }
             if (holder != null) { EnsureNearPlayer(holder, height); GroundOnGear(holder.transform, height); }
             _busy = false;
+            if (holder != null) LogPlaced(holder, "after load");
+            // Watchdog: once the loading screen is gone, check the shuttle is still there, visible, grounded and near the
+            // player (a late player move, a destroyed or disabled holder); repair and log what was wrong.
+            t = 0f;
+            while (SceneLoader.Busy && t < 240f) { t += Time.unscaledDeltaTime; yield return null; }
+            for (int check = 0; check < 3; check++)
+            {
+                yield return new WaitForSecondsRealtime(check == 0 ? 0.5f : 3f);
+                if (!_scene.IsValid() || !_scene.isLoaded) yield break;
+                Verify(height);
+            }
+        }
+
+        /// <summary>Repairs the landed shuttle if it vanished, was disabled, sank or is far from the player.</summary>
+        void Verify(LandingZonePicker.HeightFn height)
+        {
+            var holder = Shuttle;
+            if (holder == null)
+            {
+                Debug.LogWarning("[Xenoarch] Shuttle watchdog: the landed shuttle was destroyed; landing it again");
+                Land(_scene, false);
+                return;
+            }
+            string fixedWhat = null;
+            if (!holder.activeSelf) { holder.SetActive(true); fixedWhat = "re-enabled"; }
+            int shown = 0;
+            foreach (var r in holder.GetComponentsInChildren<Renderer>(true)) if (r.enabled && r.gameObject.activeInHierarchy) shown++;
+            if (shown == 0) Debug.LogWarning("[Xenoarch] Shuttle watchdog: the shuttle has no visible renderers (prefab/materials?)");
+            var rig = PlayerRigLocator.Find();
+            if (rig != null)
+            {
+                Vector3 p = rig.Root.position, s = holder.transform.position;
+                if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(s.x, s.z)) > maxPlayerDistance) { EnsureNearPlayer(holder, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "moved to the player"; }
+            }
+            if (height(holder.transform.position.x, holder.transform.position.z, out float gy, out _) && holder.transform.position.y < gy + _groundOffset - 1.5f)
+            { GroundOnGear(holder.transform, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "re-grounded"; }
+            if (fixedWhat != null) LogPlaced(holder, "watchdog: " + fixedWhat);
+        }
+
+        void LogPlaced(GameObject holder, string when)
+        {
+            var rig = PlayerRigLocator.Find();
+            var pos = holder.transform.position;
+            string pl = rig != null ? $", player at {rig.Root.position:F1} ({Vector3.Distance(rig.Root.position, pos):0} m away)" : ", no player";
+            int rs = 0; foreach (var r in holder.GetComponentsInChildren<Renderer>(true)) if (r.enabled) rs++;
+            Debug.Log($"[Xenoarch] Shuttle placed at {pos:F1} yaw {holder.transform.eulerAngles.y:0} in {holder.scene.name} ({when}; active={holder.activeInHierarchy}, {rs} renderers){pl}");
         }
 
         /// <summary>The landed shuttle must always be beside the player, whatever brought them here (shuttle descent,
