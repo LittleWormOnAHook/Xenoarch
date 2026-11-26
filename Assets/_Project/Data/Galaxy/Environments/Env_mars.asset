@@ -19,7 +19,8 @@ MonoBehaviour:
   breathable: 0
   surfaceTemperatureC: -60
   applyLighting: 1
-  ambientColor: {r: 0.45, g: 0.31, b: 0.24, a: 1}
+  ambientColor: {r: 0.55, g: 0.4, b: 0.31, a: 1}
+  sunShadowStrength: 0.7
   fog: 1
   fogColor: {r: 0.72, g: 0.5, b: 0.36, a: 1}
   fogDensity: 0.004

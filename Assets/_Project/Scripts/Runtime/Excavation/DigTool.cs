@@ -45,6 +45,7 @@ namespace DMI.Xenoarch.Excavation
         AudioSource _audio;
         AudioClip _scrape, _clunk;
         string _flash;
+        float _digUntil; // "Digging:" while strokes keep landing
 
         void Awake()
         {
@@ -134,6 +135,7 @@ namespace DMI.Xenoarch.Excavation
                 var r = site.Stroke(hit.point, tool);
                 if (r.accepted)
                 {
+                    _digUntil = Time.time + 0.6f;
                     _audio.pitch = Random.Range(0.85f, 1.15f);
                     _audio.PlayOneShot(_scrape);
                     if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
@@ -248,19 +250,20 @@ namespace DMI.Xenoarch.Excavation
             if (site == null) l2 = "Aim at a dig site within 3 m.";
             else
             {
-                var l = site.transform.InverseTransformPoint(hit.point);
-                int x = Mathf.Clamp(Mathf.FloorToInt(l.x / site.Grid.cell), 0, site.Grid.nx - 1), z = Mathf.Clamp(Mathf.FloorToInt(l.z / site.Grid.cell), 0, site.Grid.nz - 1);
-                int top = site.Grid.TopLayer(x, z);
-                string band = top >= site.Grid.ny ? "bedrock" : site.Grid.LayerAt(top).label;
-                l2 = $"{site.Definition.displayName}: {band}, depth {site.Grid.TopDepth(x, z):0.00} m";
-                if (top < site.Grid.ny)
+                // Material at the actual aim depth (a lump above the dug floor reads as the band it sits in).
+                var lay = site.LayerAtPoint(hit.point, out float depth, out bool leftover);
+                var cur = Current;
+                string verb = Time.time < _digUntil ? "Digging" : "Aiming";
+                string toolState;
+                if (lay.kind == SoilMaterial.Bedrock) toolState = "site floor reached";
+                else if (!DigTools.CanCut(lay, cur)) toolState = $"needs a tool rated {lay.minToolRating:0.#}+";
+                else if (lay.hardness > cur.maxHardness) toolState = $"slow with the {cur.shortName ?? cur.name}";
+                else toolState = "tool OK";
+                l2 = $"{verb}: {lay.label}  (hardness {lay.hardness:0.#}, {toolState})   depth {depth:0.00} m{(leftover ? "   leftover lump: levelling it" : "")}   |   {site.Definition.displayName}";
+                if (lay.kind != SoilMaterial.Bedrock && (!DigTools.CanCut(lay, cur) || lay.hardness > cur.maxHardness))
                 {
-                    var lay = site.Grid.LayerAt(top);
-                    var cur = Current;
-                    if (lay.kind == SoilMaterial.Bedrock) l2 += "   |   BEDROCK: site floor reached";
-                    else if (!DigTools.CanCut(lay, cur)) l2 += $"   |   {lay.label} needs a tool rated {lay.minToolRating:0.#}+. {ToolsFor(lay.minToolRating)}";
-                    else if (lay.hardness > cur.maxHardness)
-                        l2 += $"   |   HARD {lay.label} (hardness {lay.hardness:0.#}): slow going with the {cur.shortName ?? cur.name}. {ToolsFor(lay.hardness)}";
+                    string more = ToolsFor(!DigTools.CanCut(lay, cur) ? lay.minToolRating : lay.hardness);
+                    if (!string.IsNullOrEmpty(more)) l2 += "   " + more;
                 }
                 GridArtifact near = null; float best = 1.2f;
                 foreach (var a in site.Grid.artifacts)

@@ -11,6 +11,8 @@ namespace DMI.Xenoarch.UI
     {
         /// <summary>Safe margin from every screen edge.</summary>
         public const float Margin = 24f;
+        /// <summary>Top-right column (minimap, scanner) margin from the top and right edges (t118u).</summary>
+        public const float CornerMargin = 100f;
         /// <summary>Gap between stacked HUD panels.</summary>
         public const float Gap = 14f;
         /// <summary>Bottom edge (px from the top) of whatever occupies the top-right corner (the minimap), 0 = free.</summary>
@@ -20,7 +22,7 @@ namespace DMI.Xenoarch.UI
         /// <summary>Reference panel height (PanelSettings 1920x1080).</summary>
         public const float RefHeight = 1080f;
         /// <summary>Top of the top-right column (below the helmet pods when the visor is up).</summary>
-        public static float TopStart => Mathf.Max(Margin, TopInset * RefHeight);
+        public static float TopStart => Mathf.Max(CornerMargin, TopInset * RefHeight);
         /// <summary>Top for the next panel in the top-right column.</summary>
         public static float NextTopRight => TopRightBottom > 1f ? TopRightBottom + Gap : TopStart;
 

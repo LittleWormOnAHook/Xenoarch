@@ -76,7 +76,7 @@ namespace DMI.Xenoarch.Exploration
         {
             // Stack under the minimap (top-right column) instead of overlapping it.
             if (_panel != null && _panel.resolvedStyle.display == DisplayStyle.Flex)
-            { _panel.style.top = UI.HudLayout.NextTopRight; _panel.style.right = UI.HudLayout.Margin; }
+            { _panel.style.top = UI.HudLayout.NextTopRight; _panel.style.right = UI.HudLayout.CornerMargin; }
         }
 
         void Update()

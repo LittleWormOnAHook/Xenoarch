@@ -140,6 +140,9 @@ namespace DMI.Xenoarch.Galaxy
             {
                 RenderSettings.ambientMode = AmbientMode.Flat;
                 RenderSettings.ambientLight = env.ambientColor;
+                DynamicGI.UpdateEnvironment(); // refresh the ambient probe so the new flat ambient reaches lit (SH) shaders
+                foreach (var l in FindObjectsByType<Light>())
+                    if (l.type == LightType.Directional && l.shadows != LightShadows.None) l.shadowStrength = env.sunShadowStrength;
                 RenderSettings.fog = env.fog;
                 if (env.fog) { RenderSettings.fogMode = FogMode.ExponentialSquared; RenderSettings.fogColor = env.fogColor; RenderSettings.fogDensity = env.fogDensity; }
             }

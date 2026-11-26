@@ -120,6 +120,8 @@ namespace DMI.Xenoarch.Excavation
         /// <summary>Finds that became visible with this stroke (first glimpse).</summary>
         public List<GridArtifact> emerged;
         public List<Vector3Int> cut;    // cells cut by this stroke (drives Digger)
+        /// <summary>The stroke trimmed leftover dig-surface material above the grid floor (a lump/peak in the pit).</summary>
+        public bool leftover;
     }
 
     /// <summary>

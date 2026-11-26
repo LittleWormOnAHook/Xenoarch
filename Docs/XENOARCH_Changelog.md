@@ -1,4 +1,26 @@
-# Xenoarch Changelog
+﻿# Xenoarch Changelog
+
+## 2026-11-26 (night) - t115-t125: shader warm-up, preplaced landing zones, dig lumps, aim readout, pit lighting, minimap (UNTESTED)
+
+Nothing here has been run in Play Mode or tested. Everything compiles in the open Editor with no `_Project` CS errors.
+
+### Shader warm-up (462b93d)
+- Cause of the blue (cyan) flashes: the Editor's async compile was only requested for each material's own keywords; the variant actually drawn adds URP's scene keywords (shadows, fog, lights), so dig-site and spawned materials still compiled on first sight.
+- The loading screen now draws every tracked material once on tiny hidden quads in front of the real camera (scene lighting) and waits for those compiles (up to 25 s). Includes scene, Resources/prefab/Data dependencies (shuttle, caches, pickups, VFX), code-made materials (site markers, borders, flags, soil, artifacts, nodes, FTL, sun disc, dig ring decal).
+- Artifact and resource-node materials are shared per definition instead of one per spawn.
+- The build collection adds the URP global-keyword variants. Rebuild: `Tools/Xenoarch/Rendering/Rebuild Shader Warmup Cache` (or `Temp/xenoarch_shaderwarm.trigger`). Preloaded Shaders not used (the warm pass covers it without slowing every launch).
+- Dev: `XenoarchConfig.logShaderWarm` logs `[ShaderWarm]` lines for shaders compiling outside the loading screen.
+
+### Landing zones (f121e4d)
+- Log cause: the runtime-landed shuttle was placed at y -256.8 with the player at -23.6 (233 m underground) by the runtime terrain-height sample during load; gear offset (-1.54 m) and edit-time heights were correct. Also the prefab's bay script would have given the "fly to Mars" menu instead of "Board shuttle: return to ship".
+- `Tools/Xenoarch/Landing/Build Landing Zones` adds under each LandingZone marker a `LandingZone_<id>` with a preplaced Mark2Shuttle (grounded on its gear) and an `XA_Player Spawn (shuttle)`; `LandingZoneSet` turns on only the chosen zone. Additive and idempotent (never re-positions zones). Built in Mars and Moon (4 zones each). Runtime spawning is only a logged fallback (now grounded from real renderer bounds). Dev F7 summons the shuttle.
+- Mars: Dune Shrine, Canyon Relay and Base markers are ~3 m apart, so their three shuttles stack in the Editor (one shows in play). Not duplicates.
+
+### Digging, HUD, lighting (this commit)
+- Lumps/peaks in pits: the grid already counted that ground as dug, so aims more than ~3 cells above a column's floor were skipped and no tool did anything. Aims above the dug floor now trim the leftover where aimed (all tools; harder bands take smaller bites; never below the grid floor).
+- Dig HUD: `Aiming:` / `Digging:` with the band at the actual aim depth, hardness, and tool OK / slow / needs a tool rated N+, plus "leftover lump" when levelling.
+- Pit shadows: cause is the sun's directional shadow (full strength) into the pit lit only by flat ambient (Moon ambient was 0.03). SSAO is mild (0.4), not the cause. Now: `EnvironmentProfile.sunShadowStrength` (Mars 0.7, Moon 0.8), lighter ambient (Mars 0.55/0.40/0.31, Moon 0.10), ambient probe refreshed, and a shadowless pit fill light per dug site (`XenoarchConfig.pitFillIntensity`, 0 = off). Surface shadows stay.
+- Minimap top-right with 100 px margins (top and right); the scanner stacks under it; with the helmet visor up the column starts below the pods.
 
 ## 2026-11-26 (later) - t108-t111: digging, shuttle, maps, HUD, drag & drop, post, helmet, Sol terrain (UNTESTED)
 

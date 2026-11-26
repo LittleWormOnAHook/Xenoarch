@@ -16,6 +16,8 @@ namespace DMI.Xenoarch.Galaxy
         public float surfaceTemperatureC;
         public bool applyLighting = true;
         public Color ambientColor = new Color(0.25f, 0.25f, 0.28f);
+        [Tooltip("Shadow strength of the scene's directional (sun) lights here (1 = full black shadows). Lower keeps dug pits readable.")]
+        [Range(0f, 1f)] public float sunShadowStrength = 1f;
         public bool fog;
         public Color fogColor = Color.gray;
         [Min(0f)] public float fogDensity = 0.01f;

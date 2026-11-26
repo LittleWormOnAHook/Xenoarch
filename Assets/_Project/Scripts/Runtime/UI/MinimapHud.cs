@@ -52,7 +52,7 @@ namespace DMI.Xenoarch.UI
             if (_body == null) return;
 
             _frame = new VisualElement { pickingMode = PickingMode.Ignore };
-            _frame.style.position = Position.Absolute; _frame.style.right = HudLayout.Margin; _frame.style.top = HudLayout.Margin;
+            _frame.style.position = Position.Absolute; _frame.style.right = HudLayout.CornerMargin; _frame.style.top = HudLayout.CornerMargin;
             _frame.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDeep, 0.8f);
             _frame.style.paddingLeft = _frame.style.paddingRight = _frame.style.paddingTop = _frame.style.paddingBottom = 4;
             _title = new Label { pickingMode = PickingMode.Ignore };

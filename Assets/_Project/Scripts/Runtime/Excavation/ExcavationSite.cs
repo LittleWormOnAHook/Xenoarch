@@ -150,6 +150,7 @@ namespace DMI.Xenoarch.Excavation
                 Rebuild();
             }
             else if (restored) StartCoroutine(Replay());
+            if (restored) EnsurePitLight();
 
             foreach (var a in Grid.artifacts)
                 if (!a.recovered) _pieces.Add(BuriedArtifact.Spawn(this, a, arts.Definition(def.artifacts[a.index].artifactId)));
@@ -172,6 +173,14 @@ namespace DMI.Xenoarch.Excavation
         public StrokeResult Stroke(Vector3 worldHit, DigToolSpec tool)
         {
             var l = transform.InverseTransformPoint(worldHit);
+            // Aimed at dig-surface material standing above the grid floor (lumps and peaks left between Digger carves):
+            // the grid already counts that ground as dug, so its column stroke skipped it ("too far above the floor")
+            // and nothing happened with any tool. Trim the leftover where it is aimed instead.
+            if (_surface != null && LeftoverAt(l, out int lx, out int lz))
+            {
+                var r0 = LeftoverStroke(l, lx, lz, tool);
+                if (r0.accepted || r0.refused) { EnsurePitLight(); return r0; }
+            }
             // The Digger carve is at least CarveRadius wide, so the grid stroke covers the same footprint (otherwise the hole
             // looks dug where the grid still says "surface", and the next aim there reads depth 0).
             if (_surface != null) tool.radius = Mathf.Max(tool.radius, CarveRadius * 0.8f);
@@ -181,7 +190,86 @@ namespace DMI.Xenoarch.Excavation
             foreach (var p in _pieces) if (p != null) p.Refresh();
             _dirty = true; _saveAt = Time.unscaledTime + 1f;
             if (_surface != null && r.cut != null && r.cut.Count > 0) CarveStroke(r.cut, tool.radius);
+            EnsurePitLight();
             return r;
+        }
+
+        /// <summary>Leftover material is any aim this far (m) above its column's grid floor.</summary>
+        float LeftoverThreshold => Mathf.Max(Grid.cell * 0.6f, 0.12f);
+
+        bool LeftoverAt(Vector3 local, out int x, out int z)
+        {
+            x = Mathf.FloorToInt(local.x / Grid.cell); z = Mathf.FloorToInt(local.z / Grid.cell);
+            if (!Grid.InBounds(x, z)) return false;
+            if (Grid.TopDepth(x, z) < Grid.cell * 0.5f) return false;          // untouched column: normal digging
+            if (local.y > Grid.Surface(x, z) + 0.25f) return false;             // above the original ground (a rock, a find)
+            return local.y - Grid.FloorY(x, z) > LeftoverThreshold;
+        }
+
+        /// <summary>Layer at a depth below the column's original surface.</summary>
+        SoilLayer LayerAtDepth(float depth) => Grid.LayerAt(Mathf.Clamp(Mathf.FloorToInt(Mathf.Max(0f, depth) / Grid.cell), 0, Grid.ny - 1));
+
+        StrokeResult LeftoverStroke(Vector3 l, int x, int z, DigToolSpec tool)
+        {
+            var r = new StrokeResult { leftover = true };
+            var layer = LayerAtDepth(Grid.Surface(x, z) - l.y);
+            r.layer = layer; r.material = layer.kind;
+            if (!DigTools.CanCut(layer, tool)) { r.refused = true; r.needsBetterTool = true; return r; }
+            // Harder bands: smaller bites (never below one Digger voxel); the stroke rate already paces the tool.
+            float res = Mathf.Max(1f, DigTools.Resistance(layer.hardness, tool.maxHardness));
+            if (layer.hardness > tool.maxHardness) r.slowed = true;
+            float rad = Mathf.Max(CarveRadius, Mathf.Max(tool.radius, CarveRadius) / Mathf.Sqrt(res));
+            float floor = Grid.FloorY(x, z);
+            // Centre a little inside the surface at the aim, but never so low that the sphere cuts below the grid floor.
+            var c = new Vector3(l.x, Mathf.Max(l.y - rad * 0.35f, floor + rad * 0.95f), l.z);
+            QueueCarve(transform.TransformPoint(c), rad, layer.diggerTexture);
+            r.accepted = true;
+            return r;
+        }
+
+        /// <summary>What the tool is on: the band at the aimed depth (not the column's top cell), and whether it is a
+        /// leftover lump above the dug floor.</summary>
+        public SoilLayer LayerAtPoint(Vector3 world, out float depth, out bool leftover)
+        {
+            var l = transform.InverseTransformPoint(world);
+            int x = Mathf.Clamp(Mathf.FloorToInt(l.x / Grid.cell), 0, Grid.nx - 1), z = Mathf.Clamp(Mathf.FloorToInt(l.z / Grid.cell), 0, Grid.nz - 1);
+            leftover = _surface != null && LeftoverAt(l, out _, out _);
+            // Below the floor (Digger hole a bit deeper than the grid) reads as the column's current top band.
+            depth = Mathf.Max(0f, Grid.Surface(x, z) - l.y);
+            if (!leftover)
+            {
+                int top = Grid.TopLayer(x, z);
+                if (top >= Grid.ny) { depth = Grid.ny * Grid.cell; return SoilLayer.Bedrock; }
+                depth = Mathf.Max(depth, Grid.TopDepth(x, z));
+                return Grid.LayerAt(top);
+            }
+            return LayerAtDepth(depth);
+        }
+
+        Light _pitLight;
+        /// <summary>Shadowless fill light in a dug pit (t117u): the sun's shadow plus flat ambient left pit walls nearly black.</summary>
+        void EnsurePitLight()
+        {
+            var cfg = XenoarchRuntime.Session?.Config;
+            float k = cfg != null ? cfg.pitFillIntensity : 0.8f;
+            if (k <= 0f || Grid == null) return;
+            float maxDepth = 0f;
+            for (int x = 0; x < Grid.nx; x++) for (int z = 0; z < Grid.nz; z++) maxDepth = Mathf.Max(maxDepth, Grid.TopDepth(x, z));
+            if (maxDepth < 0.3f) return;
+            if (_pitLight == null)
+            {
+                var go = new GameObject("Pit Fill Light");
+                go.transform.SetParent(transform, false);
+                _pitLight = go.AddComponent<Light>();
+                _pitLight.type = LightType.Point; _pitLight.shadows = LightShadows.None;
+                var a = RenderSettings.ambientLight; float m = Mathf.Max(0.05f, Mathf.Max(a.r, Mathf.Max(a.g, a.b)));
+                _pitLight.color = Color.Lerp(Color.white, new Color(a.r / m, a.g / m, a.b / m), 0.5f);
+                _pitLight.renderMode = LightRenderMode.ForcePixel;
+            }
+            float surf = Grid.surface != null ? Grid.Surface(Grid.nx / 2, Grid.nz / 2) : 0f;
+            _pitLight.transform.localPosition = new Vector3(Grid.SizeX * 0.5f, surf - Mathf.Min(maxDepth * 0.4f, 1.2f), Grid.SizeZ * 0.5f);
+            _pitLight.range = Mathf.Max(Grid.SizeX, Grid.SizeZ) * 0.6f + maxDepth;
+            _pitLight.intensity = k;
         }
 
         /// <summary>Radius of one Digger carve (never below Digger's voxel size).</summary>
@@ -277,7 +365,7 @@ namespace DMI.Xenoarch.Excavation
                     while (!CarveColumn(x, z)) yield return null;
                     ops++;
                 }
-            _replaying = false;
+            _replaying = false; EnsurePitLight();
             Debug.Log($"[Xenoarch] Dig site {Definition.Id}: replayed {ops} carve op(s) into the terrain");
         }
 

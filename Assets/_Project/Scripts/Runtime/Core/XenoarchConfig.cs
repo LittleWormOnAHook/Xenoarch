@@ -61,6 +61,10 @@ namespace DMI.Xenoarch.Core
         public string saveFolderName = "Saves";
         public string quickSaveSlot = "quick";
 
+        [Header("Dig site lighting")]
+        [Tooltip("Shadowless fill light inside a dug pit (0 = off), so pit walls in the sun's shadow stay readable.")]
+        [Range(0f, 3f)] public float pitFillIntensity = 0.8f;
+
         [Header("Development")]
         [Tooltip("F5 quick save, F9 quick load in gameplay scenes.")]
         public bool enableDebugHotkeys = true;
