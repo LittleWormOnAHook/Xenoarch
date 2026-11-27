@@ -78,12 +78,17 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Economy.VendorDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.DiscoveryJournalWindow>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.ObjectiveHud>();
             gameObject.AddComponent<DMI.Xenoarch.Excavation.ChamberDirector>();
             gameObject.AddComponent<DMI.Xenoarch.World.RockScatterDirector>();
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
-                DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
-            _session.Discovery.JournalAdded += e => DMI.Xenoarch.UI.Toast.Show($"Journal: {e.text}", 8f);
-            _session.Recovery.Notice += msg => DMI.Xenoarch.UI.Toast.Show(msg, 6f);
+                _session.Notifications.Post(DMI.Xenoarch.Objectives.NoticeKind.Research,
+                    "research:" + (a != null ? a.instanceId : "") + ":" + op,
+                    $"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
+            _session.Discovery.JournalAdded += e =>
+                _session.Notifications.Post(DMI.Xenoarch.Objectives.NoticeKind.Discovery, "discovery:" + e.chainId + ":" + e.nodeId, "Journal: " + e.text, 8f);
+            _session.Recovery.Notice += msg =>
+                _session.Notifications.Post(DMI.Xenoarch.Objectives.NoticeKind.Recovery, "recovery:" + msg, msg, 6f);
             Debug.Log($"[Xenoarch] Runtime ready (save folder: {storage.Folder})");
         }
 

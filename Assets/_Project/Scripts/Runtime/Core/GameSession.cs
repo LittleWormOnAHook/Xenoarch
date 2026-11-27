@@ -2,6 +2,7 @@ using System;
 using DMI.Xenoarch.Galaxy;
 using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
+using DMI.Xenoarch.Objectives;
 using DMI.Xenoarch.Save;
 using DMI.Xenoarch.World;
 using UnityEngine;
@@ -171,9 +172,17 @@ namespace DMI.Xenoarch.Core
             };
             Economy.Changed += ApplyRankUnlocks;   // also after a load (restore raises Changed)
             Valuables.Collected += id => Economy.Award(eco.cacheCollected, "cache:" + id, "cache " + id);
+
+            Log = new CaptainsLogService(Saves) { Clock = () => PlaySeconds };
+            Notifications = new NotificationService(Log);
+            Objectives = new ObjectiveService(Discovery, this, Saves);
+            Objectives.Advanced += (id, title) => Notifications.Post(NoticeKind.Objective, "objective:" + id, "Objective: " + title, id != null && id.StartsWith("done:") ? 5f : 0f);
         }
 
         public DMI.Xenoarch.Economy.EconomyService Economy { get; private set; }
+        public ObjectiveService Objectives { get; private set; }
+        public CaptainsLogService Log { get; private set; }
+        public NotificationService Notifications { get; private set; }
 
         int _rankApplied = -1;
         /// <summary>Phase 1D: publishes notoriety.rank and every reached <see cref="DMI.Xenoarch.Economy.RankUnlock"/> (idempotent facts).</summary>

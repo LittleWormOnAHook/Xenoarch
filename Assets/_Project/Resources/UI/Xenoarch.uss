@@ -201,3 +201,30 @@
 .xa-detector__blip { -unity-background-scale-mode: scale-to-fit; }
 .xa-detector__signal { font-size: 15px; -unity-font-style: bold; color: var(--xa-highlight); letter-spacing: 1px; }
 .xa-detector__dist { font-size: 14px; color: var(--xa-text); margin-top: 2px; }
+
+/* Phase 2 M2: objective tracker HUD */
+.xa-obj {
+    position: absolute;
+    width: 360px;
+    padding: 10px 12px 8px 12px;
+    background-color: var(--xa-graphite);
+    border-left-width: 3px;
+    border-left-color: var(--xa-highlight);
+}
+.xa-obj__title { font-size: 14px; -unity-font-style: bold; color: var(--xa-heading); letter-spacing: 2px; margin-bottom: 4px; }
+.xa-obj__side { font-size: 13px; -unity-font-style: bold; color: var(--xa-heading); margin-top: 6px; margin-bottom: 2px; }
+.xa-obj__sub { font-size: 11px; -unity-font-style: bold; color: var(--xa-secondary-text); letter-spacing: 2px; margin-top: 8px; margin-bottom: 2px; }
+.xa-obj__row { flex-direction: row; align-items: flex-start; margin-bottom: 2px; }
+.xa-obj__mark { width: 14px; font-size: 14px; color: var(--xa-highlight); -unity-font-style: bold; flex-shrink: 0; }
+.xa-obj__mark--done { width: 14px; font-size: 14px; color: var(--xa-highlight); flex-shrink: 0; }
+.xa-obj__line { font-size: 14px; color: var(--xa-text); white-space: normal; flex-shrink: 1; }
+.xa-obj__line--done { font-size: 14px; color: var(--xa-secondary-text); white-space: normal; flex-shrink: 1; }
+.xa-obj__done { font-size: 13px; color: var(--xa-highlight); margin-bottom: 4px; }
+.xa-obj__hint { font-size: 13px; color: var(--xa-secondary-text); white-space: normal; margin-top: 8px; }
+.xa-obj__toggle {
+    margin-top: 6px; margin-bottom: 0; padding: 2px 8px; height: 22px;
+    font-size: 12px; color: var(--xa-secondary-text);
+    background-color: rgba(0,0,0,0);
+    border-width: 1px; border-color: var(--xa-secondary-soft);
+}
+.xa-obj__toggle:hover { color: var(--xa-heading); border-color: var(--xa-button); }

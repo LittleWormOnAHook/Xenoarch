@@ -3,6 +3,7 @@ using System.Linq;
 using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Discovery;
+using DMI.Xenoarch.Objectives;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -10,8 +11,8 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.UI
 {
     /// <summary>
-    /// Phase 1D discovery journal (J): Discoveries (chain progress + discovery log), Finds (every artifact recovered,
-    /// incl. sold / installed), Notes (collected datapad journals, opens the reader) and Standing (credits, notoriety
+    /// Phase 1D/M2 journal (J): Objectives, Discoveries (chain progress), Finds (every artifact recovered,
+    /// incl. sold / installed), Notes (collected datapad journals), Captain's Log (newest-first, player notes) and Standing (credits, notoriety
     /// rank ladder, recent deals). Read-only; pauses like the maps window; J / Esc closes.
     /// </summary>
     public sealed class DiscoveryJournalWindow : MonoBehaviour
@@ -48,7 +49,8 @@ namespace DMI.Xenoarch.UI
             var win = new VisualElement(); win.AddToClassList("xa-term");
             var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.alignItems = Align.Center;
             var title = new Label("JOURNAL"); title.AddToClassList("xa-title"); title.style.fontSize = 30; title.style.marginRight = 24; head.Add(title);
-            Tab(head, "Discoveries", "discoveries"); Tab(head, "Finds", "finds"); Tab(head, "Notes", "notes"); Tab(head, "Standing", "standing");
+            head.style.flexWrap = Wrap.Wrap;
+            Tab(head, "Objectives", "objectives"); Tab(head, "Discoveries", "discoveries"); Tab(head, "Finds", "finds"); Tab(head, "Notes", "notes"); Tab(head, "Log", "log"); Tab(head, "Standing", "standing");
             var hint = new Label("[J] / Esc close"); hint.AddToClassList("xa-hint"); hint.style.marginLeft = 20; head.Add(hint);
             win.Add(head);
             _body = new VisualElement(); _body.style.flexGrow = 1; _body.style.flexDirection = FlexDirection.Row; _body.style.marginTop = 10; _body.style.minHeight = 0;
@@ -73,7 +75,7 @@ namespace DMI.Xenoarch.UI
         void Tab(VisualElement head, string label, string id)
         {
             var b = new Button(() => { _tab = id; Render(); }) { text = label };
-            b.AddToClassList("xa-button"); b.style.width = 150; b.style.marginRight = 8;
+            b.AddToClassList("xa-button"); b.style.width = 118; b.style.marginRight = 6;
             head.Add(b);
         }
 
@@ -104,8 +106,10 @@ namespace DMI.Xenoarch.UI
             var s = XenoarchRuntime.Session; if (s == null) return;
             switch (_tab)
             {
+                case "objectives": RenderObjectives(s); break;
                 case "finds": RenderFinds(s); break;
                 case "notes": RenderNotes(s); break;
+                case "log": RenderLog(s); break;
                 case "standing": RenderStanding(s); break;
                 default: RenderDiscoveries(s); break;
             }
@@ -214,6 +218,73 @@ namespace DMI.Xenoarch.UI
                 string item = t.itemId != null && s.Items.TryGetItem(t.itemId, out var d) ? d.DisplayNameOrId : t.itemId;
                 T(deals, $"{t.kind} {t.count}x {item}: {(t.credits >= 0 ? "+" : "")}{t.credits} cr", "xa-term__dim");
             }
+        }
+
+        // ------------------------------------------------------------ Objectives (M2)
+        void RenderObjectives(GameSession s)
+        {
+            var o = s.Objectives;
+            if (o == null) { T(Col(), "Objectives are not available.", "xa-term__dim"); return; }
+            var col = Col(true);
+            T(col, "OBJECTIVES", "xa-term__h");
+            var hide = new Button(() => { o.HideOptional = !o.HideOptional; Render(); }) { text = o.HideOptional ? "Show optional objectives" : "Hide optional objectives" };
+            hide.AddToClassList("xa-term__btn"); hide.AddToClassList("xa-term__btn--ghost"); col.Add(hide);
+
+            foreach (var v in o.All())
+            {
+                if (v.optional && o.HideOptional && !v.complete && v.kind == ObjectiveKind.Side) continue;
+                string kind = v.kind == ObjectiveKind.Main ? "MAIN" : (v.optional ? "OPTIONAL" : "SIDE");
+                string status = v.complete ? "  -  complete" : "";
+                T(col, $"{kind}   {v.title}{status}", "xa-term__h");
+                if (!string.IsNullOrEmpty(v.subtitle)) T(col, v.subtitle, "xa-term__dim");
+                foreach (var l in v.lines)
+                {
+                    string text = l.label;
+                    if (!string.IsNullOrEmpty(l.progress)) text += "  (" + l.progress + ")";
+                    if (l.complete) StateRow(col, "ui-complete", "done", text, "xa-term__text");
+                    else StateRow(col, "arrowRight", "open", text, "xa-term__text");
+                }
+                if (!v.complete && !string.IsNullOrEmpty(v.Prompt)) T(col, "Hint: " + v.Prompt, "xa-term__dim");
+            }
+
+            var side = Col();
+            T(side, "TRACKER", "xa-term__h");
+            T(side, "The main objective is The Waystations expedition. Up to two optional objectives appear on the HUD unless hidden. Progress is read live from discoveries, inventory and recipes.", "xa-term__dim");
+        }
+
+        // ------------------------------------------------------------ Captain's Log (M2)
+        void RenderLog(GameSession s)
+        {
+            var log = s.Log;
+            var notes = Col(true);
+            T(notes, "CAPTAIN'S LOG", "xa-term__h");
+            if (log == null) { T(notes, "The log is not available.", "xa-term__dim"); return; }
+
+            var tools = new VisualElement(); tools.style.flexDirection = FlexDirection.Row; tools.style.marginBottom = 8;
+            var order = new Button(() => { log.OldestFirst = !log.OldestFirst; Render(); }) { text = log.OldestFirst ? "Oldest First" : "Newest First" };
+            order.AddToClassList("xa-term__btn"); order.AddToClassList("xa-term__btn--ghost"); order.style.marginRight = 8; tools.Add(order);
+            notes.Add(tools);
+
+            var entry = new TextField { multiline = true };
+            entry.AddToClassList("xa-term__text");
+            entry.style.minHeight = 64; entry.style.marginBottom = 6; entry.style.whiteSpace = WhiteSpace.Normal;
+            notes.Add(entry);
+            var add = new Button(() =>
+            {
+                if (s.Notifications != null && s.Notifications.AddNote(entry.value)) { entry.value = ""; Render(); }
+                else Toast.Show("That note is already in the log, or it was empty.", 3f);
+            }) { text = "Add note" };
+            add.AddToClassList("xa-term__btn"); notes.Add(add);
+
+            int n = 0;
+            foreach (var e in log.Ordered())
+            {
+                if (e == null || string.IsNullOrEmpty(e.text)) continue;
+                n++;
+                string tag = e.playerNote ? "NOTE" : e.kind.ToString().ToUpperInvariant();
+                T(notes, $"{Clock(e.time)}  [{tag}]  {e.text}", e.playerNote ? "xa-term__good" : "xa-term__text");
+            }
+            if (n == 0) T(notes, "Nothing yet. Discoveries, research, recoveries and objective updates appear here. You can also add your own notes.", "xa-term__dim");
         }
     }
 }
