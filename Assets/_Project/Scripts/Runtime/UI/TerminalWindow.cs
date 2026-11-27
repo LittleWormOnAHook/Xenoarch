@@ -107,6 +107,7 @@ namespace DMI.Xenoarch.UI
             Status = new Label(); Status.AddToClassList("xa-term__status"); header.Add(Status);
             Body = new VisualElement(); Body.AddToClassList("xa-term__body"); Body.style.minHeight = 0; Body.style.overflow = Overflow.Hidden; win.Add(Body);
             var footer = new VisualElement(); footer.AddToClassList("xa-term__footer"); win.Add(footer);
+            var keys = MUI.Legend(footer, ("Esc", "Close")); keys.style.marginRight = 18; // t246u key legend
             Hint = new Label("Esc / Tab / B: close"); Hint.AddToClassList("xa-term__hint"); footer.Add(Hint);
             var close = Btn("Close", Close); close.AddToClassList("xa-term__btn--ghost"); close.style.width = 140; footer.Add(close);
             XenoarchUI.Show(_root, false);

@@ -237,3 +237,205 @@
 .xa-obj__idle { color: var(--xa-secondary-text); }
 .xa-obj__title.xa-obj__idle, .xa-obj__side.xa-obj__idle { color: var(--xa-secondary-text); }
 .xa-obj__title.xa-obj__focus, .xa-obj__side.xa-obj__focus { color: var(--xa-heading); }
+/* ======================================================================================================
+   t246u Morpheus-style theme (approved mockups: Docs/Images/UI_Morpheus). Our palette (XenoarchPalette.uss)
+   and v3 icons; Morpheus layout language: flat see-through panels with 1 px borders, Jost type, header bars,
+   thin % bars, teal selection, key legends, Q/E tab chips, confirm band. Kept last so it overrides the older
+   rules above at equal specificity. USS has no text-transform: code upper-cases labels where needed.
+   ====================================================================================================== */
+:root {
+    --xa-m-glass: rgba(40, 9, 14, 0.86);
+    --xa-m-glass-2: rgba(78, 18, 26, 0.62);
+    --xa-m-tile: rgba(118, 28, 39, 0.30);
+    --xa-m-tile-hi: rgba(118, 28, 39, 0.55);
+    --xa-m-line: rgba(232, 226, 208, 0.14);
+    --xa-m-line-2: rgba(232, 226, 208, 0.28);
+    --xa-m-track: rgba(232, 226, 208, 0.12);
+    --xa-m-gold: rgb(255, 200, 80);
+}
+.xa-m-medium, .xa-term__title, .xa-term__h, .xa-obj__title, .xa-m-head, .xa-m-tab, .xa-m-key, .xa-button, .xa-term__btn, .xa-m-badge, .xa-scan__title, .xa-detector__title {
+    -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf");
+}
+.xa-m-light, .xa-title { -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-300-Light.ttf"); }
+
+/* ---- shared building blocks (MUI helpers) ---- */
+.xa-m-panel { background-color: var(--xa-m-glass); border-width: 1px; border-color: var(--xa-m-line); }
+.xa-m-tile { background-color: var(--xa-m-tile); border-width: 1px; border-color: var(--xa-m-line); }
+.xa-m-sel, .xa-m-tile.xa-m-sel { background-color: rgba(104, 223, 214, 0.14); border-color: var(--xa-highlight); }
+.xa-m-head {
+    flex-direction: row; justify-content: space-between; align-items: center; flex-shrink: 0;
+    padding: 7px 12px; margin: 10px 0 6px 0; background-color: var(--xa-m-tile-hi); border-width: 1px; border-color: var(--xa-m-line);
+    font-size: 14px; letter-spacing: 2px; color: var(--xa-heading); -unity-font-style: normal;
+}
+.xa-m-head__title { font-size: 14px; letter-spacing: 2px; color: var(--xa-heading); -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf"); }
+.xa-m-head__right { font-size: 13px; letter-spacing: 1px; color: var(--xa-secondary-text); }
+.xa-m-key {
+    min-width: 26px; height: 22px; padding: 0 6px; margin: 0 6px 0 0; -unity-text-align: middle-center;
+    font-size: 12px; letter-spacing: 1px; color: var(--xa-text); background-color: rgba(232, 226, 208, 0.08);
+    border-width: 1px; border-color: var(--xa-m-line-2); border-radius: 3px; -unity-font-style: normal;
+}
+.xa-m-key--teal { background-color: var(--xa-button); color: var(--xa-on-button); border-color: var(--xa-button); }
+.xa-m-legend { flex-direction: row; justify-content: flex-end; align-items: center; flex-shrink: 0; }
+.xa-m-legend__item { flex-direction: row; align-items: center; margin-left: 22px; }
+.xa-m-legend__text { font-size: 13px; letter-spacing: 1.5px; color: var(--xa-secondary-text); }
+.xa-m-badge {
+    font-size: 11px; letter-spacing: 1.5px; padding: 1px 7px; border-width: 1px; border-color: var(--xa-secondary-text);
+    color: var(--xa-secondary-text); -unity-text-align: middle-center; flex-shrink: 0; margin-left: 8px;
+}
+.xa-m-badge--main { color: var(--xa-heading); border-color: var(--xa-heading); }
+.xa-m-badge--side, .xa-m-badge--new { color: var(--xa-highlight); border-color: var(--xa-highlight); }
+.xa-m-badge--warn { color: var(--xa-warn-text); border-color: var(--xa-warn-text); }
+.xa-m-badge--rare { color: var(--xa-accent-rare); border-color: var(--xa-accent-rare); }
+.xa-m-bar { height: 6px; flex-grow: 1; background-color: var(--xa-m-track); overflow: hidden; }
+.xa-m-bar--thin { height: 4px; }
+.xa-m-bar__fill { height: 100%; background-color: var(--xa-bar); }
+.xa-m-bar--teal > .xa-m-bar__fill { background-color: var(--xa-highlight); }
+.xa-m-barrow { flex-direction: row; align-items: center; flex-shrink: 0; margin: 4px 0; }
+.xa-m-barrow__pct { width: 46px; font-size: 13px; color: var(--xa-text); }
+.xa-m-barrow__count { min-width: 56px; font-size: 13px; color: var(--xa-secondary-text); -unity-text-align: middle-right; margin-left: 10px; }
+.xa-m-dim { font-size: 14px; color: var(--xa-secondary-text); white-space: normal; }
+.xa-m-text { font-size: 15px; color: var(--xa-text); white-space: normal; }
+.xa-m-card {
+    padding: 12px 14px; margin: 4px 0; flex-shrink: 0; background-color: var(--xa-m-tile); border-width: 1px; border-color: var(--xa-m-line);
+}
+.xa-m-card:hover { border-color: var(--xa-m-line-2); }
+.xa-m-card--sel { background-color: rgba(104, 223, 214, 0.12); border-color: var(--xa-highlight); }
+.xa-m-card__row { flex-direction: row; align-items: center; }
+.xa-m-card__title { font-size: 17px; color: var(--xa-text); flex-grow: 1; flex-shrink: 1; white-space: normal; }
+.xa-m-card--sel .xa-m-card__title { color: rgb(255, 255, 255); }
+.xa-m-star { width: 18px; height: 18px; margin-right: 10px; flex-shrink: 0; -unity-background-image-tint-color: var(--xa-m-gold); }
+.xa-m-star--off { -unity-background-image-tint-color: rgba(232, 226, 208, 0.30); }
+
+/* Tab bar with Q / E chips (journal and other multi-tab windows) */
+.xa-m-tabs { flex-direction: row; align-items: center; flex-shrink: 0; border-bottom-width: 1px; border-bottom-color: var(--xa-m-line); margin-bottom: 8px; flex-wrap: wrap; }
+.xa-m-tab {
+    height: 46px; padding: 0 16px; margin: 0; flex-direction: row; align-items: center; -unity-text-align: middle-center;
+    font-size: 15px; letter-spacing: 1.8px; color: var(--xa-secondary-text); background-color: rgba(0, 0, 0, 0);
+    border-width: 0; border-bottom-width: 2px; border-bottom-color: rgba(0, 0, 0, 0); border-radius: 0;
+}
+.xa-m-tab:hover { color: var(--xa-text); background-color: rgba(232, 226, 208, 0.05); }
+.xa-m-tab--on { color: var(--xa-text); border-bottom-color: var(--xa-highlight); }
+.xa-m-tab__icon { width: 20px; height: 20px; margin-right: 8px; -unity-background-scale-mode: scale-to-fit; }
+.xa-m-tabs__spacer { flex-grow: 1; }
+
+/* Confirm band (full-width, Morpheus "Are you sure?") */
+.xa-m-band-veil { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(24, 6, 9, 0.55); justify-content: center; }
+.xa-m-band {
+    padding: 26px 0; align-items: center; background-color: rgba(24, 6, 9, 0.94);
+    border-top-width: 1px; border-bottom-width: 1px; border-color: var(--xa-m-line-2);
+}
+.xa-m-band__title { font-size: 21px; letter-spacing: 1.6px; color: var(--xa-text); -unity-text-align: middle-center; -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf"); }
+.xa-m-band__text { font-size: 15px; color: var(--xa-secondary-text); margin: 6px 0 14px 0; -unity-text-align: middle-center; white-space: normal; max-width: 900px; }
+.xa-m-band__buttons { flex-direction: row; }
+.xa-m-band__btn { min-width: 180px; margin: 0 8px; }
+
+/* ---- existing classes restyled ---- */
+.xa-button {
+    height: 48px; margin: 4px 0; padding-left: 18px; font-size: 16px; letter-spacing: 1.8px;
+    background-color: rgba(118, 28, 39, 0.38); border-color: var(--xa-m-line); -unity-font-style: normal;
+}
+.xa-button:hover, .xa-button.xa-m-sel { background-color: var(--xa-button); border-color: var(--xa-button); color: var(--xa-on-button); }
+.xa-button__label { font-size: 16px; letter-spacing: 1.8px; }
+.xa-title { -unity-font-style: normal; letter-spacing: 14px; }
+.xa-subtitle { letter-spacing: 3px; color: var(--xa-secondary-text); font-size: 14px; }
+.xa-menu-panel { background-image: none; background-color: rgba(0, 0, 0, 0); padding: 0; }
+.xa-menu-root { background-color: var(--xa-panel-deep); }
+.xa-m-menu { position: absolute; left: 0; top: 0; right: 0; bottom: 0; flex-direction: row; padding: 0 120px; align-items: center; }
+.xa-m-menu__col { width: 440px; }
+.xa-m-menu__side { flex-grow: 1; align-items: flex-end; justify-content: center; }
+.xa-m-logo { flex-direction: row; align-items: center; margin-bottom: 46px; }
+.xa-m-logo__mark { width: 84px; height: 84px; margin-right: 22px; -unity-background-scale-mode: scale-to-fit; background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_xenoarch_mark.png"); }
+.xa-m-logo__name { font-size: 72px; letter-spacing: 22px; color: var(--xa-heading); -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-300-Light.ttf"); }
+.xa-m-logo__tag { font-size: 14px; letter-spacing: 4px; color: var(--xa-secondary-text); margin-top: 6px; }
+.xa-m-menu__title { font-size: 44px; letter-spacing: 14px; color: var(--xa-heading); -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-300-Light.ttf"); }
+.xa-m-menu__sub { font-size: 15px; letter-spacing: 2px; color: var(--xa-secondary-text); margin: 4px 0 18px 0; padding-bottom: 18px; border-bottom-width: 1px; border-bottom-color: var(--xa-m-line-2); }
+.xa-m-menu__note { font-size: 14px; color: var(--xa-secondary-text); white-space: normal; margin-top: 18px; }
+.xa-m-menu__version { position: absolute; left: 120px; bottom: 36px; font-size: 12px; letter-spacing: 2px; color: var(--xa-secondary-text); }
+
+.xa-term-root { background-color: rgba(24, 6, 9, 0.72); }
+.xa-term {
+    background-color: var(--xa-m-glass); border-width: 1px; border-color: var(--xa-m-line); border-top-width: 1px; border-top-color: var(--xa-m-line-2);
+    padding: 18px 24px;
+}
+.xa-term__header { padding-bottom: 10px; border-bottom-width: 1px; border-bottom-color: var(--xa-m-line); }
+.xa-term__title { font-size: 20px; letter-spacing: 4px; -unity-font-style: normal; }
+.xa-term__status { font-size: 13px; letter-spacing: 1.5px; color: var(--xa-highlight); padding: 2px 8px; border-width: 1px; border-color: rgba(104, 223, 214, 0.5); }
+.xa-term__h {
+    font-size: 13px; letter-spacing: 2px; -unity-font-style: normal; margin: 10px 0 6px 0; padding: 6px 10px;
+    background-color: var(--xa-m-tile-hi); border-width: 1px; border-color: var(--xa-m-line);
+}
+.xa-term__text { font-size: 15px; }
+.xa-term__list { background-color: rgba(24, 6, 9, 0.35); border-color: var(--xa-m-line); }
+.xa-term__row { background-color: var(--xa-m-tile); border-width: 1px; border-color: var(--xa-m-line); border-left-width: 1px; margin: 2px 0; }
+.xa-term__row:hover { background-color: var(--xa-m-tile-hi); border-color: var(--xa-m-line-2); }
+.xa-term__row--sel { background-color: rgba(104, 223, 214, 0.14); border-color: var(--xa-highlight); border-left-color: var(--xa-highlight); color: var(--xa-text); }
+.xa-term__btn { -unity-font-style: normal; font-size: 15px; letter-spacing: 1.5px; border-radius: 0; min-height: 42px; }
+.xa-term__btn--ghost { background-color: rgba(118, 28, 39, 0.38); border-color: var(--xa-m-line); color: var(--xa-text); }
+.xa-term__btn--ghost:hover { background-color: var(--xa-m-tile-hi); border-color: var(--xa-m-line-2); }
+.xa-term__bar { height: 6px; background-color: var(--xa-m-track); }
+.xa-term__footer { padding-top: 10px; border-top-width: 1px; border-top-color: var(--xa-m-line); }
+.xa-term__hint { font-size: 13px; letter-spacing: 1px; }
+.xa-term__dropdown { background-color: var(--xa-m-tile); border-color: var(--xa-m-line); border-radius: 0; }
+
+.xa-slot { background-image: none; background-color: rgba(78, 18, 26, 0.72); border-color: var(--xa-m-line); }
+.xa-slot__count { -unity-font-style: normal; -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf"); }
+.xa-slot__name { font-size: 11px; letter-spacing: 1px; }
+.xa-item-slot { border-color: var(--xa-m-line); }
+
+.xa-prompt-text { background-color: rgba(40, 9, 14, 0.78); border-left-color: var(--xa-highlight); letter-spacing: 1px; }
+.xa-scan { background-color: rgba(40, 9, 14, 0.78); border-width: 1px; border-color: var(--xa-m-line); border-left-width: 2px; border-left-color: var(--xa-highlight); }
+.xa-scan__title { -unity-font-style: normal; letter-spacing: 2px; }
+
+/* Objective tracker (HUD) */
+.xa-obj { width: 440px; padding: 14px 16px 12px 16px; background-color: rgba(40, 9, 14, 0.74); border-left-width: 2px; border-left-color: var(--xa-heading); }
+.xa-obj__header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.xa-obj__header-title { font-size: 14px; letter-spacing: 2px; color: var(--xa-heading); -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf"); }
+.xa-obj__block { padding: 8px 0 10px 0; border-top-width: 1px; border-top-color: var(--xa-m-line); margin-bottom: 0; }
+.xa-obj__block--first { border-top-width: 0; }
+.xa-obj__title { font-size: 16px; letter-spacing: 0.5px; -unity-font-style: normal; margin-bottom: 0; flex-grow: 1; flex-shrink: 1; white-space: normal; }
+.xa-obj__side { font-size: 15px; -unity-font-style: normal; margin-top: 0; margin-bottom: 0; flex-grow: 1; flex-shrink: 1; white-space: normal; }
+.xa-obj__title.xa-obj__focus, .xa-obj__side.xa-obj__focus { color: rgb(255, 255, 255); }
+.xa-obj__title.xa-obj__idle, .xa-obj__side.xa-obj__idle { color: var(--xa-secondary-text); }
+.xa-obj__star { width: 18px; height: 18px; margin-right: 10px; -unity-background-image-tint-color: var(--xa-m-gold); }
+.xa-obj__star--hidden { opacity: 1; -unity-background-image-tint-color: rgba(232, 226, 208, 0.28); }
+.xa-obj__meta { flex-direction: row; justify-content: space-between; margin: 4px 0 4px 28px; }
+.xa-obj__meta > Label { font-size: 12px; letter-spacing: 1px; color: var(--xa-secondary-text); }
+.xa-obj__barwrap { margin-left: 28px; flex-direction: row; }
+.xa-obj__line { font-size: 13px; margin-left: 28px; color: var(--xa-text); }
+.xa-obj__hint { font-size: 13px; }
+.xa-obj__toggle { border-radius: 0; letter-spacing: 1px; }
+
+/* Toast (notification pipeline) */
+.xa-m-toast-stack { position: absolute; left: 0; right: 0; top: 40px; align-items: center; }
+.xa-m-toast {
+    width: 600px; flex-direction: row; align-items: center; padding: 12px 18px; margin-bottom: 8px;
+    background-color: rgba(40, 9, 14, 0.94); border-width: 1px; border-color: var(--xa-m-line); border-left-width: 3px; border-left-color: var(--xa-highlight);
+}
+.xa-m-toast--old { opacity: 0.55; }
+.xa-m-toast__icon { width: 40px; height: 40px; margin-right: 14px; flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
+.xa-m-toast__kind { font-size: 13px; letter-spacing: 2px; color: var(--xa-highlight); -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf"); }
+.xa-m-toast__text { font-size: 17px; color: var(--xa-text); white-space: normal; }
+
+/* t246u: more library icons as glyphs (full colour; names with ui-/nav-/ship-/research- get .xa-icon--pack) */
+.xa-icon--ui-missions { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_missions.png"); }
+.xa-icon--ui-journal { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_journal.png"); }
+.xa-icon--ui-alert { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_alert.png"); }
+.xa-icon--ui-warning { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_warning.png"); }
+.xa-icon--ui-info { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_info.png"); }
+.xa-icon--ui-new-discovery { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_new_discovery.png"); }
+.xa-icon--ui-inventory { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_inventory.png"); }
+.xa-icon--ui-map { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_map.png"); }
+.xa-icon--ui-credits { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_credits.png"); }
+.xa-icon--ui-level { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_level.png"); }
+.xa-icon--ui-upgrade { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_upgrade.png"); }
+.xa-icon--ui-storage { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_storage.png"); }
+.xa-icon--ui-skill { background-image: url("/Assets/Xenoarch/UI/Icons/Interface/icon_ui_skill.png"); }
+.xa-icon--ship-comms { background-image: url("/Assets/Xenoarch/UI/Icons/Ship/icon_ship_comms.png"); }
+.xa-icon--ship-starship { background-image: url("/Assets/Xenoarch/UI/Icons/Ship/icon_ship_starship.png"); }
+.xa-icon--ship-shuttle { background-image: url("/Assets/Xenoarch/UI/Icons/Ship/icon_ship_shuttle.png"); }
+.xa-icon--nav-rover { background-image: url("/Assets/Xenoarch/UI/Icons/Navigation/icon_nav_rover.png"); }
+.xa-icon--research-analyze { background-image: url("/Assets/Xenoarch/UI/Icons/Research/icon_research_analyze.png"); }
+.xa-icon--research-archive { background-image: url("/Assets/Xenoarch/UI/Icons/Research/icon_research_archive.png"); }
+
+/* t246u save thumbnails (screenshot when present, dark placeholder for older saves) */
+.xa-m-thumb { background-color: rgb(14, 4, 7); border-bottom-width: 1px; border-bottom-color: var(--xa-m-line); background-size: cover; background-position-x: center; background-position-y: center; }

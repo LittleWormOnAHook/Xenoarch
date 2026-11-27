@@ -3,17 +3,21 @@ using UnityEngine.UIElements;
 
 namespace DMI.Xenoarch.UI
 {
-    /// <summary>Short top-centre notice (recoveries, research results, journal updates). Survives scene loads.</summary>
+    /// <summary>Short top-centre notice (recoveries, research results, journal updates). Survives scene loads.
+    /// t246u: Morpheus card (icon, kind heading, text, teal edge); the previous notice stays dimmed under the newest.</summary>
     public sealed class Toast : MonoBehaviour
     {
         static Toast _inst;
-        Label _label;
-        float _hideAt;
+        VisualElement _stack, _cur, _prev;
+        float _hideAt, _prevHideAt;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => _inst = null;
 
-        public static void Show(string text, float seconds = 5f)
+        public static void Show(string text, float seconds = 5f) => Show(text, seconds, null, null);
+
+        /// <summary>Card with a kind heading (e.g. "New discovery") and a glyph name (XenoarchIcons, e.g. "ui-new-discovery").</summary>
+        public static void Show(string text, float seconds, string kind, string glyph)
         {
             Debug.Log($"[Xenoarch] Toast: {text}");
             if (!Application.isPlaying) return;
@@ -24,10 +28,8 @@ namespace DMI.Xenoarch.UI
                 _inst = go.AddComponent<Toast>();
                 _inst.Build();
             }
-            if (_inst._label == null) return;
-            _inst._label.text = text;
-            XenoarchUI.Show(_inst._label, true);
-            _inst._hideAt = Time.unscaledTime + seconds;
+            if (_inst._stack == null) return;
+            _inst.Push(text, seconds, kind, glyph ?? "ui-info");
         }
 
         void Build()
@@ -38,22 +40,32 @@ namespace DMI.Xenoarch.UI
             var root = doc.rootVisualElement; XenoarchUI.FillRoot(root);
             if (root == null) return;
             root.pickingMode = PickingMode.Ignore;
-            root.style.position = Position.Absolute; root.style.left = 0; root.style.right = 0; root.style.top = 0; root.style.bottom = 0;
-            root.style.alignItems = Align.Center;
-            _label = new Label { pickingMode = PickingMode.Ignore };
-            var s = _label.style;
-            s.marginTop = 70; s.paddingLeft = 18; s.paddingRight = 18; s.paddingTop = 8; s.paddingBottom = 8;
-            s.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.9f);
-            s.color = XenoarchPalette.Text;
-            s.fontSize = 20; s.maxWidth = 900; s.whiteSpace = WhiteSpace.Normal;
-            s.borderTopLeftRadius = 6; s.borderTopRightRadius = 6; s.borderBottomLeftRadius = 6; s.borderBottomRightRadius = 6;
-            root.Add(_label);
-            XenoarchUI.Show(_label, false);
+            XenoarchIcons.EnsureStyles(root);
+            _stack = new VisualElement { pickingMode = PickingMode.Ignore }; _stack.AddToClassList("xa-m-toast-stack");
+            root.Add(_stack);
+        }
+
+        void Push(string text, float seconds, string kind, string glyph)
+        {
+            // the current card becomes the dimmed previous one
+            _prev?.RemoveFromHierarchy();
+            _prev = _cur; _prevHideAt = Mathf.Min(_hideAt, Time.unscaledTime + 2.5f);
+            if (_prev != null) _prev.AddToClassList("xa-m-toast--old");
+
+            var card = new VisualElement { pickingMode = PickingMode.Ignore }; card.AddToClassList("xa-m-toast");
+            card.Add(XenoarchIcons.Glyph(glyph, "xa-m-toast__icon"));
+            var col = new VisualElement { pickingMode = PickingMode.Ignore }; col.style.flexGrow = 1; col.style.flexShrink = 1;
+            if (!string.IsNullOrEmpty(kind)) MUI.L(col, kind.ToUpperInvariant(), "xa-m-toast__kind");
+            MUI.L(col, text, "xa-m-toast__text");
+            card.Add(col);
+            _stack.Insert(0, card);
+            _cur = card; _hideAt = Time.unscaledTime + seconds;
         }
 
         void Update()
         {
-            if (_label != null && _hideAt > 0f && Time.unscaledTime >= _hideAt) { XenoarchUI.Show(_label, false); _hideAt = 0f; }
+            if (_cur != null && _hideAt > 0f && Time.unscaledTime >= _hideAt) { _cur.RemoveFromHierarchy(); _cur = null; _hideAt = 0f; }
+            if (_prev != null && Time.unscaledTime >= _prevHideAt) { _prev.RemoveFromHierarchy(); _prev = null; }
         }
     }
 }

@@ -1,1 +1,4 @@
 @import url("unity-theme://default");
+
+/* t246u: Jost (OFL, Art/Fonts/Jost) is the global UI font. */
+:root { -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-400-Book.ttf"); }

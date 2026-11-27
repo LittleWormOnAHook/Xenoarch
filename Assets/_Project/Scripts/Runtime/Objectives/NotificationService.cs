@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace DMI.Xenoarch.Objectives
 {
-    public enum NoticeKind { Discovery, Research, Recovery, Objective, System, Note }
+    public enum NoticeKind { Discovery, Research, Recovery, Objective, System, Note, Message }
 
     [Serializable]
     public sealed class CaptainsLogEntry
@@ -110,10 +110,24 @@ namespace DMI.Xenoarch.Objectives
         public bool Post(NoticeKind kind, string id, string text, float toastSeconds = 5f)
         {
             if (_log == null || !_log.Add(kind, id, text)) return false;
-            if (toastSeconds > 0f) Toast.Show(text, toastSeconds);
+            if (toastSeconds > 0f) Toast.Show(text, toastSeconds, KindTitle(kind), KindGlyph(kind));
             Posted?.Invoke(_log.State.entries[_log.State.entries.Count - 1]);
             return true;
         }
+
+        /// <summary>t246u: toast heading per kind.</summary>
+        public static string KindTitle(NoticeKind k) => k switch
+        {
+            NoticeKind.Discovery => "New discovery", NoticeKind.Research => "Research", NoticeKind.Recovery => "Recovery",
+            NoticeKind.Objective => "Objective", NoticeKind.Note => "Note", NoticeKind.Message => "Incoming message", _ => "System",
+        };
+
+        /// <summary>t246u: toast / log glyph per kind (Xenoarch icon library).</summary>
+        public static string KindGlyph(NoticeKind k) => k switch
+        {
+            NoticeKind.Discovery => "ui-new-discovery", NoticeKind.Research => "research-analyze", NoticeKind.Recovery => "ui-alert",
+            NoticeKind.Objective => "ui-missions", NoticeKind.Note => "ui-journal", NoticeKind.Message => "ship-comms", _ => "ui-info",
+        };
 
         /// <summary>Player-authored Captain's Log note. No toast. False if the same text is already in the log.</summary>
         public bool AddNote(string text) => _log != null && _log.Add(NoticeKind.Note, null, text, true);

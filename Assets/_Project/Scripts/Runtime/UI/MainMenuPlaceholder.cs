@@ -35,30 +35,34 @@ namespace DMI.Xenoarch.UI
 
         void ShowMain()
         {
-            var p = MenuScreens.Panel("XENOARCH", "Discover the past. Unlock the future.");
+            // t246u Morpheus layout: logo + button column on the left, Continue card (newest save) on the right.
+            var root = MenuScreens.MenuLayout(true, "Xenoarch", "Discover the past. Unlock the future.", out var col, out var side);
             string newest = SaveSlots.Newest();
+            var btns = new VisualElement(); btns.style.width = 440; col.Add(btns);
             if (newest != null)
             {
-                var info = SaveSlots.Read(newest);
-                MenuScreens.Button(p, "Continue", () => { if (!Busy) XenoarchRuntime.Instance.LoadGame(newest); });
-                MenuScreens.Note(p, $"{info.place}  -  {(newest == SaveSlots.Auto ? "autosave" : newest)}, {SaveSlots.When(info.ticks)}, played {SaveSlots.PlayTime(info.played)}");
+                MenuScreens.ColumnButton(btns, "Continue", "arrowRight", () => { if (!Busy) XenoarchRuntime.Instance.LoadGame(newest); }).AddToClassList("xa-m-sel");
+                side.Add(MenuScreens.SaveCard(newest, newest == SaveSlots.Auto ? "Autosave" : newest == SaveSlots.Quick ? "Quick save" : newest, "Continue"));
             }
-            MenuScreens.Button(p, "New Game", () =>
+            MenuScreens.ColumnButton(btns, "New Game", "ui-level", () =>
             {
                 if (Busy) return;
                 if (newest == null) XenoarchRuntime.Instance.NewGame();
-                else MenuScreens.Confirm(p, "Start a new game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewGame());
+                else MenuScreens.Confirm(root, "Start a new game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewGame());
             });
-            MenuScreens.Button(p, "New Test All", () =>
+            MenuScreens.ColumnButton(btns, "New Test All", "ui-upgrade", () =>
             {
                 if (Busy) return;
                 if (newest == null) XenoarchRuntime.Instance.NewTestAll();
-                else MenuScreens.Confirm(p, "Start a New Test All game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewTestAll());
-            });
-            MenuScreens.Button(p, "Load Game", () => Swap(MenuScreens.Slots(false, ShowMain, null)), newest != null);
-            MenuScreens.Button(p, "Settings", () => Swap(MenuScreens.Settings(ShowMain)));
-            MenuScreens.Button(p, "Quit", MenuScreens.Quit);
-            Swap(p);
+                else MenuScreens.Confirm(root, "Start a New Test All game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewTestAll());
+            }, true, "Test");
+            MenuScreens.ColumnButton(btns, "Load Game", "import", () => Swap(MenuScreens.Slots(false, ShowMain, null)), newest != null);
+            MenuScreens.ColumnButton(btns, "Settings", "ui-settings", () => Swap(MenuScreens.Settings(ShowMain)));
+            MenuScreens.ColumnButton(btns, "Quit", "exit", MenuScreens.Quit);
+            var note = MUI.L(btns, "New Test All starts with everything unlocked, all tools and full resource stacks.", "xa-m-menu__note");
+            MUI.L(root, "XENOARCH  ·  DARK MATTER INTERACTIVE", "xa-m-menu__version");
+            var lg = MUI.Legend(root, ("Click", "Select"), ("Esc", "Back")); lg.style.position = Position.Absolute; lg.style.right = 48; lg.style.bottom = 30;
+            Swap(root);
         }
     }
 }

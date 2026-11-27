@@ -91,12 +91,17 @@ namespace DMI.Xenoarch.UI
             _panel.style.top = HudLayout.TopStart;
             _panel.style.left = HudLayout.Margin;
 
+            // t246u Morpheus tracker: header, then one block per objective (star, title, kind badge, step count, %, thin bar).
+            var header = new VisualElement(); header.AddToClassList("xa-obj__header");
+            MUI.L(header, "OBJECTIVES", "xa-obj__header-title");
+            var jr = new VisualElement(); jr.style.flexDirection = FlexDirection.Row; jr.style.alignItems = Align.Center;
+            MUI.Key(jr, "J"); MUI.L(jr, "JOURNAL", "xa-m-legend__text");
+            header.Add(jr);
+            _panel.Add(header);
+
+            _first = true;
             if (main != null) Draw(svc, main, true);
-            if (sides.Count > 0)
-            {
-                var h = new Label("OPTIONAL"); h.AddToClassList("xa-obj__sub"); _panel.Add(h);
-                foreach (var s in sides) Draw(svc, s, false);
-            }
+            foreach (var s in sides) Draw(svc, s, false);
 
             var focused = svc.Focused();
             var hint = focused != null ? focused.Prompt : null;
@@ -118,6 +123,8 @@ namespace DMI.Xenoarch.UI
             XenoarchUI.Show(_panel, true);
         }
 
+        bool _first;
+
         static bool HasVisibleLine(ObjectiveView v)
         {
             if (v == null) return false;
@@ -133,6 +140,7 @@ namespace DMI.Xenoarch.UI
 
             var block = new VisualElement();
             block.AddToClassList("xa-obj__block");
+            if (_first) { block.AddToClassList("xa-obj__block--first"); _first = false; }
             block.pickingMode = PickingMode.Position;
             var captured = v.id;
             block.RegisterCallback<ClickEvent>(e => { svc.SetFocus(captured); e.StopPropagation(); });
@@ -142,32 +150,34 @@ namespace DMI.Xenoarch.UI
             var star = XenoarchIcons.Glyph("star", "xa-obj__star");
             if (!focused) star.AddToClassList("xa-obj__star--hidden");
             head.Add(star);
-            var title = new Label(isMain ? v.title.ToUpperInvariant() : v.title);
+            var title = new Label(v.title);
             title.AddToClassList(isMain ? "xa-obj__title" : "xa-obj__side");
             title.AddToClassList(focusCls);
             head.Add(title);
+            MUI.Badge(head, isMain ? "Main" : (v.optional ? "Optional" : "Side"), isMain ? "main" : (v.optional ? null : "side"));
             block.Add(head);
 
-            if (v.complete)
+            float pct = MUI.Progress(v, out int done, out int total);
+            var meta = new VisualElement(); meta.AddToClassList("xa-obj__meta");
+            MUI.L(meta, v.complete ? "Complete" : $"{done} / {total} steps");
+            MUI.L(meta, Mathf.RoundToInt(pct * 100f) + "%");
+            block.Add(meta);
+            var bw = new VisualElement(); bw.AddToClassList("xa-obj__barwrap");
+            MUI.Bar(bw, pct, !isMain, true);
+            block.Add(bw);
+
+            if (!v.complete)
             {
-                var done = new Label("Complete"); done.AddToClassList("xa-obj__done"); block.Add(done);
-                _panel.Add(block);
-                return;
-            }
-            foreach (var l in v.lines)
-            {
-                if (isMain && l.complete) continue;
-                string text = l.label;
-                if (!string.IsNullOrEmpty(l.progress) && !l.complete) text += "  (" + l.progress + ")";
-                var row = new VisualElement(); row.AddToClassList("xa-obj__row");
-                var mark = new Label(l.complete ? "\u2713" : ">"); mark.AddToClassList(l.complete ? "xa-obj__mark--done" : "xa-obj__mark");
-                row.Add(mark);
-                var lab = new Label(text); lab.AddToClassList(l.complete ? "xa-obj__line--done" : "xa-obj__line");
-                if (focused && !l.complete) lab.AddToClassList("xa-obj__focus");
-                else if (!focused) lab.AddToClassList("xa-obj__idle");
-                row.Add(lab);
-                block.Add(row);
-                if (isMain && !l.complete) break;
+                foreach (var l in v.lines)
+                {
+                    if (l.complete) continue;
+                    string text = l.label;
+                    if (!string.IsNullOrEmpty(l.progress)) text += "  (" + l.progress + ")";
+                    var lab = new Label(text); lab.AddToClassList("xa-obj__line");
+                    lab.AddToClassList(focused ? "xa-obj__focus" : "xa-obj__idle");
+                    block.Add(lab);
+                    break; // next open step only
+                }
             }
             _panel.Add(block);
         }

@@ -76,14 +76,49 @@ namespace DMI.Xenoarch.UI
 
         void ShowMain()
         {
-            var p = MenuScreens.Panel("PAUSED", SaveSlots.Pretty(SceneManager.GetActiveScene().name));
-            MenuScreens.GlyphButton(p, "Resume", "arrowRight", Close);
-            MenuScreens.GlyphButton(p, "Save game", "save", () => Swap(MenuScreens.Slots(true, ShowMain, null)));
-            MenuScreens.GlyphButton(p, "Load game", "import", () => Swap(MenuScreens.Slots(false, ShowMain, Close)));
-            MenuScreens.GlyphButton(p, "Settings", "ui-settings", () => Swap(MenuScreens.Settings(ShowMain)));
-            MenuScreens.GlyphButton(p, "Main menu", "home", () => MenuScreens.Confirm(p, "Return to the main menu? Unsaved progress since the last save is lost.", () => { Close(); XenoarchRuntime.Instance?.ReturnToMainMenu(); }));
-            MenuScreens.GlyphButton(p, "Quit", "exit", () => MenuScreens.Confirm(p, "Quit the game? Unsaved progress since the last save is lost.", MenuScreens.Quit));
-            Swap(p);
+            // t246u Morpheus layout: PAUSED + location on the left with the button column, session card on the right.
+            var s = XenoarchRuntime.Session;
+            string where = s != null ? DMI.Xenoarch.Galaxy.ShipTravel.LocationText(s.Exploration) : SaveSlots.Pretty(SceneManager.GetActiveScene().name);
+            var root = MenuScreens.MenuLayout(false, "Paused", where, out var col, out var side);
+            MenuScreens.ColumnButton(col, "Resume", "arrowRight", Close).AddToClassList("xa-m-sel");
+            MenuScreens.ColumnButton(col, "Save game", "save", () => Swap(MenuScreens.Slots(true, ShowMain, null)));
+            MenuScreens.ColumnButton(col, "Load game", "import", () => Swap(MenuScreens.Slots(false, ShowMain, Close)));
+            MenuScreens.ColumnButton(col, "Settings", "ui-settings", () => Swap(MenuScreens.Settings(ShowMain)));
+            MenuScreens.ColumnButton(col, "Main menu", "home", () => MenuScreens.Confirm(root, "Return to the main menu? Unsaved progress since the last save is lost.", () => { Close(); XenoarchRuntime.Instance?.ReturnToMainMenu(); }));
+            MenuScreens.ColumnButton(col, "Quit", "exit", () => MenuScreens.Confirm(root, "Quit the game? Unsaved progress since the last save is lost.", MenuScreens.Quit));
+            if (s != null) side.Add(SessionCard(s));
+            var lg = MUI.Legend(root, ("Esc", "Resume")); lg.style.position = Position.Absolute; lg.style.right = 48; lg.style.bottom = 30;
+            Swap(root);
+        }
+
+        static VisualElement SessionCard(GameSession s)
+        {
+            var card = new VisualElement(); card.AddToClassList("xa-m-panel"); card.style.width = 520;
+            card.style.paddingLeft = 26; card.style.paddingRight = 26; card.style.paddingTop = 20; card.style.paddingBottom = 22;
+            MUI.L(card, "SESSION", "xa-m-head__title");
+            var o = s.Objectives;
+            var f = o?.Focused() ?? o?.Main();
+            if (f != null)
+            {
+                var row = new VisualElement(); row.AddToClassList("xa-m-card__row"); row.style.marginTop = 14;
+                row.Add(XenoarchIcons.Glyph("star", "xa-m-star"));
+                MUI.L(row, f.title, "xa-m-card__title");
+                card.Add(row);
+                float p = MUI.Progress(f, out int d, out int t);
+                MUI.BarRow(card, p, $"{d} / {t}", f.kind != DMI.Xenoarch.Objectives.ObjectiveKind.Main);
+            }
+            var grid = new VisualElement(); grid.style.flexDirection = FlexDirection.Row; grid.style.flexWrap = Wrap.Wrap; grid.style.marginTop = 12;
+            void Cell(string k, string v)
+            {
+                var c = new VisualElement(); c.style.width = Length.Percent(50); c.style.marginTop = 8;
+                MUI.L(c, k, "xa-m-dim"); MUI.L(c, v, "xa-m-text"); grid.Add(c);
+            }
+            Cell("Played", SaveSlots.PlayTime(s.PlaySeconds));
+            Cell("Credits", $"{s.Economy.Credits:N0} cr");
+            Cell("Artifacts found", s.Artifacts.State.instances.Count.ToString());
+            Cell("Log entries", (s.Log?.State.entries?.Count ?? 0).ToString());
+            card.Add(grid);
+            return card;
         }
     }
 

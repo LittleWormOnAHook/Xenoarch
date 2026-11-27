@@ -34,6 +34,26 @@ namespace DMI.Xenoarch.UI
                 else if (!UIState.BlocksGameplay && XenoarchRuntime.Instance != null && XenoarchRuntime.Instance.SessionActive && !(XenoarchRuntime.Scenes?.IsLoading ?? true)) Open();
             }
             else if (IsOpen && kb != null && kb.escapeKey.wasPressedThisFrame) Close();
+            else if (IsOpen && kb != null && !TypingInField() && (kb.qKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame))
+            { _tab = MUI.Cycle(Tabs, _tab, kb.qKey.wasPressedThisFrame ? -1 : 1); RenderTabs(); Render(); }
+        }
+
+        /// <summary>t246u tab bar (Morpheus): Q / E cycle, click selects.</summary>
+        static readonly (string id, string label, string glyph)[] Tabs =
+        {
+            ("objectives", "Objectives", "ui-missions"), ("discoveries", "Discoveries", "ui-new-discovery"), ("finds", "Finds", "research-archive"),
+            ("notes", "Notes", "ui-journal"), ("log", "Captain's Log", "ui-journal"), ("standing", "Standing", "ui-level"),
+        };
+
+        VisualElement _tabHost;
+
+        bool TypingInField() => _veil != null && _veil.panel?.focusController?.focusedElement is TextField;
+
+        void RenderTabs()
+        {
+            if (_tabHost == null) return;
+            _tabHost.Clear();
+            MUI.Tabs(_tabHost, Tabs, _tab, id => { _tab = id; RenderTabs(); Render(); });
         }
 
         void Open()
@@ -47,12 +67,12 @@ namespace DMI.Xenoarch.UI
             var uss = Resources.Load<StyleSheet>("UI/Xenoarch"); if (uss != null && !root.styleSheets.Contains(uss)) root.styleSheets.Add(uss);
             _veil = new VisualElement(); XenoarchUI.FillRoot(_veil); _veil.AddToClassList("xa-term-root");
             var win = new VisualElement(); win.AddToClassList("xa-term");
-            var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.alignItems = Align.Center;
-            var title = new Label("JOURNAL"); title.AddToClassList("xa-title"); title.style.fontSize = 30; title.style.marginRight = 24; head.Add(title);
-            head.style.flexWrap = Wrap.Wrap;
-            Tab(head, "Objectives", "objectives"); Tab(head, "Discoveries", "discoveries"); Tab(head, "Finds", "finds"); Tab(head, "Notes", "notes"); Tab(head, "Log", "log"); Tab(head, "Standing", "standing");
-            var hint = new Label("[J] / Esc close"); hint.AddToClassList("xa-hint"); hint.style.marginLeft = 20; head.Add(hint);
+            var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.alignItems = Align.Center; head.style.justifyContent = Justify.SpaceBetween;
+            var title = new Label("JOURNAL"); title.AddToClassList("xa-term__title"); head.Add(title);
+            MUI.Legend(head, ("Q / E", "Tabs"), ("J", "Close"), ("Esc", "Close"));
             win.Add(head);
+            _tabHost = new VisualElement(); win.Add(_tabHost);
+            RenderTabs();
             _body = new VisualElement(); _body.style.flexGrow = 1; _body.style.flexDirection = FlexDirection.Row; _body.style.marginTop = 10; _body.style.minHeight = 0;
             win.Add(_body);
             _veil.Add(win); root.Add(_veil);
@@ -65,19 +85,12 @@ namespace DMI.Xenoarch.UI
         void Close()
         {
             bool was = _veil != null;
-            _veil?.RemoveFromHierarchy(); _veil = null; _body = null;
+            _veil?.RemoveFromHierarchy(); _veil = null; _body = null; _tabHost = null;
             UIState.SetOpen(Panel, false);
             if (was && Time.timeScale == 0f && !UIState.IsOpen(Panels.Pause)) Time.timeScale = _prevTimeScale;
         }
 
         void OnDisable() { if (IsOpen) Close(); }
-
-        void Tab(VisualElement head, string label, string id)
-        {
-            var b = new Button(() => { _tab = id; Render(); }) { text = label };
-            b.AddToClassList("xa-button"); b.style.width = 118; b.style.marginRight = 6;
-            head.Add(b);
-        }
 
         VisualElement Col(bool wide = false)
         {
@@ -220,81 +233,111 @@ namespace DMI.Xenoarch.UI
             }
         }
 
-        // ------------------------------------------------------------ Objectives (M2)
+        // ------------------------------------------------------------ Objectives (M2; t246u Morpheus cards + detail)
         void RenderObjectives(GameSession s)
         {
             var o = s.Objectives;
             if (o == null) { T(Col(), "Objectives are not available.", "xa-term__dim"); return; }
             var col = Col(true);
-            T(col, "OBJECTIVES", "xa-term__h");
-            var hide = new Button(() => { o.HideOptional = !o.HideOptional; Render(); }) { text = o.HideOptional ? "Show optional objectives" : "Hide optional objectives" };
-            hide.AddToClassList("xa-term__btn"); hide.AddToClassList("xa-term__btn--ghost"); col.Add(hide);
+            var top = new VisualElement(); top.style.flexDirection = FlexDirection.Row; top.style.alignItems = Align.Center; top.style.justifyContent = Justify.SpaceBetween;
+            var hide = new Button(() => { o.HideOptional = !o.HideOptional; Render(); }) { text = o.HideOptional ? "SHOW OPTIONAL" : "HIDE OPTIONAL" };
+            hide.AddToClassList("xa-term__btn"); hide.AddToClassList("xa-term__btn--ghost"); hide.style.minHeight = 32; hide.style.marginTop = 0;
+            var main = o.Main();
+            float mp = MUI.Progress(main, out int md, out int mt);
+            MUI.Head(col, "Objectives", main != null ? $"{main.title}   {md} / {mt}   {Mathf.RoundToInt(mp * 100f)}%" : null);
+            top.Add(hide); col.Add(top);
 
+            ObjectiveView focusedView = null;
             foreach (var v in o.All())
             {
                 if (v.optional && o.HideOptional && !v.complete && v.kind == ObjectiveKind.Side) continue;
                 bool focused = o.IsFocused(v.id);
-                string kind = v.kind == ObjectiveKind.Main ? "MAIN" : (v.optional ? "OPTIONAL" : "SIDE");
-                string status = v.complete ? "  -  complete" : (focused ? "  -  focused" : "");
-                var head = new VisualElement(); head.AddToClassList("xa-obj__head"); head.pickingMode = PickingMode.Position;
-                var star = XenoarchIcons.Glyph("star", "xa-obj__star");
-                if (!focused) star.AddToClassList("xa-obj__star--hidden");
-                head.Add(star);
-                var title = T(head, $"{kind}   {v.title}{status}", "xa-term__h");
-                title.AddToClassList(focused ? "xa-obj__focus" : "xa-obj__idle");
-                title.style.marginTop = 0; title.style.marginBottom = 0;
+                if (focused) focusedView = v;
+                bool isMain = v.kind == ObjectiveKind.Main;
+                var card = new VisualElement(); card.AddToClassList("xa-m-card"); if (focused) card.AddToClassList("xa-m-card--sel");
+                card.pickingMode = PickingMode.Position;
                 var captured = v.id;
-                head.RegisterCallback<ClickEvent>(e => { o.SetFocus(captured); Render(); e.StopPropagation(); });
-                col.Add(head);
-                if (!string.IsNullOrEmpty(v.subtitle)) T(col, v.subtitle, "xa-term__dim");
-                foreach (var l in v.lines)
-                {
-                    string text = l.label;
-                    if (!string.IsNullOrEmpty(l.progress)) text += "  (" + l.progress + ")";
-                    if (l.complete) StateRow(col, "ui-complete", "done", text, "xa-term__text");
-                    else StateRow(col, "arrowRight", "open", text, focused ? "xa-term__text" : "xa-term__dim");
-                }
-                if (!v.complete && !string.IsNullOrEmpty(v.Prompt)) T(col, "Hint: " + v.Prompt, "xa-term__dim");
+                card.RegisterCallback<ClickEvent>(e => { o.SetFocus(captured); Render(); e.StopPropagation(); });
+                var row = new VisualElement(); row.AddToClassList("xa-m-card__row");
+                var star = XenoarchIcons.Glyph("star", "xa-m-star"); if (!focused) star.AddToClassList("xa-m-star--off");
+                row.Add(star);
+                T(row, v.title, "xa-m-card__title");
+                MUI.Badge(row, isMain ? "Main" : (v.optional ? "Optional" : "Side"), isMain ? "main" : (v.optional ? null : "side"));
+                if (v.complete) MUI.Badge(row, "Complete", "side");
+                card.Add(row);
+                if (!string.IsNullOrEmpty(v.subtitle)) { var sub = T(card, v.subtitle, "xa-m-dim"); sub.style.marginLeft = 28; sub.style.marginTop = 4; }
+                float p = MUI.Progress(v, out int d, out int t);
+                var br = MUI.BarRow(card, p, $"{d} / {t}", !isMain); br.style.marginLeft = 28; br.style.marginTop = 8;
+                col.Add(card);
             }
 
+            // Detail: the focused objective (Morpheus quest detail pane).
             var side = Col();
-            T(side, "TRACKER", "xa-term__h");
-            T(side, "The main expedition stays at the top. Click an objective here or on the HUD to focus it (gold star). Navigation markers follow the focused objective. Hide optional keeps that toggle, and completing or hiding a focused side returns focus to the main expedition.", "xa-term__dim");
+            var f = focusedView ?? o.Focused() ?? main;
+            if (f == null) { T(side, "No objective yet.", "xa-term__dim"); return; }
+            var fh = new VisualElement(); fh.AddToClassList("xa-m-card__row");
+            fh.Add(XenoarchIcons.Glyph("star", "xa-m-star"));
+            var tl = T(fh, f.title.ToUpperInvariant(), "xa-term__title"); tl.style.whiteSpace = WhiteSpace.Normal; tl.style.flexShrink = 1;
+            side.Add(fh);
+            T(side, (o.IsFocused(f.id) ? "FOCUSED  ·  " : "") + (f.kind == ObjectiveKind.Main ? "MAIN OBJECTIVE" : f.optional ? "OPTIONAL OBJECTIVE" : "SIDE OBJECTIVE"), "xa-m-dim");
+            if (!string.IsNullOrEmpty(f.subtitle)) T(side, f.subtitle, "xa-m-text");
+            MUI.Head(side, "Progress");
+            float fp = MUI.Progress(f, out int fd, out int ft);
+            MUI.BarRow(side, fp, $"{fd} / {ft}", f.kind != ObjectiveKind.Main);
+            MUI.Head(side, "Steps");
+            bool nextShown = false;
+            foreach (var l in f.lines)
+            {
+                string text = l.label;
+                if (!string.IsNullOrEmpty(l.progress)) text += "  (" + l.progress + ")";
+                if (l.complete) StateRow(side, "ui-complete", "done", text, "xa-term__dim");
+                else { StateRow(side, "arrowRight", "open", text, "xa-term__text"); if (!nextShown) { nextShown = true; } }
+            }
+            if (!f.complete && !string.IsNullOrEmpty(f.Prompt)) { MUI.Head(side, "Hint"); T(side, f.Prompt, "xa-m-dim"); }
+            var lg = MUI.Legend(side, ("Click", "Set focus"), ("J", "Close")); lg.style.marginTop = 16;
         }
 
-        // ------------------------------------------------------------ Captain's Log (M2)
+        // ------------------------------------------------------------ Captain's Log (M2; t246u Morpheus entry cards)
         void RenderLog(GameSession s)
         {
             var log = s.Log;
             var notes = Col(true);
-            T(notes, "CAPTAIN'S LOG", "xa-term__h");
             if (log == null) { T(notes, "The log is not available.", "xa-term__dim"); return; }
+            int total = 0; foreach (var e in log.Ordered()) if (e != null && !string.IsNullOrEmpty(e.text)) total++;
+            MUI.Head(notes, "Captain's Log", total + (total == 1 ? " entry" : " entries"));
 
-            var tools = new VisualElement(); tools.style.flexDirection = FlexDirection.Row; tools.style.marginBottom = 8;
-            var order = new Button(() => { log.OldestFirst = !log.OldestFirst; Render(); }) { text = log.OldestFirst ? "Oldest First" : "Newest First" };
-            order.AddToClassList("xa-term__btn"); order.AddToClassList("xa-term__btn--ghost"); order.style.marginRight = 8; tools.Add(order);
-            notes.Add(tools);
-
-            var entry = new TextField { multiline = true };
+            var tools = new VisualElement(); tools.style.flexDirection = FlexDirection.Row; tools.style.marginBottom = 6; tools.style.alignItems = Align.Center;
+            var entry = new TextField { multiline = false };
             entry.AddToClassList("xa-term__text");
-            entry.style.minHeight = 64; entry.style.marginBottom = 6; entry.style.whiteSpace = WhiteSpace.Normal;
-            notes.Add(entry);
+            entry.style.flexGrow = 1; entry.style.marginRight = 8;
+            tools.Add(entry);
             var add = new Button(() =>
             {
                 if (s.Notifications != null && s.Notifications.AddNote(entry.value)) { entry.value = ""; Render(); }
                 else Toast.Show("That note is already in the log, or it was empty.", 3f);
-            }) { text = "Add note" };
-            add.AddToClassList("xa-term__btn"); notes.Add(add);
+            }) { text = "ADD NOTE" };
+            add.AddToClassList("xa-term__btn"); add.style.marginTop = 0; add.style.marginBottom = 0; tools.Add(add);
+            var order = new Button(() => { log.OldestFirst = !log.OldestFirst; Render(); }) { text = log.OldestFirst ? "OLDEST FIRST" : "NEWEST FIRST" };
+            order.AddToClassList("xa-term__btn"); order.AddToClassList("xa-term__btn--ghost"); order.style.marginLeft = 8; order.style.marginTop = 0; order.style.marginBottom = 0; tools.Add(order);
+            notes.Add(tools);
 
             int n = 0;
             foreach (var e in log.Ordered())
             {
                 if (e == null || string.IsNullOrEmpty(e.text)) continue;
                 n++;
-                string tag = e.playerNote ? "NOTE" : e.kind.ToString().ToUpperInvariant();
-                T(notes, $"{Clock(e.time)}  [{tag}]  {e.text}", e.playerNote ? "xa-term__good" : "xa-term__text");
+                var card = new VisualElement(); card.AddToClassList("xa-m-card");
+                var row = new VisualElement(); row.AddToClassList("xa-m-card__row");
+                var g = XenoarchIcons.Glyph(e.playerNote ? "ui-journal" : NotificationService.KindGlyph(e.kind), "xa-journal-icon"); g.style.width = 22; g.style.height = 22; g.style.marginRight = 10; g.style.marginBottom = 0;
+                row.Add(g);
+                T(row, Clock(e.time), "xa-m-dim").style.flexGrow = 1;
+                string tag = e.playerNote ? "Note" : e.kind.ToString();
+                MUI.Badge(row, tag, e.playerNote ? "main" : e.kind == NoticeKind.Discovery || e.kind == NoticeKind.Message ? "side" : e.kind == NoticeKind.Research ? "rare" : null);
+                card.Add(row);
+                var txt = T(card, e.text, "xa-m-text"); txt.style.marginTop = 4; txt.style.marginLeft = 32;
+                notes.Add(card);
             }
-            if (n == 0) T(notes, "Nothing yet. Discoveries, research, recoveries and objective updates appear here. You can also add your own notes.", "xa-term__dim");
+            if (n == 0) T(notes, "Nothing yet. Discoveries, research, recoveries, messages and objective updates appear here. You can also add your own notes.", "xa-term__dim");
         }
     }
 }
