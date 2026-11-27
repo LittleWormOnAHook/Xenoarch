@@ -135,11 +135,22 @@ namespace DMI.Xenoarch.World
                     // tileable noise: sample a torus-like wrap by blending the four shifted copies
                     float u = (float)x / n, v = (float)y / n;
                     float s = Tile(u, v, ox, oz, 6f) * 0.7f + Tile(u, v, ox + 31f, oz + 7f, 17f) * 0.3f;
-                    var col = c * (1f - contrast + 2f * contrast * s); col.a = 1f;
+                    // Alpha must stay 0: URP Terrain/Lit defaults smoothness to diffuse alpha, which made these worlds glossy.
+                    var col = c * (1f - contrast + 2f * contrast * s); col.a = 0f;
                     px[x + y * n] = col;
                 }
             tex.SetPixels(px); tex.Apply(true, false);
-            return new TerrainLayer { name = "ProcLayer " + name, diffuseTexture = tex, tileSize = new Vector2(tile, tile), hideFlags = HideFlags.DontSave };
+            return new TerrainLayer
+            {
+                name = "ProcLayer " + name,
+                diffuseTexture = tex,
+                tileSize = new Vector2(tile, tile),
+                hideFlags = HideFlags.DontSave,
+                metallic = 0f,
+                smoothness = 0f,
+                specular = Color.black,
+                smoothnessSource = TerrainLayerSmoothnessSource.Constant,
+            };
         }
 
         static float Tile(float u, float v, float ox, float oz, float f)

@@ -33,5 +33,5 @@ MonoBehaviour:
     thickness: 0
     hardness: 2
     color: {r: 0.392, g: 0.217, b: 0.133, a: 0.7}
-    diggerTexture: 1
+    diggerTexture: 3
   borderColor: {r: 1, g: 0.78, b: 0.35, a: 0.9}

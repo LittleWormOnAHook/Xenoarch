@@ -34,17 +34,17 @@ MonoBehaviour:
     thickness: 0.75
     hardness: 2
     color: {r: 0.392, g: 0.217, b: 0.133, a: 0.7}
-    diggerTexture: 1
+    diggerTexture: 3
   - label: rock band
     kind: 5
     thickness: 0.25
     hardness: 3
     color: {r: 0.3, g: 0.2, b: 0.17, a: 1}
-    diggerTexture: 1
+    diggerTexture: 2
   - label: cemented sediment
     kind: 2
     thickness: 0
     hardness: 2
     color: {r: 0.3472, g: 0.1922, b: 0.1178, a: 0.62}
-    diggerTexture: 1
+    diggerTexture: 3
   borderColor: {r: 1, g: 0.45, b: 0.25, a: 0.9}
