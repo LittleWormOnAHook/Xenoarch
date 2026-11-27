@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.UI
 {
     /// <summary>
-    /// Minimal UI Toolkit drag and drop (t108u): sources start a drag after an 8 px move (a plain click still clicks),
+    /// Minimal UI Toolkit drag and drop (t108u / t213u): sources start a drag after a 16 px move (a plain click still clicks),
     /// a ghost icon follows the pointer, and the drop goes to the nearest ancestor of the picked element that was
     /// registered as a zone. One instance per window root; survives the window rebuilding its contents.
     /// </summary>
@@ -53,7 +53,7 @@ namespace DMI.Xenoarch.UI
             if (_pending == null || e.pointerId != _pointer) return;
             if (!_dragging)
             {
-                if (((Vector2)e.position - _start).sqrMagnitude < 64f) return;
+                if (((Vector2)e.position - _start).sqrMagnitude < 256f) return; // 16 px: click selects, drag only after a real move
                 _dragging = true;
                 _ghost = new VisualElement { pickingMode = PickingMode.Ignore };
                 _ghost.style.position = Position.Absolute; _ghost.style.width = 80; _ghost.style.height = 80;

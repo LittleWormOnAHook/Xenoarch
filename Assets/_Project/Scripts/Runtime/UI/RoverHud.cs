@@ -209,6 +209,8 @@ namespace DMI.Xenoarch.UI
             if (menu) RefreshMenu();
 
             float fuel01 = d.Fuel01;
+            bool chase = RoverVehicle.ChaseActive;
+            XenoarchUI.Show(_speed, !chase);
             _speed.text = $"{rover.SpeedKph:0} km/h";
             SetBar(_fuelFill, _fuelTxt, fuel01, $"{d.Fuel:0}/{d.FuelCapacity:0}", fuel01 <= 0.2f);
             SetBar(_boostFill, _boostTxt, rover.Boost01, $"{rover.Boost01 * 100f:0}%", false);

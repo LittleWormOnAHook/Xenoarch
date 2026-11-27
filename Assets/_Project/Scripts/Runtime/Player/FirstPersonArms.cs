@@ -54,6 +54,8 @@ namespace DMI.Xenoarch.Player
         Transform _arms;
         readonly List<Renderer> _renderers = new List<Renderer>();
         bool _visible = true;
+        /// <summary>t213u: hide first-person arms and held items (rover follow camera).</summary>
+        public bool ForcedHidden { get; set; }
         Transform _rightHand;
 
         // Procedural reach (cockpit console buttons): right arm aims at a world point, out -> press -> back.
@@ -164,7 +166,7 @@ namespace DMI.Xenoarch.Player
                 if (_leftLayer > 0) animator.SetLayerWeight(_leftLayer, _held[0] ? _weight[0] : 0f);
                 if (_rightLayer > 0) animator.SetLayerWeight(_rightLayer, _held[1] ? _weight[1] : 0f);
             }
-            bool anyUp = _weight[0] > 0.001f || _weight[1] > 0.001f;
+            bool anyUp = !ForcedHidden && (_weight[0] > 0.001f || _weight[1] > 0.001f);
             if (anyUp != _visible) { _visible = anyUp; foreach (var r in _renderers) if (r != null) r.enabled = anyUp; }
 
             if (animator == null || controller == null || !anyUp) return;

@@ -16,7 +16,7 @@ namespace DMI.Xenoarch.UI
     {
         protected override string PanelId => "artifact.puzzle";
         string _group, _sel, _drag, _message;
-        VisualElement _ghost; Vector2 _dragStart; bool _dragMoved;
+        VisualElement _ghost; Vector2 _dragStart; bool _dragMoved; int _dragPointer;
         readonly List<VisualElement> _slotEls = new List<VisualElement>();
         float _revealStart = -1f; Label _revealCoords; VisualElement _revealMap;
         AudioSource _audio;
@@ -150,15 +150,19 @@ namespace DMI.Xenoarch.UI
         // ---------------------------------------------------------------- drag and drop
         void BeginDrag(VisualElement row, string id, Vector2 pos, int pointerId)
         {
-            _drag = id; _dragStart = pos; _dragMoved = false;
-            row.CapturePointer(pointerId);
+            _drag = id; _dragStart = pos; _dragMoved = false; _dragPointer = pointerId;
+            // Capture only after the move threshold so a click still selects (t213u).
         }
 
         void MoveDrag(VisualElement row, Vector2 pos)
         {
             if (_drag == null) return;
-            if (!_dragMoved && (pos - _dragStart).sqrMagnitude < 64f) return;
-            _dragMoved = true;
+            if (!_dragMoved && (pos - _dragStart).sqrMagnitude < 256f) return;
+            if (!_dragMoved)
+            {
+                _dragMoved = true;
+                row.CapturePointer(_dragPointer);
+            }
             if (_ghost == null)
             {
                 var a = Session.Artifacts.Get(_drag);

@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f3c6e1a4b2d4708a5c1e8f0d3b7a246, type: 3}
+  m_Name: RoverPhysics_Grasshopper
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Vehicles.RoverPhysicsProfile
+  gravityMultiplier: 1
+  extraDownforceG: 0.35
+  downforceCoeff: 0.12
+  mass: 2800
+  comDown: 0.3
+  spring: 70000
+  damper: 5500
+  travel: 0.28
+  targetPosition: 0.45
+  forceAppPointDistance: 0
+  sidewaysStiffness: 2
+  forwardStiffness: 1.8
+  maxSpeedKph: 40
+  boostSpeedKph: 80
+  acceleration: 5.5
+  brakeDecel: 12
+  maxSteer: 30
+  highSpeedSteer: 8
+  boostSeconds: 3.5
+  boostRechargeSeconds: 7
+  antiFlip: 16
+  airborneDamping: 1.6
+  maxAirUpSpeed: 5.5
+  maxAirDownSpeed: 14
+  chaseDistanceNear: 8
+  chaseDistanceMid: 14
+  chaseDistanceFar: 22
+  chaseHeightNear: 3.2
+  chaseHeightMid: 4.8
+  chaseHeightFar: 6.8

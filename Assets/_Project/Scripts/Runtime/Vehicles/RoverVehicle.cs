@@ -20,10 +20,11 @@ namespace DMI.Xenoarch.Vehicles
     /// the ship's console; driving is enabled after power-on. W/S drive and brake/reverse, A/D steer, Space handbrake,
     /// Shift boosts (short meter, extra fuel), V switches 3rd person (behind and above) / 1st person (the seat),
     /// remembered; R opens the refuel menu; E (looking at nothing usable) gets out. Fuel is held by RoverDirector.
-    /// Parked: kinematic, the model's own mesh colliders. Driving: dynamic, chassis box + wheel colliders.
+    /// Parked (t214u): stays simulated with the handbrake on, chassis + wheels, then sleeps after settling.
+    /// Driving: chassis box + wheel colliders. Suspension arms rotate on P_Rover_Setup_* pivots (t217u).
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class RoverVehicle : MonoBehaviour
+    public sealed partial class RoverVehicle : MonoBehaviour
     {
         [Serializable] public sealed class WheelSlot { public WheelCollider collider; public Transform visual; public bool front; }
 
@@ -80,7 +81,7 @@ namespace DMI.Xenoarch.Vehicles
         float _seatedAt;
 
         const string CamPref = "xenoarch.rover.camera3rd";
-        const float CruiseKph = 50f, BoostKph = 100f;
+        const float CruiseKph = 40f, BoostKph = 80f;
         float _boost01 = 1f;
         bool _warnedLow, _warnedEmpty;
         Vector3 _headXZ; Transform _head; bool _headCentered;
@@ -108,7 +109,7 @@ namespace DMI.Xenoarch.Vehicles
                 return seat != null ? seat.position : transform.position;
             }
         }
-        static bool ThirdPerson { get => PlayerPrefs.GetInt(CamPref, 1) == 1; set { PlayerPrefs.SetInt(CamPref, value ? 1 : 0); PlayerPrefs.Save(); } }
+        public static bool ThirdPerson { get => PlayerPrefs.GetInt(CamPref, 1) == 1; set { PlayerPrefs.SetInt(CamPref, value ? 1 : 0); PlayerPrefs.Save(); } }
         Transform _cam; Vector3 _camLocalPos; Quaternion _camLocalRot; bool _camSaved; Vector3 _camVel; bool _chaseInit;
 
         public bool DoorOpen => _doorTarget > 0.5f;
@@ -120,21 +121,13 @@ namespace DMI.Xenoarch.Vehicles
             _rb = GetComponent<Rigidbody>();
             if (!Live) { if (_rb != null) _rb.isKinematic = true; return; }   // a copy placed in a scene: inert
             if (!baked) Bake();
-            ApplyPlaytestTune();
             _rb = GetComponent<Rigidbody>(); if (_rb == null) _rb = gameObject.AddComponent<Rigidbody>();
-            _rb.mass = mass; _rb.useGravity = false; _rb.interpolation = RigidbodyInterpolation.Interpolate;
+            _rb.useGravity = false; _rb.interpolation = RigidbodyInterpolation.Interpolate;
             _rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            _rb.linearDamping = 0.05f; _rb.angularDamping = 1.2f; _rb.maxAngularVelocity = 3f;
-            _rb.isKinematic = true;
+            _rb.linearDamping = 0.08f; _rb.angularDamping = 1.2f; _rb.maxAngularVelocity = 3f;
             foreach (var mc in GetComponentsInChildren<MeshCollider>(true)) if (!mc.convex) _concave.Add(mc);
-            float r = 0f; int n = 0;
-            foreach (var w in wheels) if (w.collider != null) { r += w.collider.radius; n++; }
-            r = n > 0 ? r / n : 0.4f; n = Mathf.Max(1, n);
-            _motorTorque = mass * acceleration * r / n;
-            _brakeTorque = mass * brakeDecel * r / n;
-            ApplyHandling();
             if (console != null) _power = ConsolePower.Attach(console.gameObject, null);   // starts dark
-            SetDynamic(false);
+            InitPhysicsRuntime();
         }
 
         // ================================================================== bake (editor setup, or runtime fallback)
@@ -360,8 +353,9 @@ namespace DMI.Xenoarch.Vehicles
                 var off = c - transform.position; off.y = 0f;
                 transform.position = new Vector3(p.x, transform.position.y, p.z) - off;
                 Physics.SyncTransforms();
-                transform.position = new Vector3(transform.position.x, hit.point.y + LowestWheelBelowRoot() + 0.03f, transform.position.z);
+                transform.position = new Vector3(transform.position.x, hit.point.y + WheelContactBelowRoot() + 0.03f, transform.position.z);
                 Physics.SyncTransforms();
+                SnapToGround();
                 return true;
             }
             return false;
@@ -380,29 +374,7 @@ namespace DMI.Xenoarch.Vehicles
             return false;
         }
 
-        void SetDynamic(bool dynamic)
-        {
-            if (_rb == null) return;
-            if (dynamic)
-            {
-                foreach (var mc in _concave) if (mc != null) mc.enabled = false;
-                if (chassis != null) chassis.enabled = true;
-                _rb.isKinematic = false;
-                var comPos = com != null ? com.position : transform.position;
-                comPos += Vector3.down * 0.25f;
-                _rb.centerOfMass = transform.InverseTransformPoint(comPos);
-                ApplyHandling();
-                _rb.WakeUp();
-            }
-            else
-            {
-                if (!_rb.isKinematic) { _rb.linearVelocity = Vector3.zero; _rb.angularVelocity = Vector3.zero; }
-                _rb.isKinematic = true;
-                if (chassis != null) chassis.enabled = false;
-                foreach (var mc in _concave) if (mc != null) mc.enabled = true;
-            }
-            foreach (var w in wheels) if (w.collider != null) { w.collider.motorTorque = 0f; w.collider.brakeTorque = dynamic ? 0f : _brakeTorque; w.collider.steerAngle = 0f; }
-        }
+        void SetDynamic(bool dynamic) => ApplyDriveState(dynamic);
 
         // ================================================================== door
 
@@ -418,6 +390,8 @@ namespace DMI.Xenoarch.Vehicles
             }
             if (_state == State.Parked && DoorOpen && Time.time - _doorOpenedAt > 12f) SetDoor(false);
 
+            RefreshSeatedFlags();
+            TickCameraZoom();
             if (_state == State.Driving)
             {
                 if (_player == null || !_player.Seated) { Release(); return; }   // stood up by a teleport / load
@@ -428,6 +402,7 @@ namespace DMI.Xenoarch.Vehicles
                     ThirdPerson = !ThirdPerson;
                     if (!ThirdPerson) RestoreCamera();
                     _chaseInit = false;
+                    ApplySeatLookForCamera();
                 }
                 bool e = _input != null && _input.InteractPressed && (_interactor == null || _interactor.Target == null);
                 if (e)
@@ -489,9 +464,10 @@ namespace DMI.Xenoarch.Vehicles
             SetDoor(false);
             float seatYaw = LookYaw;
             yield return Glide(p, inside, SeatRoot, fwdYaw, seatYaw, 0f, 8f, eye0, seatedEyeHeight);
-            p.EnableSeatLook(seatYaw, 80f, 55f, 60f);
             CenterHead(p, true);
             _state = State.Driving;
+            ApplySeatLookForCamera();
+            RefreshSeatedFlags();
             _seatedAt = Time.unscaledTime;
             InteractionPromptHud.IdlePrompt = "Exit Rover";
             PowerUp();
@@ -544,9 +520,11 @@ namespace DMI.Xenoarch.Vehicles
             yield return Glide(p, inside, outside, backYaw, backYaw, 0f, 0f, p.StandingEyeHeight, p.StandingEyeHeight);
             p.SetSeatPose(outside, backYaw, 0f, p.StandingEyeHeight);
             p.EndSeat();
+            ClearDriverArms();
             HideBody(p, false);
             _player = null;
             _state = State.Parked;
+            RefreshSeatedFlags();
             yield return new WaitForSeconds(1.2f);
             if (_state == State.Parked) SetDoor(false);
         }
@@ -571,13 +549,15 @@ namespace DMI.Xenoarch.Vehicles
             SetDynamic(false);
             _powered = false;
             if (_power != null) _power.PowerOff();
+            ClearDriverArms();
             HideBody(_player, false);
             InteractionPromptHud.IdlePrompt = null;
             _player = null;
             _state = State.Parked;
+            RefreshSeatedFlags();
         }
 
-        void OnDisable() { if (Live && _state != State.Parked && _player != null) { if (_player.Seated) _player.EndSeat(); Release(); } }
+        void OnDisable() { if (Live && _state != State.Parked && _player != null) { ClearDriverArms(); if (_player.Seated) _player.EndSeat(); Release(); } AnySeated = false; ChaseActive = false; }
 
         void HideBody(FirstPersonController p, bool hide)
         {
@@ -599,13 +579,12 @@ namespace DMI.Xenoarch.Vehicles
 
         void FixedUpdate()
         {
-            if (!Live || _rb == null || _rb.isKinematic) return;
-            float g = _player != null ? _player.gravity : 9.81f;
-            _rb.AddForce(Vector3.down * g, ForceMode.Acceleration);
-            Stabilize();
+            if (!Live || _rb == null) return;
+            PhysicsTick();
+            if (_rb.isKinematic || _state != State.Driving || !_powered) return;
 
             float throttle = 0f, steer = 0f; bool hand = false, wantBoost = false;
-            if (_state == State.Driving && _powered && _player != null && _player.InputEnabled && !UIState.BlocksGameplay)
+            if (_player != null && _player.InputEnabled && !UIState.BlocksGameplay)
             {
                 var kb = Keyboard.current; var gp = Gamepad.current;
                 if (kb != null)
@@ -651,6 +630,7 @@ namespace DMI.Xenoarch.Vehicles
                 if (w.front) w.collider.steerAngle = steerDeg;
             }
 
+            ClampPlanarSpeed(limit);
             var planar = _rb.linearVelocity; planar.y = 0f;
             float use = (Mathf.Abs(throttle) * fuelPerSecond + planar.magnitude * fuelPerMetre) * (boosting ? boostFuelMul : 1f) * dt;
             if (use > 0f && dir != null) dir.SpendFuel(use);
@@ -669,17 +649,9 @@ namespace DMI.Xenoarch.Vehicles
         void LateUpdate()
         {
             if (!Live) return;
-            if (_rb != null && !_rb.isKinematic)
-            {
-                var right = Vector3.Cross(Vector3.up, Fwd);
-                foreach (var w in wheels)
-                {
-                    if (w.visual == null || w.collider == null) continue;
-                    var r = w.visual.GetComponent<Renderer>();
-                    var c = r != null ? r.bounds.center : w.visual.position;
-                    w.visual.RotateAround(c, right, w.collider.rpm * 6f * Time.deltaTime);
-                }
-            }
+            SyncSuspensionAndWheels();
+            HideDriverArms();
+            RefreshSeatedFlags();
             if (_state == State.Driving && _player != null && _player.Seated && seat != null)
             {
                 _player.SetSeatFrame(SeatRoot, LookYaw);
@@ -687,18 +659,7 @@ namespace DMI.Xenoarch.Vehicles
             }
         }
 
-        void ApplyPlaytestTune()
-        {
-            // t205u/t206u: force the playtest drive/camera numbers even if an older prefab serialised 11 m/s, 7.5 m chase, etc.
-            mass = 2800f;
-            acceleration = 16f;
-            brakeDecel = 12f;
-            maxSpeed = CruiseKph / 3.6f;
-            boostSpeed = BoostKph / 3.6f;
-            highSpeedSteer = 8f;
-            chaseDistance = 14f;
-            chaseHeight = 4.8f;
-        }
+        void ApplyPlaytestTune() => ApplyProfile();
 
         void ApplyHandling()
         {
@@ -758,9 +719,8 @@ namespace DMI.Xenoarch.Vehicles
             var cam = _player.ViewCamera;
             if (cam == null) return;
             if (!_camSaved || _cam != cam.transform) { _cam = cam.transform; _camLocalPos = _cam.localPosition; _camLocalRot = _cam.localRotation; _camSaved = true; _chaseInit = false; }
-            float roverYaw = Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y;
-            float seatYaw = Quaternion.LookRotation(seat.forward, Vector3.up).eulerAngles.y;
-            float orbit = Mathf.DeltaAngle(seatYaw, _player.transform.eulerAngles.y);
+            float roverYaw = LookYaw;
+            float orbit = Mathf.DeltaAngle(roverYaw, _player.transform.eulerAngles.y);
             var dir = Quaternion.Euler(0f, roverYaw + orbit, 0f) * Vector3.forward;
             var centre = (com != null ? com.position : transform.position) + Vector3.up * 1.2f;
             float lift = Mathf.Clamp(_player.Pitch, -30f, 50f) / 50f;

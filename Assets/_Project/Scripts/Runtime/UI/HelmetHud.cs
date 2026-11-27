@@ -1,6 +1,7 @@
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Galaxy;
 using DMI.Xenoarch.Player;
+using DMI.Xenoarch.Vehicles;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -143,7 +144,7 @@ namespace DMI.Xenoarch.UI
             }
 
             Simulate(outdoors);
-            bool show = outdoors && helmetOn && !UIState.IsOpen(Panels.Loading) && !UIState.BlocksGameplay && !DMI.Xenoarch.Scenes.SceneLoader.Busy;
+            bool show = outdoors && helmetOn && !RoverVehicle.AnySeated && !UIState.IsOpen(Panels.Loading) && !UIState.BlocksGameplay && !DMI.Xenoarch.Scenes.SceneLoader.Busy;
             Visible = show;
             XenoarchUI.Show(_root, show);
             // Keep other HUD out of the pods while the visor is up.
