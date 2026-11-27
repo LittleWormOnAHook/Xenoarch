@@ -209,34 +209,78 @@ namespace DMI.Xenoarch.UI
             parent.Add(l); return l;
         }
 
-        /// <summary>Save / load slot list. <paramref name="onDone"/> runs after a load starts (to close the menu).</summary>
+        /// <summary>Save / load screen (t246u): slot rows with screenshot, place, planet, date, play time and story %, and a
+        /// detail card for the selected slot with its action. <paramref name="onDone"/> runs after a load starts.</summary>
         public static VisualElement Slots(bool saveMode, Action back, Action onDone)
         {
             var p = Panel(saveMode ? "SAVE GAME" : "LOAD GAME");
-            var list = new ScrollView(); list.style.maxHeight = 520; p.Add(list);
+            p.style.width = 1240;
+            var body = new VisualElement(); body.style.flexDirection = FlexDirection.Row; body.style.marginTop = 4; p.Add(body);
+            var list = new ScrollView(); list.style.maxHeight = 600; list.style.width = 640; list.style.marginRight = 20; body.Add(list);
+            var side = new VisualElement(); side.style.flexGrow = 1; body.Add(side);
+            string selected = null;
             void Rebuild()
             {
-                list.Clear();
+                list.Clear(); side.Clear();
+                if (selected == null)
+                    foreach (var (slot, _) in SaveSlots.All())
+                        if (saveMode ? slot != SaveSlots.Auto : SaveSlots.Read(slot).exists) { selected = saveMode ? slot : (SaveSlots.Newest() ?? slot); break; }
                 foreach (var (slot, label) in SaveSlots.All())
                 {
                     var info = SaveSlots.Read(slot);
                     bool auto = slot == SaveSlots.Auto;
-                    string line = info.exists ? $"{label}  -  {info.place}   ({SaveSlots.When(info.ticks)}, played {SaveSlots.PlayTime(info.played)})" : $"{label}  -  empty";
                     bool ok = saveMode ? !auto : info.exists;
-                    var b = Button(list, line, () =>
+                    string sl = slot;
+                    var row = new VisualElement(); row.AddToClassList("xa-m-tile"); row.AddToClassList("xa-save-row");
+                    if (slot == selected) row.AddToClassList("xa-m-sel");
+                    if (!ok) row.AddToClassList("xa-save-row--off");
+                    row.RegisterCallback<ClickEvent>(e => { if (!ok) return; if (selected == sl && e.clickCount >= 2) Act(sl, label); else { selected = sl; Rebuild(); } });
+                    var th = new VisualElement(); th.AddToClassList("xa-m-thumb"); th.AddToClassList("xa-save-row__thumb");
+                    if (info.exists) SaveSlots.ApplyThumb(th, slot);
+                    row.Add(th);
+                    var col = new VisualElement(); col.style.flexGrow = 1; col.style.flexShrink = 1;
+                    var top = new VisualElement(); top.style.flexDirection = FlexDirection.Row; top.style.justifyContent = Justify.SpaceBetween;
+                    MUI.L(top, label.ToUpperInvariant(), "xa-m-dim");
+                    if (info.exists) MUI.L(top, SaveSlots.When(info.ticks), "xa-m-dim");
+                    col.Add(top);
+                    if (info.exists)
                     {
-                        if (saveMode)
-                        {
-                            void DoSave() { XenoarchRuntime.Instance?.SaveGame(slot); Toast.Show($"Saved to {label}.", 2.5f); Rebuild(); }
-                            if (info.exists) Confirm(p, $"Overwrite {label}?", DoSave); else DoSave();
-                        }
-                        else if (XenoarchRuntime.Instance != null && XenoarchRuntime.Instance.LoadGame(slot)) onDone?.Invoke();
-                    }, ok);
-                    b.style.height = 46; b.style.fontSize = 15;
+                        MUI.L(col, info.Title.ToUpperInvariant(), "xa-m-card__title");
+                        MUI.L(col, (string.IsNullOrEmpty(info.planet) ? info.place : $"{info.planet}  ·  {info.place}") + $"  ·  played {SaveSlots.PlayTime(info.played)}", "xa-m-dim");
+                        if (info.story >= 0f) MUI.BarRow(col, info.story, "story", false);
+                    }
+                    else MUI.L(col, "EMPTY", "xa-m-card__title");
+                    row.Add(col);
+                    list.Add(row);
+                }
+                if (selected != null)
+                {
+                    string label = null; foreach (var (sl, lb) in SaveSlots.All()) if (sl == selected) label = lb;
+                    var info = SaveSlots.Read(selected);
+                    if (info.exists) side.Add(SaveCard(selected, label, null));
+                    else { var empty = new VisualElement(); empty.AddToClassList("xa-m-panel"); empty.style.height = 250; empty.style.alignItems = Align.Center; empty.style.justifyContent = Justify.Center; MUI.L(empty, $"{label?.ToUpperInvariant()}  ·  EMPTY", "xa-m-dim"); side.Add(empty); }
+                    if (info.exists && !string.IsNullOrEmpty(info.focused)) { var f = MUI.L(side, "FOCUSED OBJECTIVE  ·  " + info.focused, "xa-m-dim"); f.style.marginTop = 10; f.style.whiteSpace = WhiteSpace.Normal; }
+                    string sel = selected;
+                    var go = Button(side, saveMode ? (info.exists ? "OVERWRITE" : "SAVE HERE") : "LOAD", () => Act(sel, label));
+                    go.AddToClassList("xa-m-sel"); go.style.marginTop = 14;
                 }
             }
+            void Act(string slot, string label)
+            {
+                var info = SaveSlots.Read(slot);
+                if (saveMode)
+                {
+                    if (slot == SaveSlots.Auto) return;
+                    void DoSave() { XenoarchRuntime.Instance?.SaveGame(slot); Toast.Show($"Saved to {label}.", 2.5f); Rebuild(); }
+                    if (info.exists) Confirm(p, $"Overwrite {label}? The previous save in this slot is replaced.", DoSave); else DoSave();
+                }
+                else if (info.exists && XenoarchRuntime.Instance != null && XenoarchRuntime.Instance.LoadGame(slot)) onDone?.Invoke();
+            }
             Rebuild();
-            if (saveMode) Note(p, "The autosave slot is written automatically (timer, landing/launch, discoveries; see Settings).");
+            var foot = new VisualElement(); foot.style.flexDirection = FlexDirection.Row; foot.style.alignItems = Align.Center; foot.style.justifyContent = Justify.SpaceBetween; foot.style.marginTop = 10; p.Add(foot);
+            if (saveMode) Note(foot, "The autosave slot is written automatically (timer, landing/launch, discoveries; see Settings).").style.flexShrink = 1;
+            else MUI.L(foot, "");
+            MUI.Legend(foot, ("Click", "Select"), ("Double-click", saveMode ? "Save" : "Load"));
             Button(p, "Back", back);
             return p;
         }

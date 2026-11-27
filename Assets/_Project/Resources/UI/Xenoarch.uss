@@ -481,3 +481,9 @@
 .xa-msg__reply { flex-direction: row; align-items: center; margin: 6px 0 0 0; padding: 8px 12px; border-radius: 0; -unity-text-align: middle-left; }
 .xa-msg__reply .xa-m-key { margin-right: 12px; }
 .xa-msg__reply:hover { border-color: var(--xa-highlight); background-color: rgba(104, 223, 214, 0.14); }
+
+/* t246u save / load rows */
+.xa-save-row { flex-direction: row; align-items: center; padding: 8px; margin-bottom: 6px; }
+.xa-save-row:hover { border-color: var(--xa-highlight); }
+.xa-save-row--off { opacity: 0.5; }
+.xa-save-row__thumb { width: 160px; height: 90px; margin-right: 14px; border-width: 1px; border-color: var(--xa-m-line); flex-shrink: 0; }
