@@ -36,13 +36,20 @@ namespace DMI.Xenoarch.UI
             else if (IsOpen && kb != null && kb.escapeKey.wasPressedThisFrame) Close();
             else if (IsOpen && kb != null && !TypingInField() && (kb.qKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame))
             { _tab = MUI.Cycle(Tabs, _tab, kb.qKey.wasPressedThisFrame ? -1 : 1); RenderTabs(); Render(); }
+            else if (IsOpen && kb != null && _tab == "messages" && !TypingInField() && _msgThread != null)
+            {
+                // t246u: 1-4 answer the open conversation.
+                int pick = kb.digit1Key.wasPressedThisFrame ? 0 : kb.digit2Key.wasPressedThisFrame ? 1 : kb.digit3Key.wasPressedThisFrame ? 2 : kb.digit4Key.wasPressedThisFrame ? 3 : -1;
+                var ms = DMI.Xenoarch.Messages.MessageService.Instance;
+                if (pick >= 0 && ms != null && ms.Reply(_msgThread, pick)) Render();
+            }
         }
 
         /// <summary>t246u tab bar (Morpheus): Q / E cycle, click selects.</summary>
         static readonly (string id, string label, string glyph)[] Tabs =
         {
             ("objectives", "Objectives", "ui-missions"), ("discoveries", "Discoveries", "ui-new-discovery"), ("finds", "Finds", "research-archive"),
-            ("notes", "Notes", "ui-journal"), ("log", "Captain's Log", "ui-journal"), ("standing", "Standing", "ui-level"),
+            ("notes", "Notes", "ui-journal"), ("log", "Captain's Log", "ui-journal"), ("messages", "Messages", "ship-comms"), ("standing", "Standing", "ui-level"),
         };
 
         VisualElement _tabHost;
@@ -123,6 +130,7 @@ namespace DMI.Xenoarch.UI
                 case "finds": RenderFinds(s); break;
                 case "notes": RenderNotes(s); break;
                 case "log": RenderLog(s); break;
+                case "messages": RenderMessages(); break;
                 case "standing": RenderStanding(s); break;
                 default: RenderDiscoveries(s); break;
             }
@@ -338,6 +346,68 @@ namespace DMI.Xenoarch.UI
                 notes.Add(card);
             }
             if (n == 0) T(notes, "Nothing yet. Discoveries, research, recoveries, messages and objective updates appear here. You can also add your own notes.", "xa-term__dim");
+        }
+
+        // ------------------------------------------------------------ Messages (t246u)
+        string _msgThread;
+
+        void RenderMessages()
+        {
+            var ms = DMI.Xenoarch.Messages.MessageService.Instance;
+            var left = Col();
+            if (ms == null) { T(left, "Messages are not available.", "xa-term__dim"); return; }
+            var inbox = ms.Inbox();
+            MUI.Head(left, "Messages", ms.Unread > 0 ? $"{ms.Unread} new" : $"{inbox.Count}");
+            if (inbox.Count == 0) { T(left, "No messages yet. Mission Control and the ship AI will contact you here.", "xa-term__dim"); return; }
+            if (_msgThread == null || ms.StateOf(_msgThread) == null) _msgThread = inbox[0].id;
+            foreach (var st in inbox)
+            {
+                var th = ms.Thread(st.id);
+                string id = st.id;
+                var card = new VisualElement(); card.AddToClassList("xa-m-card");
+                if (id == _msgThread) card.AddToClassList("xa-m-card--sel");
+                card.RegisterCallback<ClickEvent>(_ => { _msgThread = id; Render(); });
+                var row = new VisualElement(); row.AddToClassList("xa-m-card__row");
+                var g = XenoarchIcons.Glyph(string.IsNullOrEmpty(th.glyph) ? "ship-comms" : th.glyph); g.style.width = 26; g.style.height = 26; g.style.marginRight = 10;
+                row.Add(g);
+                var col = new VisualElement(); col.style.flexGrow = 1; col.style.flexShrink = 1;
+                MUI.L(col, (th.contact ?? "").ToUpperInvariant(), "xa-m-card__title");
+                MUI.L(col, th.subject ?? "", "xa-m-dim");
+                row.Add(col);
+                if (st.unread) MUI.Badge(row, "New", "new");
+                else if (ms.Choices(id).Count > 0) MUI.Badge(row, "Reply", "side");
+                card.Add(row);
+                var last = st.lines.Count > 0 ? st.lines[st.lines.Count - 1] : null;
+                if (last != null) { var pv = MUI.L(card, (last.player ? "You: " : "") + last.text, "xa-m-dim"); pv.style.marginLeft = 36; pv.style.marginTop = 4; pv.style.whiteSpace = WhiteSpace.Normal; pv.style.maxHeight = 40; pv.style.overflow = Overflow.Hidden; }
+                left.Add(card);
+            }
+
+            var right = Col(true);
+            var cur = ms.StateOf(_msgThread); var thr = ms.Thread(_msgThread);
+            if (cur == null || thr == null) return;
+            ms.MarkRead(_msgThread);
+            MUI.Head(right, thr.contact, thr.subject);
+            foreach (var line in cur.lines)
+            {
+                var b = new VisualElement(); b.AddToClassList("xa-msg"); b.AddToClassList(line.player ? "xa-msg--me" : "xa-msg--them");
+                MUI.L(b, $"{(line.from ?? "").ToUpperInvariant()}  ·  {Clock(line.time)}", "xa-msg__from");
+                MUI.L(b, line.text, "xa-msg__text");
+                right.Add(b);
+            }
+            var choices = ms.Choices(_msgThread);
+            if (choices.Count > 0)
+            {
+                MUI.L(right, "REPLY", "xa-m-head__title").style.marginTop = 14;
+                for (int i = 0; i < choices.Count; i++)
+                {
+                    int ci = i; string tid = _msgThread;
+                    var btn = new Button(() => { ms.Reply(tid, ci); Render(); }); btn.AddToClassList("xa-m-tile"); btn.AddToClassList("xa-msg__reply");
+                    MUI.Key(btn, (i + 1).ToString());
+                    MUI.L(btn, choices[i].text, "xa-m-text").style.whiteSpace = WhiteSpace.Normal;
+                    right.Add(btn);
+                }
+            }
+            else T(right, "End of conversation.", "xa-term__dim").style.marginTop = 10;
         }
     }
 }

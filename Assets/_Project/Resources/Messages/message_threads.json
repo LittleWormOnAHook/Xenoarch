@@ -1,0 +1,44 @@
+{
+  "threads": [
+    {
+      "id": "mc.welcome",
+      "contact": "Mission Control",
+      "glyph": "ship-comms",
+      "subject": "Uplink check",
+      "trigger": "start",
+      "nodes": [
+        { "id": "a", "text": "Mission Control to survey vessel. Telemetry is green on our side. Confirm you are receiving.", "choices": [
+          { "text": "Loud and clear.", "next": "b" },
+          { "text": "Signal is a bit noisy.", "next": "c" } ] },
+        { "id": "b", "text": "Good. Your first survey site is flagged on the ship terminal. Check in when you find something." },
+        { "id": "c", "text": "We will boost the relay on our end. Your first survey site is flagged on the ship terminal." }
+      ]
+    },
+    {
+      "id": "ai.systems",
+      "contact": "Ship AI",
+      "glyph": "ship-starship",
+      "subject": "Systems check",
+      "trigger": "start",
+      "nodes": [
+        { "id": "a", "text": "Good morning, Captain. All ship systems are nominal. Would you like a summary of the excavation tools?", "choices": [
+          { "text": "Yes, please.", "next": "b" },
+          { "text": "Not now.", "next": "c" } ] },
+        { "id": "b", "text": "The scanner finds buried signals. The shovel and drill move soil fast; the brush and precision tool expose finds safely. Hold Tab for the tool wheel." },
+        { "id": "c", "text": "Understood. I will be here." }
+      ]
+    },
+    {
+      "id": "mc.first_find",
+      "contact": "Mission Control",
+      "glyph": "ship-comms",
+      "subject": "First discovery",
+      "trigger": "notice:Discovery",
+      "nodes": [
+        { "id": "a", "text": "Your discovery just came through on the uplink. Nice work. Log anything unusual.", "choices": [
+          { "text": "Will do.", "next": "b" } ] },
+        { "id": "b", "text": "Mission Control out." }
+      ]
+    }
+  ]
+}

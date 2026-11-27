@@ -470,3 +470,14 @@
 .xa-wheel__pick { flex-direction: row; align-items: center; margin: 0 0 4px 0; padding: 6px 10px; border-radius: 0; }
 .xa-wheel__pick-icon { width: 36px; height: 36px; margin-right: 12px; }
 .xa-wheel__legend { position: absolute; right: 48px; bottom: 30px; }
+
+/* t246u messages (journal Messages tab) */
+.xa-msg { padding: 10px 14px; margin: 0 0 8px 0; max-width: 78%; border-width: 1px; }
+.xa-msg--them { align-self: flex-start; background-color: var(--xa-m-tile); border-color: var(--xa-m-line); }
+.xa-msg--me { align-self: flex-end; background-color: rgba(104, 223, 214, 0.10); border-color: rgba(104, 223, 214, 0.45); }
+.xa-msg__from { font-size: 11px; letter-spacing: 2px; color: var(--xa-secondary-text); margin-bottom: 4px; }
+.xa-msg--me .xa-msg__from { color: var(--xa-highlight); }
+.xa-msg__text { font-size: 15px; color: var(--xa-text); white-space: normal; }
+.xa-msg__reply { flex-direction: row; align-items: center; margin: 6px 0 0 0; padding: 8px 12px; border-radius: 0; -unity-text-align: middle-left; }
+.xa-msg__reply .xa-m-key { margin-right: 12px; }
+.xa-msg__reply:hover { border-color: var(--xa-highlight); background-color: rgba(104, 223, 214, 0.14); }
