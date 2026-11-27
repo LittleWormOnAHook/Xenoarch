@@ -12,30 +12,44 @@ namespace DMI.Xenoarch.Materials
     [Serializable] public sealed class NodeState { public string id; public float harvestedAt; }
 
     [Serializable]
-    public sealed class RefinerJob { public string recipeId; public float elapsed, duration; public bool done; }
+    public sealed class RefinerJob
+    {
+        public string recipeId;
+        public float elapsed, duration;
+        public bool done;
+        /// <summary>How many times the recipe runs in this slot. 0 in older data is treated as 1.</summary>
+        public int batches = 1;
+        /// <summary>Stable id for UI actions (not required for save identity).</summary>
+        public int uid;
+        public int Batches => Mathf.Max(1, batches);
+    }
 
     [Serializable]
     public sealed class MaterialsState
     {
         public List<NodeState> nodes = new List<NodeState>();
-        public bool hasJob;
         /// <summary>Dug volume carried over per (site|material|band) towards the next strata unit.</summary>
         public List<StrataAcc> strata = new List<StrataAcc>();
-        public RefinerJob job = new RefinerJob();
+        /// <summary>Up to <see cref="MaterialsService.RefinerSlots"/> jobs, each occupying a slot until collected.</summary>
+        public List<RefinerJob> jobs = new List<RefinerJob>();
+        /// <summary>First active job (existing tests and older call sites). Not serialized.</summary>
+        public RefinerJob job => jobs != null && jobs.Count > 0 ? jobs[0] : new RefinerJob();
+        public bool hasJob => jobs != null && jobs.Count > 0;
     }
 
     /// <summary>
     /// Materials loop (section "materials.state"): planet resource nodes (harvest + timed respawn), the ship refiner
-    /// (one timed recipe at a time, inputs taken on start, outputs delivered on completion or when cargo has room),
-    /// refuelling the ship from fuel items, and paying lab reagents.
+    /// (up to four timed jobs at once; each job is N recipe batches, inputs taken on start, outputs delivered on
+    /// completion or when cargo has room), refuelling the ship from fuel items, and paying lab reagents.
     /// </summary>
     public sealed class MaterialsService
     {
         public const string Key = "materials.state";
+        public const int RefinerSlots = 4;
         public MaterialsState State { get; private set; } = new MaterialsState();
         public IReadOnlyList<RefineRecipe> Recipes => _recipes;
         public event Action Changed;
-        public event Action<RefineRecipe> RefineCompleted;
+        public event Action<RefineRecipe, int> RefineCompleted;
 
         readonly IItemLookup _items;
         readonly InventoryModel _inv;
@@ -47,7 +61,12 @@ namespace DMI.Xenoarch.Materials
         {
             _items = items; _inv = inventory; Pool = new ItemPool(items, inventory);
             if (recipes != null) foreach (var r in recipes) if (r != null) _recipes.Add(r);
-            saves?.Register(new JsonStateSection<MaterialsState>(Key, 13, () => State, s => { State = s ?? new MaterialsState(); Changed?.Invoke(); }));
+            saves?.Register(new JsonStateSection<MaterialsState>(Key, 13, () => State, s =>
+            {
+                State = s ?? new MaterialsState();
+                if (State.jobs == null) State.jobs = new List<RefinerJob>();
+                Changed?.Invoke();
+            }));
         }
 
         public MaterialDefinition Material(string id) => _items != null && _items.TryGetItem(id, out var d) ? d as MaterialDefinition : null;
@@ -80,57 +99,171 @@ namespace DMI.Xenoarch.Materials
         }
 
         // ------------------------------------------------------------------ refiner
-        public bool Busy => State.hasJob;
+        int _nextJobUid;
+        void NormalizeJobs() { if (State.jobs == null) State.jobs = new List<RefinerJob>(); }
+        int NextJobUid()
+        {
+            NormalizeJobs();
+            int max = _nextJobUid;
+            foreach (var j in State.jobs) if (j.uid > max) max = j.uid;
+            _nextJobUid = max;
+            return ++_nextJobUid;
+        }
 
-        public bool CanRefine(RefineRecipe r, out string reason)
+        /// <summary>True when at least one slot has a job (running or waiting to be collected).</summary>
+        public bool Busy { get { NormalizeJobs(); return State.jobs.Count > 0; } }
+        public int JobCount { get { NormalizeJobs(); return State.jobs.Count; } }
+        public int FreeSlotCount { get { NormalizeJobs(); return Mathf.Max(0, RefinerSlots - State.jobs.Count); } }
+        public IReadOnlyList<RefinerJob> Jobs { get { NormalizeJobs(); return State.jobs; } }
+
+        /// <summary>Complete batches the current stock can pay for (every input). 0 if the recipe has no inputs.</summary>
+        public int AffordableBatches(RefineRecipe r)
+        {
+            if (r?.inputs == null || r.inputs.Count == 0) return 0;
+            int n = int.MaxValue;
+            foreach (var i in r.inputs)
+            {
+                if (i.count <= 0) continue;
+                n = Mathf.Min(n, Pool.Count(i.itemId) / i.count);
+            }
+            return n == int.MaxValue ? 0 : Mathf.Max(0, n);
+        }
+
+        /// <summary>Affordable batches whose outputs would fit after the inputs are taken (Max). May be less than All.</summary>
+        public int MaxFittingBatches(RefineRecipe r)
+        {
+            int afford = AffordableBatches(r);
+            if (afford <= 0) return 0;
+            int lo = 0, hi = afford;
+            while (lo < hi)
+            {
+                int mid = (lo + hi + 1) / 2;
+                if (OutputsFit(r, mid)) lo = mid; else hi = mid - 1;
+            }
+            return lo;
+        }
+
+        bool OutputsFit(RefineRecipe r, int batches)
+        {
+            if (r == null || batches <= 0) return batches == 0;
+            var snap = Pool.Capture();
+            foreach (var i in r.inputs) Pool.Remove(i.itemId, i.count * batches);
+            bool ok = Pool.TryAddAll(r.outputs.Select(o => (o.itemId, o.count * batches)));
+            Pool.Restore(snap);
+            return ok;
+        }
+
+        public bool CanRefine(RefineRecipe r, out string reason) => CanRefine(r, 1, out reason);
+
+        public bool CanRefine(RefineRecipe r, int batches, out string reason)
         {
             reason = null;
             if (r == null) { reason = "Unknown recipe."; return false; }
-            if (Busy) { reason = State.job.done ? "Collect the finished batch first (cargo full)." : "Refiner busy."; return false; }
+            if (batches < 1) { reason = "Amount must be at least 1 batch."; return false; }
+            NormalizeJobs();
+            if (State.jobs.Count >= RefinerSlots)
+            {
+                reason = State.jobs.Exists(j => j.done)
+                    ? "Collect a finished batch first (cargo full)."
+                    : "All 4 refiner slots are busy.";
+                return false;
+            }
             foreach (var i in r.inputs)
-                if (Pool.Count(i.itemId) < i.count) { reason = $"Needs {i.count} {Name(i.itemId)} (have {Pool.Count(i.itemId)})."; return false; }
+            {
+                int need = i.count * batches, have = Pool.Count(i.itemId);
+                if (have < need) { reason = $"Needs {need} {Name(i.itemId)} (have {have})."; return false; }
+            }
             return true;
         }
 
-        public bool StartRefine(RefineRecipe r, out string reason)
+        public bool StartRefine(RefineRecipe r, out string reason) => StartRefine(r, 1, out reason);
+
+        public bool StartRefine(RefineRecipe r, int batches, out string reason)
         {
-            if (!CanRefine(r, out reason)) return false;
-            foreach (var i in r.inputs) Pool.Remove(i.itemId, i.count);
-            State.hasJob = true;
-            State.job = new RefinerJob { recipeId = r.Id, elapsed = 0f, duration = r.seconds };
+            if (!CanRefine(r, batches, out reason)) return false;
+            foreach (var i in r.inputs) Pool.Remove(i.itemId, i.count * batches);
+            State.jobs.Add(new RefinerJob { recipeId = r.Id, elapsed = 0f, duration = r.seconds * batches, batches = batches, uid = NextJobUid() });
             Changed?.Invoke();
             return true;
         }
 
-        /// <summary>Stops the running batch and returns its inputs.</summary>
+        /// <summary>Stops the first running (not yet finished) job and returns its inputs. Finished jobs must be collected.</summary>
         public void CancelRefine()
         {
-            if (!State.hasJob) return;
-            var r = Recipe(State.job.recipeId);
-            if (r != null && !State.job.done) foreach (var i in r.inputs) Pool.Add(i.itemId, i.count);
-            State.hasJob = false;
+            NormalizeJobs();
+            int i = State.jobs.FindIndex(j => !j.done);
+            if (i >= 0) CancelRefineAt(i);
+        }
+
+        public bool CancelRefineAt(int index)
+        {
+            NormalizeJobs();
+            if (index < 0 || index >= State.jobs.Count) return false;
+            return CancelJob(State.jobs[index]);
+        }
+
+        public bool CancelRefineUid(int uid)
+        {
+            NormalizeJobs();
+            int i = State.jobs.FindIndex(j => j.uid == uid);
+            return i >= 0 && CancelRefineAt(i);
+        }
+
+        bool CancelJob(RefinerJob job)
+        {
+            if (job.done) return false; // finished jobs must be collected, not discarded
+            var r = Recipe(job.recipeId);
+            if (r != null)
+            {
+                int n = job.Batches;
+                foreach (var i in r.inputs) Pool.Add(i.itemId, i.count * n);
+            }
+            State.jobs.Remove(job);
             Changed?.Invoke();
+            return true;
         }
 
         public void Tick(float dt)
         {
-            if (!State.hasJob) return;
-            var j = State.job;
-            if (!j.done) { j.elapsed += Mathf.Max(0f, dt); if (j.elapsed >= j.duration) j.done = true; else return; }
-            TryDeliver();
+            NormalizeJobs();
+            if (State.jobs.Count == 0) return;
+            foreach (var j in State.jobs)
+                if (!j.done) { j.elapsed += Mathf.Max(0f, dt); if (j.elapsed >= j.duration) j.done = true; }
+            TryDeliverAll();
         }
 
-        /// <summary>Puts a finished batch into cargo (all or nothing). False if cargo has no room yet.</summary>
-        public bool TryDeliver()
+        int TryDeliverAll()
         {
-            if (!State.hasJob || !State.job.done) return false;
-            var r = Recipe(State.job.recipeId);
-            if (r == null) { State.hasJob = false; Changed?.Invoke(); return false; }
-            if (!Pool.TryAddAll(r.outputs.Select(o => (o.itemId, o.count)))) return false;
-            State.hasJob = false;
+            int n = 0;
+            for (int i = State.jobs.Count - 1; i >= 0; i--)
+                if (TryDeliverAt(i)) n++;
+            return n;
+        }
+
+        /// <summary>Puts every finished job that fits into cargo. False if nothing was delivered.</summary>
+        public bool TryDeliver() => TryDeliverAll() > 0;
+
+        /// <summary>Puts one finished job into cargo (all or nothing). False if it is not done or cargo has no room yet.</summary>
+        public bool TryDeliverAt(int index)
+        {
+            NormalizeJobs();
+            if (index < 0 || index >= State.jobs.Count || !State.jobs[index].done) return false;
+            var job = State.jobs[index];
+            var r = Recipe(job.recipeId);
+            if (r == null) { State.jobs.RemoveAt(index); Changed?.Invoke(); return false; }
+            int n = job.Batches;
+            if (!Pool.TryAddAll(r.outputs.Select(o => (o.itemId, o.count * n)))) return false;
+            State.jobs.RemoveAt(index);
             Changed?.Invoke();
-            RefineCompleted?.Invoke(r);
+            RefineCompleted?.Invoke(r, n);
             return true;
+        }
+
+        public bool TryDeliverUid(int uid)
+        {
+            NormalizeJobs();
+            int i = State.jobs.FindIndex(j => j.uid == uid);
+            return i >= 0 && TryDeliverAt(i);
         }
 
         // ------------------------------------------------------------------ fuel
