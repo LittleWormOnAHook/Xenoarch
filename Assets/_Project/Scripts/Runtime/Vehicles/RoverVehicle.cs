@@ -18,7 +18,8 @@ namespace DMI.Xenoarch.Vehicles
     /// Entry: look at the rover, E opens Door_Back (60 degrees on its own pivot), E "Enter Rover" walks you round to the
     /// back and in to the driver-side P_Chair_05. Seated, the hand reaches out to P_Cockpit_Tech_01, which powers on like
     /// the ship's console; driving is enabled after power-on. W/S drive and brake/reverse, A/D steer, Space handbrake,
-    /// V switches 3rd person (behind and above) / 1st person (the seat), remembered; E (looking at nothing usable) gets out.
+    /// Shift boosts (short meter, extra fuel), V switches 3rd person (behind and above) / 1st person (the seat),
+    /// remembered; R opens the refuel menu; E (looking at nothing usable) gets out. Fuel is held by RoverDirector.
     /// Parked: kinematic, the model's own mesh colliders. Driving: dynamic, chassis box + wheel colliders.
     /// </summary>
     [DisallowMultipleComponent]
@@ -27,12 +28,18 @@ namespace DMI.Xenoarch.Vehicles
         [Serializable] public sealed class WheelSlot { public WheelCollider collider; public Transform visual; public bool front; }
 
         [Header("Drive")]
-        public float mass = 900f;
-        [Tooltip("Drive acceleration on flat ground (m/s^2); wheel torque comes from it, the mass and the wheel radius.")] public float acceleration = 3.2f;
-        [Tooltip("Braking deceleration (m/s^2).")] public float brakeDecel = 8f;
-        [Tooltip("Top speed forward (m/s); reverse is a third of it.")] public float maxSpeed = 11f;
+        public float mass = 2800f;
+        [Tooltip("Drive acceleration on flat ground (m/s^2); wheel torque comes from it, the mass and the wheel radius.")] public float acceleration = 16f;
+        [Tooltip("Braking deceleration (m/s^2).")] public float brakeDecel = 12f;
+        [Tooltip("Top speed forward (m/s); 50 km/h. Reverse is a third of it.")] public float maxSpeed = 13.8889f;
+        [Tooltip("Boost top speed (m/s); 100 km/h, Shift, short-term.")] public float boostSpeed = 27.7778f;
+        [Tooltip("Seconds of continuous boost from a full meter.")] public float boostSeconds = 3.5f;
+        [Tooltip("Seconds to recharge an empty boost meter while not boosting.")] public float boostRechargeSeconds = 7f;
+        [Tooltip("Fuel units spent per second at full throttle (before boost multiplier).")] public float fuelPerSecond = 0.12f;
+        [Tooltip("Extra fuel units spent per metre travelled.")] public float fuelPerMetre = 0.008f;
+        [Tooltip("Fuel use multiplier while boosting.")] public float boostFuelMul = 2.5f;
         public float maxSteer = 30f;
-        public float highSpeedSteer = 11f;
+        public float highSpeedSteer = 8f;
         public float suspension = 0.2f;
         [Header("Door / seat")]
         public float doorOpenDegrees = 60f;
@@ -42,8 +49,8 @@ namespace DMI.Xenoarch.Vehicles
         [Tooltip("Max speed (m/s) at which you can get out.")] public float exitSpeed = 1.5f;
         [Header("Cameras (V toggles)")]
         public Key cameraKey = Key.V;
-        public float chaseDistance = 7.5f;
-        public float chaseHeight = 3.2f;
+        public float chaseDistance = 14f;
+        public float chaseHeight = 4.8f;
         public float chaseSmooth = 0.18f;
 
         [Header("Baked setup (Xenoarch > rover setup; markers can be moved)")]
@@ -73,6 +80,34 @@ namespace DMI.Xenoarch.Vehicles
         float _seatedAt;
 
         const string CamPref = "xenoarch.rover.camera3rd";
+        const float CruiseKph = 50f, BoostKph = 100f;
+        float _boost01 = 1f;
+        bool _warnedLow, _warnedEmpty;
+        Vector3 _headXZ; Transform _head; bool _headCentered;
+        public float Boost01 => _boost01;
+        public float SpeedKph
+        {
+            get
+            {
+                if (_rb == null || _rb.isKinematic) return 0f;
+                var vel = _rb.linearVelocity; vel.y = 0f;
+                return vel.magnitude * 3.6f;
+            }
+        }
+        float LookYaw => Quaternion.LookRotation(Fwd, Vector3.up).eulerAngles.y;
+        Vector3 SeatRoot
+        {
+            get
+            {
+                if (driverChair != null)
+                {
+                    var b = Bounds(driverChair.GetComponentsInChildren<Renderer>(true));
+                    float y = seat != null ? seat.position.y : b.min.y;
+                    return new Vector3(b.center.x, y, b.center.z);
+                }
+                return seat != null ? seat.position : transform.position;
+            }
+        }
         static bool ThirdPerson { get => PlayerPrefs.GetInt(CamPref, 1) == 1; set { PlayerPrefs.SetInt(CamPref, value ? 1 : 0); PlayerPrefs.Save(); } }
         Transform _cam; Vector3 _camLocalPos; Quaternion _camLocalRot; bool _camSaved; Vector3 _camVel; bool _chaseInit;
 
@@ -85,10 +120,11 @@ namespace DMI.Xenoarch.Vehicles
             _rb = GetComponent<Rigidbody>();
             if (!Live) { if (_rb != null) _rb.isKinematic = true; return; }   // a copy placed in a scene: inert
             if (!baked) Bake();
+            ApplyPlaytestTune();
             _rb = GetComponent<Rigidbody>(); if (_rb == null) _rb = gameObject.AddComponent<Rigidbody>();
             _rb.mass = mass; _rb.useGravity = false; _rb.interpolation = RigidbodyInterpolation.Interpolate;
             _rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            _rb.linearDamping = 0.05f; _rb.angularDamping = 0.6f; _rb.maxAngularVelocity = 4f;
+            _rb.linearDamping = 0.05f; _rb.angularDamping = 1.2f; _rb.maxAngularVelocity = 3f;
             _rb.isKinematic = true;
             foreach (var mc in GetComponentsInChildren<MeshCollider>(true)) if (!mc.convex) _concave.Add(mc);
             float r = 0f; int n = 0;
@@ -96,6 +132,7 @@ namespace DMI.Xenoarch.Vehicles
             r = n > 0 ? r / n : 0.4f; n = Mathf.Max(1, n);
             _motorTorque = mass * acceleration * r / n;
             _brakeTorque = mass * brakeDecel * r / n;
+            ApplyHandling();
             if (console != null) _power = ConsolePower.Attach(console.gameObject, null);   // starts dark
             SetDynamic(false);
         }
@@ -351,7 +388,10 @@ namespace DMI.Xenoarch.Vehicles
                 foreach (var mc in _concave) if (mc != null) mc.enabled = false;
                 if (chassis != null) chassis.enabled = true;
                 _rb.isKinematic = false;
-                if (com != null) _rb.centerOfMass = transform.InverseTransformPoint(com.position);
+                var comPos = com != null ? com.position : transform.position;
+                comPos += Vector3.down * 0.25f;
+                _rb.centerOfMass = transform.InverseTransformPoint(comPos);
+                ApplyHandling();
                 _rb.WakeUp();
             }
             else
@@ -447,9 +487,10 @@ namespace DMI.Xenoarch.Vehicles
             var inside = doorInside != null ? doorInside.position : centre;
             yield return Glide(p, start, inside, yaw0, fwdYaw, pitch0, 0f, eye0, eye0);
             SetDoor(false);
-            float seatYaw = seat != null ? Quaternion.LookRotation(seat.forward, Vector3.up).eulerAngles.y : fwdYaw;
-            yield return Glide(p, inside, seat != null ? seat.position : inside, fwdYaw, seatYaw, 0f, 8f, eye0, seatedEyeHeight);
+            float seatYaw = LookYaw;
+            yield return Glide(p, inside, SeatRoot, fwdYaw, seatYaw, 0f, 8f, eye0, seatedEyeHeight);
             p.EnableSeatLook(seatYaw, 80f, 55f, 60f);
+            CenterHead(p, true);
             _state = State.Driving;
             _seatedAt = Time.unscaledTime;
             InteractionPromptHud.IdlePrompt = "Exit Rover";
@@ -467,7 +508,7 @@ namespace DMI.Xenoarch.Vehicles
                 if (_power != null) _power.PowerOn();
                 _powered = true;
                 SetDynamic(true);
-                Toast.Show("Rover powered. W/S drive, A/D steer, Space brake, V camera. E to get out.", 5f);
+                Toast.Show("Rover powered. W drive, S reverse, A/D steer, Space brake, Shift boost, V camera, R refuel. E to get out.", 6f);
             }
             var arms = _player != null ? _player.GetComponentInChildren<FirstPersonArms>() : null;
             var eye = _player != null && _player.ViewCamera != null ? _player.ViewCamera.transform.position : transform.position;
@@ -525,6 +566,7 @@ namespace DMI.Xenoarch.Vehicles
 
         void Release()
         {
+            CenterHead(_player, false);
             RestoreCamera();
             SetDynamic(false);
             _powered = false;
@@ -560,8 +602,9 @@ namespace DMI.Xenoarch.Vehicles
             if (!Live || _rb == null || _rb.isKinematic) return;
             float g = _player != null ? _player.gravity : 9.81f;
             _rb.AddForce(Vector3.down * g, ForceMode.Acceleration);
+            Stabilize();
 
-            float throttle = 0f, steer = 0f; bool hand = false;
+            float throttle = 0f, steer = 0f; bool hand = false, wantBoost = false;
             if (_state == State.Driving && _powered && _player != null && _player.InputEnabled && !UIState.BlocksGameplay)
             {
                 var kb = Keyboard.current; var gp = Gamepad.current;
@@ -570,22 +613,36 @@ namespace DMI.Xenoarch.Vehicles
                     throttle += (kb.wKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed ? 1f : 0f);
                     steer += (kb.dKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed ? 1f : 0f);
                     hand = kb.spaceKey.isPressed;
+                    wantBoost = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
                 }
                 if (gp != null)
                 {
                     throttle += gp.rightTrigger.ReadValue() - gp.leftTrigger.ReadValue();
                     steer += gp.leftStick.ReadValue().x;
                     hand |= gp.buttonEast.isPressed;
+                    wantBoost |= gp.leftStickButton.isPressed || gp.rightShoulder.isPressed;
                 }
                 throttle = Mathf.Clamp(throttle, -1f, 1f); steer = Mathf.Clamp(steer, -1f, 1f);
             }
 
+            float dt = Time.fixedDeltaTime;
+            var dir = RoverDirector.Instance;
+            float fuel = dir != null ? dir.Fuel : 0f;
+            bool boosting = wantBoost && fuel > 0.01f && _boost01 > 0.02f && throttle > 0.05f;
+            if (boosting) _boost01 = Mathf.Max(0f, _boost01 - dt / Mathf.Max(0.1f, boostSeconds));
+            else _boost01 = Mathf.Min(1f, _boost01 + dt / Mathf.Max(0.1f, boostRechargeSeconds));
+            boosting = boosting && _boost01 > 0.001f;
+
             float v = Vector3.Dot(_rb.linearVelocity, Fwd);
+            bool dry = fuel <= 0.01f;
+            if (dry) throttle = 0f;
             bool reversing = Mathf.Abs(throttle) > 0.05f && Mathf.Abs(v) > 0.5f && Mathf.Sign(throttle) != Mathf.Sign(v);
-            float limit = throttle >= 0f ? maxSpeed : maxSpeed / 3f;
-            float motor = reversing || Mathf.Abs(v) > limit ? 0f : throttle * _motorTorque;
+            float cap = boosting ? boostSpeed : maxSpeed;
+            float limit = throttle >= 0f ? cap : maxSpeed / 3f;
+            // Motor sign is flipped so W (positive throttle) drives along visual / console forward.
+            float motor = reversing || Mathf.Abs(v) > limit || dry ? 0f : -throttle * _motorTorque * (boosting ? 1.35f : 1f);
             float brake = hand ? _brakeTorque * 1.3f : reversing ? _brakeTorque * Mathf.Abs(throttle) : Mathf.Abs(throttle) < 0.05f ? _brakeTorque * 0.05f : 0f;
-            float steerDeg = steer * Mathf.Lerp(maxSteer, highSpeedSteer, Mathf.Clamp01(Mathf.Abs(v) / maxSpeed));
+            float steerDeg = steer * Mathf.Lerp(maxSteer, highSpeedSteer, Mathf.Clamp01(Mathf.Abs(v) / Mathf.Max(0.01f, cap)));
             foreach (var w in wheels)
             {
                 if (w.collider == null) continue;
@@ -593,6 +650,20 @@ namespace DMI.Xenoarch.Vehicles
                 w.collider.brakeTorque = brake;
                 if (w.front) w.collider.steerAngle = steerDeg;
             }
+
+            var planar = _rb.linearVelocity; planar.y = 0f;
+            float use = (Mathf.Abs(throttle) * fuelPerSecond + planar.magnitude * fuelPerMetre) * (boosting ? boostFuelMul : 1f) * dt;
+            if (use > 0f && dir != null) dir.SpendFuel(use);
+            float fuel01 = dir != null ? dir.Fuel01 : 0f;
+            if (dir != null && dir.Fuel <= 0.01f)
+            {
+                if (!_warnedEmpty) { _warnedEmpty = true; Toast.Show("Rover out of fuel. Press R to refuel, or use the ship refuelling terminal.", 5f); }
+            }
+            else if (fuel01 <= 0.2f)
+            {
+                if (!_warnedLow) { _warnedLow = true; Toast.Show("Rover fuel low.", 3.5f); }
+            }
+            else { _warnedLow = false; _warnedEmpty = false; }
         }
 
         void LateUpdate()
@@ -611,8 +682,73 @@ namespace DMI.Xenoarch.Vehicles
             }
             if (_state == State.Driving && _player != null && _player.Seated && seat != null)
             {
-                _player.SetSeatFrame(seat.position, Quaternion.LookRotation(seat.forward, Vector3.up).eulerAngles.y);
+                _player.SetSeatFrame(SeatRoot, LookYaw);
                 if (ThirdPerson && _powered) ChaseCamera();
+            }
+        }
+
+        void ApplyPlaytestTune()
+        {
+            // t205u/t206u: force the playtest drive/camera numbers even if an older prefab serialised 11 m/s, 7.5 m chase, etc.
+            mass = 2800f;
+            acceleration = 16f;
+            brakeDecel = 12f;
+            maxSpeed = CruiseKph / 3.6f;
+            boostSpeed = BoostKph / 3.6f;
+            highSpeedSteer = 8f;
+            chaseDistance = 14f;
+            chaseHeight = 4.8f;
+        }
+
+        void ApplyHandling()
+        {
+            if (_rb != null) { _rb.mass = mass; _rb.angularDamping = 1.2f; _rb.maxAngularVelocity = 3f; }
+            foreach (var w in wheels)
+            {
+                if (w.collider == null) continue;
+                var side = w.collider.sidewaysFriction;
+                side.stiffness = 2.2f; side.extremumSlip = 0.4f; side.asymptoteSlip = 0.8f;
+                side.extremumValue = 1f; side.asymptoteValue = 0.75f;
+                w.collider.sidewaysFriction = side;
+                var fw = w.collider.forwardFriction;
+                fw.stiffness = 1.8f; fw.extremumSlip = 0.4f; fw.asymptoteSlip = 0.8f;
+                fw.extremumValue = 1f; fw.asymptoteValue = 0.75f;
+                w.collider.forwardFriction = fw;
+            }
+        }
+
+        void Stabilize()
+        {
+            var up = transform.up;
+            var planar = _rb.linearVelocity; planar.y = 0f;
+            _rb.AddForce(Vector3.down * (0.08f * planar.sqrMagnitude), ForceMode.Acceleration);
+            if (up.y < 0.98f && up.y > 0.2f)
+            {
+                var correct = Vector3.Cross(up, Vector3.up);
+                float tip = 1f - Mathf.Clamp01(up.y);
+                _rb.AddTorque(correct * (tip * 14f), ForceMode.Acceleration);
+            }
+        }
+
+        void CenterHead(FirstPersonController p, bool on)
+        {
+            var head = p != null && p.ViewCamera != null ? p.ViewCamera.transform : _head;
+            if (head == null) return;
+            if (on && !_headCentered)
+            {
+                var lp = head.localPosition;
+                _headXZ = new Vector3(lp.x, 0f, lp.z);
+                lp.x = 0f; lp.z = 0f;
+                head.localPosition = lp;
+                _head = head;
+                _headCentered = true;
+            }
+            else if (!on && _headCentered)
+            {
+                var lp = head.localPosition;
+                lp.x = _headXZ.x; lp.z = _headXZ.z;
+                head.localPosition = lp;
+                _headCentered = false; _head = null;
             }
         }
 

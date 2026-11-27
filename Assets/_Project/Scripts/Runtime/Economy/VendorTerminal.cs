@@ -4,6 +4,7 @@ using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
 using DMI.Xenoarch.UI;
+using DMI.Xenoarch.Vehicles;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -93,6 +94,21 @@ namespace DMI.Xenoarch.Economy
             Refresh();
         }
 
+        void RefuelRover(float units)
+        {
+            var d = RoverDirector.Instance;
+            if (d == null) { _message = "No rover systems."; Refresh(); return; }
+            float room = Mathf.Max(0f, d.FuelCapacity - d.Fuel);
+            float afford = vendor.fuelPricePerUnit > 0f ? Eco.Credits / vendor.fuelPricePerUnit : 0f;
+            float u = Mathf.Floor(Mathf.Min(units, room, afford));
+            if (u < 1f) { _message = room < 1f ? "Rover tank is full." : "Not enough credits."; Refresh(); return; }
+            int cost = Mathf.CeilToInt(u * vendor.fuelPricePerUnit);
+            if (!Eco.Spend(cost, "refuel", vendor.Id, "rover.fuel", (int)u)) return;
+            d.AddFuel(u);
+            _message = $"Rover refuelled {u:0} units for {cost} cr.";
+            Refresh();
+        }
+
         void Refuel(float units)
         {
             var ship = Session.Exploration.Ship;
@@ -175,6 +191,15 @@ namespace DMI.Xenoarch.Economy
                 Bar(mid, ship.fuel / Mathf.Max(1f, ship.fuelCapacity));
                 Btn(mid, "Buy 10 units", () => Refuel(10f), ship.fuel < ship.fuelCapacity - 0.5f);
                 Btn(mid, "Fill the tank", () => Refuel(ship.fuelCapacity), ship.fuel < ship.fuelCapacity - 0.5f);
+                var rover = RoverDirector.Instance;
+                if (rover != null)
+                {
+                    Text(mid, "ROVER FUEL", "xa-term__h");
+                    Text(mid, $"{rover.Fuel:0.#} / {rover.FuelCapacity:0} units   ({vendor.fuelPricePerUnit:0.#} cr per unit)");
+                    Bar(mid, rover.Fuel01);
+                    Btn(mid, "Refuel rover: 10 units", () => RefuelRover(10f), rover.Fuel < rover.FuelCapacity - 0.5f);
+                    Btn(mid, "Fill the rover", () => RefuelRover(rover.FuelCapacity), rover.Fuel < rover.FuelCapacity - 0.5f);
+                }
             }
             if (!string.IsNullOrEmpty(_message)) Text(mid, _message);
 

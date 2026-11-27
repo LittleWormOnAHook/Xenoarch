@@ -219,20 +219,23 @@ namespace DMI.Xenoarch.UI
         VisualElement MakeSlot(GameSession s, int k, string id, bool helmet, HudLayout.CornerHotbar g)
         {
             var cell = new VisualElement(); cell.AddToClassList("xa-slot");
+            float nameH = helmet && g.showNames ? Mathf.Round(g.slot * 0.40f) : 0f;
             if (helmet)
             {
+                // Square slot box; names sit above it (t205u), not inside a taller-than-wide frame.
                 cell.style.width = g.slot;
-                cell.style.height = g.showNames ? g.slot + Mathf.Round(g.slot * 0.40f) : g.slot;
-                cell.style.marginRight = k == 3 || k == 7 ? 0 : g.gap;
+                cell.style.height = g.slot;
                 cell.style.paddingTop = cell.style.paddingBottom = 0;
                 cell.style.paddingLeft = cell.style.paddingRight = 0;
+                cell.style.alignItems = Align.Center;
+                cell.style.justifyContent = Justify.Center;
             }
             var icon = new VisualElement(); icon.AddToClassList("xa-slot__icon");
             if (helmet)
             {
-                // Fill almost the whole fitted slot (t180u). A 6 px inset leaves a hair for the key and stack count.
-                float iconPx = Mathf.Max(24f, g.slot - 6f);
+                float iconPx = Mathf.Max(24f, g.slot - 8f);
                 icon.style.width = iconPx; icon.style.height = iconPx;
+                icon.style.marginTop = icon.style.marginBottom = 0;
             }
             string name = id;
             int count = 0;
@@ -256,15 +259,32 @@ namespace DMI.Xenoarch.UI
             cell.Add(icon);
             var key = new Label((k + 1).ToString()); key.AddToClassList("xa-slot__count"); key.style.left = 3; key.style.right = StyleKeyword.Auto; key.style.top = 1; key.style.bottom = StyleKeyword.Auto; cell.Add(key);
             if (count > 1) { var c = new Label("x" + count); c.AddToClassList("xa-slot__count"); cell.Add(c); }
-            if (!string.IsNullOrEmpty(name) && (!helmet || g.showNames))
+            if (helmet)
             {
-                var n = new Label(name); n.AddToClassList("xa-slot__name");
-                if (helmet)
+                var wrap = new VisualElement();
+                wrap.style.flexDirection = FlexDirection.Column;
+                wrap.style.alignItems = Align.Center;
+                wrap.style.width = g.slot;
+                wrap.style.marginRight = k == 3 || k == 7 ? 0 : g.gap;
+                if (g.showNames)
                 {
+                    var n = new Label(string.IsNullOrEmpty(name) ? " " : name); n.AddToClassList("xa-slot__name");
                     n.style.width = g.slot;
                     n.style.fontSize = Mathf.Clamp(Mathf.Round(g.slot * 0.16f), 8f, 11f);
-                    n.style.height = Mathf.Round(g.slot * 0.40f);
+                    n.style.height = nameH;
+                    n.style.overflow = Overflow.Hidden;
+                    n.style.whiteSpace = WhiteSpace.NoWrap;
+                    n.style.textOverflow = TextOverflow.Ellipsis;
+                    n.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    n.style.marginBottom = 1;
+                    wrap.Add(n);
                 }
+                wrap.Add(cell);
+                return wrap;
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                var n = new Label(name); n.AddToClassList("xa-slot__name");
                 cell.Add(n);
             }
             return cell;

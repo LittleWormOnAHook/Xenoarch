@@ -66,18 +66,22 @@ namespace DMI.Xenoarch.Player
         Vector3 _reachTarget;
         float _reachStart = -1f, _reachWeight;
         bool _reachFired;
-        System.Action _onPress;
+        System.Action _onPress, _onComplete;
 
         /// <summary>True while a reach gesture is playing.</summary>
         public bool Reaching => _reachStart >= 0f;
 
         /// <summary>Reach the right hand toward <paramref name="worldTarget"/>, press, return. <paramref name="onPress"/>
-        /// fires at the press (or immediately if the arms rig is missing).</summary>
-        public void Reach(Vector3 worldTarget, System.Action onPress)
+        /// fires at the press (or immediately if the arms rig is missing). <paramref name="onComplete"/> fires when the hand is back.</summary>
+        public void Reach(Vector3 worldTarget, System.Action onPress, System.Action onComplete = null)
         {
-            if (rightUpperArm == null || _rightHand == null) { onPress?.Invoke(); return; }
-            if (Reaching) { var prev = _onPress; _onPress = null; prev?.Invoke(); }
-            _reachTarget = worldTarget; _reachStart = Time.time; _reachFired = false; _onPress = onPress;
+            if (rightUpperArm == null || _rightHand == null) { onPress?.Invoke(); onComplete?.Invoke(); return; }
+            if (Reaching)
+            {
+                var prev = _onPress; _onPress = null; var prevDone = _onComplete; _onComplete = null;
+                prev?.Invoke(); prevDone?.Invoke();
+            }
+            _reachTarget = worldTarget; _reachStart = Time.time; _reachFired = false; _onPress = onPress; _onComplete = onComplete;
             RaiseTemporarily(Hand.Right, reachOutSeconds + reachHoldSeconds + reachBackSeconds + 0.1f);
         }
 
@@ -192,7 +196,7 @@ namespace DMI.Xenoarch.Player
             if (t < reachOutSeconds) _reachWeight = Smooth(t / reachOutSeconds);
             else if (t < reachOutSeconds + reachHoldSeconds) _reachWeight = 1f;
             else if (t < reachOutSeconds + reachHoldSeconds + reachBackSeconds) _reachWeight = 1f - Smooth((t - reachOutSeconds - reachHoldSeconds) / reachBackSeconds);
-            else { _reachWeight = 0f; _reachStart = -1f; }
+            else { _reachWeight = 0f; _reachStart = -1f; var done = _onComplete; _onComplete = null; done?.Invoke(); }
         }
 
         void ApplyReach()

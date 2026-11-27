@@ -160,6 +160,26 @@ namespace DMI.Xenoarch.Materials
             return added;
         }
 
+        /// <summary>Spends fuel items (biggest first) into a custom tank. <paramref name="accept"/> is given each
+        /// item's fuel value and must return how much was actually added (0 = tank full, stop).</summary>
+        public float RefuelCustom(Func<float, float> accept)
+        {
+            if (accept == null) return 0f;
+            float added = 0f;
+            foreach (var m in Held(m => m.fuelValue > 0f).OrderByDescending(m => m.fuelValue).ToList())
+            {
+                while (Pool.Count(m.Id) > 0)
+                {
+                    float got = accept(m.fuelValue);
+                    if (got <= 0.01f) { if (added > 0f) Changed?.Invoke(); return added; }
+                    Pool.Remove(m.Id, 1);
+                    added += got;
+                }
+            }
+            if (added > 0f) Changed?.Invoke();
+            return added;
+        }
+
         // ------------------------------------------------------------------ lab reagents
         public int ReagentUnits() => Held(m => m.reagentValue > 0).Sum(m => m.reagentValue * Pool.Count(m.Id));
 

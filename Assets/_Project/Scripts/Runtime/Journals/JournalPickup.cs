@@ -1,4 +1,5 @@
 using DMI.Xenoarch.Interaction;
+using DMI.Xenoarch.Player;
 using UnityEngine;
 
 namespace DMI.Xenoarch.Journals
@@ -15,6 +16,7 @@ namespace DMI.Xenoarch.Journals
 
         public Transform InteractionTransform => transform;
         JournalEntry _entry;
+        bool _busy;
         JournalEntry Entry => _entry != null ? _entry : (_entry = JournalService.Find(entryId));
 
         void Awake() { EnsureVisual(); EnsureCollider(); }
@@ -32,11 +34,19 @@ namespace DMI.Xenoarch.Journals
         public bool TryInteract(in InteractionContext c)
         {
             var s = c.Session; var e = Entry;
-            if (s == null || e == null) return false;
-            bool isNew = s.Journals.Collect(e.Id);
-            if (isNew) UI.Toast.Show($"Journal added: {e.title}  (Inventory > Journals)", 4f);
-            UI.JournalReader.Show(e.Id);
-            gameObject.SetActive(false);
+            if (s == null || e == null || _busy) return false;
+            _busy = true;
+            var arms = c.Rig != null ? c.Rig.Root.GetComponentInChildren<FirstPersonArms>() : null;
+            var target = transform.position + Vector3.up * 0.05f;
+            void Pickup()
+            {
+                bool isNew = s.Journals.Collect(e.Id);
+                if (isNew) UI.Toast.Show($"Journal added: {e.title}  (Inventory > Journals)", 4f);
+                gameObject.SetActive(false);
+            }
+            void OpenNote() => UI.JournalReader.Show(e.Id);
+            if (arms != null) arms.Reach(target, Pickup, OpenNote);
+            else { Pickup(); OpenNote(); }
             return true;
         }
 

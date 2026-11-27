@@ -1,6 +1,7 @@
 using System.Linq;
 using DMI.Xenoarch.Materials;
 using DMI.Xenoarch.UI;
+using DMI.Xenoarch.Vehicles;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -71,6 +72,20 @@ namespace DMI.Xenoarch.Ship
             Text(mid, $"Fuel in cargo: {cargo:0.#} units", "xa-term__dim");
             Btn(mid, "Refuel ship", () => { float a = m.Refuel(x); _message = a > 0f ? $"Refuelled +{a:0.#}." : "Nothing to refuel with (or tank full)."; Refresh(); },
                 cargo > 0f && x.Ship.fuel < x.Ship.fuelCapacity - 0.01f);
+
+            var rover = RoverDirector.Instance;
+            if (rover != null)
+            {
+                Text(mid, "ROVER FUEL", "xa-term__h");
+                Text(mid, $"{rover.Fuel:0.#} / {rover.FuelCapacity:0} units");
+                Bar(mid, rover.Fuel01);
+                Btn(mid, "Refuel rover from cargo", () => { float a = rover.RefuelFromCargo(); _message = a > 0f ? $"Rover refuelled +{a:0.#}." : "Nothing to refuel with (or tank full)."; Refresh(); },
+                    cargo > 0f && rover.Fuel < rover.FuelCapacity - 0.01f);
+                Btn(mid, "Transfer 10 from ship", () => { float a = rover.TransferFromShip(10f); _message = a > 0f ? $"Transferred {a:0.#} to the rover." : "Nothing to transfer (or tank full)."; Refresh(); },
+                    x.Ship.fuel > 0.5f && rover.Fuel < rover.FuelCapacity - 0.01f);
+                Btn(mid, "Fill rover from ship", () => { float a = rover.TransferFromShip(rover.FuelCapacity); _message = a > 0f ? $"Transferred {a:0.#} to the rover." : "Nothing to transfer (or tank full)."; Refresh(); },
+                    x.Ship.fuel > 0.5f && rover.Fuel < rover.FuelCapacity - 0.01f);
+            }
 
             var cargoCol = ScrollCol(body, 2);
             Text(cargoCol, "MATERIALS ABOARD", "xa-term__h");

@@ -335,6 +335,7 @@ namespace DMI.Xenoarch.Galaxy
         }
 
         public void Refuel(float amount) { Ship.fuel = Mathf.Min(Ship.fuelCapacity, Ship.fuel + Mathf.Max(0f, amount)); Changed?.Invoke(); }
+        public void ConsumeFuel(float amount) { Ship.fuel = Mathf.Max(0f, Ship.fuel - Mathf.Max(0f, amount)); Changed?.Invoke(); }
 
         // ------------------------------------------------------------------ scanning
 

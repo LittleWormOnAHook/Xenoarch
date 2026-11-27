@@ -74,6 +74,7 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.JournalReader>();
             gameObject.AddComponent<DMI.Xenoarch.Journals.JournalDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Vehicles.RoverDirector>();   // t187u
+            gameObject.AddComponent<DMI.Xenoarch.UI.RoverHud>();              // t206u
             gameObject.AddComponent<DMI.Xenoarch.UI.AutosaveDirector>();
             gameObject.AddComponent<DMI.Xenoarch.Economy.VendorDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.DiscoveryJournalWindow>();
