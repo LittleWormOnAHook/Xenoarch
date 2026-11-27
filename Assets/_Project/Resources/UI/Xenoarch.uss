@@ -451,3 +451,22 @@
 
 /* t246u save thumbnails (screenshot when present, dark placeholder for older saves) */
 .xa-m-thumb { background-color: rgb(14, 4, 7); border-bottom-width: 1px; border-bottom-color: var(--xa-m-line); background-size: cover; background-position-x: center; background-position-y: center; }
+
+/* t246u tool wheel (hold Tab) */
+.xa-wheel-root { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(12, 3, 5, 0.55); align-items: center; justify-content: center; }
+.xa-wheel__title { position: absolute; left: 48px; top: 40px; font-size: 14px; letter-spacing: 3px; color: var(--xa-m-gold); }
+.xa-wheel { width: 600px; height: 600px; margin-top: -60px; }
+.xa-wheel__graphic { position: absolute; left: 0; top: 0; width: 600px; height: 600px; }
+.xa-wheel__slot { position: absolute; width: 64px; height: 64px; }
+.xa-wheel__slot--missing { opacity: 0.35; }
+.xa-wheel__label { position: absolute; width: 180px; height: 22px; -unity-text-align: middle-center; font-size: 13px; letter-spacing: 2px; color: var(--xa-text); }
+.xa-wheel__label--sel { color: var(--xa-highlight); }
+.xa-wheel__center { position: absolute; left: 236px; top: 236px; width: 128px; height: 128px; align-items: center; justify-content: center; }
+.xa-wheel__action { font-size: 11px; letter-spacing: 2px; color: var(--xa-secondary-text); }
+.xa-wheel__name { font-size: 17px; letter-spacing: 2px; color: var(--xa-highlight); -unity-text-align: middle-center; white-space: normal; max-width: 120px; }
+.xa-wheel__info { position: absolute; bottom: 56px; width: 640px; flex-direction: row; align-items: center; padding: 12px 16px; }
+.xa-wheel__info-icon { width: 56px; height: 56px; margin-right: 16px; border-width: 1px; border-color: var(--xa-highlight); background-color: var(--xa-m-tile); padding: 4px; }
+.xa-wheel__picker { position: absolute; right: 60px; top: 120px; width: 420px; padding: 16px 18px; }
+.xa-wheel__pick { flex-direction: row; align-items: center; margin: 0 0 4px 0; padding: 6px 10px; border-radius: 0; }
+.xa-wheel__pick-icon { width: 36px; height: 36px; margin-right: 12px; }
+.xa-wheel__legend { position: absolute; right: 48px; bottom: 30px; }

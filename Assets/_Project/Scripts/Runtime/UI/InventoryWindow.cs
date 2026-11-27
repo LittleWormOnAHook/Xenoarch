@@ -46,7 +46,7 @@ namespace DMI.Xenoarch.UI
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (scene == SceneNames.MainMenu || scene == SceneNames.Bootstrap || Scenes.SceneLoader.Busy) return;
             var kb = Keyboard.current;
-            if (kb != null && (kb.iKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)) Open();
+            if (kb != null && kb.iKey.wasPressedThisFrame) Open(); // t246u: Tab tap opens it via ToolWheelHud (hold = wheel)
         }
 
         float _openTime;
