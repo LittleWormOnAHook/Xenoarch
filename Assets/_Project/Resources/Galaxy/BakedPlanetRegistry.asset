@@ -12,4 +12,70 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a94c0b17e5d24f6a8c3e91d0b7f52a18, type: 3}
   m_Name: BakedPlanetRegistry
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.BakedPlanetRegistry
-  entries: []
+  entries:
+  - bodyId: body.alpha_centauri.p0
+    sceneName: Surface_alpha_centauri_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_alpha_centauri_p0.unity
+  - bodyId: body.alpha_centauri.p1
+    sceneName: Surface_alpha_centauri_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_alpha_centauri_p1.unity
+  - bodyId: body.barnards_star.p0
+    sceneName: Surface_barnards_star_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_barnards_star_p0.unity
+  - bodyId: body.barnards_star.p1
+    sceneName: Surface_barnards_star_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_barnards_star_p1.unity
+  - bodyId: body.barnards_star.p2
+    sceneName: Surface_barnards_star_p2
+    scenePath: Assets/_Project/Scenes/Generated/Surface_barnards_star_p2.unity
+  - bodyId: body.barnards_star.p3
+    sceneName: Surface_barnards_star_p3
+    scenePath: Assets/_Project/Scenes/Generated/Surface_barnards_star_p3.unity
+  - bodyId: body.sirius.p0
+    sceneName: Surface_sirius_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_sirius_p0.unity
+  - bodyId: body.epsilon_eridani.p1
+    sceneName: Surface_epsilon_eridani_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_epsilon_eridani_p1.unity
+  - bodyId: body.tau_ceti.p0
+    sceneName: Surface_tau_ceti_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p0.unity
+  - bodyId: body.tau_ceti.p1
+    sceneName: Surface_tau_ceti_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p1.unity
+  - bodyId: body.tau_ceti.p2
+    sceneName: Surface_tau_ceti_p2
+    scenePath: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p2.unity
+  - bodyId: body.tau_ceti.p3
+    sceneName: Surface_tau_ceti_p3
+    scenePath: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p3.unity
+  - bodyId: body.proxima_centauri.p0
+    sceneName: Surface_proxima_centauri_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_proxima_centauri_p0.unity
+  - bodyId: body.proxima_centauri.p1
+    sceneName: Surface_proxima_centauri_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_proxima_centauri_p1.unity
+  - bodyId: body.proxima_centauri.p2
+    sceneName: Surface_proxima_centauri_p2
+    scenePath: Assets/_Project/Scenes/Generated/Surface_proxima_centauri_p2.unity
+  - bodyId: body.g93ce5fd0.p0
+    sceneName: Surface_g93ce5fd0_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g93ce5fd0_p0.unity
+  - bodyId: body.g93ce5fd0.p1
+    sceneName: Surface_g93ce5fd0_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g93ce5fd0_p1.unity
+  - bodyId: body.g93ce5fd0.p2
+    sceneName: Surface_g93ce5fd0_p2
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g93ce5fd0_p2.unity
+  - bodyId: body.g94ce6163.p0
+    sceneName: Surface_g94ce6163_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g94ce6163_p0.unity
+  - bodyId: body.g94ce6163.p1
+    sceneName: Surface_g94ce6163_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g94ce6163_p1.unity
+  - bodyId: body.g95ce62f6.p0
+    sceneName: Surface_g95ce62f6_p0
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g95ce62f6_p0.unity
+  - bodyId: body.g95ce62f6.p1
+    sceneName: Surface_g95ce62f6_p1
+    scenePath: Assets/_Project/Scenes/Generated/Surface_g95ce62f6_p1.unity

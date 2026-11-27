@@ -1,0 +1,1652 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!29 &1
+OcclusionCullingSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_OcclusionBakeSettings:
+    smallestOccluder: 5
+    smallestHole: 0.25
+    backfaceThreshold: 100
+  m_SceneGUID: 00000000000000000000000000000000
+  m_OcclusionCullingData: {fileID: 0}
+--- !u!104 &2
+RenderSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 10
+  m_Fog: 1
+  m_FogColor: {r: 0.72, g: 0.5, b: 0.36, a: 1}
+  m_FogMode: 2
+  m_FogDensity: 0.004
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.55, g: 0.4, b: 0.31, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientIntensity: 1
+  m_AmbientMode: 3
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 1b062252ffd15b80a287f35b3778db43, type: 2}
+  m_HaloStrength: 0.5
+  m_FlareStrength: 1
+  m_FlareFadeSpeed: 3
+  m_HaloTexture: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
+  m_DefaultReflectionMode: 0
+  m_DefaultReflectionResolution: 128
+  m_ReflectionBounces: 1
+  m_ReflectionIntensity: 1
+  m_CustomReflection: {fileID: 0}
+  m_Sun: {fileID: 1018289154}
+  m_UseRadianceAmbientProbe: 0
+--- !u!157 &3
+LightmapSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
+  m_GISettings:
+    serializedVersion: 2
+    m_BounceScale: 1
+    m_IndirectOutputScale: 1
+    m_AlbedoBoost: 1
+    m_EnvironmentLightingMode: 0
+    m_EnableBakedLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
+  m_LightmapEditorSettings:
+    serializedVersion: 12
+    m_Resolution: 2
+    m_BakeResolution: 40
+    m_AtlasSize: 1024
+    m_AO: 0
+    m_AOMaxDistance: 1
+    m_CompAOExponent: 1
+    m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
+    m_Padding: 2
+    m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
+    m_TextureCompression: 1
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 2
+    m_PVRSampling: 1
+    m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 1
+    m_PVRDenoiserTypeIndirect: 1
+    m_PVRDenoiserTypeAO: 1
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 1
+    m_PVRFilteringGaussRadiusAO: 1
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
+  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingSettings: {fileID: 0}
+--- !u!196 &4
+NavMeshSettings:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_BuildSettings:
+    serializedVersion: 3
+    agentTypeID: 0
+    agentRadius: 0.5
+    agentHeight: 2
+    agentSlope: 45
+    agentClimb: 0.4
+    ledgeDropHeight: 0
+    maxJumpAcrossDistance: 0
+    minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
+    manualTileSize: 0
+    tileSize: 256
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
+    debug:
+      m_Flags: 0
+  m_NavMeshData: {fileID: 0}
+--- !u!1 &84944513
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 84944515}
+  - component: {fileID: 84944514}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c7
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &84944514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84944513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c7
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 198.34357, y: 14.3182, z: 323.95084}
+  hasSiteHint: 0
+--- !u!4 &84944515
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84944513}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.2469081, z: 0, w: 0.9690389}
+  m_LocalPosition: {x: 198.34357, y: 14.3182, z: 323.95084}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &216084802
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 216084804}
+  - component: {fileID: 216084803}
+  m_Layer: 0
+  m_Name: LandingZone_Base
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &216084803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216084802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: 
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 0, y: 14.812771, z: -40}
+  hasSiteHint: 0
+--- !u!4 &216084804
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216084802}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 14.812771, z: -40}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &297533716
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 297533718}
+  - component: {fileID: 297533717}
+  m_Layer: 0
+  m_Name: Digger Master
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &297533717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297533716}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521f8e3d06ab44cadaed6ad179732778, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerMaster
+  chunkSize: 33
+  sceneDataFolder: Surface_proxima_centauri_p0
+  screenRelativeTransitionHeightLod0: 0.1
+  screenRelativeTransitionHeightLod1: 0.05
+  colliderLodIndex: 0
+  createLODs: 0
+  showUnderlyingObjects: 0
+  resolutionMult: 4
+  voxelHeight: 1
+  autoVoxelHeight: 0
+  layer: 0
+  chunksTag: Untagged
+  enableOcclusionCulling: 1
+  enableContributeGI: 1
+  forceMicroSplatMaterialAssetUpdate: 0
+  autoSaveMeshesAsAssets: 1
+  autoRemoveFloatingVoxels: 0
+  maxFloatingVoxelGroupSizeToRemove: 30
+  voxelGenerator: {fileID: 0}
+--- !u!4 &297533718
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297533716}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &297981293
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 297981295}
+  - component: {fileID: 297981294}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &297981294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297981293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c9
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -255.76852, y: 28.919004, z: -255.6854}
+  hasSiteHint: 0
+--- !u!4 &297981295
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297981293}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.9068249, z: 0, w: -0.42150757}
+  m_LocalPosition: {x: -255.76852, y: 28.919004, z: -255.6854}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &608339011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 608339013}
+  - component: {fileID: 608339012}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_s2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &608339012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608339011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.s2
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 143.11734, y: 22.088203, z: -216.68808}
+  hasSiteHint: 0
+--- !u!4 &608339013
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608339011}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.94261974, z: 0, w: 0.33386835}
+  m_LocalPosition: {x: 143.11734, y: 22.088203, z: -216.68808}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &791702140
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 791702143}
+  - component: {fileID: 791702142}
+  - component: {fileID: 791702141}
+  m_Layer: 0
+  m_Name: Surface_proxima_centauri_p0_Terrain
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!154 &791702141
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 791702140}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_TerrainData: {fileID: 15600000, guid: 924c57e8545555b42a1952b765b6bedd, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &791702142
+Terrain:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 791702140}
+  m_Enabled: 1
+  serializedVersion: 6
+  m_TerrainData: {fileID: 15600000, guid: 924c57e8545555b42a1952b765b6bedd, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 1
+  m_SplatMapDistance: 400
+  m_HeightmapMinimumLODSimplification: 0
+  m_HeightmapMaximumLOD: 0
+  m_ShadowCastingMode: 2
+  m_DrawHeightmap: 1
+  m_DrawInstanced: 1
+  m_DrawTreesAndFoliage: 1
+  m_StaticShadowCaster: 0
+  m_IgnoreQualitySettings: 0
+  m_ReflectionProbeUsage: 1
+  m_MaterialTemplate: {fileID: 2100000, guid: 024a035272d76e84c934a898d9cd31d3, type: 2}
+  m_BakeLightProbesForTrees: 1
+  m_PreserveTreePrototypeLayers: 0
+  m_DeringLightProbesForTrees: 1
+  m_ReceiveGI: 1
+  m_ScaleInLightmap: 0.025
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
+  m_GroupingID: 0
+  m_RenderingLayerMask: 1
+  m_AllowAutoConnect: 1
+  m_EnableHeightmapRayTracing: 1
+  m_EnableTreesAndDetailsRayTracing: 0
+  m_EnableHeightmapLODFrustumCulling: 1
+  m_TreeMotionVectorModeOverride: 3
+--- !u!4 &791702143
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 791702140}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -512, y: 0, z: -512}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1040279779}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &964071630
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 964071632}
+  - component: {fileID: 964071631}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &964071631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964071630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c3
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -108.34945, y: 25.264868, z: -327.031}
+  hasSiteHint: 0
+--- !u!4 &964071632
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964071630}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.98375887, z: 0, w: -0.17949508}
+  m_LocalPosition: {x: -108.34945, y: 25.264868, z: -327.031}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1018289153
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1018289155}
+  - component: {fileID: 1018289154}
+  m_Layer: 0
+  m_Name: Sun
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!108 &1018289154
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1018289153}
+  m_Enabled: 1
+  serializedVersion: 13
+  m_Type: 1
+  m_Color: {r: 1, g: 0.95, b: 0.88, a: 1}
+  m_Intensity: 1.3
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 2
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShapeRadius: 0.025
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!4 &1018289155
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1018289153}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.34178162, y: -0.28073305, z: 0.10776333, w: 0.8903715}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1037475291
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1037475293}
+  - component: {fileID: 1037475292}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1037475292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1037475291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c4
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -25.135357, y: 24.457664, z: -118.757454}
+  hasSiteHint: 0
+--- !u!4 &1037475293
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1037475291}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.988094, z: 0, w: -0.1538519}
+  m_LocalPosition: {x: -25.135357, y: 24.457664, z: -118.757454}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1040279778
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1040279779}
+  - component: {fileID: 1040279781}
+  - component: {fileID: 1040279780}
+  m_Layer: 0
+  m_Name: Digger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1040279779
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040279778}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 791702143}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1040279780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040279778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12efbee81634dd78fa2cb2ab5a26c2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.TerrainInterface.TerrainCutter
+  digger: {fileID: 1040279781}
+--- !u!114 &1040279781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040279778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34d2e180125d4ac3a3e845f480befdfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
+  master: {fileID: 297533717}
+  guid: d8ec3d302a980a44db0f0a6e848e4421
+  version: 2
+  basePathData: Assets\DiggerData\Scenes\Surface_proxima_centauri_p0\d8ec3d302a980a44db0f0a6e848e4421
+  cutter: {fileID: 1040279780}
+  heightmapScale: {x: 0.5, y: 1, z: 0.5}
+  alphamapsSize:
+    x: 256
+    y: 256
+  uvScale: {x: 0.0009765625, y: 0.0009765625}
+  holeMapScale: {x: 2, y: 1, z: 2}
+  Terrain: {fileID: 791702142}
+  Materials:
+  - {fileID: 2100000, guid: 601dba5e2abd4e24d8f124958c005e44, type: 2}
+  materialType: 2
+  terrainTextures:
+  - {fileID: 2800000, guid: f5e38232e7ee14f4d97a3d975479c2a7, type: 3}
+  - {fileID: 2800000, guid: b701f800b1113fa4786047283d15b57b, type: 3}
+  - {fileID: 2800000, guid: 41665b831439d6749875df4cf2e39a5d, type: 3}
+  - {fileID: 2800000, guid: 9da517596d271fb4d9604563e2ed8b07, type: 3}
+  chunksInStreamingAssets: []
+  persistenceSubPath: 
+  ShowDebug: 0
+  onChunkObjectCreated:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!1 &1092283068
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1092283070}
+  - component: {fileID: 1092283069}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1092283069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092283068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c0
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -311.74203, y: 28.44436, z: -198.7398}
+  hasSiteHint: 0
+--- !u!4 &1092283070
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092283068}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.8525732, z: 0, w: 0.52260786}
+  m_LocalPosition: {x: -311.74203, y: 28.44436, z: -198.7398}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1100667877
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1100667879}
+  - component: {fileID: 1100667878}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2m1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1100667878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1100667877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2m1
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -247.78981, y: 22.990305, z: 231.82912}
+  hasSiteHint: 0
+--- !u!4 &1100667879
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1100667877}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.36122745, z: -0, w: 0.9324778}
+  m_LocalPosition: {x: -247.78981, y: 22.990305, z: 231.82912}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1205526367
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1205526369}
+  - component: {fileID: 1205526368}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_s0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1205526368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1205526367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.s0
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 96.56686, y: 23.126703, z: 194.26404}
+  hasSiteHint: 0
+--- !u!4 &1205526369
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1205526367}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.19425257, z: 0, w: 0.98095155}
+  m_LocalPosition: {x: 96.56686, y: 23.126703, z: 194.26404}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1219202615
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1219202617}
+  - component: {fileID: 1219202616}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1219202616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1219202615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c1
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 340.8382, y: 19.574726, z: -154.88928}
+  hasSiteHint: 0
+--- !u!4 &1219202617
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1219202615}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.81222534, z: 0, w: 0.5833438}
+  m_LocalPosition: {x: 340.8382, y: 19.574726, z: -154.88928}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1290269361
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1290269363}
+  - component: {fileID: 1290269362}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2m3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1290269362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290269361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2m3
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 218.87523, y: 21.045645, z: 140.88861}
+  hasSiteHint: 0
+--- !u!4 &1290269363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290269361}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.42600104, z: 0, w: 0.9047227}
+  m_LocalPosition: {x: 218.87523, y: 21.045645, z: 140.88861}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1322655589
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1322655592}
+  - component: {fileID: 1322655591}
+  - component: {fileID: 1322655590}
+  m_Layer: 0
+  m_Name: Digger Master Runtime
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1322655590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322655589}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecc23ad8b64052c4292fe634f94635ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Integrations.Digger::DMI.Xenoarch.Integrations.Digger.DiggerExcavationSurface
+  digger: {fileID: 0}
+  brush: 0
+  bufferSize: 512
+  runtimeVoxelHeight: 0.1
+--- !u!114 &1322655591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322655589}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2071d786339914393a9a433cd58890f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Digger.Runtime::Digger.Modules.Runtime.Sources.DiggerMasterRuntime
+  enablePersistence: 0
+--- !u!4 &1322655592
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322655589}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1332036347
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1332036349}
+  - component: {fileID: 1332036348}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c11
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1332036348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1332036347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c11
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -137.26337, y: 30.483187, z: -250.59586}
+  hasSiteHint: 0
+--- !u!4 &1332036349
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1332036347}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.9585821, z: 0, w: -0.28481635}
+  m_LocalPosition: {x: -137.26337, y: 30.483187, z: -250.59586}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1351119704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1351119706}
+  - component: {fileID: 1351119705}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_s1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1351119705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1351119704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.s1
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -217.40308, y: 11.277437, z: 28.932684}
+  hasSiteHint: 0
+--- !u!4 &1351119706
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1351119704}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.5906591, z: -0, w: 0.80692124}
+  m_LocalPosition: {x: -217.40308, y: 11.277437, z: 28.932684}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1439972702
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1439972704}
+  - component: {fileID: 1439972703}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2m2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1439972703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1439972702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2m2
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 226.011, y: 20.438429, z: 47.201096}
+  hasSiteHint: 0
+--- !u!4 &1439972704
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1439972702}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.5657016, z: 0, w: 0.82461005}
+  m_LocalPosition: {x: 226.011, y: 20.438429, z: 47.201096}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1464043104
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1464043106}
+  - component: {fileID: 1464043105}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2m0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1464043105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464043104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2m0
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 156.60715, y: 19.276508, z: -8.004992}
+  hasSiteHint: 0
+--- !u!4 &1464043106
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464043104}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.6323897, z: 0, w: 0.7746504}
+  m_LocalPosition: {x: 156.60715, y: 19.276508, z: -8.004992}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1611121376
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1611121378}
+  - component: {fileID: 1611121377}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c8
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1611121377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611121376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c8
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -11.151638, y: 24.036612, z: -250.0225}
+  hasSiteHint: 0
+--- !u!4 &1611121378
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611121376}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.9996483, z: 0, w: -0.026520642}
+  m_LocalPosition: {x: -11.151638, y: 24.036612, z: -250.0225}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1668838791
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4439054525628738990, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_Name
+      value: XA_Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 14.912771
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -40
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5622592626030644804, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8055970413951583867, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+      propertyPath: gravity
+      value: 8.0442
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a76e2ed6c6e0c0645b26f16963a90608, type: 3}
+--- !u!1 &1670923146
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1670923148}
+  - component: {fileID: 1670923147}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c5
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1670923147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1670923146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c5
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 278.48956, y: 24.49556, z: -308.88647}
+  hasSiteHint: 0
+--- !u!4 &1670923148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1670923146}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.9204875, z: 0, w: 0.39077199}
+  m_LocalPosition: {x: 278.48956, y: 24.49556, z: -308.88647}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1693883332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1693883334}
+  - component: {fileID: 1693883333}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c6
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1693883333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1693883332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c6
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -162.34468, y: 28.508392, z: 257.95023}
+  hasSiteHint: 0
+--- !u!4 &1693883334
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1693883332}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.24686964, z: -0, w: 0.96904874}
+  m_LocalPosition: {x: -162.34468, y: 28.508392, z: 257.95023}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1770919071
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1770919073}
+  - component: {fileID: 1770919072}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1770919072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770919071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c2
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: -59.062824, y: 27.352274, z: 276.2719}
+  hasSiteHint: 0
+--- !u!4 &1770919073
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770919071}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.092179246, z: -0, w: 0.99574244}
+  m_LocalPosition: {x: -59.062824, y: 27.352274, z: 276.2719}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1863439069
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1863439071}
+  - component: {fileID: 1863439070}
+  m_Layer: 0
+  m_Name: LandingZone_site_proxima_centauri_p0_v2c10
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1863439070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863439069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d802b4671402ea468e2674fbf18d6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Exploration.LandingZone
+  siteId: site.proxima_centauri.p0.v2c10
+  footprint: 8
+  playerOffset: {x: 0, y: 0, z: 0}
+  siteHint: {x: 0, y: 0, z: 0}
+  autoPlaced: 1
+  relaxedPick: 0
+  autoPosition: {x: 38.40988, y: 21.221249, z: -143.00832}
+  hasSiteHint: 0
+--- !u!4 &1863439071
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863439069}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.984119, z: 0, w: 0.17751028}
+  m_LocalPosition: {x: 38.40988, y: 21.221249, z: -143.00832}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 791702143}
+  - {fileID: 1018289155}
+  - {fileID: 1668838791}
+  - {fileID: 216084804}
+  - {fileID: 1205526369}
+  - {fileID: 1351119706}
+  - {fileID: 608339013}
+  - {fileID: 1464043106}
+  - {fileID: 1100667879}
+  - {fileID: 1439972704}
+  - {fileID: 1290269363}
+  - {fileID: 1092283070}
+  - {fileID: 1219202617}
+  - {fileID: 1770919073}
+  - {fileID: 964071632}
+  - {fileID: 1037475293}
+  - {fileID: 1670923148}
+  - {fileID: 1693883334}
+  - {fileID: 84944515}
+  - {fileID: 1611121378}
+  - {fileID: 297981295}
+  - {fileID: 1863439071}
+  - {fileID: 1332036349}
+  - {fileID: 297533718}
+  - {fileID: 1322655592}

@@ -26,5 +26,71 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Surface_Procedural.unity
     guid: 781fe5fb42eca8445be883fdb3c39d68
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_alpha_centauri_p0.unity
+    guid: 85fa2156497e2b24e99bb40fa086bf0c
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_alpha_centauri_p1.unity
+    guid: 0f9559dfedcc1fa469810279a780d9c5
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_barnards_star_p0.unity
+    guid: a64bdd972d4d9b9458daa64eb9e377f9
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_barnards_star_p1.unity
+    guid: 0577f978094beed489490e015a4b7e54
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_barnards_star_p2.unity
+    guid: cffe7d87898194a41b004f4baa71375a
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_barnards_star_p3.unity
+    guid: 1d3fadcbfdf5e1542b8714f57dcfb0a9
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_sirius_p0.unity
+    guid: 8bf4318c182e6dc468d871d6b309d805
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_epsilon_eridani_p1.unity
+    guid: f69f0e95c3ee6c442b4cded6fe44ac6d
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p0.unity
+    guid: 5b2bf7cd786f51f469c2701c2966becb
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p1.unity
+    guid: 5dee203873b9089428e1984ac567596a
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p2.unity
+    guid: ad867f768d60d62468c4ab21bec01abe
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_tau_ceti_p3.unity
+    guid: bcd1c79d3e9f1ea4d8b76ce53c3a79fc
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_proxima_centauri_p0.unity
+    guid: ffa3660c008060640a78768ef6065ade
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_proxima_centauri_p1.unity
+    guid: 6ccbf5a9e83a1fd4e827d3b4b46831ce
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_proxima_centauri_p2.unity
+    guid: 3125bd8ea8184a54fab8af6a414d43fd
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g93ce5fd0_p0.unity
+    guid: 1b190c14a3d86a047847d1f1dd63fa33
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g93ce5fd0_p1.unity
+    guid: 5cb2a7d65f8b108479047b8c682462e5
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g93ce5fd0_p2.unity
+    guid: 9227824956d32224f90341f94363f80a
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g94ce6163_p0.unity
+    guid: 766dc84a9f1c4aa42bf8cd983a774abf
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g94ce6163_p1.unity
+    guid: 776770e4ea1cce84eb6863b101f1391f
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g95ce62f6_p0.unity
+    guid: a8f926bdd4447b3459959dac09bc0010
+  - enabled: 1
+    path: Assets/_Project/Scenes/Generated/Surface_g95ce62f6_p1.unity
+    guid: c933dae33a310de47af4fef6ce458043
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

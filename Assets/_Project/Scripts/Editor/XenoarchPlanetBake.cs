@@ -19,7 +19,7 @@ namespace DMI.Xenoarch.EditorTools
     /// t262u: bake each generated planet once into its own landing scene (terrain asset, lighting, landing zones,
     /// spawn, Digger when it is safe). Never overwrites a baked scene (use Rebake Terrain Only to refresh terrain
     /// without touching placed objects). Never saves or closes the currently open scene. Trigger:
-    /// Temp/xenoarch_planet_bake.trig containing "all", "digger", or a body id (log: Logs/xenoarch_planet_bake.txt).
+    /// Temp/xenoarch_planet_bake.trig containing "all", "digger", "rebake", "repair", or a body id (log: Logs/xenoarch_planet_bake.txt).
     /// </summary>
     [InitializeOnLoad]
     public static class XenoarchPlanetBake
@@ -43,6 +43,7 @@ namespace DMI.Xenoarch.EditorTools
             File.Delete(Trigger);
             if (cmd.Equals("digger", StringComparison.OrdinalIgnoreCase)) AddDiggerToBaked();
             else if (cmd.Equals("rebake", StringComparison.OrdinalIgnoreCase)) RebakeAllTerrain();
+            else if (cmd.Equals("repair", StringComparison.OrdinalIgnoreCase)) RepairBakedDigger();
             else if (string.IsNullOrEmpty(cmd) || cmd.Equals("all", StringComparison.OrdinalIgnoreCase)) BakeAll();
             else BakeBody(cmd);
         }
@@ -104,6 +105,58 @@ namespace DMI.Xenoarch.EditorTools
                 finally { EditorSceneManager.CloseScene(scene, true); }
             }
             Log($"Digger pass finished ({n} scene(s) updated).\n{log}");
+        }
+
+        [MenuItem("Xenoarch/Planets/Repair Baked Digger Paths", priority = 83)]
+        public static void RepairBakedDigger()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var log = new StringBuilder();
+            try
+            {
+                EnsureSupportAssets(log);
+                string[] scenes = Directory.Exists(ScenesFolder)
+                    ? Directory.GetFiles(ScenesFolder, "Surface_*.unity")
+                    : Array.Empty<string>();
+                int moved = 0, skipped = 0;
+                foreach (var file in scenes)
+                {
+                    string assetPath = ToAssetPath(file);
+                    if (IsUserOpenScene(assetPath)) { log.AppendLine($"{Path.GetFileNameWithoutExtension(assetPath)}: open in the Editor, skipped"); skipped++; continue; }
+                    if (RemapDiggerFolder(assetPath, log)) moved++;
+                }
+                AssetDatabase.Refresh();
+
+                var bodies = LandableGenerated(out _);
+                int iceFixed = 0, diggerFixed = 0;
+                foreach (var b in bodies)
+                {
+                    if (!BakedPlanetRegistry.TryGetScene(b.Id, out _, out var path) || string.IsNullOrEmpty(path) || !File.Exists(path)) continue;
+                    if (IsUserOpenScene(path)) { log.AppendLine($"{b.displayName}: scene is open, skipped"); continue; }
+                    var rec = ProceduralGalaxy.Recipe(b.Id);
+                    bool ice = rec != null && rec.type == ProceduralPlanetType.Ice;
+                    bool missingRuntime = File.ReadAllText(path).IndexOf("Digger Master Runtime", StringComparison.Ordinal) < 0;
+                    if (ice && RebakeTerrain(b, path, log)) iceFixed++;
+                    if (missingRuntime)
+                    {
+                        var previous = SceneManager.GetActiveScene();
+                        var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                        try
+                        {
+                            if (SetupDigger(scene, log)) { EditorSceneManager.SaveScene(scene, path); diggerFixed++; }
+                        }
+                        finally
+                        {
+                            if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
+                            if (scene.IsValid() && scene.isLoaded) EditorSceneManager.CloseScene(scene, true);
+                        }
+                    }
+                }
+
+                int deleted = DeleteOrphanUntitledFolders(log);
+                Log($"repair finished: {moved} Digger folder(s) renamed, {iceFixed} ice terrain(s) restored, {diggerFixed} Digger runtime(s) added, {deleted} leftover Untitled folder(s) removed, {skipped} open scene(s) skipped.\n{log}");
+            }
+            catch (Exception e) { Log("FAILED " + e); }
         }
 
         [MenuItem("Xenoarch/Planets/Rebake Terrain Only (keep placed objects)", priority = 82)]
@@ -176,6 +229,7 @@ namespace DMI.Xenoarch.EditorTools
                 var data = ProceduralSurface.CreateTerrainData(rec, cutHoles: false);
                 data.name = sceneName + "_Terrain";
                 AssetDatabase.CreateAsset(data, terrainPath);
+                PersistProceduralLayers(data, terrainPath);
 
                 float half = ProceduralGalaxy.TerrainSize * 0.5f;
                 var go = Terrain.CreateTerrainGameObject(data);
@@ -211,6 +265,10 @@ namespace DMI.Xenoarch.EditorTools
                     var look = site.position - p; look.y = 0f;
                     PlaceZone(site.Id, "LandingZone_" + site.Id.Replace('.', '_'), p, look.sqrMagnitude > 0.01f ? look.normalized : Vector3.forward);
                 }
+
+                // Save first so DiggerMaster.CreateDirs uses the scene name, not "Untitled".
+                EditorSceneManager.SaveScene(scene, scenePath);
+                SceneManager.SetActiveScene(scene);
 
                 bool digger = false;
                 var other = OtherTerrainScenes(scene);
@@ -249,14 +307,18 @@ namespace DMI.Xenoarch.EditorTools
                 dst.heightmapResolution = fresh.heightmapResolution;
                 dst.size = fresh.size;
                 dst.SetHeights(0, 0, fresh.GetHeights(0, 0, fresh.heightmapResolution, fresh.heightmapResolution));
+                int n = fresh.terrainLayers != null ? fresh.terrainLayers.Length : 0;
+                string names = fresh.terrainLayers == null ? "-" : string.Join(", ", fresh.terrainLayers.Select(l => l != null ? l.name : "null"));
                 dst.terrainLayers = fresh.terrainLayers;
                 dst.alphamapResolution = fresh.alphamapResolution;
                 dst.SetAlphamaps(0, 0, fresh.GetAlphamaps(0, 0, fresh.alphamapResolution, fresh.alphamapResolution));
+                PersistProceduralLayers(dst, path);
                 EditorUtility.SetDirty(dst);
-                if (!string.IsNullOrEmpty(path)) AssetDatabase.SaveAssetIfDirty(dst);
+                AssetDatabase.SaveAssets();
+                if (terrain != null) terrain.Flush();
                 UnityEngine.Object.DestroyImmediate(fresh);
                 // Do not move or delete anything except a baked rock root if we had written one (runtime scatter uses this name only when present).
-                log.AppendLine($"{b.displayName}: terrain refreshed, placed objects kept");
+                log.AppendLine($"{b.displayName}: terrain refreshed ({n} layers: {names}), placed objects kept");
                 if (!IsUserOpenScene(scenePath)) EditorSceneManager.SaveScene(scene, scenePath);
                 return true;
             }
@@ -380,7 +442,13 @@ namespace DMI.Xenoarch.EditorTools
             }
             FillCatalog(cat);
             EditorUtility.SetDirty(cat);
-            AssetDatabase.SaveAssetIfDirty(cat);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(IceLayerPath);
+            AssetDatabase.ImportAsset(CatalogPath);
+            PlanetSurfaceCatalog.Invalidate();
+            var iceEntry = PlanetSurfaceCatalog.For(ProceduralPlanetType.Ice);
+            int iceLayers = iceEntry != null && iceEntry.layers != null ? iceEntry.layers.Count(l => l != null) : 0;
+            log?.AppendLine($"ice catalog layers: {iceLayers}");
         }
 
         static void FillCatalog(PlanetSurfaceCatalog cat)
@@ -403,21 +471,182 @@ namespace DMI.Xenoarch.EditorTools
             var dune = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_dune_shrine.asset");
             var ice = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_ice_vault.asset");
             var cache = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_regolith_cache.asset");
+            var iceSheet = EnsureIceTerrainLayer();
+            var moonIce = new[] { moon[0], moon[1], moon[2], iceSheet };
             void Set(ProceduralPlanetType type, TerrainLayer[] layers, bool iceLayer, Color tint, int count, int clusters, DMI.Xenoarch.Excavation.DigSiteStyle major, DMI.Xenoarch.Excavation.DigSiteStyle cstyle)
             {
                 var e = cat.entries.FirstOrDefault(x => x != null && x.type == type);
                 if (e == null) { e = new PlanetSurfaceCatalog.Entry { type = type }; cat.entries.Add(e); }
-                if (e.layers == null || e.layers.Length == 0) e.layers = layers;
-                e.generateIceLayer = iceLayer;
+                if (type == ProceduralPlanetType.Ice) { e.layers = layers; e.generateIceLayer = false; e.iceColor = new Color(0.78f, 0.88f, 0.95f); }
+                else
+                {
+                    if (e.layers == null || e.layers.Length == 0) e.layers = layers;
+                    e.generateIceLayer = iceLayer;
+                }
                 e.scatterTint = tint; e.scatterCount = count; e.slopeClusters = clusters;
                 if (e.majorStyle == null) e.majorStyle = major;
                 if (e.cacheStyle == null) e.cacheStyle = cstyle;
             }
             Set(ProceduralPlanetType.Desert, mars, false, new Color(1f, 0.62f, 0.43f), 440, 40, canyon, dune);
             Set(ProceduralPlanetType.Volcanic, mars, false, new Color(0.45f, 0.28f, 0.24f), 400, 50, canyon, dune);
-            Set(ProceduralPlanetType.Ice, moon, true, new Color(0.86f, 0.9f, 0.95f), 360, 35, ice, cache);
+            Set(ProceduralPlanetType.Ice, moonIce, false, new Color(0.86f, 0.9f, 0.95f), 360, 35, ice, cache);
             Set(ProceduralPlanetType.Barren, moon, false, new Color(0.86f, 0.86f, 0.88f), 480, 45, cache, cache);
             Set(ProceduralPlanetType.Rocky, moon, false, new Color(0.7f, 0.64f, 0.56f), 400, 40, cache, cache);
+        }
+
+
+        const string IceLayerPath = "Assets/_Project/Data/Terrain/Layers/TL_Ice_Sheet.terrainlayer";
+        const string IceTexPath = "Assets/_Project/Data/Terrain/Layers/TL_Ice_Sheet.png";
+
+        static string ToAssetPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+            string p = path.Replace("\\", "/");
+            int i = p.IndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
+            if (i >= 0) return p.Substring(i + 1);
+            if (p.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase)) return p;
+            return p;
+        }
+
+        static TerrainLayer EnsureIceTerrainLayer()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<TerrainLayer>(IceLayerPath);
+            if (existing != null) return existing;
+            XenoarchSetup.EnsureFolder("Assets/_Project/Data/Terrain/Layers");
+            if (!File.Exists(IceTexPath))
+            {
+                var tex = new Texture2D(64, 64, TextureFormat.RGBA32, true) { name = "TL_Ice_Sheet", wrapMode = TextureWrapMode.Repeat };
+                var px = new Color[64 * 64];
+                for (int y = 0; y < 64; y++)
+                    for (int x = 0; x < 64; x++)
+                    {
+                        float n = 0.92f + 0.16f * Mathf.PerlinNoise(x * 0.17f, y * 0.17f);
+                        var c = new Color(0.78f * n, 0.88f * n, 0.95f * n, 1f);
+                        px[x + y * 64] = c;
+                    }
+                tex.SetPixels(px);
+                File.WriteAllBytes(IceTexPath, tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+                AssetDatabase.ImportAsset(IceTexPath);
+                if (AssetImporter.GetAtPath(IceTexPath) is TextureImporter imp)
+                {
+                    imp.sRGBTexture = true;
+                    imp.alphaSource = TextureImporterAlphaSource.None;
+                    imp.wrapMode = TextureWrapMode.Repeat;
+                    imp.SaveAndReimport();
+                }
+            }
+            var layer = new TerrainLayer
+            {
+                name = "TL_Ice_Sheet",
+                diffuseTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(IceTexPath),
+                tileSize = new Vector2(14f, 14f),
+                metallic = 0f,
+                smoothness = 0f,
+                specular = Color.black,
+                smoothnessSource = TerrainLayerSmoothnessSource.Constant,
+            };
+            AssetDatabase.CreateAsset(layer, IceLayerPath);
+            return AssetDatabase.LoadAssetAtPath<TerrainLayer>(IceLayerPath);
+        }
+
+        static void PersistProceduralLayers(TerrainData data, string terrainPath)
+        {
+            if (data == null) return;
+            var layers = data.terrainLayers;
+            if (layers == null || layers.Length == 0) return;
+            var ice = EnsureIceTerrainLayer();
+            bool changed = false;
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i] == null)
+                {
+                    layers[i] = ice;
+                    changed = true;
+                    continue;
+                }
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(layers[i]))) continue;
+                if (layers[i].name != null && layers[i].name.IndexOf("Ice", StringComparison.OrdinalIgnoreCase) >= 0)
+                { layers[i] = ice; changed = true; }
+            }
+            if (!changed) return;
+            data.terrainLayers = layers;
+            EditorUtility.SetDirty(data);
+            if (!string.IsNullOrEmpty(terrainPath)) AssetDatabase.SaveAssetIfDirty(data);
+        }
+
+        static bool RemapDiggerFolder(string scenePath, StringBuilder log)
+        {
+            string text = File.ReadAllText(scenePath);
+            const string marker = "basePathData: ";
+            int i = text.IndexOf(marker, StringComparison.Ordinal);
+            if (i < 0) { log.AppendLine($"{Path.GetFileNameWithoutExtension(scenePath)}: no Digger path"); return false; }
+            int start = i + marker.Length;
+            int end = text.IndexOfAny(new[] { '\r', '\n' }, start);
+            if (end < 0) end = text.Length;
+            string current = text.Substring(start, end - start).Trim();
+            if (current.IndexOf("Untitled", StringComparison.OrdinalIgnoreCase) < 0) return false;
+
+            string sceneName = Path.GetFileNameWithoutExtension(scenePath);
+            string norm = current.Replace("\\", "/");
+            const string prefix = "Assets/DiggerData/Scenes/";
+            int rel = norm.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+            if (rel < 0) { log.AppendLine($"{sceneName}: unexpected Digger path {current}"); return false; }
+            string rest = norm.Substring(rel + prefix.Length);
+            string oldFolder = rest.Split('/')[0];
+            if (string.IsNullOrEmpty(oldFolder) || oldFolder == sceneName) return false;
+
+            string src = prefix + oldFolder;
+            string dest = prefix + sceneName;
+            if (AssetDatabase.IsValidFolder(src))
+            {
+                if (AssetDatabase.IsValidFolder(dest))
+                    log.AppendLine($"{sceneName}: {dest} already exists, left {src} in place and rewired the scene");
+                else
+                {
+                    string err = AssetDatabase.MoveAsset(src, dest);
+                    if (!string.IsNullOrEmpty(err)) { log.AppendLine($"{sceneName}: move failed: {err}"); return false; }
+                }
+            }
+            else log.AppendLine($"{sceneName}: source folder missing ({src}), rewiring path only");
+
+            text = text.Replace("sceneDataFolder: " + oldFolder, "sceneDataFolder: " + sceneName);
+            text = text.Replace("DiggerData\\Scenes\\" + oldFolder + "\\", "DiggerData\\Scenes\\" + sceneName + "\\");
+            text = text.Replace("DiggerData/Scenes/" + oldFolder + "/", "DiggerData/Scenes/" + sceneName + "/");
+            File.WriteAllText(scenePath, text);
+            AssetDatabase.ImportAsset(scenePath);
+            log.AppendLine($"{sceneName}: Digger data {oldFolder} -> {sceneName}");
+            return true;
+        }
+
+        static int DeleteOrphanUntitledFolders(StringBuilder log)
+        {
+            const string scenesBase = "Assets/DiggerData/Scenes";
+            if (!AssetDatabase.IsValidFolder(scenesBase)) return 0;
+            var referenced = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var scene in Directory.GetFiles("Assets", "*.unity", SearchOption.AllDirectories))
+            {
+                string txt = File.ReadAllText(scene);
+                int idx = 0;
+                while ((idx = txt.IndexOf("DiggerData", idx, StringComparison.OrdinalIgnoreCase)) >= 0)
+                {
+                    int lineEnd = txt.IndexOfAny(new[] { '\r', '\n' }, idx);
+                    if (lineEnd < 0) lineEnd = txt.Length;
+                    referenced.Add(txt.Substring(idx, lineEnd - idx).Replace("\\", "/"));
+                    idx = lineEnd;
+                }
+            }
+            int deleted = 0;
+            foreach (var folder in AssetDatabase.GetSubFolders(scenesBase))
+            {
+                string name = Path.GetFileName(folder);
+                if (name == null || !name.StartsWith("Untitled", StringComparison.OrdinalIgnoreCase)) continue;
+                if (name == "Moon_Excavation_01" || name == "Mars_Excavation_01") continue;
+                bool used = referenced.Any(r => r.IndexOf("/" + name + "/", StringComparison.OrdinalIgnoreCase) >= 0 || r.EndsWith("/" + name, StringComparison.OrdinalIgnoreCase));
+                if (used) { log.AppendLine($"kept {folder} (still referenced)"); continue; }
+                if (AssetDatabase.DeleteAsset(folder)) { log.AppendLine("deleted leftover " + folder); deleted++; }
+            }
+            return deleted;
         }
 
         static string SceneNameFor(CelestialBodyDefinition b)

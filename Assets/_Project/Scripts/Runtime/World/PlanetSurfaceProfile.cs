@@ -34,6 +34,7 @@ namespace DMI.Xenoarch.World
         public List<Entry> entries = new List<Entry>();
 
         static PlanetSurfaceCatalog _loaded;
+        public static void Invalidate() { _loaded = null; }
         public static PlanetSurfaceCatalog Load()
         {
             if (_loaded == null) _loaded = Resources.Load<PlanetSurfaceCatalog>(ResourcePath);

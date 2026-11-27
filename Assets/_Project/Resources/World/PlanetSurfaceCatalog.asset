@@ -44,7 +44,8 @@ MonoBehaviour:
     - {fileID: 8574412962073106934, guid: 8d0e762bc0155ac41b6a425d47e62c64, type: 2}
     - {fileID: 8574412962073106934, guid: 96c6f5f66e02afd4cba2aa37b17f04be, type: 2}
     - {fileID: 8574412962073106934, guid: da4842eddcf2f914c821932d6e37f7a1, type: 2}
-    generateIceLayer: 1
+    - {fileID: 8574412962073106934, guid: 58660db3fa840ed4c8a453b486dbacd5, type: 2}
+    generateIceLayer: 0
     iceColor: {r: 0.78, g: 0.88, b: 0.95, a: 1}
     scatterTint: {r: 0.86, g: 0.9, b: 0.95, a: 1}
     scatterCount: 360
