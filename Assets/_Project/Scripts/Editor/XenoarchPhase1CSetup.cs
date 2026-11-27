@@ -731,6 +731,7 @@ namespace DMI.Xenoarch.EditorTools
             for (int i = 0; i < 150; i++) brushOnly.Stroke(1f, 1f, brushOnly.TopDepth(4, 4), DigTools.Brush);
             var rb = brushOnly.Stroke(1f, 1f, brushOnly.TopDepth(4, 4), DigTools.Brush);
             check(!rb.refused && rb.slowed && brushOnly.MaterialAt(brushOnly.TopLayer(4, 4)) == SoilMaterial.Compacted, "1C dig: brush still cuts the compacted layer, slowly (no per-tool depth cap)");
+            float condBeforePrecision = art.condition;   // the shovel stroke above may already have jarred it
             for (int i = 0; i < 12; i++) grid.Stroke(lx, lz, grid.TopDepth(10, 10), DigTools.Precision);
             float condPrecision = art.condition;
             float exp = grid.Exposure(art);
@@ -740,7 +741,7 @@ namespace DMI.Xenoarch.EditorTools
             grid2.artifacts.Add(art2);
             for (int i = 0; i < 12; i++) grid2.Stroke(lx, lz, grid2.TopDepth(10, 10), DigTools.Shovel);
             check(art2.condition < condPrecision - 0.1f, $"1C dig: shovel through the find damages it more (condition {art2.condition:P0} vs {condPrecision:P0})");
-            check(Mathf.Approximately(condPrecision, 0.9f), $"1C dig: precision tool never damages finds (condition {condPrecision:P0})");
+            check(Mathf.Approximately(condPrecision, condBeforePrecision), $"1C dig: precision tool never damages finds (condition {condBeforePrecision:P0} -> {condPrecision:P0} over 12 strokes)");
             // Damage only once visible + crude tool
             var g3 = ExcavationGrid.ForSite(3f, 1.2f, 0.25f);
             var a3 = new GridArtifact { index = 0, x = 10, z = 10, y = 1, fragility = 1f, condition = 0.9f };
@@ -761,10 +762,15 @@ namespace DMI.Xenoarch.EditorTools
             // Style bands: ice needs the drill
             var ice = new[] { DMI.Xenoarch.Excavation.SoilLayer.Make("dust", SoilMaterial.Dust, 0.25f, 0.5f, Color.grey), DMI.Xenoarch.Excavation.SoilLayer.Make("ice", SoilMaterial.Ice, 0.5f, 3f, Color.white), DMI.Xenoarch.Excavation.SoilLayer.Make("compacted", SoilMaterial.Compacted, 0f, 2f, Color.grey) };
             var g5 = ExcavationGrid.ForSite(1f, 1.2f, 0.25f, ice);
-            for (int i = 0; i < 6; i++) g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Shovel);
-            var r5 = g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Shovel);
-            var r5d = g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Drill);
-            check(r5.accepted && r5.slowed && r5.material == SoilMaterial.Ice && r5d.accepted && r5d.removed > r5.removed, "1C dig: style bands drive hardness (shovel cuts ice slowly, the drill faster)");
+            g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Shovel);   // through the dust into the ice band
+            float d5a = g5.TopDepth(4, 4);
+            var r5 = g5.Stroke(1f, 1f, d5a, DigTools.Shovel);
+            float d5b = g5.TopDepth(4, 4);
+            var r5d = g5.Stroke(1f, 1f, d5b, DigTools.Drill);
+            float d5c = g5.TopDepth(4, 4);
+            // Compare the aimed column only: the shovel is wider, so its total removal over all columns is not a speed measure.
+            check(r5.accepted && r5.slowed && r5.material == SoilMaterial.Ice && r5d.accepted && !r5d.slowed && r5d.material == SoilMaterial.Ice && d5c - d5b > d5b - d5a,
+                $"1C dig: style bands drive hardness (shovel cuts ice slowly {d5b - d5a:0.000} m/stroke, the drill faster {d5c - d5b:0.000} m/stroke)");
             // Uneven ground: per-column surface heights
             var g6 = ExcavationGrid.ForSite(1f, 1.2f, 0.25f);
             g6.surface = new float[g6.nx * g6.nz];

@@ -1,5 +1,12 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (evening) - Smoke check: 5 failures fixed (UNTESTED in Play)
+
+- **Dig bug (real):** since ZEN-8 (943563e) set shovel removal to 2.0, one shovel or drill stroke could clear the soil above a still-hidden find and then remove its whole cell in the same stroke. The find was fully exposed with no damage (only the 15% jar), and the next stroke dug underneath it, so crude tools almost never damaged single-cell finds and the "jarred something" warning came too late. `ExcavationGrid.StrokeAt` now stops a crude stroke on top of a hidden find after it has cut the soil above, and caps a crude bite into a find cell at 0.5 (`CrudeFindBite`). The precision tool and brush are unchanged. This fixed the "surface dust" and "jar" checks.
+- **Orbital coverage (real):** ZEN-14 (2c664e1) spread the Mars sites to the map edges, so all three were outside the Mk I 400 m orbital scan radius (dune shrine 450 m, buried spire 418 m, canyon relay 586 m from the Mars map centre). A Mars orbital scan at Mk I revealed nothing. The Mk I radius is now 460 m (`Ship_ConstellationMk1`, `ShipDefinition` default, Orbital Scanner Range I text "460 to 700 m"). The dune shrine is covered; the buried spire still needs 3 passes, so it stays hidden at Mk I. The canyon relay (story, gated) still needs Range I or an on-foot scan to resolve. Moon sites were already inside.
+- **Stale checks updated:** "precision tool never damages finds" now compares the condition before and after the precision strokes (the earlier shovel jar had been counted against it). "Style bands drive hardness" now compares the aimed column's depth per stroke (the wider shovel's total over all columns isn't a speed measure).
+- Smoke 171 / 0, M1 check 82 / 0.
+- Tuning note: in ice the drill now digs only about 10% deeper per stroke than the shovel (0.099 vs 0.089 m), and the shovel strokes faster (5.6/s vs 4/s). This is a side effect of t108u (linear hardness falloff) and ZEN-8.
 ## 2026-11-26 (evening) - Phase 2 M1: foundations and safety (UNTESTED in Play)
 
 - **Progression classes** (data, separate from rarity): `ArtifactDefinition.progression` = Ordinary / ResearchRequired / StoryCritical, with `releaseWhen` facts and a `progressionNote`. The tablet is StoryCritical until `civ.identified:civ.vael` and 35% translation. The Mars navigation core is StoryCritical until `tech.installed` (physically installed). The sensor lattice is ResearchRequired (it can be sold after a warning). Everything else is Ordinary.

@@ -144,6 +144,8 @@ namespace DMI.Xenoarch.Excavation
         public float tolerance = 1.5f;
         [Tooltip("How far (m) below a column's grid floor an aim may land and still dig it (Digger's visual hole can run deeper).")]
         public float belowSlack = 1f;
+        /// <summary>Largest share of a find's cell a crude tool (shovel, drill) removes in one stroke.</summary>
+        public const float CrudeFindBite = 0.5f;
         public float Surface(int x, int z) => surface != null ? surface[x + nx * z] : 0f;
         /// <summary>Local height of the column's current floor (surface minus dug depth).</summary>
         public float FloorY(int x, int z) => Surface(x, z) - TopDepth(x, z);
@@ -263,6 +265,11 @@ namespace DMI.Xenoarch.Excavation
                         if (centre || !centreSet) { r.material = layer.kind; r.layer = layer; centreSet |= centre; }
                         if (layer.kind == SoilMaterial.Bedrock) { if (c == 0) r.refused = true; break; }   // the site floor
                         if (!DigTools.CanCut(layer, tool)) { if (c == 0) { r.refused = true; r.needsBetterTool = true; } break; }
+                        // Crude tools never go through a hidden find in one stroke: after cutting the soil above it they stop on
+                        // top of it (the jar warning comes first), and they bite at most half a find cell per stroke. Without this
+                        // the 2.0 shovel (ZEN-8) cleared the cell above AND the whole find cell in one hidden, damage-free stroke.
+                        var crudeFind = tool.crude ? ArtifactAt(x, y, z) : null;
+                        if (crudeFind != null && c > 0 && !visibleBefore.Contains(crudeFind)) break;
                         float res = DigTools.Resistance(layer.hardness, tool.maxHardness);
                         if (layer.hardness > tool.maxHardness) r.slowed = true;
                         int i = Index(x, y, z);
@@ -270,6 +277,7 @@ namespace DMI.Xenoarch.Excavation
                         float take = Mathf.Min(before, amount / res);
                         // Minimum effective bite on the aimed column: hard bands are slow, never a wall.
                         if (centre && c == 0) take = Mathf.Min(before, Mathf.Max(take, tool.minBite > 0f ? tool.minBite : 0.03f));
+                        if (crudeFind != null) take = Mathf.Min(take, CrudeFindBite);
                         if (take <= 0f) continue;
                         amount -= take * res;
                         fill[i] = (byte)Mathf.Clamp(Mathf.RoundToInt((before - take) * 255f), 0, 255);
