@@ -78,7 +78,11 @@ namespace DMI.Xenoarch.World
         /// shared scene and by the Editor bake (which saves the TerrainData as an asset and does not cut holes).</summary>
         public static TerrainData CreateTerrainData(ProceduralPlanetRecipe rec, bool cutHoles)
         {
-            int res = ProceduralGalaxy.HeightRes;
+            var profile = PlanetHeightCatalog.For(rec.bodyId);
+            if (profile != null) rec.relief = profile.relief;
+            int res = cutHoles
+                ? ProceduralGalaxy.HeightRes
+                : (profile != null && profile.heightmapResolution >= 33 ? profile.heightmapResolution : ProceduralGalaxy.BakeHeightRes);
             float size = ProceduralGalaxy.TerrainSize, half = size * 0.5f, step = size / (res - 1);
             float top = Mathf.Max(1f, rec.relief);
 
@@ -110,7 +114,7 @@ namespace DMI.Xenoarch.World
 
             var layers = BuildLayers(rec, out bool generated);
             data.terrainLayers = layers;
-            int n = layers.Length, ar = 256;
+            int n = layers.Length, ar = cutHoles ? 256 : 1024;
             data.alphamapResolution = ar;
             var a = new float[ar, ar, n];
             for (int z = 0; z < ar; z++)

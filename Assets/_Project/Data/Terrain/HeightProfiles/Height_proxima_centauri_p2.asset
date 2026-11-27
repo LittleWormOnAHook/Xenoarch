@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8900df152243cf3498a96bf228fee6b2, type: 3}
+  m_Name: Height_proxima_centauri_p2
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.PlanetHeightProfile
+  bodyId: body.proxima_centauri.p2
+  description: Barren terraced benches and risers.
+  shape: 6
+  heightmapResolution: 2049
+  relief: 90
+  frequency: 0.0024
+  octaves: 5
+  persistence: 0.5
+  lacunarity: 2.05
+  ridgeWeight: 0.2
+  warp: 0.15
+  terraceSteps: 8
+  cliffSharpness: 0.3
+  mesaCoverage: 0.2
+  canyonDepth: 0.05
+  craterDensity: 0.08
+  peakDensity: 0.1
+  rimHeight: 12
+  rimStart: 0.84
+  noiseOffset: {x: 188.7, y: 435.1}
+  seedOffset: 1603
+  flattenRadius: 24
+  flattenFalloff: 2.3
+  futureRockPrefabs: 1
+  futureVegetation: 0
+  futureSnowLayer: 0
+  futureGlacierSheets: 0
+  futureIcebergs: 0
+  futureSnowDrifts: 0

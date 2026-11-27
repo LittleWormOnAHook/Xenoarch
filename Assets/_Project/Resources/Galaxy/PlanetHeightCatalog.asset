@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: PlanetHeightCatalog
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Galaxy:PlanetHeightCatalog
+  profiles:
+  - {fileID: 11400000, guid: 583fd10d668cbc14d85bd27ac491904f, type: 2}
+  - {fileID: 11400000, guid: 5e901ce4c8d1fa040a859a0aff943379, type: 2}
+  - {fileID: 11400000, guid: 92c3c3f414fd1c04dafe5293504d136e, type: 2}
+  - {fileID: 11400000, guid: 4dc70b928a83a864b9f6c8f2bca55776, type: 2}
+  - {fileID: 11400000, guid: cf340a59acd1ca04da09aff42f62658b, type: 2}
+  - {fileID: 11400000, guid: 6f95d15d99120b647b258f4a02c227e2, type: 2}
+  - {fileID: 11400000, guid: 832ee837f175b6f4e938eca44a2ccc02, type: 2}
+  - {fileID: 11400000, guid: 9dfbb81ec60879f41a1e5639859de86c, type: 2}
+  - {fileID: 11400000, guid: 5018d368aed862144b65b531c4268e71, type: 2}
+  - {fileID: 11400000, guid: 70fa18d8736a4c84c8f02faacc25c680, type: 2}
+  - {fileID: 11400000, guid: 53bdb2679c2e67d4f8685c117142c992, type: 2}
+  - {fileID: 11400000, guid: 9e4805fd1c0166b4181aba3957e66e8c, type: 2}
+  - {fileID: 11400000, guid: 8fb9e2c1b0924d846a5b2890d673b231, type: 2}
+  - {fileID: 11400000, guid: 54ed4cf959da3494580a620cf3f7592c, type: 2}
+  - {fileID: 11400000, guid: 2b1820ad8abb1ea439ca2be5ee7d0b6b, type: 2}
+  - {fileID: 11400000, guid: bd7981c67b23f0a44b404918790692cc, type: 2}
+  - {fileID: 11400000, guid: b970efc74aece58408526a4f1097f8d9, type: 2}
+  - {fileID: 11400000, guid: 24dc065c621316a45a75cc0de51a96a8, type: 2}
+  - {fileID: 11400000, guid: 997b0196bbb138d4dbc9e5a0a43f709a, type: 2}
+  - {fileID: 11400000, guid: 038c3b7f4aecaa945adfa7aecb4e38f2, type: 2}
+  - {fileID: 11400000, guid: c2cd2d4048dac914b917995459b9a375, type: 2}
+  - {fileID: 11400000, guid: 0f79fcd9d85d4a44fac4e0f9bda4e6bb, type: 2}

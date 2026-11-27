@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8900df152243cf3498a96bf228fee6b2, type: 3}
+  m_Name: Height_tau_ceti_p1
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.PlanetHeightProfile
+  bodyId: body.tau_ceti.p1
+  description: Desert dune seas with long wind-aligned crests.
+  shape: 10
+  heightmapResolution: 2049
+  relief: 48
+  frequency: 0.0048
+  octaves: 4
+  persistence: 0.4
+  lacunarity: 2
+  ridgeWeight: 0.05
+  warp: 0.55
+  terraceSteps: 0
+  cliffSharpness: 0.05
+  mesaCoverage: 0.1
+  canyonDepth: 0.05
+  craterDensity: 0.02
+  peakDensity: 0.05
+  rimHeight: 8
+  rimStart: 0.84
+  noiseOffset: {x: 173.90001, y: 406.6}
+  seedOffset: 1502
+  flattenRadius: 20
+  flattenFalloff: 2.3
+  futureRockPrefabs: 1
+  futureVegetation: 0
+  futureSnowLayer: 0
+  futureGlacierSheets: 0
+  futureIcebergs: 0
+  futureSnowDrifts: 0

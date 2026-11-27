@@ -23,11 +23,20 @@ namespace DMI.Xenoarch.Galaxy
         /// <summary>Terrain height (m above the terrain origin) at world x/z. Pads are flattened to their centre height.</summary>
         public float Height(float x, float z)
         {
+            var profile = PlanetHeightCatalog.For(bodyId);
+            if (profile != null) relief = profile.relief;
             float h = Raw(x, z);
             foreach (var p in pads)
             {
                 float d = Vector2.Distance(new Vector2(x, z), new Vector2(p.x, p.y));
-                float r0 = p.z, r1 = p.z * 2.2f;
+                float r0 = p.z;
+                float falloff = 2.2f;
+                if (profile != null)
+                {
+                    r0 = Mathf.Max(r0, profile.flattenRadius);
+                    falloff = profile.flattenFalloff;
+                }
+                float r1 = r0 * falloff;
                 if (d >= r1) continue;
                 float k = d <= r0 ? 1f : 1f - Mathf.SmoothStep(0f, 1f, (d - r0) / (r1 - r0));
                 h = Mathf.Lerp(h, Raw(p.x, p.y), k);
@@ -37,6 +46,8 @@ namespace DMI.Xenoarch.Galaxy
 
         public float Raw(float x, float z)
         {
+            var profile = PlanetHeightCatalog.For(bodyId);
+            if (profile != null) return profile.Sample(x, z);
             float amp = 1f, f = frequency, sum = 0f, norm = 0f;
             for (int o = 0; o < 5; o++)
             {
@@ -66,6 +77,8 @@ namespace DMI.Xenoarch.Galaxy
         public const string SurfaceScene = DMI.Xenoarch.Core.SceneNames.ProceduralSurface;
         public const float TerrainSize = 1024f;
         public const int HeightRes = 513;
+        /// <summary>Baked generated surfaces use the same heightmap resolution as Moon and Mars.</summary>
+        public const int BakeHeightRes = 2049;
         /// <summary>Published when a navigation drive (installed Vael navigation device) is fitted.</summary>
         public const string NavDriveFact = "tech.navdrive";
         public const int UnchartedSystems = 3;

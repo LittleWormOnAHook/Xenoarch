@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8900df152243cf3498a96bf228fee6b2, type: 3}
+  m_Name: Height_alpha_centauri_p0
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Galaxy.PlanetHeightProfile
+  bodyId: body.alpha_centauri.p0
+  description: Barren cratered basin, low rims, open floors.
+  shape: 11
+  heightmapResolution: 2049
+  relief: 55
+  frequency: 0.0022
+  octaves: 5
+  persistence: 0.5
+  lacunarity: 2.05
+  ridgeWeight: 0.1
+  warp: 0.15
+  terraceSteps: 0
+  cliffSharpness: 0.1
+  mesaCoverage: 0.2
+  canyonDepth: 0.15
+  craterDensity: 0.55
+  peakDensity: 0.1
+  rimHeight: 10
+  rimStart: 0.84
+  noiseOffset: {x: 125.8, y: 298.3}
+  seedOffset: 1101
+  flattenRadius: 22
+  flattenFalloff: 2.3
+  futureRockPrefabs: 1
+  futureVegetation: 0
+  futureSnowLayer: 0
+  futureGlacierSheets: 0
+  futureIcebergs: 0
+  futureSnowDrifts: 0

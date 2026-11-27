@@ -317,8 +317,12 @@ namespace DMI.Xenoarch.EditorTools
                 AssetDatabase.SaveAssets();
                 if (terrain != null) terrain.Flush();
                 UnityEngine.Object.DestroyImmediate(fresh);
+                int snapped = SnapSurfaceObjects(scene, terrain);
+                int digger = SyncDiggerInScene(scene, log);
+                var profile = PlanetHeightCatalog.For(b.Id);
+                string shape = profile != null ? profile.shape.ToString() : "legacy-noise";
                 // Do not move or delete anything except a baked rock root if we had written one (runtime scatter uses this name only when present).
-                log.AppendLine($"{b.displayName}: terrain refreshed ({n} layers: {names}), placed objects kept");
+                log.AppendLine($"{b.displayName}: terrain refreshed ({dst.heightmapResolution} res, {dst.size.y:0} m relief, {shape}, {n} layers: {names}), snapped {snapped} object(s), Digger sync {digger}");
                 if (!IsUserOpenScene(scenePath)) EditorSceneManager.SaveScene(scene, scenePath);
                 return true;
             }
@@ -327,6 +331,51 @@ namespace DMI.Xenoarch.EditorTools
                 if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
                 if (scene.IsValid() && scene.isLoaded && !IsUserOpenScene(scenePath)) EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        static int SnapSurfaceObjects(Scene scene, Terrain terrain)
+        {
+            if (terrain == null) return 0;
+            int n = 0;
+            float Y(Vector3 p) => terrain.transform.position.y + terrain.SampleHeight(p);
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var zone in root.GetComponentsInChildren<LandingZone>(true))
+                {
+                    var p = zone.transform.position;
+                    p.y = Y(p);
+                    zone.transform.position = p;
+                    if (zone.autoPlaced) zone.autoPosition = p;
+                    n++;
+                }
+                foreach (var spawn in root.GetComponentsInChildren<PlayerSpawnPoint>(true))
+                {
+                    var p = spawn.transform.position;
+                    p.y = Y(p) + 0.1f;
+                    spawn.transform.position = p;
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        static int SyncDiggerInScene(Scene scene, StringBuilder log)
+        {
+            var editorT = FindType("Digger.Modules.Core.Editor.DiggerSystemEditor");
+            var systemT = FindType("Digger.Modules.Core.Sources.DiggerSystem");
+            if (editorT == null || systemT == null) return 0;
+            var init = editorT.GetMethod("Init", new[] { systemT, typeof(bool) });
+            if (init == null) { log?.AppendLine($"{scene.name}: Digger Init not found"); return 0; }
+            int n = 0;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var d in root.GetComponentsInChildren(systemT, true))
+                {
+                    init.Invoke(null, new object[] { d, true });
+                    n++;
+                }
+            }
+            return n;
         }
 
         static void PlaceZone(string siteId, string name, Vector3 pos, Vector3 forward)
@@ -449,6 +498,7 @@ namespace DMI.Xenoarch.EditorTools
             var iceEntry = PlanetSurfaceCatalog.For(ProceduralPlanetType.Ice);
             int iceLayers = iceEntry != null && iceEntry.layers != null ? iceEntry.layers.Count(l => l != null) : 0;
             log?.AppendLine($"ice catalog layers: {iceLayers}");
+            XenoarchHeightProfiles.Ensure(log);
         }
 
         static void FillCatalog(PlanetSurfaceCatalog cat)
