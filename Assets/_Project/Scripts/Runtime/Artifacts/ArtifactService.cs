@@ -208,6 +208,26 @@ namespace DMI.Xenoarch.Artifacts
             return n;
         }
 
+        /// <summary>DEV / TESTING: records the device as already installed, with no recovery, research,
+        /// inventory move, or notoriety award. Used by New Test All so travel tech is fitted at the start.</summary>
+        public bool ForceInstallForTest(ArtifactDefinition def)
+        {
+            if (def == null || def.installTarget == TechInstallTarget.None) return false;
+            foreach (var a in State.instances)
+                if (a != null && a.definitionId == def.Id && a.location == ArtifactLocation.Installed) return true;
+            State.instances.Add(new ArtifactInstance
+            {
+                instanceId = Guid.NewGuid().ToString("N"),
+                definitionId = def.Id,
+                condition = 1f,
+                location = ArtifactLocation.Installed,
+            });
+            if (def.rarity == ArtifactRarity.Unique && !State.uniquesFound.Contains(def.Id)) State.uniquesFound.Add(def.Id);
+            _discovery?.Publish(Facts.Installed(def.Id));
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Distinct artifact definitions recovered that match <paramref name="match"/>.</summary>
         public int DistinctFound(Func<ArtifactDefinition, bool> match)
         {

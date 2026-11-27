@@ -6,8 +6,8 @@ namespace DMI.Xenoarch.UI
 {
     /// <summary>
     /// Main menu (MainMenu scene, Resources/UI/MainMenu.uxml for the backdrop), following ASH's ASHMainMenu flow:
-    /// Continue (newest save, shown only when one exists, with its place and time) above New Game, then Load Game,
-    /// Settings, Quit. Screens are built in code (<see cref="MenuScreens"/>) so the scene needs no changes.
+    /// Continue (newest save, shown only when one exists, with its place and time) above New Game, then New Test All,
+    /// Load Game, Settings, Quit. Screens are built in code (<see cref="MenuScreens"/>) so the scene needs no changes.
     /// (Class name kept: the MainMenu scene references it.)
     /// </summary>
     public sealed class MainMenuPlaceholder : MonoBehaviour
@@ -48,6 +48,12 @@ namespace DMI.Xenoarch.UI
                 if (Busy) return;
                 if (newest == null) XenoarchRuntime.Instance.NewGame();
                 else MenuScreens.Confirm(p, "Start a new game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewGame());
+            });
+            MenuScreens.Button(p, "New Test All", () =>
+            {
+                if (Busy) return;
+                if (newest == null) XenoarchRuntime.Instance.NewTestAll();
+                else MenuScreens.Confirm(p, "Start a New Test All game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewTestAll());
             });
             MenuScreens.Button(p, "Load Game", () => Swap(MenuScreens.Slots(false, ShowMain, null)), newest != null);
             MenuScreens.Button(p, "Settings", () => Swap(MenuScreens.Settings(ShowMain)));

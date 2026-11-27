@@ -279,6 +279,10 @@ namespace DMI.Xenoarch.Core
             if (ok) { Discovery.Publish(fact); Debug.Log("[Xenoarch] Granted the Grasshopper rover (inventory: Deploy on a planet surface)."); }
         }
 
+        /// <summary>DEV / TESTING: main-menu "New Test All" button. Unlocks travel, tech, recipes and upgrades and
+        /// fills inventories from the item registry. Normal New Game is unchanged.</summary>
+        public void ApplyTestAllLoadout() => TestAllLoadout.Apply(this);
+
         /// <summary>DEV / TESTING (XenoarchConfig.devTestingLoadout): makes sure every dig tool and the handheld scanner are
         /// in the inventory. Only adds missing ones; turning the flag off stops it (items already granted stay).</summary>
         public void ApplyDevLoadout()

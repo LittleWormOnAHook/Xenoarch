@@ -133,6 +133,8 @@ namespace DMI.Xenoarch.Galaxy
 
         public bool GalaxyMapUnlocked => GalaxyUnlocked(Galaxy, Gate);
         public bool IsSystemKnown(StarSystemDefinition s) => SystemKnown(s, Gate);
+        /// <summary>Notify listeners after an external system (e.g. New Test All) mutates discovery flags.</summary>
+        public void NotifyChanged() => Changed?.Invoke();
 
         /// <summary>Systems offered by the Nav terminal's system dropdown, in order. Sol is first and the default.</summary>
         public static readonly (string id, string name)[] NavSystems =

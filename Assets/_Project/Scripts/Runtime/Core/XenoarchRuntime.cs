@@ -141,6 +141,19 @@ namespace DMI.Xenoarch.Core
             _loader.Load(_session.Location.sceneName, SceneLoader.Arrival.AtSpawn(_session.Location.spawnId));
         }
 
+        /// <summary>DEV / TESTING: same fresh start as <see cref="NewGame"/>, then applies the New Test All loadout
+        /// (everything unlocked, all tools/equipment, full resource stacks in the backpack and crates). Normal New Game is unchanged.</summary>
+        public void NewTestAll()
+        {
+            ClearDevSaves();
+            _session.StartNewGame();
+            _session.ApplyTestAllLoadout();
+            _sessionActive = true;
+            SceneLoader.NextTitle = "New Test All";
+            SceneLoader.NextSubtitle = DMI.Xenoarch.Galaxy.ShipTravel.LocationText(_session.Exploration);
+            _loader.Load(_session.Location.sceneName, SceneLoader.Arrival.AtSpawn(_session.Location.spawnId));
+        }
+
         public void ReturnToMainMenu()
         {
             _sessionActive = false;
