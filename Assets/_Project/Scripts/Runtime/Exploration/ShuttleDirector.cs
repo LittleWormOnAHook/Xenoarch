@@ -157,6 +157,9 @@ namespace DMI.Xenoarch.Exploration
                 _building = holder; _terrain = terrain;
                 var inst = Instantiate(def.shuttlePrefab, holder.transform, false);
                 inst.name = def.shuttlePrefab.name;
+                // The vendor prefab is saved at a scene pose (on Epsilon this was local (-244, 234, 1352)), so without
+                // this reset the visible craft sits ~230 m up and more than a kilometre away from the holder.
+                ResetPrefabLocalPose(holder.transform);
                 // Instance-only fix: the vendor model has convex hull colliders that Unity can't build fully ("partial
                 // hull" warnings); a static craft doesn't need convex colliders. The prefab asset is untouched.
                 foreach (var mc in inst.GetComponentsInChildren<MeshCollider>(true)) if (mc.convex && mc.GetComponentInParent<Rigidbody>(true) == null) mc.convex = false;
@@ -227,6 +230,7 @@ namespace DMI.Xenoarch.Exploration
                 holder.SetActive(true);
                 GroundByBounds(holder.transform, height);
                 Shuttle = holder;
+                _descendGround = holder.transform.position;
             }
 
             // Player arrival beside the shuttle, facing the site.
@@ -351,6 +355,58 @@ namespace DMI.Xenoarch.Exploration
             return true;
         }
 
+        /// <summary>The Creepy Cat Mark_2 Shuttle prefab is referenced, not edited, but it was saved with a world
+        /// position from a vendor scene. Instantiating it under the landing holder keeps that local pose, so the
+        /// visible mesh is hundreds of metres from the holder (Editor.log: minY 241 with holder at Y 8.9, and a 1.3 km
+        /// Z offset). Zero the instance local pose; do not touch the prefab asset.</summary>
+        void ResetPrefabLocalPose(Transform holder)
+        {
+            if (holder == null || holder.childCount == 0) return;
+            var inst = holder.GetChild(0);
+            var before = inst.localPosition;
+            if (before.sqrMagnitude > 0.01f || inst.localEulerAngles.sqrMagnitude > 0.01f)
+                Debug.Log($"[ShuttleDiag] reset prefab localPosition {before:F1} / euler {inst.localEulerAngles:F1} -> 0 (vendor prefab was saved at a scene pose)");
+            inst.localPosition = Vector3.zero;
+            inst.localRotation = Quaternion.identity;
+        }
+
+        const float DescendHeight = 45f;
+        const float DescendSeconds = 5f;
+        Coroutine _descend;
+
+        void StartDescent(Transform holder, Vector3 ground, string reason)
+        {
+            if (holder == null) return;
+            if (_descend != null) StopCoroutine(_descend);
+            _descend = StartCoroutine(DescendToGround(holder, ground, reason));
+        }
+
+        IEnumerator DescendToGround(Transform holder, Vector3 ground, string reason)
+        {
+            ResetPrefabLocalPose(holder);
+            holder.gameObject.SetActive(true);
+            var start = new Vector3(ground.x, ground.y + DescendHeight, ground.z);
+            holder.SetPositionAndRotation(start, holder.rotation);
+            Debug.Log($"[ShuttleDiag] descend start={start:F1} ground={ground:F1} reason={reason}");
+            float t = 0f;
+            while (t < DescendSeconds && holder != null)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / DescendSeconds));
+                var p = holder.position;
+                holder.position = new Vector3(ground.x, Mathf.Lerp(start.y, ground.y, u), ground.z);
+                yield return null;
+            }
+            if (holder != null)
+            {
+                holder.position = new Vector3(ground.x, ground.y, ground.z);
+                GroundByBounds(holder, WorldHeight(holder));
+                Debug.Log($"[ShuttleDiag] descend done pos={holder.position:F1} reason={reason}");
+                LogPlaced(holder.gameObject, reason);
+            }
+            _descend = null;
+        }
+
         void Update()
         {
             // Dev: F7 brings the shuttle beside the player (lands one if it is missing).
@@ -415,6 +471,7 @@ namespace DMI.Xenoarch.Exploration
                 message = "No valid ground near you for the shuttle to land.";
                 return false;
             }
+            ResetPrefabLocalPose(Shuttle.transform);
             Shuttle.SetActive(true);
             Shuttle.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rig.Root.eulerAngles.y + 90f, 0f));
             GroundByBounds(Shuttle.transform, height);
@@ -424,14 +481,13 @@ namespace DMI.Xenoarch.Exploration
                 if (TrySurfaceY(landed.x, landed.z, out float surf, out bool hole) && !hole)
                 {
                     Debug.LogWarning($"[ShuttleDiag] CallToPlayer lifted shuttle from {landed:F1} to surface Y={surf:F1}");
-                    var lp = Shuttle.transform.position;
-                    Shuttle.transform.position = new Vector3(lp.x, lp.y + (surf - landed.y), lp.z);
+                    landed = new Vector3(landed.x, surf, landed.z);
                 }
                 else Debug.LogWarning($"[ShuttleDiag] CallToPlayer final Y still implausible at {landed:F1}");
             }
-            Debug.Log($"[ShuttleDiag] CallToPlayer dev={dev} player={rig.Root.position:F1} requested={pos:F1} final={Shuttle.transform.position:F1}");
+            Debug.Log($"[ShuttleDiag] CallToPlayer dev={dev} player={rig.Root.position:F1} requested={pos:F1} ground={landed:F1}");
             if (!dev) _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
-            LogPlaced(Shuttle, dev ? "dev summon (F7)" : "emergency call");
+            StartDescent(Shuttle.transform, landed, dev ? "dev summon (F7)" : "emergency call");
             message = dev ? "Shuttle summoned (dev F7)." : "Shuttle inbound. Landing near your position.";
             return true;
         }
@@ -441,6 +497,7 @@ namespace DMI.Xenoarch.Exploration
         [Tooltip("After the player is placed (landing, save load, Continue, autosave restore), the shuttle is moved next to them if it is farther than this (m).")]
         public float maxPlayerDistance = 40f;
         float _groundOffset;
+        Vector3 _descendGround;
 
         static Transform FindDeep(Transform t, string name)
         {
@@ -486,14 +543,23 @@ namespace DMI.Xenoarch.Exploration
             while (arriving && SceneLoader.PlacedFrame < startFrame && t < 5f) { t += Time.unscaledDeltaTime; yield return null; }
             t = 0f;
             while (ExcavationSite.BusyStatus() != null && t < 20f) { t += Time.unscaledDeltaTime; yield return null; }
-            if (holder != null) { EnsureNearPlayer(holder, height); GroundByBounds(holder.transform, height); }
+            if (holder != null)
+            {
+                ResetPrefabLocalPose(holder.transform);
+                EnsureNearPlayer(holder, height);
+                GroundByBounds(holder.transform, height);
+                _descendGround = holder.transform.position;
+            }
             _busy = false;
             if (holder != null)
             {
                 var ap = holder.transform.position;
                 TrySurfaceY(ap.x, ap.z, out float asurf, out bool ahole);
-                Debug.Log($"[ShuttleDiag] after load pos={ap:F1} surfY={asurf:F1} hole={ahole} plausible={PlausibleGroundY(ap.y, ap)}");
-                LogPlaced(holder, "after load");
+                Debug.Log($"[ShuttleDiag] after load pos={ap:F1} surfY={asurf:F1} hole={ahole} plausible={PlausibleGroundY(ap.y, ap)} local0={holder.transform.childCount > 0 && holder.transform.GetChild(0).localPosition.sqrMagnitude < 0.01f}");
+                if (arriving)
+                    StartDescent(holder.transform, _descendGround, "after load (descent)");
+                else
+                    LogPlaced(holder, "after load");
             }
             // Watchdog: once the loading screen is gone, check the shuttle is still there, visible, grounded and near the
             // player (a late player move, a destroyed or disabled holder); repair and log what was wrong.
@@ -510,6 +576,7 @@ namespace DMI.Xenoarch.Exploration
         /// <summary>Repairs the landed shuttle if it vanished, was disabled, sank or is far from the player.</summary>
         void Verify(LandingZonePicker.HeightFn height)
         {
+            if (_descend != null) return; // don't fight the descent
             var holder = Shuttle;
             if (_preplaced != null)
             {
@@ -524,6 +591,7 @@ namespace DMI.Xenoarch.Exploration
                 Land(_scene, false);
                 return;
             }
+            ResetPrefabLocalPose(holder.transform);
             string fixedWhat = null;
             if (!holder.activeSelf) { holder.SetActive(true); fixedWhat = "re-enabled"; }
             int shown = 0;
