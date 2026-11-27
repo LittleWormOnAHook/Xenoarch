@@ -52,7 +52,34 @@ namespace DMI.Xenoarch.Exploration
             };
         }
 
-        /// <summary>Terrain if the point is on it and not a hole, otherwise a downward raycast (mesh / leftover colliders).</summary>
+        /// <summary>Heightmap surface even inside a Digger hole (SampleHeight ignores holes). False when off the terrain.</summary>
+        public const float MaxDropBelowSurface = 12f;
+        public const float MaxRiseAboveSurface = 40f;
+
+        public static bool TryTerrainSurface(Terrain t, float x, float z, out float y, out Vector3 n, out bool hole, out bool onMap)
+        {
+            y = 0f; n = Vector3.up; hole = false; onMap = false;
+            if (t == null || t.terrainData == null) return false;
+            var tp = t.transform.position; var size = t.terrainData.size;
+            if (size.x < 0.01f || size.z < 0.01f) return false;
+            float u = (x - tp.x) / size.x, v = (z - tp.z) / size.z;
+            if (u < 0f || v < 0f || u > 1f || v > 1f) return false;
+            onMap = true;
+            hole = IsHole(t, u, v);
+            y = tp.y + t.SampleHeight(new Vector3(x, 0f, z));
+            n = t.terrainData.GetInterpolatedNormal(u, v);
+            return true;
+        }
+
+        public static bool NearTerrainSurface(Terrain t, Vector3 pos)
+        {
+            if (!TryTerrainSurface(t, pos.x, pos.z, out float surf, out _, out _, out bool onMap) || !onMap) return true;
+            return pos.y >= surf - MaxDropBelowSurface && pos.y <= surf + MaxRiseAboveSurface;
+        }
+
+        /// <summary>Terrain if the point is on it and not a hole, otherwise a downward raycast (mesh / leftover colliders).
+        /// Never accepts a hit far below the heightmap (Digger hole bottoms sit ~200 m down and used to snap the shuttle
+        /// under the surface after excavation finished).</summary>
         public static HeightFn ForWorld(Terrain t, Transform ignore = null)
         {
             var terr = ForTerrain(t);
@@ -60,14 +87,22 @@ namespace DMI.Xenoarch.Exploration
             {
                 if (terr(x, z, out y, out n)) return true;
                 y = 0f; n = Vector3.up;
-                var origin = new Vector3(x, 800f, z);
-                var hits = Physics.RaycastAll(origin, Vector3.down, 1600f, ~0, QueryTriggerInteraction.Ignore);
+                // A hole is not landable: the picker / FindOnGround must spiral to solid ground. Do not raycast
+                // through it — that hits the excavation floor or a buried mesh hundreds of metres down.
+                bool hasSurf = TryTerrainSurface(t, x, z, out float surfY, out _, out bool hole, out bool onMap);
+                if (hasSurf && hole) return false;
+                float fromY = hasSurf ? surfY + 80f : 800f;
+                float dist = hasSurf ? 80f + MaxDropBelowSurface : 1600f;
+                var origin = new Vector3(x, fromY, z);
+                var hits = Physics.RaycastAll(origin, Vector3.down, dist, ~0, QueryTriggerInteraction.Ignore);
                 System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
                 foreach (var h in hits)
                 {
                     if (h.collider == null) continue;
                     if (ignore != null && h.collider.transform.IsChildOf(ignore)) continue;
                     if (Vector3.Angle(h.normal, Vector3.up) > 75f) continue;
+                    if (hasSurf && (h.point.y < surfY - MaxDropBelowSurface || h.point.y > surfY + MaxRiseAboveSurface))
+                        continue;
                     y = h.point.y; n = h.normal;
                     return true;
                 }

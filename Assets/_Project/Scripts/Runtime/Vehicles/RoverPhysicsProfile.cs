@@ -29,8 +29,8 @@ namespace DMI.Xenoarch.Vehicles
         [Header("Suspension (world metres / N / N-s)")]
         public float spring = 70000f;
         public float damper = 5500f;
-        [Tooltip("Minimum damping as a fraction of critical (0 disables the floor, 0.2-2). 0.85 kills pogo-bounce; the authored damper is still used if it is firmer.")]
-        public float damperRatio = 0.85f;
+        [Tooltip("Minimum damping as a fraction of critical (0 still uses a 1.6 PhysX floor, 0.2-3). 1.6 kills pogo-bounce; the authored damper is still used if it is firmer.")]
+        public float damperRatio = 1.6f;
 
         [Header("Planet adaptation (wide ranges; 0 disables a term)")]
         [Tooltip("Scale spring, damper, anti-pitch and grip with local gravity and terrain/temperature.")]

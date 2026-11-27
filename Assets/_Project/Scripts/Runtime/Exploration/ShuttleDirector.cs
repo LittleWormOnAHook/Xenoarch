@@ -215,6 +215,7 @@ namespace DMI.Xenoarch.Exploration
                 else how += ", snapped to valid ground near the site";
             }
             pos = groundedPos;
+            Debug.Log($"[ShuttleDiag] LandCore scene={scene.name} site={(site != null ? site.Id : "none")} arriving={arriving} how={how} pos={pos:F1} target={target:F1} terrain={(terrain != null)}");
 
             if (holder != null)
             {
@@ -288,6 +289,7 @@ namespace DMI.Xenoarch.Exploration
                     if (near != null && near.shuttle != null) { UsePreplaced(near); LastPick += $"; player {d:0} m away, switched to nearest zone '{near.name}'"; }
                 }
             }
+            _busy = false;
             if (Shuttle != null) LogPlaced(Shuttle, "preplaced zone");
             t = 0f;
             while (SceneLoader.Busy && t < 240f) { t += Time.unscaledDeltaTime; yield return null; }
@@ -308,14 +310,45 @@ namespace DMI.Xenoarch.Exploration
             var p = holder.position; float ground = float.NegativeInfinity;
             if (height(p.x, p.z, out float gy, out _)) ground = gy;
             foreach (var g in _gears) if (g != null) { var gp = g.position; if (height(gp.x, gp.z, out float y, out _)) ground = Mathf.Max(ground, y); }
-            if (float.IsInfinity(ground))
+            if (float.IsNegativeInfinity(ground) || !PlausibleGroundY(ground, p))
             {
-                if (!PlaceOnGround(height, p, 200f, out var safe)) return;
+                float rejected = ground;
+                if (!PlaceOnGround(height, p, 200f, out var safe) || !PlausibleGroundY(safe.y, p))
+                {
+                    if (!TrySurfaceY(p.x, p.z, out float surf, out _) || !PlausibleGroundY(surf, p))
+                    {
+                        Debug.LogWarning($"[ShuttleDiag] GroundByBounds aborted: no plausible ground at {p:F1} (rejected Y={rejected:F1})");
+                        return;
+                    }
+                    safe = new Vector3(p.x, surf, p.z);
+                }
+                Debug.Log($"[ShuttleDiag] GroundByBounds rejected Y={rejected:F1} at {p:F1}; using {safe:F1}");
                 holder.position = new Vector3(safe.x, holder.position.y, safe.z);
                 p = holder.position;
                 ground = safe.y;
             }
-            holder.position = p + Vector3.up * (ground - minY);
+            float delta = ground - minY;
+            if (Mathf.Abs(delta) > 80f)
+            {
+                Debug.LogWarning($"[ShuttleDiag] GroundByBounds refused {delta:F1} m snap (holder={p:F1} minY={minY:F1} ground={ground:F1})");
+                return;
+            }
+            holder.position = p + Vector3.up * delta;
+        }
+
+        bool TrySurfaceY(float x, float z, out float y, out bool hole)
+        {
+            y = 0f; hole = false;
+            return LandingZonePicker.TryTerrainSurface(_terrain, x, z, out y, out _, out hole, out bool onMap) && onMap;
+        }
+
+        bool PlausibleGroundY(float y, Vector3 near)
+        {
+            if (float.IsNaN(y) || float.IsInfinity(y)) return false;
+            if (TrySurfaceY(near.x, near.z, out float surf, out _))
+                return y >= surf - LandingZonePicker.MaxDropBelowSurface && y <= surf + LandingZonePicker.MaxRiseAboveSurface;
+            if (Mathf.Abs(y - near.y) > 80f) return false;
+            return true;
         }
 
         void Update()
@@ -376,9 +409,27 @@ namespace DMI.Xenoarch.Exploration
                 message = "No valid ground near you for the shuttle to land.";
                 return false;
             }
+            if (!PlausibleGroundY(pos.y, rig.Root.position))
+            {
+                Debug.LogWarning($"[ShuttleDiag] CallToPlayer rejected Y={pos.y:F1} near player {rig.Root.position:F1}");
+                message = "No valid ground near you for the shuttle to land.";
+                return false;
+            }
             Shuttle.SetActive(true);
             Shuttle.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rig.Root.eulerAngles.y + 90f, 0f));
             GroundByBounds(Shuttle.transform, height);
+            var landed = Shuttle.transform.position;
+            if (!PlausibleGroundY(landed.y, rig.Root.position))
+            {
+                if (TrySurfaceY(landed.x, landed.z, out float surf, out bool hole) && !hole)
+                {
+                    Debug.LogWarning($"[ShuttleDiag] CallToPlayer lifted shuttle from {landed:F1} to surface Y={surf:F1}");
+                    var lp = Shuttle.transform.position;
+                    Shuttle.transform.position = new Vector3(lp.x, lp.y + (surf - landed.y), lp.z);
+                }
+                else Debug.LogWarning($"[ShuttleDiag] CallToPlayer final Y still implausible at {landed:F1}");
+            }
+            Debug.Log($"[ShuttleDiag] CallToPlayer dev={dev} player={rig.Root.position:F1} requested={pos:F1} final={Shuttle.transform.position:F1}");
             if (!dev) _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
             LogPlaced(Shuttle, dev ? "dev summon (F7)" : "emergency call");
             message = dev ? "Shuttle summoned (dev F7)." : "Shuttle inbound. Landing near your position.";
@@ -420,7 +471,10 @@ namespace DMI.Xenoarch.Exploration
             var p = holder.position; float ground = float.NegativeInfinity;
             if (height(p.x, p.z, out float gy, out _)) ground = gy;
             foreach (var g in _gears) { var gp = g.position; if (height(gp.x, gp.z, out float y, out _)) ground = Mathf.Max(ground, y); }
-            if (!float.IsInfinity(ground)) holder.position = new Vector3(p.x, ground + _groundOffset, p.z);
+            if (!float.IsNegativeInfinity(ground) && PlausibleGroundY(ground, p))
+                holder.position = new Vector3(p.x, ground + _groundOffset, p.z);
+            else
+                Debug.LogWarning($"[ShuttleDiag] GroundOnGear skipped implausible Y={ground:F1} at {p:F1}");
         }
 
         IEnumerator Settle(GameObject holder, LandingZonePicker.HeightFn height, bool arriving)
@@ -434,7 +488,13 @@ namespace DMI.Xenoarch.Exploration
             while (ExcavationSite.BusyStatus() != null && t < 20f) { t += Time.unscaledDeltaTime; yield return null; }
             if (holder != null) { EnsureNearPlayer(holder, height); GroundByBounds(holder.transform, height); }
             _busy = false;
-            if (holder != null) LogPlaced(holder, "after load");
+            if (holder != null)
+            {
+                var ap = holder.transform.position;
+                TrySurfaceY(ap.x, ap.z, out float asurf, out bool ahole);
+                Debug.Log($"[ShuttleDiag] after load pos={ap:F1} surfY={asurf:F1} hole={ahole} plausible={PlausibleGroundY(ap.y, ap)}");
+                LogPlaced(holder, "after load");
+            }
             // Watchdog: once the loading screen is gone, check the shuttle is still there, visible, grounded and near the
             // player (a late player move, a destroyed or disabled holder); repair and log what was wrong.
             t = 0f;
@@ -476,13 +536,24 @@ namespace DMI.Xenoarch.Exploration
                 if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(s.x, s.z)) > maxPlayerDistance) { EnsureNearPlayer(holder, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "moved to the player"; }
             }
             var hp = holder.transform.position;
-            if (!height(hp.x, hp.z, out float gy, out _))
+            bool heightOk = height(hp.x, hp.z, out float gy, out _);
+            bool surfaceOk = TrySurfaceY(hp.x, hp.z, out float surfY, out bool inHole);
+            bool sunk = surfaceOk && (inHole || hp.y < surfY - LandingZonePicker.MaxDropBelowSurface || (heightOk && gy < surfY - LandingZonePicker.MaxDropBelowSurface));
+            if (!heightOk || sunk || (heightOk && !PlausibleGroundY(gy, hp)))
             {
-                if (PlaceOnGround(height, hp, 200f, out var safe))
+                if (PlaceOnGround(height, hp, 200f, out var safe) && PlausibleGroundY(safe.y, hp))
                 {
                     holder.transform.position = safe;
                     GroundByBounds(holder.transform, height);
                     fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "moved onto valid ground";
+                    Debug.Log($"[ShuttleDiag] Verify relocated from {hp:F1} (heightOk={heightOk} gy={gy:F1} surf={surfY:F1} hole={inHole}) to {holder.transform.position:F1}");
+                }
+                else if (surfaceOk && !inHole && PlausibleGroundY(surfY, hp))
+                {
+                    holder.transform.position = new Vector3(hp.x, surfY, hp.z);
+                    GroundByBounds(holder.transform, height);
+                    fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "lifted to terrain surface";
+                    Debug.Log($"[ShuttleDiag] Verify lifted from {hp:F1} to surface {holder.transform.position:F1}");
                 }
             }
             else if (hp.y < gy + _groundOffset - 1.5f)

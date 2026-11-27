@@ -20,7 +20,7 @@ MonoBehaviour:
   comForeAft: 0
   spring: 200000
   damper: 5500
-  damperRatio: 0.85
+  damperRatio: 1.6
   adaptToPlanet: 1
   minGravityScale: 0.15
   maxGravityScale: 2.5

@@ -226,7 +226,7 @@ namespace DMI.Xenoarch.Vehicles
                 go.transform.SetParent(wroot, false);
                 go.transform.position = w.c + Vector3.up * suspension * 0.5f;
                 var wc = go.AddComponent<WheelCollider>();
-                wc.radius = w.r; wc.mass = 25f; wc.suspensionDistance = suspension; wc.forceAppPointDistance = 0.1f;
+                wc.radius = w.r; wc.mass = Mathf.Clamp(sprung * 0.08f, 40f, 150f); wc.suspensionDistance = suspension; wc.forceAppPointDistance = 0.1f;
                 float k = sprung * 90f;
                 wc.suspensionSpring = new JointSpring { spring = k, damper = 0.6f * Mathf.Sqrt(k * sprung), targetPosition = 0.5f };
                 var side = wc.sidewaysFriction; side.stiffness = 1.3f; wc.sidewaysFriction = side;

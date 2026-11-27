@@ -48,6 +48,7 @@ namespace DMI.Xenoarch.Vehicles
             _zoomStep = Mathf.Clamp(PlayerPrefs.GetInt(ZoomPref, 1), 0, 2);
             ApplyProfile();
             AlignWheelCollidersToVisuals();
+            ApplySuspensionSprings();
             BindPivots();
             StartParkedPhysics(true);
             ApplyPresence(false);
@@ -90,6 +91,12 @@ namespace DMI.Xenoarch.Vehicles
             return n;
         }
 
+        float WheelMassFor(int n)
+        {
+            n = Mathf.Max(1, n);
+            return Mathf.Clamp(mass / n * 0.08f, 40f, 150f);
+        }
+
         static float WorldRadius(WheelCollider wc)
         {
             if (wc == null) return 0.3f;
@@ -129,7 +136,7 @@ namespace DMI.Xenoarch.Vehicles
                 w.collider.radius = worldR / sc;
                 w.collider.suspensionDistance = travel / sc;
                 w.collider.forceAppPointDistance = (p != null ? p.forceAppPointDistance : 0f) / sc;
-                w.collider.mass = 25f;
+                w.collider.mass = WheelMassFor(WheelCount());
                 // Attachment sits above the visual centre so mid-travel matches the authored wheel.
                 w.collider.transform.position = b.center + Vector3.up * (travel * target);
                 w.collider.transform.rotation = Quaternion.LookRotation(Fwd.sqrMagnitude > 0.01f ? Fwd : transform.forward, Vector3.up);
@@ -157,7 +164,8 @@ namespace DMI.Xenoarch.Vehicles
             var surf = FindAnyObjectByType<ProceduralSurface>();
             var ptype = surf != null && surf.Recipe != null ? surf.Recipe.type : (ProceduralPlanetType?)null;
             float temp = env != null ? env.surfaceTemperatureC : 15f;
-            string key = $"{g:0.00}|{ptype}|{temp:0}";
+            int n = Mathf.Max(1, WheelCount());
+            string key = $"{g:0.00}|{ptype}|{temp:0}|{n}";
             if (!force && key == _adaptKey) return;
             _adaptKey = key;
 
@@ -181,16 +189,24 @@ namespace DMI.Xenoarch.Vehicles
             _speedScale = Mathf.Clamp(speed, 0.3f, 1.5f);
             _rollDrag = Mathf.Max(0f, roll);
 
-            int n = Mathf.Max(1, WheelCount());
             float sprung = mass / n;
             float spring = (p.spring > 0f ? p.spring : sprung * 90f) * gScale;
             float damper = (p.damper > 0f ? p.damper : 0f) * gScale;
             float critical = 2f * Mathf.Sqrt(Mathf.Max(1f, spring * sprung));
-            if (p.damperRatio > 0.01f) damper = Mathf.Max(damper, p.damperRatio * critical);
+            // PhysX WheelColliders need more than textbook critical damping to kill pogo; 1.6 is the floor.
+            // Springs live in local metres, so world zeta shrinks with collider scale — compensate by sqrt(scale).
+            float ratio = p.damperRatio > 0.01f ? Mathf.Max(p.damperRatio, 1.6f) : 1.6f;
+            float sc = 0f; int scN = 0;
+            foreach (var w in wheels)
+                if (w != null && w.collider != null) { sc += ScaleOf(w.collider); scN++; }
+            sc = scN > 0 ? Mathf.Clamp(sc / scN, 0.05f, 8f) : 1f;
+            damper = Mathf.Max(damper, ratio * critical * Mathf.Max(1f, Mathf.Sqrt(sc)));
+            float wheelMass = WheelMassFor(n);
             _appliedSpring = spring; _appliedDamper = damper;
             foreach (var w in wheels)
             {
                 if (w == null || w.collider == null) continue;
+                w.collider.mass = wheelMass;
                 w.collider.suspensionSpring = new JointSpring
                 {
                     spring = spring,
@@ -198,6 +214,8 @@ namespace DMI.Xenoarch.Vehicles
                     targetPosition = Mathf.Clamp01(p.targetPosition)
                 };
             }
+            float zeta = critical > 1f ? damper / critical : 0f;
+            Debug.Log($"[RoverDiag] g={g:0.00} gScale={gScale:0.00} spring={spring:0} damper={damper:0} critical={critical:0} zeta={zeta:0.00} mass={mass:0} wheels={n} travel={p.travel:0.00} scale={sc:0.000} wheelMass={wheelMass:0.0} type={ptype} temp={temp:0}");
             // Grip: re-apply stiffness scaled by the terrain/temperature factor.
             foreach (var w in wheels)
             {
@@ -463,6 +481,17 @@ namespace DMI.Xenoarch.Vehicles
             _rb.linearVelocity = vel;
 
             ApplyAntiPitch(grounded);
+
+            // Kill residual suspension hop once the wheels are planted. Does not run in the air, so it won't flatten jumps.
+            if (grounded)
+            {
+                var hopVel = _rb.linearVelocity;
+                if (Mathf.Abs(hopVel.y) > 0.02f)
+                {
+                    hopVel.y *= Mathf.Exp(-14f * Time.fixedDeltaTime);
+                    _rb.linearVelocity = hopVel;
+                }
+            }
 
             bool parked = !_autoPilot && (_state != State.Driving || !_powered);
             if (parked)
