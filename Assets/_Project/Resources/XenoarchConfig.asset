@@ -86,7 +86,7 @@ MonoBehaviour:
   basePostEnabled: 1
   firstGameplayScene: Ship_Starter
   firstSpawnId: default
-  inventoryCapacity: 24
+  inventoryCapacity: 29
   startingItems:
   - item: {fileID: 11400000, guid: 320668b74695aef49a837cdbbf1f205d, type: 2}
     count: 1

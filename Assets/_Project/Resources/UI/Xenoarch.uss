@@ -237,6 +237,18 @@
 .xa-obj__idle { color: var(--xa-secondary-text); }
 .xa-obj__title.xa-obj__idle, .xa-obj__side.xa-obj__idle { color: var(--xa-secondary-text); }
 .xa-obj__title.xa-obj__focus, .xa-obj__side.xa-obj__focus { color: var(--xa-heading); }
+
+
+/* t243u: inventory context menu (drop / destroy) */
+.xa-ctx {
+    background-color: var(--xa-panel-deep);
+    padding: 6px;
+    border-width: 1px;
+    border-color: var(--xa-highlight);
+    min-width: 260px;
+}
+.xa-ctx .xa-term__btn { margin-top: 4px; margin-bottom: 0; }
+
 /* ======================================================================================================
    t246u Morpheus-style theme (approved mockups: Docs/Images/UI_Morpheus). Our palette (XenoarchPalette.uss)
    and v3 icons; Morpheus layout language: flat see-through panels with 1 px borders, Jost type, header bars,

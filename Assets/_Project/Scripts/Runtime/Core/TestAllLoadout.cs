@@ -98,14 +98,27 @@ namespace DMI.Xenoarch.Core
                     resources.Add(def);
             }
 
-            int extra = 0;
-            foreach (var d in tools) if (inv.Count(d.Id) <= 0) extra++;
-            foreach (var d in resources) extra++;
-            if (extra > inv.FreeSlots) inv.SetCapacity(inv.Capacity + extra - inv.FreeSlots);
-
             foreach (var d in tools)
-                if (inv.Count(d.Id) <= 0 && inv.Add(d.Id, 1) != 0)
+            {
+                if (inv.Count(d.Id) > 0) continue;
+                if (inv.FreeSlots <= 0) inv.SetCapacity(inv.Capacity + 1);
+                if (inv.Add(d.Id, 1) != 0)
                     Debug.LogWarning($"[Xenoarch] New Test All: could not add {d.Id} to the backpack.");
+            }
+            session.Hotbar.ShelveFrom(inv);
+
+            int extra = 0;
+            foreach (var d in resources)
+                if (inv.Count(d.Id) <= 0) extra++;
+                else
+                {
+                    // A full stack may still need a new slot if the existing one is already full.
+                    int room = 0;
+                    foreach (var s in inv.Slots)
+                        if (!s.IsEmpty && s.itemId == d.Id) room += System.Math.Max(0, d.EffectiveMaxStack - s.count);
+                    if (d.EffectiveMaxStack - inv.Count(d.Id) > room) extra++;
+                }
+            if (extra > inv.FreeSlots) inv.SetCapacity(inv.Capacity + extra - inv.FreeSlots);
 
             foreach (var d in resources)
             {

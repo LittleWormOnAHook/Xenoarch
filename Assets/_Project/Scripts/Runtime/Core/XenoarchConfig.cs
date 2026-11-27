@@ -48,7 +48,7 @@ namespace DMI.Xenoarch.Core
         [Header("New game")]
         public string firstGameplayScene = SceneNames.ShipStarter;
         public string firstSpawnId = PlayerSpawnIds.Default;
-        [Min(1)] public int inventoryCapacity = 24;
+        [Min(1)] public int inventoryCapacity = 29;
         public List<StartingItem> startingItems = new List<StartingItem>();
         [Tooltip("DEV / TESTING ONLY: every dig tool (shovel, precision tool, brush, powered drill, ...) and the handheld " +
                  "scanner are put in the inventory on New Game, Continue and Load if missing. Untick for release builds.")]

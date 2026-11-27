@@ -84,10 +84,14 @@ namespace DMI.Xenoarch.Core
             Saves = new SaveService(storage);
 
             Saves.Register(new JsonStateSection<PlayerLocationState>(LocationKey, 0, () => Location, v => Location = v));
-            Saves.Register(new InventorySection(InventoryKey, 0, Inventory));
+            Saves.Register(new InventorySection(InventoryKey, 0, Inventory, config.inventoryCapacity));
             Hotbar = new Hotbar(() => Config.surfaceScanner != null ? Config.surfaceScanner.itemId : "item.tool.handheld_scanner",
                 () => { var l = new System.Collections.Generic.List<string>(); foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) l.Add(t.itemId); l.Add(DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().itemId); return l; });
             Saves.Register(new JsonStateSection<HotbarData>(Hotbar.Key, 0, () => Hotbar.Data, v => Hotbar.Set(v)));
+            Inventory.ExtraStacks = () => Hotbar.StoredStacks;
+            Inventory.ExtraRemove = (id, n) => Hotbar.Remove(id, n);
+            Inventory.ExtraRemoveInstance = id => Hotbar.RemoveInstance(id);
+            Inventory.Changed += () => Hotbar.ShelveFrom(Inventory);
             Saves.Register(World);
             Exploration = new ExplorationService(config.galaxy, config.starterShip, config.siteRegistry, Saves);
             Exploration.Clock = () => PlaySeconds;
@@ -312,12 +316,14 @@ namespace DMI.Xenoarch.Core
         sealed class InventorySection : ISaveSection
         {
             readonly InventoryModel _model;
+            readonly int _defaultCapacity;
             public string Key { get; }
             public int RestoreOrder { get; }
-            public InventorySection(string key, int order, InventoryModel model) { Key = key; RestoreOrder = order; _model = model; }
+            public InventorySection(string key, int order, InventoryModel model, int defaultCapacity)
+            { Key = key; RestoreOrder = order; _model = model; _defaultCapacity = defaultCapacity; }
             public string CaptureJson() => JsonUtility.ToJson(_model.Capture());
             public void RestoreJson(string json) => _model.Restore(JsonUtility.FromJson<InventorySaveData>(json));
-            public void ResetToNewGame() => _model.Clear();
+            public void ResetToNewGame() { _model.Clear(); _model.SetCapacity(_defaultCapacity); }
         }
     }
 }

@@ -7,6 +7,8 @@ using DMI.Xenoarch.Items;
 using DMI.Xenoarch.Materials;
 using MaterialDefinition = DMI.Xenoarch.Materials.MaterialDefinition;
 using DMI.Xenoarch.Ship;
+using DMI.Xenoarch.Interaction;
+using DMI.Xenoarch.Vehicles;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -64,14 +66,16 @@ namespace DMI.Xenoarch.UI
             if (!_menuHooked) { _menuHooked = true; body.RegisterCallback<PointerDownEvent>(e => { if (_menu != null && !_menu.worldBound.Contains(e.position)) HideMenu(); }); }
             var s = Session; var inv = s.Inventory;
             Status.text = $"Backpack {inv.Capacity - inv.FreeSlots}/{inv.Capacity}   |   {s.Economy.Credits:N0} cr   |   {s.Economy.RankName} ({s.Economy.Score})   |   Ship storage level {s.Exploration.Ship.holdLevel + 1}" + (s.AboardShip ? "   |   Aboard: ship workshop available" : "");
-            Hint.text = "I / Tab / Esc: close   |   Move items in and out of the ship crates at the crates";
+            Hint.text = "I / Tab / Esc: close   |   Right-click an item to drop or destroy   |   Hotbar items do not use backpack space";
 
             // ---------------- backpack grid + ship crates
             var left = ScrollCol(body, 0, true);
             Text(left, "BACKPACK", "xa-term__h");
-            var grid = new VisualElement(); grid.style.flexDirection = FlexDirection.Row; grid.style.flexWrap = Wrap.Wrap; left.Add(grid);
+            var grid = new VisualElement(); grid.style.flexDirection = FlexDirection.Row; grid.style.flexWrap = Wrap.Wrap;
+            grid.style.width = 84 * 6; // six 80px slots with 4px gutters, so 29 slots land on a clean last row of five
+            left.Add(grid);
             for (int i = 0; i < inv.Slots.Count; i++) grid.Add(Tile(inv.Slots[i], i));
-            Text(left, "Drag items to rearrange, onto the hotbar, or onto a crate below.", "xa-term__dim");
+            Text(left, "Drag items to rearrange, onto the hotbar, or onto a crate below. Right-click to drop or destroy.", "xa-term__dim");
 
             // Hotbar (keys 1-8). Slot 1 is the scanner; drag tools/items onto 2-8, drag off to clear.
             Text(left, "HOTBAR", "xa-term__h");
@@ -194,22 +198,57 @@ namespace DMI.Xenoarch.UI
 
         VisualElement _menu; bool _menuHooked;
 
-        /// <summary>Right-click menu for a puzzle piece.</summary>
-        void ShowPieceMenu(string instanceId, string group, Vector2 screenPos)
+        /// <summary>Right-click menu: Drop, Destroy, and Combine when the item is a puzzle piece. Available whenever
+        /// the item can be selected, not only when the backpack is full.</summary>
+        void ShowItemMenu(ItemStack st, System.Action remove, Vector2 screenPos)
         {
             HideMenu();
-            var s = Session; var p = s.Puzzles; var spec = ArtifactPuzzleService.Spec(group);
+            if (st == null || st.IsEmpty || remove == null) return;
+            _selItem = st.itemId;
+            var s = Session;
+            var d = Def(st.itemId);
+            string name = d != null ? d.DisplayNameOrId : st.itemId;
+            var art = !string.IsNullOrEmpty(st.instanceId) ? s.Artifacts.Get(st.instanceId) : null;
+            var group = art != null ? s.Puzzles.GroupOf(art) : null;
+            var dropGate = s.Eligibility != null ? s.Eligibility.Check(art, ArtifactAction.Discard) : Eligibility.Allowed;
+            var destroyGate = s.Eligibility != null ? s.Eligibility.Check(art, ArtifactAction.Destroy) : Eligibility.Allowed;
+            bool vehicleOut = d is VehicleItemDefinition vd && RoverDirector.Instance is RoverDirector rd && rd.IsDeployed(vd);
+
             _menu = new VisualElement();
-            _menu.style.position = Position.Absolute; _menu.style.minWidth = 300;
-            _menu.style.backgroundColor = XenoarchPalette.PanelDeep;
-            _menu.style.paddingLeft = _menu.style.paddingRight = _menu.style.paddingTop = _menu.style.paddingBottom = 6;
-            _menu.style.borderTopWidth = _menu.style.borderBottomWidth = _menu.style.borderLeftWidth = _menu.style.borderRightWidth = 1;
-            _menu.style.borderTopColor = _menu.style.borderBottomColor = _menu.style.borderLeftColor = _menu.style.borderRightColor = XenoarchPalette.Highlight;
-            int found = p.Pieces(group).Count;
-            Text(_menu, $"{spec?.title ?? group} piece   ({found} found)", "xa-term__dim");
-            bool can = p.CanCombine(group);
-            string label = p.IsSolved(group) ? "View reconstructed star map" : "Combine with other artifact";
-            Btn(_menu, can ? label : "Combine (needs 2 puzzle pieces)", () => { HideMenu(); OpenPuzzle(group, instanceId); }, can);
+            _menu.AddToClassList("xa-ctx");
+            _menu.style.position = Position.Absolute;
+            _menu.style.minWidth = 280;
+            Text(_menu, name + (st.count > 1 ? $"  x{st.count}" : ""), "xa-term__h");
+            if (group != null)
+            {
+                var puz = s.Puzzles; var spec = ArtifactPuzzleService.Spec(group);
+                int found = puz.Pieces(group).Count;
+                Text(_menu, $"{spec?.title ?? group} piece   ({found} found)", "xa-term__dim");
+                bool can = puz.CanCombine(group);
+                string label = puz.IsSolved(group) ? "View reconstructed star map" : "Combine with other artifact";
+                string inst = st.instanceId, g = group;
+                Btn(_menu, can ? label : "Combine (needs 2 puzzle pieces)", () => { HideMenu(); OpenPuzzle(g, inst); }, can);
+            }
+            if (vehicleOut) Text(_menu, "Recall the vehicle before dropping or destroying it.", "xa-term__warn");
+            else
+            {
+                var dropStack = st.Clone();
+                if (dropGate.IsBlocked) Text(_menu, "Drop: " + dropGate.Message, "xa-term__warn");
+                else Btn(_menu, "Drop", () =>
+                {
+                    HideMenu();
+                    void Go() => DoDrop(dropStack, remove, name);
+                    if (dropGate.IsWarning) MenuScreens.Confirm(Body, dropGate.Message + $"\n\nDrop {name} in front of you?", Go);
+                    else Go();
+                });
+                if (destroyGate.IsBlocked) Text(_menu, "Destroy: " + destroyGate.Message, "xa-term__warn");
+                else Btn(_menu, "Destroy", () =>
+                {
+                    HideMenu();
+                    string q = (destroyGate.IsWarning ? destroyGate.Message + "\n\n" : "") + $"Destroy {name}" + (st.count > 1 ? $" x{st.count}" : "") + "? This cannot be undone.";
+                    MenuScreens.Confirm(Body, q, () => { remove(); Toast.Show($"Destroyed {name}."); Refresh(); });
+                });
+            }
             Btn(_menu, "Cancel", HideMenu).AddToClassList("xa-term__btn--ghost");
             Body.Add(_menu);
             var local = Body.WorldToLocal(screenPos);
@@ -221,6 +260,14 @@ namespace DMI.Xenoarch.UI
                 _menu.style.left = Mathf.Clamp(local.x, 0f, Mathf.Max(0f, b.width - _menu.layout.width));
                 _menu.style.top = Mathf.Clamp(local.y, 0f, Mathf.Max(0f, b.height - _menu.layout.height));
             });
+        }
+
+        void DoDrop(ItemStack st, System.Action remove, string name)
+        {
+            if (!DroppedItemPickup.SpawnInFrontOfPlayer(st, Session.Items)) { Toast.Show("Can't drop that here."); return; }
+            remove();
+            Toast.Show("Dropped " + name + (st.count > 1 ? $" x{st.count}" : "") + ".");
+            Refresh();
         }
 
         void HideMenu() { if (_menu != null) { _menu.RemoveFromHierarchy(); _menu = null; } }
@@ -275,17 +322,24 @@ namespace DMI.Xenoarch.UI
             Refresh();
         }
 
-        /// <summary>Hotbar slot dropped on the backpack (ZEN-21): the hotbar only points at backpack items, so this clears the
-        /// shortcut and never removes an item. Says so, and says when the tool is not owned yet (default layout shows every tool).</summary>
-        void TakeOffHotbar(int index)
+        /// <summary>Hotbar slot dropped on the backpack: the stored stack returns to a backpack slot. Ghost assignments
+        /// (default tools not yet owned) just clear the shortcut.</summary>
+        void TakeOffHotbar(int index, int preferredIndex = -1)
         {
             var bar = Session.Hotbar; string id = bar.At(index);
             if (index <= 0 || id == null) return;
-            bar.Clear(index);
+            bool hadStack = bar.StackAt(index) != null;
+            if (!bar.TryReturnTo(index, Session.Inventory, preferredIndex))
+            {
+                Toast.Show("Backpack is full. Drop or destroy an item first.");
+                return;
+            }
             string name = Def(id)?.DisplayNameOrId ?? id;
-            Toast.Show(Session.Inventory.Count(id) > 0
-                ? $"{name} taken off the hotbar. It is still in your backpack: drag it back onto any slot."
-                : $"{name} taken off the hotbar. You don't have one yet: craft it aboard the ship, then drag it from the backpack onto the hotbar.", 4f);
+            Toast.Show(hadStack
+                ? $"{name} returned to the backpack."
+                : Session.Inventory.Count(id) > 0
+                    ? $"{name} taken off the hotbar. It is still in your backpack: drag it back onto any slot."
+                    : $"{name} taken off the hotbar. You don't have one yet: craft it aboard the ship, then drag it from the backpack onto the hotbar.", 4f);
         }
 
         VisualElement HotbarTile(int k)
@@ -310,14 +364,30 @@ namespace DMI.Xenoarch.UI
             key.style.position = Position.Absolute; key.style.left = 3; key.style.top = 1; key.style.fontSize = 11; key.style.color = XenoarchPalette.Highlight;
             t.Add(key);
             bool owned = id != null && Session.Inventory.Count(id) > 0;
-            t.tooltip = k == 0 ? "1: handheld scanner (fixed)" : id != null ? $"{k + 1}: {(d != null ? d.DisplayNameOrId : id)}" + (owned ? " (drag off to clear)" : " (not owned yet: craft it aboard the ship)") : $"{k + 1}: empty (drag an item here)";
+            t.tooltip = k == 0 ? "1: handheld scanner (fixed)" : id != null ? $"{k + 1}: {(d != null ? d.DisplayNameOrId : id)}" + (owned ? " (drag off to clear, right-click to drop or destroy)" : " (not owned yet: craft it aboard the ship)") : $"{k + 1}: empty (drag an item here)";
+            if (k > 0 && bar.StackAt(k) != null)
+            {
+                int slot = k;
+                t.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    if (e.button != 1) return;
+                    e.StopPropagation();
+                    var held = Session.Hotbar.StackAt(slot);
+                    if (held == null) return;
+                    ShowItemMenu(held.Clone(), () => Session.Hotbar.Clear(slot), e.position);
+                });
+            }
             if (k > 0)
             {
                 if (id != null) Drag.Source(t, () => new DragDrop.Payload { kind = "hotbar", index = k, itemId = id, icon = d != null ? d.icon : null });
                 DragDrop.Target(t, p => p.kind == "backpack" || p.kind == "hotbar", p =>
                 {
                     if (p.kind == "hotbar") bar.Swap(p.index, k);
-                    else if (!string.IsNullOrEmpty(p.itemId)) bar.Assign(k, p.itemId);
+                    else if (p.kind == "backpack")
+                    {
+                        if (!bar.AssignFrom(k, Session.Inventory, p.index))
+                            Toast.Show("Backpack is full; couldn't swap the hotbar item back.");
+                    }
                     Refresh();
                 });
             }
@@ -340,7 +410,7 @@ namespace DMI.Xenoarch.UI
             DragDrop.Target(t, p => p.kind == "backpack" || p.kind == "hotbar", p =>
             {
                 if (p.kind == "backpack") inv0.Swap(p.index, index);
-                else TakeOffHotbar(p.index);
+                else TakeOffHotbar(p.index, index);
                 Refresh();
             });
             t.AddToClassList("xa-item-slot");
@@ -360,7 +430,6 @@ namespace DMI.Xenoarch.UI
                 t.Add(img);
             }
             else t.Add(new Label(d != null ? d.DisplayNameOrId : st.itemId) { pickingMode = PickingMode.Ignore, style = { fontSize = 10, whiteSpace = WhiteSpace.Normal } });
-            // Puzzle pieces: right-click menu (Combine with other artifact).
             var art = !string.IsNullOrEmpty(st.instanceId) ? Session.Artifacts.Get(st.instanceId) : null;
             var group = art != null ? Session.Puzzles.GroupOf(art) : null;
             if (group != null)
@@ -368,16 +437,23 @@ namespace DMI.Xenoarch.UI
                 var mark = new VisualElement { pickingMode = PickingMode.Ignore };
                 mark.style.position = Position.Absolute; mark.style.left = 4; mark.style.top = 4; mark.style.width = 8; mark.style.height = 8; mark.style.backgroundColor = XenoarchPalette.Primary;
                 t.Add(mark);
-                string inst = st.instanceId, item = st.itemId;
-                t.RegisterCallback<PointerDownEvent>(e => { if (e.button == 1) { e.StopPropagation(); _selItem = item; ShowPieceMenu(inst, group, e.position); } });
             }
+            int slot = index;
+            t.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.button != 1 || Session.Inventory.Slots[slot].IsEmpty) return;
+                e.StopPropagation();
+                var cur = Session.Inventory.Slots[slot];
+                _selItem = cur.itemId;
+                ShowItemMenu(cur.Clone(), () => Session.Inventory.TakeAt(slot), e.position);
+            });
             if (st.count > 1)
             {
                 var n = new Label(st.count.ToString()) { pickingMode = PickingMode.Ignore };
                 n.style.position = Position.Absolute; n.style.right = 3; n.style.bottom = 1; n.style.fontSize = 12; n.style.color = Color.white;
                 t.Add(n);
             }
-            t.tooltip = (d != null ? d.DisplayNameOrId : st.itemId) + (group != null ? "  (puzzle piece: right-click)" : "");
+            t.tooltip = (d != null ? d.DisplayNameOrId : st.itemId) + (group != null ? "  (puzzle piece)" : "") + "  (right-click: drop or destroy)";
             return t;
         }
     }

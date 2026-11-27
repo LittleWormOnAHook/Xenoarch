@@ -27,6 +27,12 @@ namespace DMI.Xenoarch.Inventory
         public IReadOnlyList<ItemStack> Slots => _slots;
         public event Action Changed;
 
+        /// <summary>Optional extra stacks that count as owned (hotbar). Ignored by Capacity, FreeSlots and Add.</summary>
+        public Func<IEnumerable<ItemStack>> ExtraStacks;
+        /// <summary>Removes up to amount from the extra store; returns how many were removed.</summary>
+        public Func<string, int, int> ExtraRemove;
+        public Func<string, bool> ExtraRemoveInstance;
+
         public InventoryModel(IItemLookup lookup, int capacity)
         {
             _lookup = lookup ?? throw new ArgumentNullException(nameof(lookup));
@@ -50,6 +56,7 @@ namespace DMI.Xenoarch.Inventory
         {
             int n = 0;
             foreach (var s in _slots) if (!s.IsEmpty && s.itemId == itemId) n += s.count;
+            if (ExtraStacks != null) foreach (var s in ExtraStacks()) if (s != null && !s.IsEmpty && s.itemId == itemId) n += s.count;
             return n;
         }
 
@@ -57,6 +64,7 @@ namespace DMI.Xenoarch.Inventory
         {
             if (string.IsNullOrEmpty(instanceId)) return false;
             foreach (var s in _slots) if (!s.IsEmpty && s.instanceId == instanceId) return true;
+            if (ExtraStacks != null) foreach (var s in ExtraStacks()) if (s != null && !s.IsEmpty && s.instanceId == instanceId) return true;
             return false;
         }
 
@@ -121,7 +129,7 @@ namespace DMI.Xenoarch.Inventory
         /// a unique instance that must not be consumed (protected artifacts); those slots are skipped. Null = no guard.</summary>
         public Func<string, bool> CanBulkRemoveInstance;
 
-        /// <summary>Removes up to <paramref name="amount"/> (from the last stacks first). Returns how many were removed.</summary>
+        /// <summary>Removes up to <paramref name="amount"/> (from the last stacks first, then the extra store). Returns how many were removed.</summary>
         public int Remove(string itemId, int amount)
         {
             if (amount <= 0) return 0;
@@ -135,6 +143,7 @@ namespace DMI.Xenoarch.Inventory
                 s.count -= take; removed += take;
                 if (s.count <= 0) s.Clear();
             }
+            if (removed < amount && ExtraRemove != null) removed += Math.Max(0, ExtraRemove(itemId, amount - removed));
             if (removed > 0) Changed?.Invoke();
             return removed;
         }
@@ -145,6 +154,39 @@ namespace DMI.Xenoarch.Inventory
             {
                 if (s.IsEmpty || s.instanceId != instanceId) continue;
                 s.Clear();
+                Changed?.Invoke();
+                return true;
+            }
+            if (ExtraRemoveInstance != null && ExtraRemoveInstance(instanceId)) { Changed?.Invoke(); return true; }
+            return false;
+        }
+
+        /// <summary>Takes the stack at <paramref name="index"/> and leaves the slot empty.</summary>
+        public ItemStack TakeAt(int index)
+        {
+            if (index < 0 || index >= _slots.Count || _slots[index].IsEmpty) return new ItemStack();
+            var c = _slots[index].Clone();
+            _slots[index].Clear();
+            Changed?.Invoke();
+            return c;
+        }
+
+        /// <summary>Places a stack in a preferred empty slot, or the first empty slot. False if there is no room.</summary>
+        public bool TryPlace(ItemStack stack, int preferredIndex = -1)
+        {
+            if (stack == null || stack.IsEmpty) return true;
+            if (preferredIndex >= 0 && preferredIndex < _slots.Count && _slots[preferredIndex].IsEmpty)
+            {
+                var d = stack.Clone();
+                _slots[preferredIndex].itemId = d.itemId; _slots[preferredIndex].count = d.count; _slots[preferredIndex].instanceId = d.instanceId;
+                Changed?.Invoke();
+                return true;
+            }
+            foreach (var s in _slots)
+            {
+                if (!s.IsEmpty) continue;
+                var d = stack.Clone();
+                s.itemId = d.itemId; s.count = d.count; s.instanceId = d.instanceId;
                 Changed?.Invoke();
                 return true;
             }
@@ -172,9 +214,15 @@ namespace DMI.Xenoarch.Inventory
             return data;
         }
 
-        /// <summary>Restores slots. Unknown item ids and duplicate instance ids are dropped with a warning (never duplicated).</summary>
+        /// <summary>Restores slots. Grows to the saved size when a save is larger than the current capacity (New Test All).
+        /// Never shrinks below the constructed size, so older 24-slot saves pick up the extra empty slots. Unknown item ids
+        /// and duplicate instance ids are dropped with a warning (never duplicated).</summary>
         public void Restore(InventorySaveData data)
         {
+            int want = _slots.Count;
+            if (data != null)
+                want = Mathf.Max(want, Mathf.Max(data.capacity, data.slots != null ? data.slots.Count : 0));
+            while (_slots.Count < want) _slots.Add(new ItemStack());
             foreach (var s in _slots) s.Clear();
             if (data?.slots == null) { Changed?.Invoke(); return; }
             var seen = new HashSet<string>();
@@ -194,7 +242,6 @@ namespace DMI.Xenoarch.Inventory
                     _slots[i].itemId = src.itemId; _slots[i].count = Mathf.Clamp(src.count, 1, def.EffectiveMaxStack); _slots[i].instanceId = null;
                 }
             }
-            if (data.slots.Count > _slots.Count) Debug.LogWarning($"[Xenoarch] Inventory restore: {data.slots.Count - _slots.Count} slot(s) beyond capacity ignored");
             Changed?.Invoke();
         }
     }
