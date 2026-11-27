@@ -27,6 +27,8 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("Upgrade level of the handheld scanner radius (index into SurfaceScannerDefinition.rangeByLevel).")] public int handheldScannerLevel;
         [Tooltip("Depth Probe upgrade tier (index into DepthProbeDefinition.tiers). Missing in older saves = 0.")] public int depthProbeLevel;
         [Tooltip("Upgrade level of the ship hold (index into ShipDefinition.holdSlotsByLevel).")] public int holdLevel;
+        [Tooltip("1 = Emergency Shuttle Call unlocked. Missing in older saves = 0.")] public int emergencyShuttleLevel;
+        [Tooltip("1 = Emergency Rover Call unlocked. Missing in older saves = 0.")] public int emergencyRoverLevel;
         [Tooltip("ZEN-17: seed of the current arrival's orbit view placement (0 = older save: derived from the body).")] public int arrivalSeed;
         [Tooltip("ZEN-17: play time (s) of the current arrival; drives the orbit view's real-time motion.")] public float arrivalPlaySeconds;
     }

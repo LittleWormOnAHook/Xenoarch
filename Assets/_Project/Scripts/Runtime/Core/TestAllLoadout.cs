@@ -21,7 +21,16 @@ namespace DMI.Xenoarch.Core
             if (session == null) return;
 
             // Upgrades first so crate capacity is already at max when the holds are filled.
-            foreach (var id in new[] { GameSession.UpgradeHold, GameSession.UpgradeHandheldScanner, GameSession.UpgradeOrbitalScanner, GameSession.UpgradeDepthProbe })
+            var upgradeIds = new System.Collections.Generic.List<string>
+            {
+                GameSession.UpgradeHold, GameSession.UpgradeHandheldScanner, GameSession.UpgradeOrbitalScanner, GameSession.UpgradeDepthProbe,
+                GameSession.UpgradeEmergencyShuttle, GameSession.UpgradeEmergencyRover
+            };
+            if (session.Crafting != null)
+                foreach (var r in session.Crafting.Recipes)
+                    if (r != null && r.IsUpgrade && !upgradeIds.Contains(r.upgradeId))
+                        upgradeIds.Add(r.upgradeId);
+            foreach (var id in upgradeIds)
                 while (session.ApplyUpgrade(id)) { }
 
             UnlockTravelAndRecipes(session);

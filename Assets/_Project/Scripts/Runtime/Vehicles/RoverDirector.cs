@@ -1,6 +1,7 @@
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Economy;
 using DMI.Xenoarch.Galaxy;
+using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
 using DMI.Xenoarch.Player;
 using DMI.Xenoarch.Save;
@@ -101,8 +102,115 @@ namespace DMI.Xenoarch.Vehicles
         {
             if (_rover == null) return;
             if (_rover.Occupied) { UI.Toast.Show("Get out of the rover first."); return; }
+            _rover.CancelAutopilot(false);
             Destroy(_rover.gameObject);
             _rover = null; _itemId = null;
+        }
+
+        [Tooltip("Seconds between Emergency Rover Call uses.")]
+        public float emergencyCooldown = 45f;
+        float _emergencyReadyAt;
+
+        public float EmergencyCooldownRemaining => Mathf.Max(0f, _emergencyReadyAt - Time.unscaledTime);
+
+        public VehicleItemDefinition OwnedRover()
+        {
+            var s = XenoarchRuntime.Session;
+            if (s == null || s.Items == null) return null;
+            VehicleItemDefinition Find(string id)
+            {
+                return !string.IsNullOrEmpty(id) && s.Items.TryGetItem(id, out var d) && d is VehicleItemDefinition v ? v : null;
+            }
+            if (!string.IsNullOrEmpty(_itemId)) { var known = Find(_itemId); if (known != null) return known; }
+            if (s.Inventory != null)
+                foreach (var st in s.Inventory.Slots)
+                    if (st != null && !st.IsEmpty) { var v = Find(st.itemId); if (v != null) return v; }
+            if (s.Hotbar != null)
+            {
+                for (int i = 0; i < Hotbar.Size; i++)
+                {
+                    var v = Find(s.Hotbar.At(i));
+                    if (v != null) return v;
+                    var st = s.Hotbar.StackAt(i);
+                    if (st != null && !st.IsEmpty) { v = Find(st.itemId); if (v != null) return v; }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Emergency call: deploy near the player, or drive a deployed rover over (fallback: recall and redeploy).</summary>
+        public bool CallEmergency(out string message)
+        {
+            message = null;
+            var s = XenoarchRuntime.Session;
+            if (s == null) { message = "No session."; return false; }
+            if (!s.EmergencyRoverUnlocked)
+            {
+                message = "Emergency Rover Call is locked. Craft the Emergency Rover Beacon at the ship workshop.";
+                return false;
+            }
+            if (DMI.Xenoarch.Scenes.SceneLoader.Busy) { message = "Can't call the rover while a scene is loading."; return false; }
+            float left = EmergencyCooldownRemaining;
+            if (left > 0.5f) { message = $"Emergency rover call is cooling down ({left:0}s)."; return false; }
+            if (!OnPlanetSurface(out var why)) { message = why; return false; }
+
+            var player = FindAnyObjectByType<FirstPersonController>();
+            if (player == null) { message = "Can't find your position."; return false; }
+            if (_rover != null && _rover.Occupied)
+            {
+                message = player.Seated ? "You're already in the rover." : "The rover is occupied.";
+                return false;
+            }
+
+            var item = OwnedRover();
+            if (_rover == null)
+            {
+                if (item == null) { message = "No rover in your backpack."; return false; }
+                if (!Deploy(item, out why)) { message = why; return false; }
+                _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
+                message = $"{item.DisplayNameOrId} deployed near you. Rear door: E to open, E to enter.";
+                return true;
+            }
+
+            float dist = Vector3.Distance(new Vector3(_rover.transform.position.x, 0f, _rover.transform.position.z),
+                new Vector3(player.transform.position.x, 0f, player.transform.position.z));
+            if (dist > RoverVehicle.AutoMaxDistance || !_rover.StartAutopilot(out why))
+            {
+                if (why != null && why.StartsWith("Rover is already nearby"))
+                {
+                    message = why;
+                    return true;
+                }
+                if (!RedeployNearPlayer(item, out message)) return false;
+                _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
+                return true;
+            }
+
+            _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
+            message = dist > 8f ? $"Rover is on its way ({dist:0} m)." : "Rover is coming to you.";
+            return true;
+        }
+
+        bool RedeployNearPlayer(VehicleItemDefinition item, out string message)
+        {
+            message = null;
+            if (item == null) item = OwnedRover();
+            if (_rover != null && _rover.Occupied) { message = "The rover is occupied."; return false; }
+            Recall();
+            if (item == null) { message = "No rover in your backpack to redeploy."; return false; }
+            if (!Deploy(item, out var why)) { message = "Couldn't redeploy near you: " + why; return false; }
+            message = $"{item.DisplayNameOrId} recalled and deployed near you.";
+            return true;
+        }
+
+        internal void OnAutopilotFailed(RoverVehicle rover, string reason)
+        {
+            if (rover == null || rover != _rover) return;
+            var item = OwnedRover();
+            if (RedeployNearPlayer(item, out var msg))
+                UI.Toast.Show($"{reason} Recalled and deployed near you.", 4f);
+            else
+                UI.Toast.Show($"{reason} {msg}", 4f);
         }
 
         public void SpendFuel(float units) => _fuel = Mathf.Max(0f, _fuel - Mathf.Max(0f, units));

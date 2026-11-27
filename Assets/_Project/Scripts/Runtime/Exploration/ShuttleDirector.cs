@@ -351,6 +351,12 @@ namespace DMI.Xenoarch.Exploration
             if (SceneLoader.Busy) { message = "Can't call the shuttle while a scene is loading."; return false; }
             if (!dev)
             {
+                var session = XenoarchRuntime.Session;
+                if (session == null || !session.EmergencyShuttleUnlocked)
+                {
+                    message = "Emergency Shuttle Call is locked. Craft the Emergency Shuttle Beacon at the ship workshop.";
+                    return false;
+                }
                 float left = EmergencyCooldownRemaining;
                 if (left > 0.5f) { message = $"Emergency shuttle call is cooling down ({left:0}s)."; return false; }
             }

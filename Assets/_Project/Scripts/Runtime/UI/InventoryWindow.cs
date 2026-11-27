@@ -27,6 +27,7 @@ namespace DMI.Xenoarch.UI
         string _selItem; string _selRecipe; CraftCategory? _filter; string _message;
         int _closedFrame = -1; float _nextRefresh; bool _hooked;
         bool _confirmShuttle;
+        bool _confirmRover;
 
         void Awake() { terminalName = "Inventory"; }
 
@@ -58,7 +59,9 @@ namespace DMI.Xenoarch.UI
         protected override void Tick()
         {
             if (Session.Crafting.Busy && Time.unscaledTime >= _nextRefresh) { _nextRefresh = Time.unscaledTime + 0.2f; Refresh(); }
-            else if (IsOpen && ShuttleDirector.Instance != null && ShuttleDirector.Instance.EmergencyCooldownRemaining > 0f && Time.unscaledTime >= _nextRefresh)
+            else if (IsOpen && Time.unscaledTime >= _nextRefresh &&
+                ((ShuttleDirector.Instance != null && ShuttleDirector.Instance.EmergencyCooldownRemaining > 0f)
+                 || (RoverDirector.Instance != null && RoverDirector.Instance.EmergencyCooldownRemaining > 0f)))
             { _nextRefresh = Time.unscaledTime + 0.5f; Refresh(); }
         }
 
@@ -97,11 +100,11 @@ namespace DMI.Xenoarch.UI
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToCrate(role, hold, p));
             }
 
-            Text(left, "SHUTTLE", "xa-term__h");
+            Text(left, "EMERGENCY CALLS", "xa-term__h");
             if (_confirmShuttle)
             {
                 Text(left, "Call the shuttle to land on valid ground near you?", "xa-term__dim");
-                Btn(left, "Confirm emergency call", () =>
+                Btn(left, "Confirm emergency shuttle call", () =>
                 {
                     _confirmShuttle = false;
                     var d = ShuttleDirector.Instance;
@@ -111,15 +114,38 @@ namespace DMI.Xenoarch.UI
                 });
                 Btn(left, "Cancel", () => { _confirmShuttle = false; Refresh(); }).AddToClassList("xa-term__btn--ghost");
             }
+            else if (_confirmRover)
+            {
+                Text(left, "Call the rover to drive to you (or deploy it nearby if it is not out)?", "xa-term__dim");
+                Btn(left, "Confirm emergency rover call", () =>
+                {
+                    _confirmRover = false;
+                    var d = RoverDirector.Instance;
+                    if (d == null) Toast.Show("Couldn't call the rover.", 3f);
+                    else { d.CallEmergency(out var msg); Toast.Show(string.IsNullOrEmpty(msg) ? "Couldn't call the rover." : msg, 3f); }
+                    Refresh();
+                });
+                Btn(left, "Cancel", () => { _confirmRover = false; Refresh(); }).AddToClassList("xa-term__btn--ghost");
+            }
             else
             {
-                string label = "Emergency Shuttle Call";
-                bool on = true;
-                var dir = ShuttleDirector.Instance;
-                if (s.AboardShip) { label = "Emergency Shuttle Call (aboard ship)"; on = false; }
-                else if (dir == null) { label = "Emergency Shuttle Call (unavailable)"; on = false; }
-                else if (dir.EmergencyCooldownRemaining > 0.5f) { label = $"Emergency Shuttle Call ({dir.EmergencyCooldownRemaining:0}s)"; on = false; }
-                Btn(left, label, () => { _confirmShuttle = true; Refresh(); }, on);
+                string shuttleLabel = "Emergency Shuttle Call";
+                bool shuttleOn = true;
+                var shuttle = ShuttleDirector.Instance;
+                if (!s.EmergencyShuttleUnlocked) { shuttleLabel = "Emergency Shuttle Call (locked)"; shuttleOn = false; }
+                else if (s.AboardShip) { shuttleLabel = "Emergency Shuttle Call (aboard ship)"; shuttleOn = false; }
+                else if (shuttle == null) { shuttleLabel = "Emergency Shuttle Call (unavailable)"; shuttleOn = false; }
+                else if (shuttle.EmergencyCooldownRemaining > 0.5f) { shuttleLabel = $"Emergency Shuttle Call ({shuttle.EmergencyCooldownRemaining:0}s)"; shuttleOn = false; }
+                Btn(left, shuttleLabel, () => { _confirmShuttle = true; _confirmRover = false; Refresh(); }, shuttleOn);
+
+                string roverLabel = "Emergency Rover Call";
+                bool roverOn = true;
+                var rover = RoverDirector.Instance;
+                if (!s.EmergencyRoverUnlocked) { roverLabel = "Emergency Rover Call (locked)"; roverOn = false; }
+                else if (!RoverDirector.OnPlanetSurface(out _)) { roverLabel = "Emergency Rover Call (surface only)"; roverOn = false; }
+                else if (rover == null) { roverLabel = "Emergency Rover Call (unavailable)"; roverOn = false; }
+                else if (rover.EmergencyCooldownRemaining > 0.5f) { roverLabel = $"Emergency Rover Call ({rover.EmergencyCooldownRemaining:0}s)"; roverOn = false; }
+                Btn(left, roverLabel, () => { _confirmRover = true; _confirmShuttle = false; Refresh(); }, roverOn);
             }
 
             // Journals: survey notes picked up along the way (click to read; prev / next inside).

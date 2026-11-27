@@ -464,7 +464,7 @@ namespace DMI.Xenoarch.Vehicles
 
             ApplyAntiPitch(grounded);
 
-            bool parked = _state != State.Driving || !_powered;
+            bool parked = !_autoPilot && (_state != State.Driving || !_powered);
             if (parked)
             {
                 foreach (var w in wheels)

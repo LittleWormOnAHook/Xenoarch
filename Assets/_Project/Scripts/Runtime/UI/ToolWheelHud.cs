@@ -24,7 +24,7 @@ namespace DMI.Xenoarch.UI
     /// <summary>
     /// t246u tool wheel (Morpheus radial). Hold Tab to open, point with the mouse, release Tab to use the slot:
     /// tools equip (same toggles as the hotbar keys), the rover slot deploys the rover from the backpack or, when it is
-    /// already out and far away, calls it to you (recall + deploy in front of you), consumables report what you carry.
+    /// already out, uses Emergency Rover Call so it drives to you, consumables report what you carry.
     /// A short Tab tap still opens the inventory. Right-click a slot to choose what goes in it; drag one slot onto
     /// another to swap them (both pin the wheel open; Esc or Tab closes). The layout is saved with the game.
     /// Bootstraps itself onto the runtime object (no scene or prefab edits).
@@ -172,7 +172,12 @@ namespace DMI.Xenoarch.UI
             if (id == RoverId)
             {
                 var rd = RoverDirector.Instance;
-                if (rd != null && rd.Current != null) return DistanceToRover(rd) > SummonDistance ? "Call" : "Nearby";
+                if (rd != null && rd.Current != null)
+                {
+                    var s = S;
+                    if (s != null && !s.EmergencyRoverUnlocked) return "Locked";
+                    return DistanceToRover(rd) > RoverVehicle.AutoParkDistance + 1f ? "Call" : "Nearby";
+                }
                 return "Deploy";
             }
             if (!Owned(id)) return "Not carried";
@@ -267,14 +272,13 @@ namespace DMI.Xenoarch.UI
             if (rd == null) { Toast.Show("The rover is not available here."); return; }
             if (rd.Current != null)
             {
-                float dist = DistanceToRover(rd);
-                if (dist <= SummonDistance) { Toast.Show($"Rover is {dist:0} m away. Rear door: E to open, E to enter."); return; }
-                if (rd.Current.Occupied) { Toast.Show("The rover is occupied."); return; }
-                var item = RoverItem();
-                if (item == null) { Toast.Show($"Rover is {dist:0} m away."); return; }
-                rd.Recall();
-                if (rd.Deploy(item, out var why)) Toast.Show($"{item.DisplayNameOrId} called to your position.");
-                else Toast.Show($"Could not call the rover: {why}");
+                if (S != null && !S.EmergencyRoverUnlocked)
+                {
+                    Toast.Show("Emergency Rover Call is locked. Craft the Emergency Rover Beacon at the ship workshop.");
+                    return;
+                }
+                if (rd.CallEmergency(out var msg)) Toast.Show(msg);
+                else Toast.Show(msg ?? "Couldn't call the rover.");
                 return;
             }
             var v = RoverItem();

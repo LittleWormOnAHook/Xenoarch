@@ -420,6 +420,7 @@ namespace DMI.Xenoarch.Vehicles
         public bool Enter(FirstPersonController p)
         {
             if (!CanEnter(p)) return false;
+            CancelAutopilot(false);
             _player = p;
             _interactor = p.GetComponentInChildren<Interactor>();
             _input = p.GetComponentInChildren<IInteractionInput>();
@@ -584,7 +585,14 @@ namespace DMI.Xenoarch.Vehicles
         {
             if (!Live || _rb == null) return;
             PhysicsTick();
-            if (_rb.isKinematic || _state != State.Driving || !_powered) return;
+            if (_rb.isKinematic) return;
+            if (_autoPilot)
+            {
+                if (_state != State.Parked) { CancelAutopilot(false); return; }
+                TickAutopilot();
+                return;
+            }
+            if (_state != State.Driving || !_powered) return;
 
             float throttle = 0f, steer = 0f; bool hand = false, wantBoost = false;
             if (_player != null && _player.InputEnabled && !UIState.BlocksGameplay)
@@ -606,6 +614,12 @@ namespace DMI.Xenoarch.Vehicles
                 }
                 throttle = Mathf.Clamp(throttle, -1f, 1f); steer = Mathf.Clamp(steer, -1f, 1f);
             }
+            ApplyDriveInput(throttle, steer, hand, wantBoost);
+        }
+
+        void ApplyDriveInput(float throttle, float steer, bool hand, bool wantBoost, float speedCap = 0f)
+        {
+            if (_rb == null) return;
 
             float dt = Time.fixedDeltaTime;
             var dir = RoverDirector.Instance;
@@ -619,6 +633,7 @@ namespace DMI.Xenoarch.Vehicles
             bool dry = fuel <= 0.01f;
             if (dry) throttle = 0f;
             float cap = (boosting ? boostSpeed : maxSpeed) * Mathf.Max(0.3f, _speedScale);
+            if (speedCap > 0.1f) cap = Mathf.Min(cap, speedCap);
             float limit = throttle >= 0f ? cap : maxSpeed / 3f;
             float rise = _profile != null ? Mathf.Max(0.05f, _profile.throttleRise) : 0.45f;
             float fall = _profile != null ? Mathf.Max(0.05f, _profile.throttleFall) : 0.22f;

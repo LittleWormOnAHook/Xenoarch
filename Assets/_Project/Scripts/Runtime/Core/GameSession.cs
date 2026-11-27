@@ -229,7 +229,8 @@ namespace DMI.Xenoarch.Core
         }
 
         public const string UpgradeHold = "ship.hold", UpgradeHandheldScanner = "scanner.handheld", UpgradeOrbitalScanner = "scanner.orbital",
-            UpgradeDepthProbe = DMI.Xenoarch.Excavation.DepthProbeDefinition.UpgradeId;
+            UpgradeDepthProbe = DMI.Xenoarch.Excavation.DepthProbeDefinition.UpgradeId,
+            UpgradeEmergencyShuttle = "shuttle.emergency", UpgradeEmergencyRover = "rover.emergency";
 
         public int UpgradeLevel(string id) => id switch
         {
@@ -237,8 +238,13 @@ namespace DMI.Xenoarch.Core
             UpgradeHandheldScanner => Exploration.Ship.handheldScannerLevel,
             UpgradeOrbitalScanner => Exploration.Ship.orbitalRangeLevel,
             UpgradeDepthProbe => Exploration.Ship.depthProbeLevel,
+            UpgradeEmergencyShuttle => Exploration.Ship.emergencyShuttleLevel,
+            UpgradeEmergencyRover => Exploration.Ship.emergencyRoverLevel,
             _ => 0,
         };
+
+        public bool EmergencyShuttleUnlocked => UpgradeLevel(UpgradeEmergencyShuttle) > 0;
+        public bool EmergencyRoverUnlocked => UpgradeLevel(UpgradeEmergencyRover) > 0;
 
         static int Top(System.Array a) => a != null ? Math.Max(0, a.Length - 1) : 0;
 
@@ -248,6 +254,8 @@ namespace DMI.Xenoarch.Core
             UpgradeHandheldScanner => Top(Config.surfaceScanner?.rangeByLevel),
             UpgradeOrbitalScanner => Top(Config.starterShip?.orbitalScanRadiusByLevel),
             UpgradeDepthProbe => DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().MaxLevel,
+            UpgradeEmergencyShuttle => 1,
+            UpgradeEmergencyRover => 1,
             _ => 0,
         };
 
@@ -265,6 +273,8 @@ namespace DMI.Xenoarch.Core
                 case UpgradeHandheldScanner: s.handheldScannerLevel++; return true;
                 case UpgradeOrbitalScanner: s.orbitalRangeLevel++; return true;
                 case UpgradeDepthProbe: s.depthProbeLevel++; return true;
+                case UpgradeEmergencyShuttle: s.emergencyShuttleLevel++; return true;
+                case UpgradeEmergencyRover: s.emergencyRoverLevel++; return true;
             }
             return false;
         }

@@ -148,6 +148,8 @@ namespace DMI.Xenoarch.EditorTools
                 ("craft.orbital_1", "Orbital Scanner Range I", "Orbital scan radius 400 to 700 m.", CraftCategory.Upgrades, new[] { (SensorArr, 1), (Plate, 2) }, null, 0, GameSession.UpgradeOrbitalScanner, 1, 8f, CraftStation.Ship),
                 ("craft.orbital_2", "Orbital Scanner Range II", "Orbital scan radius 700 to 1000 m.", CraftCategory.Upgrades, new[] { (SensorArr, 2), (Platinum, 1) }, null, 0, GameSession.UpgradeOrbitalScanner, 2, 10f, CraftStation.Ship),
                 ("craft.orbital_3", "Orbital Scanner Range III", "Orbital scan radius 1000 to 1500 m.", CraftCategory.Upgrades, new[] { (SensorArr, 3), (Platinum, 2) }, null, 0, GameSession.UpgradeOrbitalScanner, 3, 12f, CraftStation.Ship),
+                ("craft.shuttle_emergency", "Emergency Shuttle Beacon", "Unlocks Emergency Shuttle Call in the inventory, to land the shuttle on valid ground near you.", CraftCategory.Upgrades, new[] { (Circuit, 1), (Wiring, 2) }, null, 0, GameSession.UpgradeEmergencyShuttle, 1, 6f, CraftStation.Ship),
+                ("craft.rover_emergency", "Emergency Rover Beacon", "Unlocks Emergency Rover Call in the inventory and the tool wheel, so a deployed rover can drive itself to you.", CraftCategory.Upgrades, new[] { (Circuit, 1), (SensorArr, 1) }, null, 0, GameSession.UpgradeEmergencyRover, 1, 6f, CraftStation.Ship),
             };
             var crafts = new List<CraftRecipe>();
             foreach (var d in cr)
