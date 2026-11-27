@@ -762,15 +762,17 @@ namespace DMI.Xenoarch.EditorTools
             // Style bands: ice needs the drill
             var ice = new[] { DMI.Xenoarch.Excavation.SoilLayer.Make("dust", SoilMaterial.Dust, 0.25f, 0.5f, Color.grey), DMI.Xenoarch.Excavation.SoilLayer.Make("ice", SoilMaterial.Ice, 0.5f, 3f, Color.white), DMI.Xenoarch.Excavation.SoilLayer.Make("compacted", SoilMaterial.Compacted, 0f, 2f, Color.grey) };
             var g5 = ExcavationGrid.ForSite(1f, 1.2f, 0.25f, ice);
-            g5.Stroke(1f, 1f, g5.TopDepth(4, 4), DigTools.Shovel);   // through the dust into the ice band
+            const float c5 = 4.5f * 0.25f;                            // centre of column (4, 4)
+            g5.Stroke(c5, c5, g5.TopDepth(4, 4), DigTools.Shovel);   // through the dust into the ice band
             float d5a = g5.TopDepth(4, 4);
-            var r5 = g5.Stroke(1f, 1f, d5a, DigTools.Shovel);
+            var r5 = g5.Stroke(c5, c5, d5a, DigTools.Shovel);
             float d5b = g5.TopDepth(4, 4);
-            var r5d = g5.Stroke(1f, 1f, d5b, DigTools.Drill);
+            var r5d = g5.Stroke(c5, c5, d5b, DigTools.Drill);
             float d5c = g5.TopDepth(4, 4);
-            // Compare the aimed column only: the shovel is wider, so its total removal over all columns is not a speed measure.
-            check(r5.accepted && r5.slowed && r5.material == SoilMaterial.Ice && r5d.accepted && !r5d.slowed && r5d.material == SoilMaterial.Ice && d5c - d5b > d5b - d5a,
-                $"1C dig: style bands drive hardness (shovel cuts ice slowly {d5b - d5a:0.000} m/stroke, the drill faster {d5c - d5b:0.000} m/stroke)");
+            // Aimed column only (the shovel is wider, so its total over all columns is not a speed measure), per second (stroke rate).
+            float shovelIce = (d5b - d5a) * DigTools.Shovel.rate, drillIce = (d5c - d5b) * DigTools.Drill.rate;
+            check(r5.accepted && r5.slowed && r5.material == SoilMaterial.Ice && r5d.accepted && !r5d.slowed && r5d.material == SoilMaterial.Ice && drillIce >= 1.5f * shovelIce,
+                $"1C dig: style bands drive hardness (ice: shovel {shovelIce:0.00} m/s, drill {drillIce:0.00} m/s = {drillIce / Mathf.Max(0.001f, shovelIce):0.0}x)");
             // Uneven ground: per-column surface heights
             var g6 = ExcavationGrid.ForSite(1f, 1.2f, 0.25f);
             g6.surface = new float[g6.nx * g6.nz];

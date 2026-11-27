@@ -20,7 +20,7 @@ MonoBehaviour:
   ftlRangeLy: 0
   scannerLevel: 1
   orbitalScanRadiusByLevel:
-  - 460
+  - 400
   - 700
   - 1000
   - 1500

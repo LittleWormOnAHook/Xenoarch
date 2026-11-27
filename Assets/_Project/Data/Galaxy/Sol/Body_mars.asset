@@ -35,8 +35,8 @@ MonoBehaviour:
   surfaceMapRect:
     serializedVersion: 2
     x: -494
-    y: -364.52728
-    width: 952
-    height: 952
+    y: -356.52728
+    width: 936
+    height: 936
   baseLanding: {x: -16.190956, y: -24.48, z: 102.225746}
   hasBaseLanding: 1

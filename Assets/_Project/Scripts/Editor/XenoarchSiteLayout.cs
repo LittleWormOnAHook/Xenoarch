@@ -95,8 +95,8 @@ namespace DMI.Xenoarch.EditorTools
             Debug.Log("[Xenoarch] Spread Sites and Landing Zones:\n" + sb);
         }
 
-        static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
-        static float FlatDist(Vector3 a, Vector3 b) => Vector3.Distance(Flat(a), Flat(b));
+        internal static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+        internal static float FlatDist(Vector3 a, Vector3 b) => Vector3.Distance(Flat(a), Flat(b));
 
         static bool Layout(Scene scene, XenoarchConfig cfg, SiteLayoutSettings ls, ShipDefinition def, StringBuilder sb)
         {
@@ -243,9 +243,9 @@ namespace DMI.Xenoarch.EditorTools
             return changed || created;
         }
 
-        delegate bool FlatFn(Vector3 p, float r, float slopeMax, float reliefMax, out float y, out float score);
+        internal delegate bool FlatFn(Vector3 p, float r, float slopeMax, float reliefMax, out float y, out float score);
 
-        static bool FindLanding(Vector3 s, Vector3 basePos, float rSite, SiteLayoutSettings ls, float slopeMax, float reliefMax,
+        internal static bool FindLanding(Vector3 s, Vector3 basePos, float rSite, SiteLayoutSettings ls, float slopeMax, float reliefMax,
             FlatFn flatish, System.Func<Vector3, float, bool> blocked, out Vector3 l)
         {
             var toBase = Flat(basePos - s); var dir0 = toBase.sqrMagnitude > 0.01f ? toBase.normalized : Vector3.forward;
@@ -265,7 +265,7 @@ namespace DMI.Xenoarch.EditorTools
         }
 
         /// <summary>Shuttle: lowest gear renderer onto the highest terrain under craft / gear. Spawn: beside it, facing the site.</summary>
-        static void Reground(LandingZone m, Terrain t, ShipDefinition def, Vector3 site, StringBuilder sb)
+        internal static void Reground(LandingZone m, Terrain t, ShipDefinition def, Vector3 site, StringBuilder sb)
         {
             foreach (var slot in m.GetComponentsInChildren<LandingZoneSlot>(true))
             {
@@ -302,7 +302,7 @@ namespace DMI.Xenoarch.EditorTools
             }
         }
 
-        static float? Height(Terrain t, Vector3 p)
+        internal static float? Height(Terrain t, Vector3 p)
         {
             if (t == null || t.terrainData == null) return null;
             var tp = t.transform.position; var size = t.terrainData.size;

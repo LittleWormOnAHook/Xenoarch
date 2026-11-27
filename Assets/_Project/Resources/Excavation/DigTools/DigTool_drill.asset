@@ -20,7 +20,7 @@ MonoBehaviour:
     name: Powered drill
     shortName: drill
     radius: 0.25
-    removal: 1.8
+    removal: 3.5
     maxHardness: 4
     damage: 0.8
     crude: 1

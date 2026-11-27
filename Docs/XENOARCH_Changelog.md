@@ -1,5 +1,16 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (evening) - Drill tuned for ice; Mars Dune Shrine moved into Mk I orbital coverage (t209u, UNTESTED in Play)
+
+- **Drill:** removal 1.8 -> 3.5 (`DigTool_drill.asset` and the `DigTools.Drill` fallback). In ice/rock (hardness 3) the drill now digs about 1.5-1.9x deeper per second than the shovel (aimed column: 1.16 vs 0.62 m/s centred). In soft soil it is about 1.25x deeper per second but still narrower (0.25 vs 0.45 m radius). The shovel and the other tools are unchanged. The smoke check now compares metres per second in the aimed column and requires at least 1.5x.
+- **Orbital range reverted:** Mk I is back to 400 m (Ship_ConstellationMk1, ShipDefinition default, "Orbital scanner range I: 400 to 700 m").
+- **Dune Shrine moved instead** (approved Mars scene edit): from (358, 358) to (285, 326.5), 80 m inward. It is now 378 m from the re-baked Mars map centre (-26, 111.5), so the first orbital pass covers it. It is 376 m from base, 563 m from the Canyon Relay and 688 m from the Buried Spire.
+  - Its landing zone moved with it: now (263.9, 310.8), 26 m from the site, with the shuttle re-grounded and the arrival spawn reset.
+  - Its 4 scene journals (dig_flags, dig_hardness, scan_depth_probe, maps) were re-placed by the Place Journals rule.
+  - The surface map and landing hints were re-baked. The Mars map is now 936 m square, x -494, z -356.5. Nothing else in the scene moved, and no other objects were near the old spot.
+  - Caches, resource nodes and dig sites are placed at runtime from these positions, so there was nothing to re-sync in Digger.
+- **New tool:** `XenoarchSiteMove` (trigger `Temp/xenoarch_sitemove.trigger`: "plan|apply siteId ringMin ringMax"; log `Logs/xenoarch_sitemove.txt`) moves one site using the Spread Sites rules. It refuses to run while the scene is open with unsaved changes or the Editor is in Play mode.
+- Smoke 171/0, M1 check 82/0, galaxy snapshot compare identical.
 ## 2026-11-26 (evening) - Smoke check: 5 failures fixed (UNTESTED in Play)
 
 - **Dig bug (real):** since ZEN-8 (943563e) set shovel removal to 2.0, one shovel or drill stroke could clear the soil above a still-hidden find and then remove its whole cell in the same stroke. The find was fully exposed with no damage (only the 15% jar), and the next stroke dug underneath it, so crude tools almost never damaged single-cell finds and the "jarred something" warning came too late. `ExcavationGrid.StrokeAt` now stops a crude stroke on top of a hidden find after it has cut the soil above, and caps a crude bite into a find cell at 0.5 (`CrudeFindBite`). The precision tool and brush are unchanged. This fixed the "surface dust" and "jar" checks.

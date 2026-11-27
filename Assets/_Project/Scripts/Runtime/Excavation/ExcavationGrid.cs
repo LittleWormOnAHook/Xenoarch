@@ -58,7 +58,8 @@ namespace DMI.Xenoarch.Excavation
         // ZEN-23 (t166u): precision = small shallow controlled bites, narrow; brush = a thin dust/loose-soil skim, wide and soft.
         public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Precision tool", shortName = "precision", radius = 0.1f, removal = 0.15f, maxHardness = 2f, damage = 0f, rate = 5f, cells = 1, minBite = 0.02f };
         public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Brush", shortName = "brush", radius = 0.6f, removal = 0.035f, maxHardness = 1f, damage = 0f, rate = 7f, cells = 1, minBite = 0.005f };
-        public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Powered drill", shortName = "drill", radius = 0.25f, removal = 1.8f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
+        // t209u: removal 1.8 -> 3.5 so the drill clearly out-digs the shovel in ice/rock (about 1.5-1.9x per second); in soft soil it is ~1.25x deeper per second but narrower.
+        public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Powered drill", shortName = "drill", radius = 0.25f, removal = 3.5f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
         public static readonly DigToolSpec[] Defaults = { Shovel, Precision, Brush, Drill };
 
         public const string ResourceFolder = "Excavation/DigTools";

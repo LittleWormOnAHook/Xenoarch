@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Crafting.CraftRecipe
   id: craft.orbital_1
   displayName: Orbital Scanner Range I
-  description: Orbital scan radius 460 to 700 m.
+  description: Orbital scan radius 400 to 700 m.
   category: 3
   ingredients:
   - itemId: item.component.sensor_array

@@ -145,7 +145,7 @@ namespace DMI.Xenoarch.EditorTools
                 ("craft.scanner_1", "Handheld Scanner Range I", "Handheld scan radius 30 to 45 m.", CraftCategory.Upgrades, new[] { (Wiring, 2), (Circuit, 1) }, null, 0, GameSession.UpgradeHandheldScanner, 1, 5f, CraftStation.Ship),
                 ("craft.scanner_2", "Handheld Scanner Range II", "Handheld scan radius 45 to 60 m.", CraftCategory.Upgrades, new[] { (Circuit, 2), (Gold, 1) }, null, 0, GameSession.UpgradeHandheldScanner, 2, 6f, CraftStation.Ship),
                 ("craft.scanner_3", "Handheld Scanner Range III", "Handheld scan radius 60 to 80 m.", CraftCategory.Upgrades, new[] { (SensorArr, 1), (Circuit, 2) }, null, 0, GameSession.UpgradeHandheldScanner, 3, 8f, CraftStation.Ship),
-                ("craft.orbital_1", "Orbital Scanner Range I", "Orbital scan radius 460 to 700 m.", CraftCategory.Upgrades, new[] { (SensorArr, 1), (Plate, 2) }, null, 0, GameSession.UpgradeOrbitalScanner, 1, 8f, CraftStation.Ship),
+                ("craft.orbital_1", "Orbital Scanner Range I", "Orbital scan radius 400 to 700 m.", CraftCategory.Upgrades, new[] { (SensorArr, 1), (Plate, 2) }, null, 0, GameSession.UpgradeOrbitalScanner, 1, 8f, CraftStation.Ship),
                 ("craft.orbital_2", "Orbital Scanner Range II", "Orbital scan radius 700 to 1000 m.", CraftCategory.Upgrades, new[] { (SensorArr, 2), (Platinum, 1) }, null, 0, GameSession.UpgradeOrbitalScanner, 2, 10f, CraftStation.Ship),
                 ("craft.orbital_3", "Orbital Scanner Range III", "Orbital scan radius 1000 to 1500 m.", CraftCategory.Upgrades, new[] { (SensorArr, 3), (Platinum, 2) }, null, 0, GameSession.UpgradeOrbitalScanner, 3, 12f, CraftStation.Ship),
             };

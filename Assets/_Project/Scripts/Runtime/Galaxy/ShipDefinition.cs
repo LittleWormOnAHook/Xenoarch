@@ -17,7 +17,7 @@ namespace DMI.Xenoarch.Galaxy
         [Tooltip("t186u: fuel per light year of an interstellar jump (placeholder balance).")] public float fuelPerLy = 3f;
         [Tooltip("t186u: jump range (ly) each fitted navigation drive adds (the decoded Vael navigation core).")] public float navDriveRangeLy = 15f;
         [Tooltip("Orbital scanner level: max orbital reveal passes / resolution.")] public int scannerLevel = 1;
-        [Tooltip("Upgradable orbital scan radius (m around the landing region) per orbital range level (0 = base).")] public float[] orbitalScanRadiusByLevel = { 460f, 700f, 1000f, 1500f };
+        [Tooltip("Upgradable orbital scan radius (m around the landing region) per orbital range level (0 = base).")] public float[] orbitalScanRadiusByLevel = { 400f, 700f, 1000f, 1500f };
         public int moduleSlots = 4;
         public int cargoSlots = 12;
         public List<string> startingModules = new List<string>();
