@@ -41,7 +41,7 @@ namespace DMI.Xenoarch.Vehicles
         readonly List<AudioSlot> _presenceAudio = new List<AudioSlot>();
         readonly List<LightSlot> _presenceLights = new List<LightSlot>();
         readonly List<EmitSlot> _presenceEmit = new List<EmitSlot>();
-        readonly MaterialPropertyBlock _presenceBlock = new MaterialPropertyBlock();
+        MaterialPropertyBlock _presenceBlock;
         bool _presenceInit;
         bool _presenceOn;
 
@@ -79,6 +79,7 @@ namespace DMI.Xenoarch.Vehicles
                     l.light.enabled = false;
                 }
             }
+            if (_presenceBlock == null) _presenceBlock = new MaterialPropertyBlock();
             for (int i = 0; i < _presenceEmit.Count; i++)
             {
                 var e = _presenceEmit[i];
