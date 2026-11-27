@@ -117,6 +117,10 @@ namespace DMI.Xenoarch.Inventory
             return false;
         }
 
+        /// <summary>Phase 2 M1: optional guard for bulk removal by item id (crafting, refining, stack sales). Returns false for
+        /// a unique instance that must not be consumed (protected artifacts); those slots are skipped. Null = no guard.</summary>
+        public Func<string, bool> CanBulkRemoveInstance;
+
         /// <summary>Removes up to <paramref name="amount"/> (from the last stacks first). Returns how many were removed.</summary>
         public int Remove(string itemId, int amount)
         {
@@ -126,6 +130,7 @@ namespace DMI.Xenoarch.Inventory
             {
                 var s = _slots[i];
                 if (s.IsEmpty || s.itemId != itemId) continue;
+                if (!string.IsNullOrEmpty(s.instanceId) && CanBulkRemoveInstance != null && !CanBulkRemoveInstance(s.instanceId)) continue;
                 int take = Mathf.Min(s.count, amount - removed);
                 s.count -= take; removed += take;
                 if (s.count <= 0) s.Clear();

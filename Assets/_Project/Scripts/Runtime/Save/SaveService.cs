@@ -41,6 +41,21 @@ namespace DMI.Xenoarch.Save
 
         public bool HasSave(string slot) => _storage.Exists(slot);
 
+        /// <summary>Phase 2 M1 (New Game clears development saves): deletes exactly the named slots (and their backup /
+        /// temp files on disk). Nothing else in the save folder is touched. Returns how many slots existed.</summary>
+        public int DeleteSlots(IEnumerable<string> slots)
+        {
+            int n = 0;
+            if (slots == null) return 0;
+            foreach (var slot in slots)
+            {
+                if (string.IsNullOrWhiteSpace(slot)) continue;
+                try { if (_storage.Delete(slot)) n++; }
+                catch (Exception e) { Debug.LogWarning($"[Xenoarch] Could not delete save slot '{slot}': {e.Message}"); }
+            }
+            return n;
+        }
+
         public SaveFile Capture(string slot, float playSeconds = 0f)
         {
             var file = new SaveFile

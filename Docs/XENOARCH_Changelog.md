@@ -1,5 +1,14 @@
 # Xenoarch Changelog
 
+## 2026-11-26 (evening) - Phase 2 M1: foundations and safety (UNTESTED in Play)
+
+- **Progression classes** (data, separate from rarity): `ArtifactDefinition.progression` = Ordinary / ResearchRequired / StoryCritical, with `releaseWhen` facts and a `progressionNote`. The tablet is StoryCritical until `civ.identified:civ.vael` and 35% translation. The Mars navigation core is StoryCritical until `tech.installed` (physically installed). The sensor lattice is ResearchRequired (it can be sold after a warning). Everything else is Ordinary.
+- **One gate:** `ArtifactEligibility.Check(instance, action)` returns Allowed, Warning or Blocked, with a reason. The services enforce it: `ArtifactService.TrySell/CanInstall/CanStart`, `ShipHold.Transfer`, and the bulk `InventoryModel.Remove` guard used by crafting and refining. The vendor lists blocked items as "not for sale" and asks for a second click on warned items.
+- **Star map:** placed pieces stay secured until the puzzle is solved. A piece cannot be sold if that would leave fewer than 8 different owned piece types; duplicates and surplus pieces can be sold.
+- **Recovery** (`ArtifactRecoveryService`, save key `artifacts.recovery`): runs on load, every 5 s and when the lab terminal opens. It returns missing protected items with the same instance id (backpack, then crate, then held at the research lab for collection). It buys back a story item that was sold by an unguarded path, issues at most one `recovered:<id>` replacement per definition if the record itself is lost, and cancels lab jobs whose item is gone. It is idempotent and keeps a ledger. Knowledge facts are never removed.
+- **New Game** now deletes every development save: autosave, quick save and slots 1-6, including their .bak/.tmp files. Before this, New Game kept saves. There is no migration or recovery for old saves, by decision.
+- **Procedural pool frozen:** `ProceduralArtifactPools` v1 = [artifact.unknown_lump], with explicit order, plus a weighted v2 hook. Added independent RNG streams `ProceduralGalaxy.Stream(id, stream, seed)`. The tools are Xenoarch/Tools/Galaxy Snapshot, Galaxy Snapshot Compare and Galaxy Snapshot Record Baseline (`Temp/xenoarch_galaxy.trigger`). The baseline is `Docs/galaxy_snapshot_baseline.txt`, and the compare after M1 was a PASS (identical).
+- **Check:** Xenoarch/Validate/Run Phase 2 M1 Check (`Temp/xenoarch_m1check.trigger` -> `Logs/xenoarch_m1_check.txt`): 82 pass / 0 fail. Chain_MoonMars was not changed and no mandatory steps were added. SaveService.CurrentVersion is unchanged (1).
 ## 2026-11-26 (afternoon) - Held first-person tool models (ZEN-23, UNTESTED)
 
 - Added held models for the six tools Anthony picked from the mockups: wand depth probe, pistol-grip scanner, entrenching shovel, dual-ended precision tool, stubby brush and heavy rock drill. They are simple generated meshes under `Assets/Xenoarch/Tools/Held/`.

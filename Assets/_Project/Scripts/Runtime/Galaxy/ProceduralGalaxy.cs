@@ -377,6 +377,45 @@ namespace DMI.Xenoarch.Galaxy
             return tex;
         }
 
+        /// <summary>
+        /// Phase 2 M1: an independent, named RNG stream for one stable id (body, site, POI...). The seed depends only on
+        /// (stableId, stream name, galaxy seed), so adding a new stream or drawing more from one stream never shifts any
+        /// other stream or the original generator order. Use for all new procedural content (materials, pool v2, POIs,
+        /// story inserts); never draw new values from the existing per-system / per-body generators.
+        /// </summary>
+        public static System.Random Stream(string stableId, string streamName, int galaxySeed) =>
+            new System.Random(Hash((stableId ?? "") + ":" + (streamName ?? ""), galaxySeed));
+
+        /// <summary>Editor tooling only (Galaxy Snapshot): forget the generated content so the next <see cref="Ensure"/>
+        /// rebuilds it from scratch. In Edit Mode it also destroys the runtime-only (DontSave) objects it made.</summary>
+        public static void ResetForTooling(GalaxyDefinition g)
+        {
+            if (g != null && !Application.isPlaying)
+            {
+                var doomed = new List<Object>();
+                void Mark(Object o) { if (o != null && (o.hideFlags & HideFlags.DontSave) == HideFlags.DontSave && !doomed.Contains(o)) doomed.Add(o); }
+                if (g.systems != null)
+                    foreach (var s in g.systems) if (s != null && s.generatedBodies != null) foreach (var b in s.generatedBodies) MarkBody(b, Mark);
+                if (g.generatedSystems != null)
+                    foreach (var s in g.generatedSystems) { if (s == null) continue; if (s.generatedBodies != null) foreach (var b in s.generatedBodies) MarkBody(b, Mark); Mark(s); }
+                foreach (var site in _sites) Mark(site);
+                foreach (var o in doomed) Object.DestroyImmediate(o);
+                if (g.systems != null) foreach (var s in g.systems) if (s != null) s.generatedBodies = new List<CelestialBodyDefinition>();
+                g.generatedSystems = new List<StarSystemDefinition>();
+            }
+            _done = null;
+            _recipes.Clear(); _sites.Clear(); _siteById.Clear();
+        }
+
+        static void MarkBody(CelestialBodyDefinition b, System.Action<Object> mark)
+        {
+            if (b == null || (b.hideFlags & HideFlags.DontSave) != HideFlags.DontSave) return;
+            mark(b.surfaceMap);
+            mark(b.environment);
+            if (b.orbitView != null) { mark(b.orbitView.planetMaterial); mark(b.orbitView); }
+            mark(b);
+        }
+
         public static int Hash(string s, int seed)
         {
             unchecked

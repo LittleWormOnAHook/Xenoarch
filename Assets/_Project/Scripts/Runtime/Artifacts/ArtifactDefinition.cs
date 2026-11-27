@@ -42,6 +42,13 @@ namespace DMI.Xenoarch.Artifacts
         public ArtifactShape shape = ArtifactShape.Shard;
         public Color tint = new Color(0.6f, 0.62f, 0.66f);
         [Tooltip("Rough size (m) of the longest side.")] [Range(0.05f, 0.6f)] public float size = 0.2f;
+        [Header("Progression (Phase 2 M1, separate from rarity)")]
+        [Tooltip("Ordinary: no restrictions. Research Required: may be sold with a warning until releaseWhen holds. Story Critical: cannot be sold, discarded, destroyed, dismantled, donated, loaned, listed or moved to inaccessible storage until releaseWhen holds.")]
+        public ArtifactProgression progression = ArtifactProgression.Ordinary;
+        [Tooltip("Facts that must ALL hold to end the protection (Story Critical) or to count the research as complete (Research Required). Facts keep their maximum, so release is permanent.")]
+        public List<FactRequirement> releaseWhen = new List<FactRequirement>();
+        [Tooltip("Shown when an action is blocked or warned (why it is needed).")]
+        [TextArea(1, 3)] public string progressionNote;
 
         public bool HasTranslation => translation != null && translation.Count > 0;
 

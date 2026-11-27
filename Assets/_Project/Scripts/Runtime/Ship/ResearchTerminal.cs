@@ -19,6 +19,7 @@ namespace DMI.Xenoarch.Ship
 
         protected override void OnOpened()
         {
+            Session.Recovery.Ensure("lab"); // Phase 2 M1: controlled recovery path for mandatory items
             var a = Session.Artifacts;
             if (_selected == null || a.Get(_selected) == null) _selected = Held().FirstOrDefault()?.instanceId;
             a.ResearchCompleted += OnDone;
@@ -74,6 +75,18 @@ namespace DMI.Xenoarch.Ship
             }
             else Text(lab, "Idle. One operation at a time (Mk I lab).");
             Text(lab, $"Lab reagents in cargo: {Session.Materials.ReagentUnits()} units (refine more at the refiner)", "xa-term__dim");
+            var pending = Session.Recovery.State.pendingAtLab;
+            if (pending.Count > 0)
+            {
+                Text(lab, "RECOVERED ITEMS (held by the lab)", "xa-term__h");
+                foreach (var id in pending) { var pi = arts.Get(id); Text(lab, pi != null ? arts.DisplayName(pi) : id, "xa-term__dim"); }
+                Btn(lab, "Collect (needs a free backpack or crate slot)", () =>
+                {
+                    int n = Session.Recovery.CollectPending();
+                    _message = n > 0 ? $"Collected {n} item{(n == 1 ? "" : "s")}." : "No free slot in your backpack or the artifact crates.";
+                    Refresh();
+                });
+            }
             if (!string.IsNullOrEmpty(_message)) Text(lab, _message);
 
             var installed = arts.State.instances.Where(i => i.location == ArtifactLocation.Installed).ToList();

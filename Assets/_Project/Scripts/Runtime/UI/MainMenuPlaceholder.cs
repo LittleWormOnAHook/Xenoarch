@@ -47,7 +47,7 @@ namespace DMI.Xenoarch.UI
             {
                 if (Busy) return;
                 if (newest == null) XenoarchRuntime.Instance.NewGame();
-                else MenuScreens.Confirm(p, "Start a new game? Your saves are kept (the autosave will be replaced as you play).", () => XenoarchRuntime.Instance.NewGame());
+                else MenuScreens.Confirm(p, "Start a new game? This deletes ALL saves (autosave, quick save and slots 1-6).", () => XenoarchRuntime.Instance.NewGame());
             });
             MenuScreens.Button(p, "Load Game", () => Swap(MenuScreens.Slots(false, ShowMain, null)), newest != null);
             MenuScreens.Button(p, "Settings", () => Swap(MenuScreens.Settings(ShowMain)));

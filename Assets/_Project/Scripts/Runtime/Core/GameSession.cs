@@ -41,20 +41,22 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Valuables.ValuableService Valuables { get; }
         public DMI.Xenoarch.Journals.JournalService Journals { get; }
         public DMI.Xenoarch.Artifacts.ArtifactService Artifacts { get; }
-        /// <summary>t186u: artifacts that may be buried at generated sites: common to rare, no device, fragment or set role.</summary>
-        static System.Collections.Generic.List<string> ProceduralArtifactPool(IItemLookup items)
-        {
-            var l = new System.Collections.Generic.List<string>();
-            if (items is DMI.Xenoarch.Items.ItemRegistry reg && reg.Entries != null)
-                foreach (var e in reg.Entries)
-                    if (e is DMI.Xenoarch.Artifacts.ArtifactDefinition a && a.rarity <= DMI.Xenoarch.Artifacts.ArtifactRarity.Rare
-                        && a.installTarget == DMI.Xenoarch.Artifacts.TechInstallTarget.None && string.IsNullOrEmpty(a.fragmentOf) && string.IsNullOrEmpty(a.setId))
-                        l.Add(a.Id);
-            return l;
-        }
+        /// <summary>Phase 2 M1: the artifact pool generated sites actually use (tooling: Galaxy Snapshot).</summary>
+        /// <summary>Frozen pool v1 (explicit ordered ids, <see cref="DMI.Xenoarch.Galaxy.ProceduralArtifactPools"/>); no longer
+        /// rebuilt from ItemRegistry order. Verified equal to the old registry filter by the Galaxy Snapshot baseline.</summary>
+        public static System.Collections.Generic.IList<string> RuntimeArtifactPool(IItemLookup items) => DMI.Xenoarch.Galaxy.ProceduralArtifactPools.ForVersion(1);
 
         /// <summary>Fragment puzzles (e.g. the Vael star map that reveals Proxima Centauri).</summary>
         public DMI.Xenoarch.Artifacts.ArtifactPuzzleService Puzzles { get; }
+        /// <summary>Phase 2 M1: the central artifact eligibility gate (story-critical protection, star-map safeguards).</summary>
+        public DMI.Xenoarch.Artifacts.ArtifactEligibility Eligibility { get; }
+        /// <summary>Phase 2 M1: runtime recovery of items mandatory progression still needs.</summary>
+        public DMI.Xenoarch.Artifacts.ArtifactRecoveryService Recovery { get; }
+
+        /// <summary>True if the player can reach this unique instance: backpack, any ship crate, or held for pickup at the lab.</summary>
+        public bool OwnsInstance(string instanceId) =>
+            !string.IsNullOrEmpty(instanceId) && (Inventory.ContainsInstance(instanceId) || System.Linq.Enumerable.Any(Holds.Values, h => h.ContainsInstance(instanceId))
+            || (Recovery != null && Recovery.IsPending(instanceId)));
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         /// <summary>Dig site maps: fenced site codes (Ma1), refined-scan spots (Ma11) and their dig state.</summary>
         public DMI.Xenoarch.Excavation.DigSiteMapsService DigMaps { get; }
@@ -103,7 +105,16 @@ namespace DMI.Xenoarch.Core
                 Saves.Register(new DMI.Xenoarch.Ship.ShipHold.Section(role, hold, () => DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, Exploration.Ship.holdLevel)));
             }
             Stock = new ItemPool(items, Inventory, HoldOrder);
-            Puzzles.Owns = id => Inventory.ContainsInstance(id) || System.Linq.Enumerable.Any(Holds.Values, h => h.ContainsInstance(id));
+            Puzzles.Owns = OwnsInstance;
+            // Phase 2 M1: one eligibility gate for every artifact path, and recovery for mandatory items.
+            Eligibility = new DMI.Xenoarch.Artifacts.ArtifactEligibility(Artifacts, Puzzles, Discovery) { Owns = OwnsInstance };
+            Artifacts.Gate = Eligibility.Check;
+            Recovery = new DMI.Xenoarch.Artifacts.ArtifactRecoveryService(Artifacts, Puzzles, Eligibility, Discovery, Inventory, ArtifactCrates, Saves) { Clock = () => PlaySeconds };
+            Recovery.Definitions = () => AllArtifactDefinitions(items);
+            System.Func<string, bool> bulkGuard = id => { var a = Artifacts.Get(id); return a == null || !Eligibility.Check(a, DMI.Xenoarch.Artifacts.ArtifactAction.Dismantle).IsBlocked; };
+            Inventory.CanBulkRemoveInstance = bulkGuard;
+            foreach (var h in Holds.Values) h.CanBulkRemoveInstance = bulkGuard;
+            Saves.Loaded += _ => Recovery.Ensure("load");
             Materials.Pool = Stock;
             Crafting = new DMI.Xenoarch.Crafting.CraftingService(items, Stock, config.craftRecipes)
             {
@@ -135,11 +146,18 @@ namespace DMI.Xenoarch.Core
             };
             Exploration.SiteRevealed += (id, level) => { if (level >= 3) Economy.Award(eco.sitePinpointed, "site:" + id, "site pinpointed " + id); };
             Artifacts.Installed += (a, d) => Economy.Award(eco.techInstalled, "installed:" + a.instanceId, "installed " + d.DisplayNameOrId);
+            Recovery.SalePrice = id =>
+            {
+                var tx = Economy.Wallet.transactions;
+                for (int i = tx.Count - 1; i >= 0; i--) if (tx[i] != null && tx[i].kind == "sell" && tx[i].instanceId == id) return Math.Max(0, tx[i].credits);
+                return 0;
+            };
+            Recovery.Charge = (price, defId) => Economy.CanAfford(price) && Economy.Spend(price, "buyback", "lab.recovery", defId, 1);
             Exploration.OrbitalTechBonus = () => Artifacts.TechBonus(DMI.Xenoarch.Artifacts.TechInstallTarget.OrbitalScanner);
 
             // t186u: procedural systems / planets (runtime only, deterministic from the galaxy seed) and the navigation
             // drive (the decoded Vael navigation core, fitted at the research lab) that opens jumps beyond Sol.
-            DMI.Xenoarch.Galaxy.ProceduralGalaxy.Ensure(config.galaxy, ProceduralArtifactPool(items));
+            DMI.Xenoarch.Galaxy.ProceduralGalaxy.Ensure(config.galaxy, RuntimeArtifactPool(items));
             Artifacts.InstallBlock = (a, d) =>
             {
                 var spec = string.IsNullOrEmpty(d.fragmentOf) ? null : DMI.Xenoarch.Artifacts.ArtifactPuzzleService.Spec(d.fragmentOf);
@@ -173,6 +191,19 @@ namespace DMI.Xenoarch.Core
                 if (!string.IsNullOrEmpty(u.setFact)) Discovery.Publish(u.setFact);
                 if (!string.IsNullOrEmpty(u.unlockSystemId)) Discovery.Publish(DMI.Xenoarch.Discovery.Facts.NavSystem(u.unlockSystemId));
             }
+        }
+
+        /// <summary>Crates that take artifacts, Artifacts crate first (recovery destination after the backpack).</summary>
+        System.Collections.Generic.IEnumerable<InventoryModel> ArtifactCrates()
+        {
+            foreach (var role in new[] { DMI.Xenoarch.Ship.StorageRole.Artifacts, DMI.Xenoarch.Ship.StorageRole.General, DMI.Xenoarch.Ship.StorageRole.Equipment })
+                if (Holds.TryGetValue(role, out var h) && DMI.Xenoarch.Ship.ShipHold.Accepts(role, ItemCategory.Artifact)) yield return h;
+        }
+
+        static System.Collections.Generic.IEnumerable<DMI.Xenoarch.Artifacts.ArtifactDefinition> AllArtifactDefinitions(IItemLookup items)
+        {
+            if (items is ItemRegistry reg && reg.Entries != null)
+                foreach (var e in reg.Entries) if (e is DMI.Xenoarch.Artifacts.ArtifactDefinition a) yield return a;
         }
 
         System.Collections.Generic.IEnumerable<(InventoryModel, Func<ItemCategory, bool>)> HoldOrder()

@@ -50,3 +50,10 @@ MonoBehaviour:
   shape: 0
   tint: {r: 0.62, g: 0.64, b: 0.7, a: 1}
   size: 0.5
+  progression: 2
+  releaseWhen:
+  - factKey: civ.identified:civ.vael
+    threshold: 1
+  - factKey: translation:artifact.moon_metallic_tablet
+    threshold: 0.35
+  progressionNote: 'It is needed until its origin is identified and it is translated to 35% (the Mars coordinates).'

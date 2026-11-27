@@ -83,6 +83,7 @@ namespace DMI.Xenoarch.Core
             _session.Artifacts.ResearchCompleted += (a, op, result) =>
                 DMI.Xenoarch.UI.Toast.Show($"Lab: {DMI.Xenoarch.Artifacts.ResearchRules.Label(op)} done. {result}");
             _session.Discovery.JournalAdded += e => DMI.Xenoarch.UI.Toast.Show($"Journal: {e.text}", 8f);
+            _session.Recovery.Notice += msg => DMI.Xenoarch.UI.Toast.Show(msg, 6f);
             Debug.Log($"[Xenoarch] Runtime ready (save folder: {storage.Folder})");
         }
 
@@ -103,6 +104,8 @@ namespace DMI.Xenoarch.Core
         void Update()
         {
             if (_sessionActive && !_loader.IsLoading) { _session.PlaySeconds += Time.unscaledDeltaTime; _session.Artifacts.Tick(Time.deltaTime); _session.Materials.Tick(Time.deltaTime); _session.Crafting.Tick(Time.deltaTime); }
+            // Phase 2 M1: cheap, idempotent recovery check for mandatory items (acts only when something went missing).
+            if (_sessionActive && !_loader.IsLoading && Time.unscaledTime >= _nextRecoveryCheck) { _nextRecoveryCheck = Time.unscaledTime + 5f; _session.Recovery.Ensure("periodic"); }
             if (!_session.Config.enableDebugHotkeys || _loader.IsLoading) return;
             var kb = Keyboard.current;
             if (kb == null) return;
@@ -112,8 +115,25 @@ namespace DMI.Xenoarch.Core
 
         // ------------------------------------------------------------------ game flow
 
+        float _nextRecoveryCheck;
+
+        /// <summary>
+        /// Phase 2 M1: New Game clears the development save slots (autosave, quick save, manual slots 1-6, with their
+        /// .bak/.tmp files) before the new expedition starts. Only those slot files are deleted; nothing else in the save
+        /// folder or the project is touched. (Before M1, New Game kept every save; the menu said so.)
+        /// </summary>
+        public int ClearDevSaves()
+        {
+            var names = new System.Collections.Generic.List<string>();
+            foreach (var (slot, _) in DMI.Xenoarch.UI.SaveSlots.All()) names.Add(slot);
+            int n = _session.Saves.DeleteSlots(names);
+            Debug.Log($"[Xenoarch] New Game: cleared {n} development save slot(s) ({string.Join(", ", names)})");
+            return n;
+        }
+
         public void NewGame()
         {
+            ClearDevSaves();
             _session.StartNewGame();
             _sessionActive = true;
             SceneLoader.NextTitle = "New expedition";

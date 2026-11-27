@@ -79,6 +79,39 @@ namespace DMI.Xenoarch.Artifacts
         public ArtifactDefinition Definition(string id) => _items != null && _items.TryGetItem(id, out var d) ? d as ArtifactDefinition : null;
         public ArtifactDefinition Definition(ArtifactInstance a) => a != null ? Definition(a.definitionId) : null;
         public ArtifactInstance Get(string instanceId) { foreach (var a in State.instances) if (a.instanceId == instanceId) return a; return null; }
+
+        // ------------------------------------------------------------------ eligibility (Phase 2 M1)
+        /// <summary>Central eligibility gate (wired by GameSession to <see cref="ArtifactEligibility.Check"/>). Null = allow (tests).</summary>
+        public Func<ArtifactInstance, ArtifactAction, Eligibility> Gate;
+        public Eligibility Check(ArtifactInstance a, ArtifactAction action) => Gate != null ? Gate(a, action) : Eligibility.Allowed;
+
+        /// <summary>True while the lab job is working on this instance.</summary>
+        public bool InJob(string instanceId) => State.hasJob && State.job != null && !string.IsNullOrEmpty(instanceId) && State.job.instanceId == instanceId;
+
+        /// <summary>
+        /// The only way an artifact is sold. Checks the gate (a Warning needs <paramref name="acceptWarning"/>), then runs
+        /// <paramref name="removeFromContainer"/>; only if that succeeds is the instance marked Sold. Knowledge is untouched.
+        /// </summary>
+        public bool TrySell(ArtifactInstance a, bool acceptWarning, Func<bool> removeFromContainer, out Eligibility verdict)
+        {
+            verdict = Check(a, ArtifactAction.Sell);
+            if (a == null || verdict.IsBlocked || (verdict.IsWarning && !acceptWarning)) return false;
+            if (removeFromContainer != null && !removeFromContainer()) { verdict = Eligibility.Blocked("The item could not be taken from your inventory."); return false; }
+            a.location = ArtifactLocation.Sold;
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>Recovery only: re-creates a lost instance record under a fixed id (no rewards, no recovery facts).</summary>
+        public ArtifactInstance AddRestoredInstance(string instanceId, ArtifactDefinition def, float condition, string siteId, string bodyId)
+        {
+            if (def == null || string.IsNullOrEmpty(instanceId) || Get(instanceId) != null) return null;
+            var a = new ArtifactInstance { instanceId = instanceId, definitionId = def.Id, condition = Mathf.Clamp01(condition), siteId = siteId, bodyId = bodyId, discoveredAt = Clock() };
+            State.instances.Add(a);
+            if (def.rarity == ArtifactRarity.Unique && !State.uniquesFound.Contains(def.Id)) State.uniquesFound.Add(def.Id);
+            Changed?.Invoke();
+            return a;
+        }
         public bool UniqueFound(string defId) => State.uniquesFound.Contains(defId);
 
         public CivilizationDefinition Civilization(string civId) { foreach (var c in _civs) if (c.Id == civId) return c; return null; }
@@ -139,6 +172,9 @@ namespace DMI.Xenoarch.Artifacts
             if (a.location == ArtifactLocation.Installed) { reason = "Already installed."; return false; }
             if (a.location != ArtifactLocation.Held) { reason = "Not in your possession."; return false; }
             if (!a.Done(ResearchOp.TechnologyAnalysis)) { reason = "Run Technology analysis first."; return false; }
+            if (InJob(a.instanceId)) { reason = "The lab is working on it. Wait for the job to finish."; return false; }
+            var gate = Check(a, ArtifactAction.Install);
+            if (gate.IsBlocked) { reason = gate.Message; return false; }
             var block = InstallBlock?.Invoke(a, d);
             if (!string.IsNullOrEmpty(block)) { reason = block; return false; }
             return true;
@@ -195,6 +231,9 @@ namespace DMI.Xenoarch.Artifacts
             var d = Definition(a);
             if (d == null) { reason = "Unknown artifact."; return false; }
             if (Busy) { reason = "Lab busy."; return false; }
+            if (a.location == ArtifactLocation.Sold || a.location == ArtifactLocation.Installed) { reason = "Not in your possession."; return false; }
+            var gate = Check(a, ArtifactAction.ResearchOperation);
+            if (gate.IsBlocked) { reason = gate.Message; return false; }
             if (!d.researchOps.Contains(op) && !(op == ResearchOp.Translation && d.HasTranslation)) { reason = "Not applicable."; return false; }
             if (op == ResearchOp.Translation && !d.HasTranslation) { reason = "No text to translate."; return false; }
             if (!ResearchRules.Repeatable(op) && a.Done(op)) { reason = "Done."; return false; }

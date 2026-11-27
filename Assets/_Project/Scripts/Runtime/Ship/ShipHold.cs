@@ -60,8 +60,22 @@ namespace DMI.Xenoarch.Ship
             if (!string.IsNullOrEmpty(stack.instanceId))
             {
                 string id = stack.itemId, inst = stack.instanceId;
+                // Phase 2 M1: crate transfers go through the artifact eligibility gate (accessible moves are allowed).
+                var session = XenoarchRuntime.Session;
+                var art = session?.Artifacts.Get(inst);
+                if (art != null)
+                {
+                    bool toCrate = session.Holds.ContainsValue(to);
+                    var gate = session.Artifacts.Check(art, toCrate ? DMI.Xenoarch.Artifacts.ArtifactAction.MoveToShipStorage : DMI.Xenoarch.Artifacts.ArtifactAction.MoveToBackpack);
+                    if (gate.IsBlocked) { DMI.Xenoarch.UI.Toast.Show(gate.Message, 5f); return 0; }
+                }
                 if (to.FreeSlots <= 0 || !from.RemoveInstance(inst)) return 0;
-                if (!to.AddInstance(id, inst)) { from.AddInstance(id, inst); return 0; }
+                if (!to.AddInstance(id, inst))
+                {
+                    // Failed transfer: put it back; if even that fails, recovery restores it (same instance id, no duplicate).
+                    if (!from.AddInstance(id, inst)) { Debug.LogWarning($"[Xenoarch] Transfer of {inst} failed both ways; running recovery"); session?.Recovery.Ensure("transfer"); }
+                    return 0;
+                }
                 return 1;
             }
             string item = stack.itemId; int n = stack.count;

@@ -40,12 +40,15 @@ namespace DMI.Xenoarch.Save
             else File.Move(tmp, path);
         }
 
+        /// <summary>Deletes the slot file plus its own backup (.json.bak, written by <see cref="Write"/>) and leftover temp file.</summary>
         public bool Delete(string slot)
         {
             string path = PathFor(slot);
-            if (!File.Exists(path)) return false;
-            File.Delete(path);
-            return true;
+            bool existed = File.Exists(path);
+            if (existed) File.Delete(path);
+            if (File.Exists(path + ".bak")) File.Delete(path + ".bak");
+            if (File.Exists(path + ".tmp")) File.Delete(path + ".tmp");
+            return existed;
         }
 
         public IEnumerable<string> ListSlots()

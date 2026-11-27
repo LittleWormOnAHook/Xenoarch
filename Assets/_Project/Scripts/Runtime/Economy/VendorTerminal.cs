@@ -47,6 +47,9 @@ namespace DMI.Xenoarch.Economy
             var d = Def(st.itemId); return d != null ? d.DisplayNameOrId : st.itemId;
         }
 
+        /// <summary>Instance waiting for a second click after an eligibility warning (Phase 2 M1).</summary>
+        string _confirmInstance;
+
         void Sell(ItemStack st, int count)
         {
             int each = OfferFor(st);
@@ -54,11 +57,25 @@ namespace DMI.Xenoarch.Economy
             var inv = Session.Inventory;
             if (!string.IsNullOrEmpty(st.instanceId))
             {
-                if (!inv.RemoveInstance(st.instanceId)) return;
                 var a = Session.Artifacts.Get(st.instanceId);
-                if (a != null) { a.location = ArtifactLocation.Sold; Eco.Award(Eco.Settings.artifactSold, "sold:" + a.instanceId); }
-                Eco.Earn(each, "sell", vendor.Id, st.itemId, st.instanceId, 1);
-                _message = $"Sold {Name(st)} for {each} cr.";
+                string label = Name(st), inst = st.instanceId, itemId = st.itemId;
+                if (a != null)
+                {
+                    // Phase 2 M1: the artifact service checks the eligibility gate; the UI cannot bypass it.
+                    bool confirmed = _confirmInstance == inst;
+                    if (!Session.Artifacts.TrySell(a, confirmed, () => inv.RemoveInstance(inst), out var verdict))
+                    {
+                        if (verdict.IsWarning) { _confirmInstance = inst; _message = $"WARNING: {verdict.Message}\nClick sell again to confirm."; }
+                        else { _confirmInstance = null; _message = verdict.Message; Toast.Show(verdict.Message, 5f); }
+                        Refresh();
+                        return;
+                    }
+                    _confirmInstance = null;
+                    Eco.Award(Eco.Settings.artifactSold, "sold:" + a.instanceId);
+                }
+                else if (!inv.RemoveInstance(inst)) return;
+                Eco.Earn(each, "sell", vendor.Id, itemId, inst, 1);
+                _message = $"Sold {label} for {each} cr.";
             }
             else
             {
@@ -149,7 +166,14 @@ namespace DMI.Xenoarch.Economy
                         Btn(row, $"{Name(st)} x{have}: {offer} cr each", () => Sell(s, 1)).style.flexGrow = 1;
                         if (have > 1) Btn(row, $"All ({offer * have} cr)", () => Sell(s, have));
                     }
-                    else { var s = st; Btn(sellCol, $"{Name(st)}: {offer} cr", () => Sell(s, 1)); }
+                    else
+                    {
+                        var s = st;
+                        var art = Session.Artifacts.Get(st.instanceId);
+                        var gate = art != null ? Session.Artifacts.Check(art, ArtifactAction.Sell) : Eligibility.Allowed;
+                        if (gate.IsBlocked) Text(sellCol, $"{Name(st)}: not for sale. {gate.Message}", "xa-term__dim");
+                        else Btn(sellCol, $"{Name(st)}: {offer} cr" + (gate.IsWarning ? (_confirmInstance == st.instanceId ? "  (click again to confirm)" : "  (not fully researched)") : ""), () => Sell(s, 1));
+                    }
                     shown++;
                 }
                 if (shown == 0) Text(sellCol, "Nothing in your backpack this vendor wants.", "xa-term__dim");

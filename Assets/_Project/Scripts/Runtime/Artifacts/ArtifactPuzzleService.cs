@@ -99,9 +99,14 @@ namespace DMI.Xenoarch.Artifacts
             if (b == null) { b = new PuzzleBoardState { groupId = groupId }; State.boards.Add(b); }
             int n = spec != null ? spec.slots : 8;
             while (b.slots.Count < n) b.slots.Add("");
-            if (!b.solved) // drop pieces that were sold or lost since they were placed
+            if (!b.solved) // Phase 2 M1: only drop pieces whose record is gone or that were really sold/installed. A placed piece
+                           // that is temporarily missing (failed transfer, interrupted load) keeps its slot; recovery restores it.
                 for (int i = 0; i < b.slots.Count; i++)
-                    if (!string.IsNullOrEmpty(b.slots[i]) && (_artifacts?.Get(b.slots[i]) == null || !Owns(b.slots[i]))) b.slots[i] = "";
+                {
+                    if (string.IsNullOrEmpty(b.slots[i])) continue;
+                    var a = _artifacts?.Get(b.slots[i]);
+                    if (a == null || a.location == ArtifactLocation.Sold || a.location == ArtifactLocation.Installed) b.slots[i] = "";
+                }
             return b;
         }
 
@@ -127,9 +132,27 @@ namespace DMI.Xenoarch.Artifacts
             }
             b.slots[slot] = instanceId;
             Changed?.Invoke();
-            if (Filled(groupId) >= b.slots.Count) Solve(b);
+            if (Filled(groupId) >= b.slots.Count)
+            {
+                foreach (var id in b.slots)
+                    if (!Owns(id)) { reason = "A placed piece is missing from your inventory; it is being recovered. Try again in a moment."; return true; }
+                Solve(b);
+            }
             return true;
         }
+
+        /// <summary>Phase 2 M1: solves a full board whose solve was deferred because a placed piece was being recovered.</summary>
+        public bool RecheckSolved(string groupId)
+        {
+            var b = Board(groupId);
+            if (b.solved || Filled(groupId) < b.slots.Count) return false;
+            foreach (var id in b.slots) if (!Owns(id)) return false;
+            Solve(b);
+            return true;
+        }
+
+        /// <summary>Ids of every registered puzzle group.</summary>
+        public static IEnumerable<string> Groups() { foreach (var s in _specs) yield return s.groupId; }
 
         public void Remove(string groupId, int slot)
         {

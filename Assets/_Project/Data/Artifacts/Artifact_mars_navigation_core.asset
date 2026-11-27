@@ -44,3 +44,8 @@ MonoBehaviour:
   shape: 7
   tint: {r: 0.2, g: 0.7, b: 0.6, a: 1}
   size: 0.6
+  progression: 2
+  releaseWhen:
+  - factKey: tech.installed:artifact.mars_navigation_core
+    threshold: 1
+  progressionNote: 'It must be installed in the ship''s navigation drive at the research lab first (research alone is not enough).'
