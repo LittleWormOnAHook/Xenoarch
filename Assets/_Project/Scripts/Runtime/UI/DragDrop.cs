@@ -73,7 +73,7 @@ namespace DMI.Xenoarch.UI
                 _ghost.style.position = Position.Absolute; _ghost.style.width = 80; _ghost.style.height = 80;
                 _ghost.style.opacity = 0.85f;
                 _ghost.style.backgroundColor = XenoarchPalette.A(XenoarchPalette.PanelDark, 0.8f);
-                _ghost.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                _ghost.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
                 if (_pending.icon != null) { _ghost.style.backgroundImage = new StyleBackground(_pending.icon); XenoarchIcons.ApplyItem(_ghost, _pending.itemId); }
                 else _ghost.Add(new Label(_pending.itemId) { pickingMode = PickingMode.Ignore, style = { fontSize = 9, whiteSpace = WhiteSpace.Normal } });
                 _root.Add(_ghost);

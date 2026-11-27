@@ -181,7 +181,7 @@ namespace DMI.Xenoarch.Exploration
             if (site == null) { Refined = false; SetText("Left the fenced site: back to normal scanning."); Beep(0.5f, 1); _lmbDownAt = -1f; return; }
             _sweeping = true; _nextTick = 0f; _sweepText = 0f;
             _sweepTargets.Clear();
-            foreach (var a in FindObjectsByType<DMI.Xenoarch.Excavation.BuriedArtifact>(FindObjectsSortMode.None))
+            foreach (var a in FindObjectsByType<DMI.Xenoarch.Excavation.BuriedArtifact>(FindObjectsInactive.Exclude))
                 if (a != null && a.Site == site && a.Grid != null && !a.Grid.recovered) _sweepTargets.Add(a);
             if (_glowMat == null) _glowMat = Resources.Load<Material>("Excavation/XRayGlow");
             if (_tick == null) _tick = Resources.Load<AudioClip>("Audio/Scanner/detector_tick");

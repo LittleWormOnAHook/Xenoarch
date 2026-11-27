@@ -125,7 +125,7 @@ namespace DMI.Xenoarch.Excavation
             {
                 if (a == null || a.Definition == null) continue;
                 float half = BuriedArtifact.Extents(a.Definition).y * a.transform.lossyScale.y * 0.5f;
-                found.Add((a.transform.position + Vector3.up * half, a.GetInstanceID()));
+                found.Add((a.transform.position + Vector3.up * half, a.GetEntityId().GetHashCode()));
             }
             var vd = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
             var session = XenoarchRuntime.Session;
