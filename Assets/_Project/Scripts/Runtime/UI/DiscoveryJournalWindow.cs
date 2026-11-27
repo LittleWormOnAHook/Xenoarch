@@ -233,23 +233,33 @@ namespace DMI.Xenoarch.UI
             foreach (var v in o.All())
             {
                 if (v.optional && o.HideOptional && !v.complete && v.kind == ObjectiveKind.Side) continue;
+                bool focused = o.IsFocused(v.id);
                 string kind = v.kind == ObjectiveKind.Main ? "MAIN" : (v.optional ? "OPTIONAL" : "SIDE");
-                string status = v.complete ? "  -  complete" : "";
-                T(col, $"{kind}   {v.title}{status}", "xa-term__h");
+                string status = v.complete ? "  -  complete" : (focused ? "  -  focused" : "");
+                var head = new VisualElement(); head.AddToClassList("xa-obj__head"); head.pickingMode = PickingMode.Position;
+                var star = XenoarchIcons.Glyph("star", "xa-obj__star");
+                if (!focused) star.AddToClassList("xa-obj__star--hidden");
+                head.Add(star);
+                var title = T(head, $"{kind}   {v.title}{status}", "xa-term__h");
+                title.AddToClassList(focused ? "xa-obj__focus" : "xa-obj__idle");
+                title.style.marginTop = 0; title.style.marginBottom = 0;
+                var captured = v.id;
+                head.RegisterCallback<ClickEvent>(e => { o.SetFocus(captured); Render(); e.StopPropagation(); });
+                col.Add(head);
                 if (!string.IsNullOrEmpty(v.subtitle)) T(col, v.subtitle, "xa-term__dim");
                 foreach (var l in v.lines)
                 {
                     string text = l.label;
                     if (!string.IsNullOrEmpty(l.progress)) text += "  (" + l.progress + ")";
                     if (l.complete) StateRow(col, "ui-complete", "done", text, "xa-term__text");
-                    else StateRow(col, "arrowRight", "open", text, "xa-term__text");
+                    else StateRow(col, "arrowRight", "open", text, focused ? "xa-term__text" : "xa-term__dim");
                 }
                 if (!v.complete && !string.IsNullOrEmpty(v.Prompt)) T(col, "Hint: " + v.Prompt, "xa-term__dim");
             }
 
             var side = Col();
             T(side, "TRACKER", "xa-term__h");
-            T(side, "The main objective is The Waystations expedition. Up to two optional objectives appear on the HUD unless hidden. Progress is read live from discoveries, inventory and recipes.", "xa-term__dim");
+            T(side, "The main expedition stays at the top. Click an objective here or on the HUD to focus it (gold star). Navigation markers follow the focused objective. Hide optional keeps that toggle, and completing or hiding a focused side returns focus to the main expedition.", "xa-term__dim");
         }
 
         // ------------------------------------------------------------ Captain's Log (M2)

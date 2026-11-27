@@ -583,15 +583,21 @@ namespace DMI.Xenoarch.Exploration
             ArchaeologicalSiteDefinition site = null; float dist = 0f;
             if (show)
             {
-                // Point at the site the last pulse read out (so the chevron and the "ahead/left/behind" text agree);
-                // otherwise the nearest one.
+                // Focused objective site (when it has a valid destination in this scene) wins; otherwise the last
+                // pulse target, then the nearest site.
                 float lim = ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult);
-                site = Time.time < _lastTargetUntil ? SiteInScene(_lastTargetId, transform.position, lim, out dist) : null;
+                var dest = XenoarchRuntime.Session?.Objectives?.Destination();
+                if (dest != null && !string.IsNullOrEmpty(dest.siteId))
+                    site = SiteInScene(dest.siteId, transform.position, float.MaxValue, out dist);
+                if (site == null)
+                    site = Time.time < _lastTargetUntil ? SiteInScene(_lastTargetId, transform.position, lim, out dist) : null;
                 if (site == null) site = NearestSite(transform.position, lim, out dist);
             }
             bool cache = false; Vector3 targetPos = site != null ? site.position : Vector3.zero; float targetRadius = site != null ? site.radius : 0f; int targetSeed = site != null ? site.seed : 0;
+            var focusedDest = XenoarchRuntime.Session?.Objectives?.Destination();
+            bool holdFocus = focusedDest != null && !string.IsNullOrEmpty(focusedDest.siteId) && site != null && site.Id == focusedDest.siteId;
             var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
-            if (show && vdir != null && vdir.Nearest(transform.position, site != null ? dist : ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), true, out var cv, out float cd))
+            if (show && !holdFocus && vdir != null && vdir.Nearest(transform.position, site != null ? dist : ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), true, out var cv, out float cd))
             { cache = true; dist = cd; targetPos = cv.position; targetRadius = 0.9f; targetSeed = cv.seed; site = site ?? Placeholder; }
             if (site == null) { XenoarchUI.Show(_dirPivot, false); XenoarchUI.Show(_dirLabel, show); if (show) _dirLabel.text = "NO SITE IN RANGE"; _dirHasAngle = false; return; }
             bool onSite = dist <= targetRadius;

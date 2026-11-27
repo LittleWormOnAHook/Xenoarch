@@ -228,3 +228,12 @@
     border-width: 1px; border-color: var(--xa-secondary-soft);
 }
 .xa-obj__toggle:hover { color: var(--xa-heading); border-color: var(--xa-button); }
+
+.xa-obj__block { margin-bottom: 2px; }
+.xa-obj__head { flex-direction: row; align-items: center; margin-bottom: 2px; }
+.xa-obj__star { width: 14px; height: 14px; margin-right: 6px; flex-shrink: 0; -unity-background-image-tint-color: var(--xa-heading); }
+.xa-obj__star--hidden { opacity: 0; }
+.xa-obj__focus { color: var(--xa-heading); }
+.xa-obj__idle { color: var(--xa-secondary-text); }
+.xa-obj__title.xa-obj__idle, .xa-obj__side.xa-obj__idle { color: var(--xa-secondary-text); }
+.xa-obj__title.xa-obj__focus, .xa-obj__side.xa-obj__focus { color: var(--xa-heading); }

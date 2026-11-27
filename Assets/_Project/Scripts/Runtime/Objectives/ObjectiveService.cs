@@ -33,7 +33,93 @@ namespace DMI.Xenoarch.Objectives
         public bool HideOptional
         {
             get => State.hideOptional;
-            set { if (State.hideOptional == value) return; State.hideOptional = value; Changed?.Invoke(); }
+            set { if (State.hideOptional == value) return; State.hideOptional = value; EnsureFocus(); Changed?.Invoke(); }
+        }
+
+        /// <summary>Stable id of the focused objective. Empty or unknown values resolve to the main expedition.
+        /// Changing focus never writes discovery facts or completion state.</summary>
+        public string FocusedId
+        {
+            get
+            {
+                var main = Main();
+                string resolved = ResolveFocusId(State.focusedId, main);
+                return string.IsNullOrEmpty(resolved) && main != null ? main.id : resolved;
+            }
+        }
+
+        public bool IsFocused(string id) => !string.IsNullOrEmpty(id) && id == FocusedId;
+
+        public ObjectiveView Focused()
+        {
+            string id = FocusedId;
+            if (string.IsNullOrEmpty(id)) return Main();
+            foreach (var v in All()) if (v != null && v.id == id) return v;
+            return Main();
+        }
+
+        /// <summary>Select the focused objective. Only the main expedition or a currently listed (visible, incomplete) side is accepted.</summary>
+        public void SetFocus(string id)
+        {
+            var main = Main();
+            string resolved = ResolveFocusId(id, main);
+            if (string.IsNullOrEmpty(resolved) && main != null) resolved = main.id;
+            if (State.focusedId == resolved) return;
+            State.focusedId = resolved ?? "";
+            Changed?.Invoke();
+        }
+
+        void EnsureFocus()
+        {
+            var main = Main();
+            string resolved = ResolveFocusId(State.focusedId, main);
+            if (string.IsNullOrEmpty(resolved) && main != null) resolved = main.id;
+            if (State.focusedId == resolved) return;
+            State.focusedId = resolved ?? "";
+        }
+
+        string ResolveFocusId(string want, ObjectiveView main)
+        {
+            string mainId = main != null ? main.id : null;
+            if (string.IsNullOrEmpty(want) || want == mainId) return mainId;
+            foreach (var v in Sides()) if (v != null && v.id == want) return want;
+            return mainId;
+        }
+
+        /// <summary>World target of the focused objective's current incomplete line, if one can be derived. Null if none.</summary>
+        public ObjectiveDestination Destination()
+        {
+            var v = Focused();
+            if (v == null) return null;
+            foreach (var l in v.lines)
+            {
+                if (l == null || l.complete) continue;
+                var d = DestinationFromFact(l.factKey);
+                if (d != null && d.Valid) return d;
+            }
+            return null;
+        }
+
+        public static ObjectiveDestination DestinationFromFact(string factKey)
+        {
+            if (string.IsNullOrEmpty(factKey)) return null;
+            const string siteP = "site.revealed:", bodyP = "body.visited:", chamberP = "chamber.opened:";
+            if (factKey.StartsWith(siteP, StringComparison.Ordinal))
+                return new ObjectiveDestination { siteId = factKey.Substring(siteP.Length) };
+            if (factKey.StartsWith(bodyP, StringComparison.Ordinal))
+                return new ObjectiveDestination { bodyId = factKey.Substring(bodyP.Length) };
+            if (factKey.StartsWith(chamberP, StringComparison.Ordinal))
+            {
+                string id = factKey.Substring(chamberP.Length);
+                var chambers = DMI.Xenoarch.Excavation.ChamberDefinition.All();
+                if (chambers != null)
+                    foreach (var ch in chambers)
+                        if (ch != null && ch.Id == id && !string.IsNullOrEmpty(ch.hostSiteId))
+                            return new ObjectiveDestination { siteId = ch.hostSiteId };
+                if (id.StartsWith("chamber.", StringComparison.Ordinal))
+                    return new ObjectiveDestination { siteId = "site." + id.Substring("chamber.".Length) };
+            }
+            return null;
         }
 
         public ObjectiveService(DiscoveryService discovery, GameSession session, SaveService saves)
@@ -272,6 +358,7 @@ namespace DMI.Xenoarch.Objectives
                     float value = _discovery != null ? _discovery.Value(line.factKey) : 0f;
                     v.complete = _discovery != null && _discovery.Has(line.factKey, line.factThreshold);
                     v.progress = FormatProgress(value, line.factThreshold);
+                    v.factKey = line.factKey;
                     if (string.IsNullOrEmpty(v.label)) v.label = line.factKey;
                     if (string.IsNullOrEmpty(v.prompt) && !v.complete) v.prompt = ContextualPrompt.For(line.factKey, value, line.factThreshold, Context());
                     break;
@@ -290,6 +377,7 @@ namespace DMI.Xenoarch.Objectives
                 complete = done,
                 progress = FormatProgress(value, threshold),
                 prompt = done ? null : ContextualPrompt.For(factKey, value, threshold, Context()),
+                factKey = factKey,
             };
         }
 

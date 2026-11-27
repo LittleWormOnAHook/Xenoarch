@@ -99,9 +99,11 @@ namespace DMI.Xenoarch.UI
             if (session == null || _map == null) return;
             var x = session.Exploration;
             _map.Markers.Clear();
+            var dest = session.Objectives != null ? session.Objectives.Destination() : null;
+            string focusSite = dest != null ? dest.siteId : null;
             foreach (var k in KnownSites.OnBody(x, _body.Id))   // t182u: orbital + handheld reveals, shared with the M map
                 _map.Markers.Add(new SurfaceMapView.Marker { id = k.Def.Id, kind = SurfaceMapView.Kind.Site, world = k.Map,
-                    uncertainty = k.Uncertainty, label = k.Label() });
+                    uncertainty = k.Uncertainty, label = k.Label(), selected = !string.IsNullOrEmpty(focusSite) && k.Def.Id == focusSite });
             var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
             if (vdir != null)
                 foreach (var v in vdir.Sites)

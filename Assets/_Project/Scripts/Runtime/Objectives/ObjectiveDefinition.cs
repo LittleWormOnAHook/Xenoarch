@@ -46,12 +46,13 @@ namespace DMI.Xenoarch.Objectives
     public sealed class ObjectiveState
     {
         public bool hideOptional;
+        [Tooltip("Stable id of the focused objective; empty = the main expedition.")] public string focusedId;
         public List<string> notified = new List<string>();
     }
 
     public sealed class ObjectiveLineView
     {
-        public string id, label, progress, prompt;
+        public string id, label, progress, prompt, factKey;
         public bool complete;
     }
 
@@ -69,5 +70,12 @@ namespace DMI.Xenoarch.Objectives
                 return null;
             }
         }
+    }
+
+    /// <summary>World target of the focused objective, when one can be read from the current fact line. Null = no marker.</summary>
+    public sealed class ObjectiveDestination
+    {
+        public string siteId, bodyId;
+        public bool Valid => !string.IsNullOrEmpty(siteId) || !string.IsNullOrEmpty(bodyId);
     }
 }
