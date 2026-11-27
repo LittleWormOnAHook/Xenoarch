@@ -46,6 +46,17 @@ namespace DMI.Xenoarch.Exploration
             return Activate(pick);
         }
 
+        /// <summary>Switch on the zone whose siteId matches exactly. No fallback to the base or first pad.</summary>
+        public LandingZoneSlot ActivateExact(string siteId)
+        {
+            if (Slots.Count == 0) Collect();
+            siteId ??= "";
+            if (string.IsNullOrEmpty(siteId)) return null;
+            LandingZoneSlot pick = null;
+            foreach (var s in Slots) if (s != null && (s.siteId ?? "") == siteId) { pick = s; break; }
+            return pick == null ? null : Activate(pick);
+        }
+
         /// <summary>Switch on the zone nearest <paramref name="p"/> (saved pose / Continue).</summary>
         public LandingZoneSlot ActivateNearest(Vector3 p)
         {

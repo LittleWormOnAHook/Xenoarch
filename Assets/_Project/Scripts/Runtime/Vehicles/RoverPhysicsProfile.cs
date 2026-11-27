@@ -29,6 +29,34 @@ namespace DMI.Xenoarch.Vehicles
         [Header("Suspension (world metres / N / N-s)")]
         public float spring = 70000f;
         public float damper = 5500f;
+        [Tooltip("Minimum damping as a fraction of critical (0 disables the floor, 0.2-2). 0.85 kills pogo-bounce; the authored damper is still used if it is firmer.")]
+        public float damperRatio = 0.85f;
+
+        [Header("Planet adaptation (wide ranges; 0 disables a term)")]
+        [Tooltip("Scale spring, damper, anti-pitch and grip with local gravity and terrain/temperature.")]
+        public bool adaptToPlanet = true;
+        [Tooltip("Clamps gravity/9.81 used to scale the springs (0.05-4).")]
+        public float minGravityScale = 0.15f;
+        public float maxGravityScale = 2.5f;
+        [Tooltip("While grounded, add extra downward acceleration so wheel load never falls below this (m/s^2). Keeps low-g worlds plantable. 0 = off.")]
+        public float minWheelLoad = 3.5f;
+        [Tooltip("Ice / very cold grip multiplier (0-2).")]
+        public float iceGrip = 0.55f;
+        [Tooltip("Loose sand / desert grip multiplier (0-2).")]
+        public float sandGrip = 0.75f;
+        [Tooltip("Rock / highland grip multiplier (0-2).")]
+        public float rockGrip = 1.05f;
+        public float coldGripBelowC = -80f;
+        public float coldGrip = 0.7f;
+        public float hotGripAboveC = 80f;
+        public float hotGrip = 0.85f;
+        [Tooltip("Extra planar drag on ice (1/s).")]
+        public float iceRoll = 0.04f;
+        [Tooltip("Extra planar drag on sand (1/s).")]
+        public float sandRoll = 0.08f;
+        public float defaultRoll = 0.015f;
+        [Tooltip("Top-speed scale on ice (0.3-1.5).")]
+        public float iceSpeed = 0.8f;
         [Tooltip("Suspension travel in world metres.")]
         public float travel = 0.28f;
         [Tooltip("Spring target (0 = full droop, 1 = fully compressed).")]

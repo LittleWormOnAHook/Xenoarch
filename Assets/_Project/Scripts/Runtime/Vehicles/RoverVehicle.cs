@@ -618,7 +618,7 @@ namespace DMI.Xenoarch.Vehicles
             float v = Vector3.Dot(_rb.linearVelocity, Fwd);
             bool dry = fuel <= 0.01f;
             if (dry) throttle = 0f;
-            float cap = boosting ? boostSpeed : maxSpeed;
+            float cap = (boosting ? boostSpeed : maxSpeed) * Mathf.Max(0.3f, _speedScale);
             float limit = throttle >= 0f ? cap : maxSpeed / 3f;
             float rise = _profile != null ? Mathf.Max(0.05f, _profile.throttleRise) : 0.45f;
             float fall = _profile != null ? Mathf.Max(0.05f, _profile.throttleFall) : 0.22f;

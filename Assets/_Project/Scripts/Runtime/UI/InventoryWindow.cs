@@ -9,6 +9,7 @@ using MaterialDefinition = DMI.Xenoarch.Materials.MaterialDefinition;
 using DMI.Xenoarch.Ship;
 using DMI.Xenoarch.Interaction;
 using DMI.Xenoarch.Vehicles;
+using DMI.Xenoarch.Exploration;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -25,6 +26,7 @@ namespace DMI.Xenoarch.UI
         protected override string PanelId => "player.inventory";
         string _selItem; string _selRecipe; CraftCategory? _filter; string _message;
         int _closedFrame = -1; float _nextRefresh; bool _hooked;
+        bool _confirmShuttle;
 
         void Awake() { terminalName = "Inventory"; }
 
@@ -56,6 +58,8 @@ namespace DMI.Xenoarch.UI
         protected override void Tick()
         {
             if (Session.Crafting.Busy && Time.unscaledTime >= _nextRefresh) { _nextRefresh = Time.unscaledTime + 0.2f; Refresh(); }
+            else if (IsOpen && ShuttleDirector.Instance != null && ShuttleDirector.Instance.EmergencyCooldownRemaining > 0f && Time.unscaledTime >= _nextRefresh)
+            { _nextRefresh = Time.unscaledTime + 0.5f; Refresh(); }
         }
 
         ItemDefinition Def(string id) => id != null && Session.Items.TryGetItem(id, out var d) ? d : null;
@@ -91,6 +95,31 @@ namespace DMI.Xenoarch.UI
                 var line = Text(left, $"{kv.Key} crate: {used}/{h.Capacity} slots" + (used > 0 ? $"  ({string.Join(", ", top)}{(h.Slots.Count(x => !x.IsEmpty) > 4 ? ", ..." : "")})" : "") + "   [drop here]", "xa-term__dim");
                 var role = kv.Key; var hold = h;
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToCrate(role, hold, p));
+            }
+
+            Text(left, "SHUTTLE", "xa-term__h");
+            if (_confirmShuttle)
+            {
+                Text(left, "Call the shuttle to land on valid ground near you?", "xa-term__dim");
+                Btn(left, "Confirm emergency call", () =>
+                {
+                    _confirmShuttle = false;
+                    var d = ShuttleDirector.Instance;
+                    if (d == null) Toast.Show("Couldn't call the shuttle.", 3f);
+                    else { d.CallEmergency(out var msg); Toast.Show(string.IsNullOrEmpty(msg) ? "Couldn't call the shuttle." : msg, 3f); }
+                    Refresh();
+                });
+                Btn(left, "Cancel", () => { _confirmShuttle = false; Refresh(); }).AddToClassList("xa-term__btn--ghost");
+            }
+            else
+            {
+                string label = "Emergency Shuttle Call";
+                bool on = true;
+                var dir = ShuttleDirector.Instance;
+                if (s.AboardShip) { label = "Emergency Shuttle Call (aboard ship)"; on = false; }
+                else if (dir == null) { label = "Emergency Shuttle Call (unavailable)"; on = false; }
+                else if (dir.EmergencyCooldownRemaining > 0.5f) { label = $"Emergency Shuttle Call ({dir.EmergencyCooldownRemaining:0}s)"; on = false; }
+                Btn(left, label, () => { _confirmShuttle = true; Refresh(); }, on);
             }
 
             // Journals: survey notes picked up along the way (click to read; prev / next inside).

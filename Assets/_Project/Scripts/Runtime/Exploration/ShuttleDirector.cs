@@ -35,9 +35,77 @@ namespace DMI.Xenoarch.Exploration
 
         public static string BusyStatus() => _busy ? "Choosing landing zone" : null;
 
+        static Terrain FindTerrain(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded) return null;
+            foreach (var r in scene.GetRootGameObjects())
+            {
+                var terr = r.GetComponentInChildren<Terrain>();
+                if (terr != null && terr.terrainData != null) return terr;
+            }
+            return null;
+        }
+
+        void EnsureTerrain()
+        {
+            if (_terrain != null && _terrain.terrainData != null) return;
+            var scene = _scene.IsValid() ? _scene : SceneManager.GetActiveScene();
+            _terrain = FindTerrain(scene);
+        }
+
+        LandingZonePicker.HeightFn WorldHeight(Transform ignore = null)
+        {
+            EnsureTerrain();
+            return LandingZonePicker.ForWorld(_terrain, ignore);
+        }
+
+        bool PlaceOnGround(LandingZonePicker.HeightFn height, Vector3 preferred, float search, out Vector3 pos)
+        {
+            pos = preferred;
+            if (height != null && height(preferred.x, preferred.z, out float y, out _))
+            {
+                pos = new Vector3(preferred.x, y, preferred.z);
+                return true;
+            }
+            return LandingZonePicker.FindOnGround(height, preferred, search, out pos);
+        }
+
         void Land(Scene scene, bool arriving)
         {
             // Never leave a half-built (inactive) shuttle or a stuck loading gate behind if anything below throws.
+            try
+            {
+                if (FindTerrain(scene) == null && scene.IsValid() && scene.isLoaded)
+                {
+                    StartCoroutine(LandWhenTerrainReady(scene, arriving));
+                    return;
+                }
+                LandCore(scene, arriving);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[Xenoarch] Shuttle landing failed: {e}");
+                _busy = false;
+                if (_building != null)
+                {
+                    _building.SetActive(true);
+                    Shuttle = _building;
+                    StartCoroutine(Settle(_building, WorldHeight(_building.transform), arriving));
+                }
+            }
+            _building = null;
+        }
+
+        IEnumerator LandWhenTerrainReady(Scene scene, bool arriving)
+        {
+            _busy = true;
+            float t = 0f;
+            while (t < 8f && FindTerrain(scene) == null)
+            {
+                if (!scene.IsValid() || !scene.isLoaded) { _busy = false; yield break; }
+                t += Time.unscaledDeltaTime;
+                yield return null;
+            }
             try { LandCore(scene, arriving); }
             catch (System.Exception e)
             {
@@ -47,7 +115,7 @@ namespace DMI.Xenoarch.Exploration
                 {
                     _building.SetActive(true);
                     Shuttle = _building;
-                    StartCoroutine(Settle(_building, LandingZonePicker.ForTerrain(_terrain), arriving));
+                    StartCoroutine(Settle(_building, WorldHeight(_building.transform), arriving));
                 }
             }
             _building = null;
@@ -65,9 +133,7 @@ namespace DMI.Xenoarch.Exploration
             var body = x.CurrentBody;
             if (body == null || body.sceneName != scene.name) body = x.Galaxy != null ? x.Galaxy.FindBodyByScene(scene.name) : null;
             if (!ShipTravel.UsesShuttle(body)) return;
-            Terrain terrain = null;
-            foreach (var r in scene.GetRootGameObjects()) { terrain = r.GetComponentInChildren<Terrain>(); if (terrain != null) break; }
-            if (terrain == null) return;
+            Terrain terrain = FindTerrain(scene);
 
             _busy = true;
             var def = session.Config.starterShip;
@@ -113,16 +179,20 @@ namespace DMI.Xenoarch.Exploration
             if (rules.angles <= 0) rules = LandingZonePicker.Rules.Default;
             float footprint = def != null && def.shuttleFootprint > 0f ? def.shuttleFootprint : Mathf.Max(3f, LandingZonePicker.FootprintOf(local));
             rules.footprint = footprint;
-            var height = LandingZonePicker.ForTerrain(terrain);
+            var height = LandingZonePicker.ForWorld(terrain, holder != null ? holder.transform : null);
 
             var spawnDefault = PlayerSpawnPoint.Find(PlayerSpawnIds.Default);
-            Vector3 target = site != null ? site.position : spawnDefault != null ? spawnDefault.transform.position : terrain.transform.position + terrain.terrainData.size * 0.5f;
+            Vector3 target;
+            if (site != null && site.hasLandingHint) target = site.landingHint;
+            else if (site != null) target = site.position;
+            else if (spawnDefault != null) target = spawnDefault.transform.position;
+            else if (terrain != null && terrain.terrainData != null) target = terrain.transform.position + terrain.terrainData.size * 0.5f;
+            else target = Vector3.zero;
             Vector3 pos; float yaw; string how;
             var marker = LandingZone.Find(siteId);
             if (marker != null)
             {
                 pos = marker.transform.position;
-                if (height(pos.x, pos.z, out float gy, out _)) pos.y = gy;
                 yaw = marker.transform.eulerAngles.y;
                 how = $"marker '{marker.name}'";
             }
@@ -135,10 +205,16 @@ namespace DMI.Xenoarch.Exploration
                 else
                 {
                     pos = target + Vector3.right * (footprint + 6f);
-                    if (height(pos.x, pos.z, out float gy, out _)) pos.y = gy;
                     yaw = 0f; how = "no flat ground found, fallback beside the target";
                 }
             }
+            if (!PlaceOnGround(height, pos, 200f, out var groundedPos))
+            {
+                if (!PlaceOnGround(height, target, 400f, out groundedPos))
+                    Debug.LogWarning($"[Xenoarch] Shuttle: no valid ground near {(site != null ? site.Id : "the landing target")} in {scene.name}; using the last fallback");
+                else how += ", snapped to valid ground near the site";
+            }
+            pos = groundedPos;
 
             if (holder != null)
             {
@@ -175,7 +251,9 @@ namespace DMI.Xenoarch.Exploration
         /// <summary>Switches on the preplaced zone for the chosen site; false if the scene has none usable.</summary>
         bool LandPreplaced(LandingZoneSet set, Scene scene, string siteId, bool arriving)
         {
-            var slot = set.Activate(siteId);
+            // Exact site match only. The shared procedural template's base/first pad is often off the generated terrain
+            // and is not the chosen site, so an unmatched siteId must use the runtime picker at the site's landing hint.
+            var slot = string.IsNullOrEmpty(siteId) ? set.Activate(siteId) : set.ActivateExact(siteId);
             if (slot == null || slot.shuttle == null) { _preplaced = null; return false; }
             _preplaced = set;
             UsePreplaced(slot);
@@ -214,7 +292,7 @@ namespace DMI.Xenoarch.Exploration
             t = 0f;
             while (SceneLoader.Busy && t < 240f) { t += Time.unscaledDeltaTime; yield return null; }
             yield return new WaitForSecondsRealtime(0.5f);
-            if (_scene.IsValid() && _scene.isLoaded) Verify(LandingZonePicker.ForTerrain(_terrain));
+            if (_scene.IsValid() && _scene.isLoaded) Verify(WorldHeight(Shuttle != null ? Shuttle.transform : null));
         }
 
         /// <summary>Rest the lowest visible gear (or hull) renderer on the highest ground under the craft, measured from
@@ -230,7 +308,13 @@ namespace DMI.Xenoarch.Exploration
             var p = holder.position; float ground = float.NegativeInfinity;
             if (height(p.x, p.z, out float gy, out _)) ground = gy;
             foreach (var g in _gears) if (g != null) { var gp = g.position; if (height(gp.x, gp.z, out float y, out _)) ground = Mathf.Max(ground, y); }
-            if (float.IsInfinity(ground)) return;
+            if (float.IsInfinity(ground))
+            {
+                if (!PlaceOnGround(height, p, 200f, out var safe)) return;
+                holder.position = new Vector3(safe.x, holder.position.y, safe.z);
+                p = holder.position;
+                ground = safe.y;
+            }
             holder.position = p + Vector3.up * (ground - minY);
         }
 
@@ -246,20 +330,53 @@ namespace DMI.Xenoarch.Exploration
         /// <summary>Dev summon: moves the active shuttle next to the player (runtime only; the scene is untouched).</summary>
         public void Summon()
         {
+            if (CallToPlayer(dev: true, out var message))
+                DMI.Xenoarch.UI.Toast.Show(message, 2.5f);
+            else
+                Debug.LogWarning("[Xenoarch] Summon shuttle: " + (message ?? "failed"));
+        }
+
+        [Tooltip("Seconds between Emergency Shuttle Call uses from the inventory.")]
+        public float emergencyCooldown = 90f;
+        float _emergencyReadyAt;
+
+        public float EmergencyCooldownRemaining => Mathf.Max(0f, _emergencyReadyAt - Time.unscaledTime);
+
+        /// <summary>Player emergency call: land the shuttle on valid ground near the player. Honours the cooldown.</summary>
+        public bool CallEmergency(out string message) => CallToPlayer(dev: false, out message);
+
+        bool CallToPlayer(bool dev, out string message)
+        {
+            message = null;
+            if (SceneLoader.Busy) { message = "Can't call the shuttle while a scene is loading."; return false; }
+            if (!dev)
+            {
+                float left = EmergencyCooldownRemaining;
+                if (left > 0.5f) { message = $"Emergency shuttle call is cooling down ({left:0}s)."; return false; }
+            }
             var rig = PlayerRigLocator.Find();
-            if (rig == null) return;
-            if (Shuttle == null) { Land(SceneManager.GetActiveScene(), false); if (Shuttle == null) { Debug.LogWarning("[Xenoarch] Summon shuttle: nothing to summon in this scene"); return; } }
-            if (_terrain == null) foreach (var r in SceneManager.GetActiveScene().GetRootGameObjects()) { _terrain = r.GetComponentInChildren<Terrain>(); if (_terrain != null) break; }
-            var height = LandingZonePicker.ForTerrain(_terrain);
+            if (rig == null) { message = "Can't call the shuttle: no player position."; return false; }
+            if (Shuttle == null)
+            {
+                Land(SceneManager.GetActiveScene(), false);
+                if (Shuttle == null) { message = "No shuttle is available in this area."; return false; }
+            }
+            var height = WorldHeight(Shuttle.transform);
             var fwd = rig.Root.forward; fwd.y = 0f; if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
             float fp = _footprint > 0f ? _footprint : 8f;
-            var pos = rig.Root.position + fwd.normalized * (fp + 4f);
-            if (height(pos.x, pos.z, out float gy, out _)) pos.y = gy;
+            var around = rig.Root.position + fwd.normalized * (fp + 4f);
+            if (!PlaceOnGround(height, around, 80f, out var pos) && !PlaceOnGround(height, rig.Root.position, 160f, out pos))
+            {
+                message = "No valid ground near you for the shuttle to land.";
+                return false;
+            }
             Shuttle.SetActive(true);
             Shuttle.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rig.Root.eulerAngles.y + 90f, 0f));
             GroundByBounds(Shuttle.transform, height);
-            LogPlaced(Shuttle, "dev summon (F7)");
-            UI.Toast.Show("Shuttle summoned (dev F7).", 2.5f);
+            if (!dev) _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
+            LogPlaced(Shuttle, dev ? "dev summon (F7)" : "emergency call");
+            message = dev ? "Shuttle summoned (dev F7)." : "Shuttle inbound. Landing near your position.";
+            return true;
         }
 
         readonly List<Transform> _gears = new List<Transform>();
@@ -332,8 +449,9 @@ namespace DMI.Xenoarch.Exploration
             {
                 if (holder == null) { Debug.LogWarning("[Xenoarch] Shuttle watchdog: the preplaced shuttle was destroyed; using the runtime fallback"); _preplaced = null; Land(_scene, false); return; }
                 if (!holder.activeInHierarchy) { _preplaced.Active?.gameObject.SetActive(true); holder.SetActive(true); LogPlaced(holder, "watchdog: re-enabled the preplaced shuttle"); }
-                return;
+                // Fall through to re-ground / relocate if the pad is off the terrain.
             }
+            else 
             if (holder == null)
             {
                 Debug.LogWarning("[Xenoarch] Shuttle watchdog: the landed shuttle was destroyed; landing it again");
@@ -351,7 +469,17 @@ namespace DMI.Xenoarch.Exploration
                 Vector3 p = rig.Root.position, s = holder.transform.position;
                 if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(s.x, s.z)) > maxPlayerDistance) { EnsureNearPlayer(holder, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "moved to the player"; }
             }
-            if (height(holder.transform.position.x, holder.transform.position.z, out float gy, out _) && holder.transform.position.y < gy + _groundOffset - 1.5f)
+            var hp = holder.transform.position;
+            if (!height(hp.x, hp.z, out float gy, out _))
+            {
+                if (PlaceOnGround(height, hp, 200f, out var safe))
+                {
+                    holder.transform.position = safe;
+                    GroundByBounds(holder.transform, height);
+                    fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "moved onto valid ground";
+                }
+            }
+            else if (hp.y < gy + _groundOffset - 1.5f)
             { GroundByBounds(holder.transform, height); fixedWhat = (fixedWhat != null ? fixedWhat + ", " : "") + "re-grounded"; }
             if (fixedWhat != null) LogPlaced(holder, "watchdog: " + fixedWhat);
         }
@@ -385,7 +513,7 @@ namespace DMI.Xenoarch.Exploration
             {
                 var fwd = rig.Root.forward; fwd.y = 0f; if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
                 pos = p + Quaternion.Euler(0f, 60f, 0f) * fwd.normalized * (_footprint + 4f);
-                if (height(pos.x, pos.z, out float gy, out _)) pos.y = gy;
+                if (!PlaceOnGround(height, pos, 120f, out pos)) PlaceOnGround(height, p, 160f, out pos);
                 yaw = rig.Root.eulerAngles.y + 180f;
             }
             holder.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f));

@@ -20,6 +20,22 @@ MonoBehaviour:
   comForeAft: 0
   spring: 200000
   damper: 5500
+  damperRatio: 0.85
+  adaptToPlanet: 1
+  minGravityScale: 0.15
+  maxGravityScale: 2.5
+  minWheelLoad: 3.5
+  iceGrip: 0.55
+  sandGrip: 0.75
+  rockGrip: 1.05
+  coldGripBelowC: -80
+  coldGrip: 0.7
+  hotGripAboveC: 80
+  hotGrip: 0.85
+  iceRoll: 0.04
+  sandRoll: 0.08
+  defaultRoll: 0.015
+  iceSpeed: 0.8
   travel: 0.28
   targetPosition: 0.45
   forceAppPointDistance: 0

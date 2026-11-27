@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DMI.Xenoarch.Galaxy;
+using DMI.Xenoarch.World;
 using DMI.Xenoarch.Player;
 using DMI.Xenoarch.UI;
 using UnityEngine;
@@ -24,6 +25,10 @@ namespace DMI.Xenoarch.Vehicles
         float _settleTimer;
         float _throttleSmooth;
         float _prevFwdVel;
+        float _speedScale = 1f;
+        float _rollDrag;
+        float _appliedSpring, _appliedDamper;
+        string _adaptKey;
         bool _pivotsBound;
         readonly List<Corner> _corners = new List<Corner>();
 
@@ -135,10 +140,54 @@ namespace DMI.Xenoarch.Vehicles
         {
             var p = _profile;
             if (p == null) return;
+            AdaptToPlanet(true);
+        }
+
+        /// <summary>
+        /// Scale spring/damper/grip/speed for the current gravity, terrain type and temperature so the rover stays
+        /// planted on every body. The authored damper is a floor; damperRatio (default 0.85 of critical) stops pogo-bounce
+        /// even when the asset damper is too soft for the spring (t245u).
+        /// </summary>
+        void AdaptToPlanet(bool force = false)
+        {
+            var p = _profile;
+            if (p == null) return;
+            float g = PlanetGravity();
+            var env = FindAnyObjectByType<EnvironmentDirector>() is { Current: var cur } ? cur : null;
+            var surf = FindAnyObjectByType<ProceduralSurface>();
+            var ptype = surf != null && surf.Recipe != null ? surf.Recipe.type : (ProceduralPlanetType?)null;
+            float temp = env != null ? env.surfaceTemperatureC : 15f;
+            string key = $"{g:0.00}|{ptype}|{temp:0}";
+            if (!force && key == _adaptKey) return;
+            _adaptKey = key;
+
+            float gScale = 1f, grip = 1f, roll = p.defaultRoll, speed = 1f;
+            if (p.adaptToPlanet)
+            {
+                gScale = Mathf.Clamp(g / 9.81f, Mathf.Max(0.05f, p.minGravityScale), Mathf.Max(p.minGravityScale, p.maxGravityScale));
+                if (ptype == ProceduralPlanetType.Ice || temp <= p.coldGripBelowC) { grip *= p.iceGrip; roll = p.iceRoll; speed *= p.iceSpeed > 0.05f ? p.iceSpeed : 0.8f; }
+                else if (ptype == ProceduralPlanetType.Desert) { grip *= p.sandGrip; roll = p.sandRoll; }
+                else if (ptype == ProceduralPlanetType.Volcanic || ptype == ProceduralPlanetType.Barren) grip *= p.rockGrip;
+                if (temp <= p.coldGripBelowC) grip *= p.coldGrip;
+                else if (temp >= p.hotGripAboveC) grip *= p.hotGrip;
+                if (env != null)
+                {
+                    string id = (env.Id ?? env.name ?? "").ToLowerInvariant();
+                    if (id.Contains("moon") || id.Contains("icy")) { grip *= Mathf.Min(1f, p.iceGrip + 0.2f); roll = Mathf.Max(roll, p.iceRoll * 0.6f); }
+                    else if (id.Contains("mars")) grip *= p.sandGrip;
+                }
+            }
+            grip = Mathf.Clamp(grip, 0.15f, 3f);
+            _speedScale = Mathf.Clamp(speed, 0.3f, 1.5f);
+            _rollDrag = Mathf.Max(0f, roll);
+
             int n = Mathf.Max(1, WheelCount());
             float sprung = mass / n;
-            float spring = p.spring > 0f ? p.spring : sprung * 90f;
-            float damper = p.damper > 0f ? p.damper : 0.4f * 2f * Mathf.Sqrt(spring * sprung);
+            float spring = (p.spring > 0f ? p.spring : sprung * 90f) * gScale;
+            float damper = (p.damper > 0f ? p.damper : 0f) * gScale;
+            float critical = 2f * Mathf.Sqrt(Mathf.Max(1f, spring * sprung));
+            if (p.damperRatio > 0.01f) damper = Mathf.Max(damper, p.damperRatio * critical);
+            _appliedSpring = spring; _appliedDamper = damper;
             foreach (var w in wheels)
             {
                 if (w == null || w.collider == null) continue;
@@ -148,6 +197,17 @@ namespace DMI.Xenoarch.Vehicles
                     damper = damper,
                     targetPosition = Mathf.Clamp01(p.targetPosition)
                 };
+            }
+            // Grip: re-apply stiffness scaled by the terrain/temperature factor.
+            foreach (var w in wheels)
+            {
+                if (w == null || w.collider == null) continue;
+                var side = w.collider.sidewaysFriction;
+                side.stiffness = p.sidewaysStiffness * grip;
+                w.collider.sidewaysFriction = side;
+                var fw = w.collider.forwardFriction;
+                fw.stiffness = p.forwardStiffness * grip;
+                w.collider.forwardFriction = fw;
             }
         }
 
@@ -358,9 +418,17 @@ namespace DMI.Xenoarch.Vehicles
             float g = PlanetGravity();
             bool grounded = AnyWheelGrounded();
             var p = _profile;
+            AdaptToPlanet();
             _rb.AddForce(Vector3.down * g, ForceMode.Acceleration);
             if (grounded && p != null && p.extraDownforceG > 0f)
                 _rb.AddForce(Vector3.down * (g * p.extraDownforceG), ForceMode.Acceleration);
+            if (grounded && p != null && p.minWheelLoad > 0f && g < p.minWheelLoad)
+                _rb.AddForce(Vector3.down * (p.minWheelLoad - g), ForceMode.Acceleration);
+            if (grounded && _rollDrag > 0f)
+            {
+                var rollPlanar = _rb.linearVelocity; rollPlanar.y = 0f;
+                _rb.AddForce(-rollPlanar * _rollDrag, ForceMode.Acceleration);
+            }
 
             var vel = _rb.linearVelocity;
             var planar = vel; planar.y = 0f;
@@ -481,7 +549,8 @@ namespace DMI.Xenoarch.Vehicles
             var p = _profile;
             var right = transform.right;
             float pitchRate = Vector3.Dot(_rb.angularVelocity, right); // + = nose up
-            float damp = p != null ? p.antiPitch : 18f;
+            float gScale = p != null && p.adaptToPlanet ? Mathf.Clamp(PlanetGravity() / 9.81f, Mathf.Max(0.05f, p.minGravityScale), Mathf.Max(p.minGravityScale, p.maxGravityScale)) : 1f;
+            float damp = (p != null ? p.antiPitch : 18f) * gScale;
             if (damp > 0f) _rb.AddTorque(-right * pitchRate * damp, ForceMode.Acceleration);
 
             float dt = Time.fixedDeltaTime;

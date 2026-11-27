@@ -45,10 +45,63 @@ namespace DMI.Xenoarch.Exploration
                 var tp = t.transform.position; var size = t.terrainData.size;
                 float u = (x - tp.x) / size.x, v = (z - tp.z) / size.z;
                 if (u < 0f || v < 0f || u > 1f || v > 1f) return false;
+                if (IsHole(t, u, v)) return false;
                 y = tp.y + t.SampleHeight(new Vector3(x, 0f, z));
                 n = t.terrainData.GetInterpolatedNormal(u, v);
                 return true;
             };
+        }
+
+        /// <summary>Terrain if the point is on it and not a hole, otherwise a downward raycast (mesh / leftover colliders).</summary>
+        public static HeightFn ForWorld(Terrain t, Transform ignore = null)
+        {
+            var terr = ForTerrain(t);
+            return (float x, float z, out float y, out Vector3 n) =>
+            {
+                if (terr(x, z, out y, out n)) return true;
+                y = 0f; n = Vector3.up;
+                var origin = new Vector3(x, 800f, z);
+                var hits = Physics.RaycastAll(origin, Vector3.down, 1600f, ~0, QueryTriggerInteraction.Ignore);
+                System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+                foreach (var h in hits)
+                {
+                    if (h.collider == null) continue;
+                    if (ignore != null && h.collider.transform.IsChildOf(ignore)) continue;
+                    if (Vector3.Angle(h.normal, Vector3.up) > 75f) continue;
+                    y = h.point.y; n = h.normal;
+                    return true;
+                }
+                return false;
+            };
+        }
+
+        public static bool IsHole(Terrain t, float u, float v)
+        {
+            if (t == null || t.terrainData == null) return false;
+            int res = t.terrainData.holesResolution;
+            if (res <= 0) return false;
+            int hx = Mathf.Clamp(Mathf.FloorToInt(u * res), 0, res - 1);
+            int hz = Mathf.Clamp(Mathf.FloorToInt(v * res), 0, res - 1);
+            return t.terrainData.IsHole(hx, hz);
+        }
+
+        /// <summary>Nearest valid ground around <paramref name="around"/>, or false if nothing is within maxDist.</summary>
+        public static bool FindOnGround(HeightFn height, Vector3 around, float maxDist, out Vector3 pos)
+        {
+            pos = around;
+            if (height == null) return false;
+            if (height(around.x, around.z, out float y, out _)) { pos = new Vector3(around.x, y, around.z); return true; }
+            for (float d = 4f; d <= Mathf.Max(8f, maxDist); d += 4f)
+            {
+                int n = Mathf.Max(8, (int)(d * 0.6f));
+                for (int i = 0; i < n; i++)
+                {
+                    float a = (i + 0.5f) * Mathf.PI * 2f / n;
+                    float x = around.x + Mathf.Sin(a) * d, z = around.z + Mathf.Cos(a) * d;
+                    if (height(x, z, out y, out _)) { pos = new Vector3(x, y, z); return true; }
+                }
+            }
+            return false;
         }
 
         /// <param name="target">Dig site centre (or spawn point for the base zone).</param>
