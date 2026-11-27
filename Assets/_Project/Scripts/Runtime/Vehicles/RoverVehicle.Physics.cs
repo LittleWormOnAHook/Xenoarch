@@ -14,6 +14,7 @@ namespace DMI.Xenoarch.Vehicles
     public sealed partial class RoverVehicle
     {
         public static bool AnySeated { get; private set; }
+        public static RoverVehicle SeatedRover { get; private set; }
         public static bool ChaseActive { get; private set; }
         public static bool ThirdPersonView => ThirdPerson;
 
@@ -21,6 +22,8 @@ namespace DMI.Xenoarch.Vehicles
         RoverPhysicsProfile _profile;
         int _zoomStep = 1;
         float _settleTimer;
+        float _throttleSmooth;
+        float _prevFwdVel;
         bool _pivotsBound;
         readonly List<Corner> _corners = new List<Corner>();
 
@@ -42,6 +45,7 @@ namespace DMI.Xenoarch.Vehicles
             AlignWheelCollidersToVisuals();
             BindPivots();
             StartParkedPhysics(true);
+            ApplyPresence(false);
         }
 
         void ApplyProfile()
@@ -62,7 +66,8 @@ namespace DMI.Xenoarch.Vehicles
             if (_rb != null)
             {
                 _rb.mass = mass;
-                _rb.angularDamping = 1.2f;
+                _rb.angularDamping = p.angularDamping;
+                ApplyPitchInertia();
                 _rb.maxAngularVelocity = 3f;
             }
             float r = AverageWorldRadius();
@@ -150,7 +155,7 @@ namespace DMI.Xenoarch.Vehicles
         {
             var p = _profile;
             if (p == null) { ApplyHandling(); return; }
-            if (_rb != null) { _rb.mass = mass; _rb.angularDamping = 1.2f; _rb.maxAngularVelocity = 3f; }
+            if (_rb != null) { _rb.mass = mass; _rb.angularDamping = p != null ? p.angularDamping : 2.2f; _rb.maxAngularVelocity = 3f; ApplyPitchInertia(); }
             foreach (var w in wheels)
             {
                 if (w == null || w.collider == null) continue;
@@ -242,10 +247,34 @@ namespace DMI.Xenoarch.Vehicles
         void ApplyCom()
         {
             if (_rb == null) return;
-            var comPos = com != null ? com.position : transform.position;
-            float down = _profile != null ? _profile.comDown : 0.3f;
-            comPos += Vector3.down * down;
-            _rb.centerOfMass = transform.InverseTransformPoint(comPos);
+            // Midway between the axles, then lowered and optionally shifted fore/aft (t224u).
+            Vector3 mid = Vector3.zero; int n = 0;
+            foreach (var w in wheels)
+            {
+                if (w == null || w.collider == null) continue;
+                mid += w.collider.transform.position;
+                n++;
+            }
+            if (n > 0) mid /= n;
+            else mid = com != null ? com.position : transform.position;
+            float down = _profile != null ? _profile.comDown : 0.55f;
+            float fore = _profile != null ? _profile.comForeAft : 0f;
+            mid += Vector3.down * down;
+            mid += Fwd * fore;
+            _rb.centerOfMass = transform.InverseTransformPoint(mid);
+        }
+
+        void ApplyPitchInertia()
+        {
+            if (_rb == null) return;
+            float mul = _profile != null ? _profile.pitchInertia : 1.6f;
+            _rb.ResetInertiaTensor();
+            if (mul > 1.01f)
+            {
+                var it = _rb.inertiaTensor;
+                it.x *= mul;
+                _rb.inertiaTensor = it;
+            }
         }
 
         void ApplyDriveState(bool driving)
@@ -365,6 +394,8 @@ namespace DMI.Xenoarch.Vehicles
             if (vel.y < -maxDown) vel.y = -maxDown;
             _rb.linearVelocity = vel;
 
+            ApplyAntiPitch(grounded);
+
             bool parked = _state != State.Driving || !_powered;
             if (parked)
             {
@@ -444,10 +475,43 @@ namespace DMI.Xenoarch.Vehicles
             }
         }
 
+        void ApplyAntiPitch(bool grounded)
+        {
+            if (!grounded || _rb == null || _state != State.Driving || !_powered) { _prevFwdVel = _rb != null ? Vector3.Dot(_rb.linearVelocity, Fwd) : 0f; return; }
+            var p = _profile;
+            var right = transform.right;
+            float pitchRate = Vector3.Dot(_rb.angularVelocity, right); // + = nose up
+            float damp = p != null ? p.antiPitch : 18f;
+            if (damp > 0f) _rb.AddTorque(-right * pitchRate * damp, ForceMode.Acceleration);
+
+            float dt = Time.fixedDeltaTime;
+            float vNow = Vector3.Dot(_rb.linearVelocity, Fwd);
+            float longAcc = dt > 1e-5f ? (vNow - _prevFwdVel) / dt : 0f;
+            _prevFwdVel = vNow;
+            float accMag = Mathf.Min(Mathf.Abs(longAcc), 25f);
+            bool braking = (vNow > 0.2f && longAcc < -0.4f) || (vNow < -0.2f && longAcc > 0.4f);
+            bool accel = !braking && accMag > 0.4f && Mathf.Abs(vNow) > 0.05f;
+            float noseDown = 0f;
+            if (accel) noseDown += (p != null ? p.antiSquat : 10f) * accMag;
+            if (braking)
+            {
+                float dive = p != null ? p.antiDive : 16f;
+                // Always a little nose-down on the brakes (real dive). If the nose is rising, fight it hard.
+                noseDown += dive * 0.35f * accMag;
+                if (pitchRate > 0f) noseDown += dive * pitchRate;
+            }
+            if (noseDown > 0f) _rb.AddTorque(-right * noseDown, ForceMode.Acceleration);
+        }
+
         void HideDriverArms()
         {
             var arms = _player != null ? _player.GetComponentInChildren<FirstPersonArms>(true) : null;
-            if (arms != null) arms.ForcedHidden = _state == State.Driving && ThirdPerson;
+            if (arms == null) return;
+            bool tool = false;
+            var held = _player.GetComponentInChildren<HeldToolVisuals>(true);
+            if (held != null) tool = held.HasTool;
+            // 3rd person: always hide arms and the held tool. 1st person: show them only while a tool is equipped.
+            arms.ForcedHidden = _state == State.Driving && (ThirdPerson || !tool);
         }
 
         void ClearDriverArms()
@@ -495,6 +559,7 @@ namespace DMI.Xenoarch.Vehicles
         void RefreshSeatedFlags()
         {
             AnySeated = Live && _state == State.Driving;
+            SeatedRover = AnySeated ? this : (SeatedRover == this ? null : SeatedRover);
             ChaseActive = AnySeated && ThirdPerson;
         }
     }

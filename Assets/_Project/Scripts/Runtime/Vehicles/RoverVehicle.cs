@@ -430,6 +430,7 @@ namespace DMI.Xenoarch.Vehicles
         IEnumerator EnterRoutine()
         {
             _state = State.Entering;
+            ApplyPresence(true);
             var p = _player;
             Vector3 start = p.transform.position;
             float yaw0 = p.transform.eulerAngles.y, pitch0 = p.Pitch, eye0 = p.StandingEyeHeight;
@@ -469,7 +470,7 @@ namespace DMI.Xenoarch.Vehicles
             ApplySeatLookForCamera();
             RefreshSeatedFlags();
             _seatedAt = Time.unscaledTime;
-            InteractionPromptHud.IdlePrompt = "Exit Rover";
+            InteractionPromptHud.IdlePrompt = null; // hint bar already has E to exit; no world/idle popup (t222u)
             PowerUp();
         }
 
@@ -505,6 +506,7 @@ namespace DMI.Xenoarch.Vehicles
         {
             _state = State.Exiting;
             InteractionPromptHud.IdlePrompt = null;
+            ApplyPresence(false);
             RestoreCamera();
             SetDynamic(false);
             _powered = false;
@@ -549,6 +551,7 @@ namespace DMI.Xenoarch.Vehicles
             SetDynamic(false);
             _powered = false;
             if (_power != null) _power.PowerOff();
+            ApplyPresence(false);
             ClearDriverArms();
             HideBody(_player, false);
             InteractionPromptHud.IdlePrompt = null;
@@ -557,7 +560,7 @@ namespace DMI.Xenoarch.Vehicles
             RefreshSeatedFlags();
         }
 
-        void OnDisable() { if (Live && _state != State.Parked && _player != null) { ClearDriverArms(); if (_player.Seated) _player.EndSeat(); Release(); } AnySeated = false; ChaseActive = false; }
+        void OnDisable() { if (Live && _state != State.Parked && _player != null) { ClearDriverArms(); if (_player.Seated) _player.EndSeat(); Release(); } if (SeatedRover == this) SeatedRover = null; AnySeated = false; ChaseActive = false; if (Live) ApplyPresence(false); }
 
         void HideBody(FirstPersonController p, bool hide)
         {
@@ -615,12 +618,38 @@ namespace DMI.Xenoarch.Vehicles
             float v = Vector3.Dot(_rb.linearVelocity, Fwd);
             bool dry = fuel <= 0.01f;
             if (dry) throttle = 0f;
-            bool reversing = Mathf.Abs(throttle) > 0.05f && Mathf.Abs(v) > 0.5f && Mathf.Sign(throttle) != Mathf.Sign(v);
             float cap = boosting ? boostSpeed : maxSpeed;
             float limit = throttle >= 0f ? cap : maxSpeed / 3f;
-            // Motor sign is flipped so W (positive throttle) drives along visual / console forward.
-            float motor = reversing || Mathf.Abs(v) > limit || dry ? 0f : -throttle * _motorTorque * (boosting ? 1.35f : 1f);
-            float brake = hand ? _brakeTorque * 1.3f : reversing ? _brakeTorque * Mathf.Abs(throttle) : Mathf.Abs(throttle) < 0.05f ? _brakeTorque * 0.05f : 0f;
+            float rise = _profile != null ? Mathf.Max(0.05f, _profile.throttleRise) : 0.45f;
+            float fall = _profile != null ? Mathf.Max(0.05f, _profile.throttleFall) : 0.22f;
+            float rate = Mathf.Abs(throttle) >= Mathf.Abs(_throttleSmooth) ? 1f / rise : 1f / fall;
+            _throttleSmooth = Mathf.MoveTowards(_throttleSmooth, throttle, rate * dt);
+            float engage = _profile != null ? Mathf.Max(0.05f, _profile.reverseEngageSpeed) : 0.35f;
+            bool almostStopped = Mathf.Abs(v) <= engage;
+            // Opposite throttle, or the handbrake, only applies brake torque until nearly stopped — never reverse drive (t225u).
+            bool opposing = !almostStopped && Mathf.Abs(throttle) > 0.05f && Mathf.Sign(throttle) != Mathf.Sign(v);
+            bool coast = Mathf.Abs(throttle) < 0.05f;
+            float motor = 0f, brake = 0f;
+            if (hand || opposing)
+            {
+                motor = 0f;
+                brake = _brakeTorque * (hand ? 1.3f : Mathf.Abs(throttle));
+                _throttleSmooth = 0f;
+            }
+            else if (coast)
+            {
+                motor = 0f;
+                brake = _brakeTorque * 0.05f;
+            }
+            else if (dry || Mathf.Abs(v) > limit)
+            {
+                motor = 0f;
+            }
+            else
+            {
+                // Motor sign is flipped so W (positive throttle) drives along visual / console forward.
+                motor = -_throttleSmooth * _motorTorque * (boosting ? 1.35f : 1f);
+            }
             float steerDeg = steer * Mathf.Lerp(maxSteer, highSpeedSteer, Mathf.Clamp01(Mathf.Abs(v) / Mathf.Max(0.01f, cap)));
             foreach (var w in wheels)
             {
@@ -651,6 +680,7 @@ namespace DMI.Xenoarch.Vehicles
             if (!Live) return;
             SyncSuspensionAndWheels();
             HideDriverArms();
+            TickPresence();
             RefreshSeatedFlags();
             if (_state == State.Driving && _player != null && _player.Seated && seat != null)
             {

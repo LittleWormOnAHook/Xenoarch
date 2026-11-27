@@ -16,8 +16,9 @@ MonoBehaviour:
   extraDownforceG: 0.35
   downforceCoeff: 0.12
   mass: 2800
-  comDown: 0.3
-  spring: 70000
+  comDown: 0.55
+  comForeAft: 0
+  spring: 200000
   damper: 5500
   travel: 0.28
   targetPosition: 0.45
@@ -28,10 +29,18 @@ MonoBehaviour:
   boostSpeedKph: 80
   acceleration: 5.5
   brakeDecel: 12
-  maxSteer: 30
+  maxSteer: 90
   highSpeedSteer: 8
   boostSeconds: 3.5
   boostRechargeSeconds: 7
+  throttleRise: 0.45
+  throttleFall: 0.22
+  reverseEngageSpeed: 0.35
+  antiPitch: 18
+  antiSquat: 10
+  antiDive: 16
+  pitchInertia: 1.6
+  angularDamping: 2.2
   antiFlip: 16
   airborneDamping: 1.6
   maxAirUpSpeed: 5.5

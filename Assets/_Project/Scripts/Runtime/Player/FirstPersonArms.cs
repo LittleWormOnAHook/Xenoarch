@@ -167,7 +167,14 @@ namespace DMI.Xenoarch.Player
                 if (_rightLayer > 0) animator.SetLayerWeight(_rightLayer, _held[1] ? _weight[1] : 0f);
             }
             bool anyUp = !ForcedHidden && (_weight[0] > 0.001f || _weight[1] > 0.001f);
-            if (anyUp != _visible) { _visible = anyUp; foreach (var r in _renderers) if (r != null) r.enabled = anyUp; }
+            _visible = anyUp;
+            // Re-collect every frame so a held tool spawned after Awake is shown or hidden with the arms.
+            if (_arms != null)
+            {
+                _renderers.Clear();
+                foreach (var r in _arms.GetComponentsInChildren<Renderer>(true)) if (r != null) _renderers.Add(r);
+            }
+            foreach (var r in _renderers) if (r != null) r.enabled = anyUp;
 
             if (animator == null || controller == null || !anyUp) return;
             float s = controller.PlanarSpeed;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Interaction;
 using DMI.Xenoarch.Inventory;
+using DMI.Xenoarch.Vehicles;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -104,7 +105,7 @@ namespace DMI.Xenoarch.UI
 
             string prompt = interactor != null ? interactor.Prompt : null;
             bool targeted = !string.IsNullOrEmpty(prompt);
-            if (!targeted && !UIState.BlocksGameplay) prompt = IdlePrompt;
+            if (!targeted && !UIState.BlocksGameplay && !RoverVehicle.AnySeated) prompt = IdlePrompt;
             bool hasPrompt = !string.IsNullOrEmpty(prompt);
             XenoarchUI.Show(_prompt, hasPrompt);
             _crosshair?.EnableInClassList("xa-crosshair--target", targeted);

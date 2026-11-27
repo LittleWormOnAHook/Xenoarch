@@ -39,12 +39,20 @@ namespace DMI.Xenoarch.Player
             SetHeld(false);
         }
 
+        public bool HasTool => CurrentId() != null;
+
         void LateUpdate()
         {
             if (_arms == null) _arms = GetComponentInChildren<FirstPersonArms>(true);
             if (_dig == null) _dig = GetComponent<DigTool>();
             if (_probe == null) _probe = GetComponent<DepthProbeTool>();
             if (_scanner == null) _scanner = GetComponentInChildren<SurfaceScannerTool>(true);
+            if (_arms != null && _arms.ForcedHidden)
+            {
+                Show(null);
+                foreach (var inst in _instances.Values) if (inst != null) inst.SetActive(false);
+                return;
+            }
             Show(CurrentId());
         }
 

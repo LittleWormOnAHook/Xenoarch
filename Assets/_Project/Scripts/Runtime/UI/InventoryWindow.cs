@@ -327,9 +327,16 @@ namespace DMI.Xenoarch.UI
 
         VisualElement Tile(ItemStack st, int index)
         {
-            var t = new Button(() => { if (!st.IsEmpty) { _selItem = st.itemId; Refresh(); } }) { text = "" };
+            var t = new VisualElement();
             var inv0 = Session.Inventory;
-            Drag.Source(t, () => st.IsEmpty ? null : new DragDrop.Payload { kind = "backpack", index = index, itemId = st.itemId, container = inv0, icon = Def(st.itemId)?.icon });
+            string itemId = st.itemId; bool empty = st.IsEmpty;
+            Drag.Source(t, () => empty ? null : new DragDrop.Payload { kind = "backpack", index = index, itemId = itemId, container = inv0, icon = Def(itemId)?.icon });
+            t.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (e.button != 0 || Drag.Dragging || empty) return;
+                _selItem = itemId;
+                Refresh();
+            });
             DragDrop.Target(t, p => p.kind == "backpack" || p.kind == "hotbar", p =>
             {
                 if (p.kind == "backpack") inv0.Swap(p.index, index);

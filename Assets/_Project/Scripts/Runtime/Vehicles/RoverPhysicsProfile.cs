@@ -21,8 +21,10 @@ namespace DMI.Xenoarch.Vehicles
 
         [Header("Mass and centre")]
         public float mass = 2800f;
-        [Tooltip("Metres to drop the centre of mass below the COM marker.")]
-        public float comDown = 0.30f;
+        [Tooltip("Metres to drop the centre of mass below the axle midpoint (0-2, wide range). Lower = less pitch.")]
+        public float comDown = 0.55f;
+        [Tooltip("Metres to shift the centre of mass along forward from the axle midpoint (negative = toward the rear). -2 to 2.")]
+        public float comForeAft = 0f;
 
         [Header("Suspension (world metres / N / N-s)")]
         public float spring = 70000f;
@@ -47,8 +49,26 @@ namespace DMI.Xenoarch.Vehicles
         public float highSpeedSteer = 8f;
         public float boostSeconds = 3.5f;
         public float boostRechargeSeconds = 7f;
+        [Tooltip("Seconds to ease the throttle up to the stick/key value (0.05-2). Smooths squat on takeoff.")]
+        public float throttleRise = 0.45f;
+        [Tooltip("Seconds to ease the throttle back to zero (0.05-2).")]
+        public float throttleFall = 0.22f;
+        [Tooltip("Do not apply reverse/forward drive torque until speed along the body is below this (m/s). Brakes only until then.")]
+        public float reverseEngageSpeed = 0.35f;
 
         [Header("Air / bounce")]
+        [Header("Pitch (wide ranges; 0 disables each one)")]
+        [Tooltip("Damps pitch rate (0-40). Stops the ends from pumping up when you accelerate or brake.")]
+        public float antiPitch = 18f;
+        [Tooltip("Nose-down torque while accelerating, as a multiplier of longitudinal accel (0-40). Kills wheelies.")]
+        public float antiSquat = 10f;
+        [Tooltip("On the brakes: stops the front lifting and leaves only a mild nose-dive (0-40). Higher = firmer, less pitch.")]
+        public float antiDive = 16f;
+        [Tooltip("Multiplies pitch inertia (1-4). Higher = the nose is slower to rise or dip.")]
+        public float pitchInertia = 1.6f;
+        [Tooltip("Rigidbody angular damping (0-8). Was 1.2.")]
+        public float angularDamping = 2.2f;
+
         [Tooltip("Anti-flip uprighting torque.")]
         public float antiFlip = 16f;
         [Tooltip("Extra velocity damping per second while airborne (not a launch killer on jumps, just air control).")]

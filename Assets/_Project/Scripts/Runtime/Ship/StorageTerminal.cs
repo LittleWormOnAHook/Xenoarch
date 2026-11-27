@@ -182,10 +182,7 @@ namespace DMI.Xenoarch.Ship
                 string name = Session.Items.TryGetItem(s.itemId, out var d) && d != null ? d.DisplayNameOrId : s.itemId;
                 var stack = s.Clone(); int index = i; var icon = d != null ? d.icon : null;
                 bool ok = to != HoldInv || d == null || ShipHold.Accepts(Role, d.category);
-                var b = Btn(col, arrow == "->" ? $"{name}  x{s.count}   {arrow}" : $"{arrow}   {name}  x{s.count}", () =>
-                {
-                    if (ShipHold.Transfer(from, to, stack) == 0) Toast.Show(to == HoldInv ? $"{Title} is full" : "Backpack is full");
-                }, ok);
+                var b = Btn(col, arrow == "->" ? $"{name}  x{s.count}   {arrow}" : $"{arrow}   {name}  x{s.count}", () => { }, ok);
                 if (ok) Drag.Source(b, () => new DragDrop.Payload { kind = kind, index = index, itemId = stack.itemId, container = from, icon = icon });
             }
             if (!any) Text(col, "(empty)");

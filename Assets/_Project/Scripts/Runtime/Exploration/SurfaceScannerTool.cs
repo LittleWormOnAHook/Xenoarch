@@ -107,7 +107,7 @@ namespace DMI.Xenoarch.Exploration
             {
                 XenoarchUI.Show(_panel, Equipped && !_sweeping && !UIState.BlocksGameplay);
                 if (_panel.resolvedStyle.display == DisplayStyle.Flex)
-                { _panel.style.top = UI.HudLayout.ScannerTop; _panel.style.right = UI.HudLayout.CornerMargin; }
+                { _panel.style.top = UI.HudLayout.ScannerTop; _panel.style.right = UI.HudLayout.ScannerRight; _panel.style.width = UI.HudLayout.ScannerWidth; }
             }
         }
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Player;
 using DMI.Xenoarch.UI;
+using DMI.Xenoarch.Vehicles;
 using UnityEngine;
 
 namespace DMI.Xenoarch.Interaction
@@ -121,6 +122,8 @@ namespace DMI.Xenoarch.Interaction
             {
                 var h = _hits[i];
                 if (h.collider == null || h.collider.transform.IsChildOf(root)) continue;
+                var seated = RoverVehicle.SeatedRover;
+                if (seated != null && h.collider.transform.IsChildOf(seated.transform)) continue;
                 var usable = h.collider.GetComponentInParent<IInteractable>();
                 if (usable == null)
                 {

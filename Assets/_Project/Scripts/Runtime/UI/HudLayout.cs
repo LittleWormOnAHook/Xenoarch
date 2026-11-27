@@ -7,7 +7,8 @@ namespace DMI.Xenoarch.UI
     /// holds at 1080p and 4K). Top-right column: minimap, then the scanner panel stacked under it with a gap. Top-left
     /// and the lower corners are the helmet readout pods; the centre stays clear (crosshair, prompts, dig HUD).
     /// t170u: when the helmet visor is up, the hotbar splits 4+4 into the dark lower corners and the minimap sits
-    /// mid-right inside the glass; the scanner reading panel stays under the top-right pods (it does not follow the minimap).
+    /// mid-right inside the glass. t218u-t220u: the scanner reading panel sits directly under the minimap (or at the
+    /// top of the column if the minimap is hidden), inset to stay inside the visor edge when the helmet is on.
     /// </summary>
     public static class HudLayout
     {
@@ -26,8 +27,12 @@ namespace DMI.Xenoarch.UI
         public const float RefHeight = 1080f;
         /// <summary>Top of the top-right column (below the helmet pods when the visor is up).</summary>
         public static float TopStart => TopInset > 0f ? TopInset * RefHeight + Gap : CornerMargin;
-        /// <summary>Top for the scanner reading panel. Stays under the helmet pods; does not follow the mid-height minimap.</summary>
-        public static float ScannerTop => TopStart;
+        /// <summary>Top for the scanner reading panel: just under the minimap, or TopStart if the minimap is hidden.</summary>
+        public static float ScannerTop => NextTopRight;
+        /// <summary>Right margin of the scanner panel. Extra inset with the helmet on so text stays inside the visor rim.</summary>
+        public static float ScannerRight => HelmetHud.Visible ? 52f : MinimapRight;
+        /// <summary>Width of the scanner panel. Narrower with the helmet on so it clears the visor rim.</summary>
+        public static float ScannerWidth => HelmetHud.Visible ? 310f : 360f;
         /// <summary>Top of the minimap. Mid-right inside the visor when the helmet is on (t169u/t170u).</summary>
         public static float MinimapTop => HelmetHud.Visible ? RefHeight * 0.40f : TopStart;
         /// <summary>Right margin of the minimap (a little extra when the helmet is on so it clears the thin side frame).</summary>
