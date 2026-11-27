@@ -1,4 +1,4 @@
-# Xenoarch galaxy snapshot 2026-11-26 19:50:46 -05:00, Unity 6000.4.11f1
+# Xenoarch galaxy snapshot 2026-11-27 15:43:33 -05:00, Unity 6000.4.11f1
 # generated twice in one session: identical
 galaxy galaxy.milky_way seed=1337
 artifactPool runtime=[artifact.unknown_lump]
@@ -11,12 +11,48 @@ stream sys.probe:story -> 526459771 1225637816 1727591318
 system sys.alpha_centauri "Alpha Centauri" class=G2V seed=-1902325601 pos=(-1.6, -1.4, -3.8) ftl=4.3543 potential=0.1 known=True reveal=
   body body.alpha_centauri.star "Alpha Centauri" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=-1902325601 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.alpha_centauri.p0 "Alpha Centauri b" kind=Planet au=0.2538 period=46.7 radiusKm=6098.0 g=0.48 potential=0.41 seed=1935328472 scene=Surface_Procedural base=(0.0, 16.3693, -40.0) env=env.gen.body.alpha_centauri.p0 gravity=4.7088
-    recipe type=Barren seed=1935328472 relief=65.4807 freq=0.002921 offset=(375.3907, 310.987) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=5 holes=2
+    recipe type=Barren seed=1935328472 relief=65.4807 freq=0.002921 offset=(375.3907, 310.987) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=41 holes=20
       pad (0.0, -40.0, 26.0)
       pad (32.0, -306.0, 14.0)
       pad (28.4168, -276.2148, 12.0)
       pad (16.0, 236.0, 14.0)
       pad (14.2638, 206.0503, 12.0)
+      pad (-198.0, 230.0, 14.0)
+      pad (-180.2591, 205.8078, 12.0)
+      pad (-156.0, -152.0, 14.0)
+      pad (-131.6303, -134.5038, 12.0)
+      pad (-290.0, -16.0, 14.0)
+      pad (-260.1022, -18.4743, 12.0)
+      pad (-198.0, -282.0, 14.0)
+      pad (-179.0029, -258.7813, 12.0)
+      pad (322.0, 264.0, 14.0)
+      pad (300.1859, 243.4053, 12.0)
+      pad (166.0, 200.0, 14.0)
+      pad (148.9344, 175.3268, 12.0)
+      pad (-302.0, 66.0, 8.0)
+      pad (-286.903, 60.701, 8.0)
+      pad (334.0, -232.0, 8.0)
+      pad (320.1286, -224.026, 8.0)
+      pad (186.0, -146.0, 8.0)
+      pad (172.0989, -138.0779, 8.0)
+      pad (-232.0, 34.0, 8.0)
+      pad (-216.7566, 29.1379, 8.0)
+      pad (-314.0, -210.0, 8.0)
+      pad (-299.9298, -202.3824, 8.0)
+      pad (-58.0, -90.0, 8.0)
+      pad (-45.8814, -79.553, 8.0)
+      pad (-104.0, 180.0, 8.0)
+      pad (-97.1619, 165.5349, 8.0)
+      pad (-70.0, -360.0, 8.0)
+      pad (-66.5809, -344.3696, 8.0)
+      pad (90.0, 106.0, 8.0)
+      pad (81.604, 92.3799, 8.0)
+      pad (216.0, 114.0, 8.0)
+      pad (202.9721, 104.7116, 8.0)
+      pad (68.0, -208.0, 8.0)
+      pad (61.9969, -193.1689, 8.0)
+      pad (-360.0, -18.0, 8.0)
+      pad (-344.0298, -18.976, 8.0)
     site site.alpha_centauri.p0.s0 "Shattered outpost" pos=(32.0, 26.9094, -306.0) r=4.0 depth=1.8867 diff=1 passes=1 signal=0.791 seed=1133997759 hint=(28.4168, 26.2653, -276.2148)
       find artifact.unknown_lump cell=(23, 2, 13) footprint=1
       find artifact.unknown_lump cell=(17, 1, 9) footprint=1
@@ -25,24 +61,129 @@ system sys.alpha_centauri "Alpha Centauri" class=G2V seed=-1902325601 pos=(-1.6,
       find artifact.unknown_lump cell=(6, 3, 21) footprint=1
       find artifact.unknown_lump cell=(9, 3, 25) footprint=1
       find artifact.unknown_lump cell=(22, 4, 24) footprint=1
+    site site.alpha_centauri.p0.v2m0 "Sunken spire" pos=(-198.0, 28.3144, 230.0) r=4.0 depth=2.0428 diff=1 passes=2 signal=0.6808 seed=1363567958 hint=(-180.2591, 27.5194, 205.8078)
+      find artifact.unknown_lump cell=(14, 2, 19) footprint=1
+      find artifact.unknown_lump cell=(17, 2, 13) footprint=1
+      find artifact.unknown_lump cell=(12, 4, 25) footprint=1
+      find artifact.unknown_lump cell=(16, 2, 8) footprint=1
+    site site.alpha_centauri.p0.v2m1 "Silent shrine" pos=(-156.0, 21.7537, -152.0) r=4.0 depth=1.5713 diff=2 passes=2 signal=0.8036 seed=2119596133 hint=(-131.6303, 19.5616, -134.5038)
+      find artifact.unknown_lump cell=(19, 2, 24) footprint=1
+      find artifact.unknown_lump cell=(26, 2, 22) footprint=1
+      find artifact.unknown_lump cell=(24, 2, 13) footprint=1
+      find artifact.unknown_lump cell=(19, 2, 4) footprint=1
+    site site.alpha_centauri.p0.v2m2 "Hollow cache" pos=(-290.0, 27.6401, -16.0) r=4.0 depth=1.9318 diff=3 passes=1 signal=0.6824 seed=845228812 hint=(-260.1022, 27.6879, -18.4743)
+      find artifact.unknown_lump cell=(9, 3, 18) footprint=1
+      find artifact.unknown_lump cell=(14, 3, 24) footprint=1
+      find artifact.unknown_lump cell=(20, 1, 19) footprint=1
+      find artifact.unknown_lump cell=(5, 2, 6) footprint=1
+    site site.alpha_centauri.p0.v2m3 "Fused shrine" pos=(-198.0, 17.4616, -282.0) r=4.0 depth=2.0119 diff=3 passes=1 signal=0.4819 seed=112130790 hint=(-179.0029, 21.299, -258.7813)
+      find artifact.unknown_lump cell=(16, 4, 23) footprint=1
+      find artifact.unknown_lump cell=(23, 2, 5) footprint=1
+      find artifact.unknown_lump cell=(8, 1, 10) footprint=1
+    site site.alpha_centauri.p0.v2m4 "Fused cache" pos=(322.0, 29.8215, 264.0) r=4.0 depth=1.9503 diff=3 passes=1 signal=0.7953 seed=1614190889 hint=(300.1859, 29.4677, 243.4053)
+      find artifact.unknown_lump cell=(16, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(7, 4, 7) footprint=1
+      find artifact.unknown_lump cell=(15, 3, 14) footprint=1
+      find artifact.unknown_lump cell=(6, 1, 9) footprint=1
+      find artifact.unknown_lump cell=(8, 1, 19) footprint=1
+    site site.alpha_centauri.p0.v2m5 "Hollow shrine" pos=(166.0, 25.1148, 200.0) r=4.0 depth=1.8847 diff=3 passes=2 signal=0.5093 seed=493813291 hint=(148.9344, 27.3232, 175.3268)
+      find artifact.unknown_lump cell=(8, 3, 5) footprint=1
+      find artifact.unknown_lump cell=(11, 3, 5) footprint=1
+      find artifact.unknown_lump cell=(11, 1, 21) footprint=1
+      find artifact.unknown_lump cell=(21, 3, 20) footprint=1
+    site site.alpha_centauri.p0.v2c0 "Scattered deposit" pos=(-302.0, 24.6488, 66.0) r=1.6 depth=1.068 diff=1 passes=2 signal=0.4068 seed=233775821 hint=(-286.903, 25.4433, 60.701)
+    site site.alpha_centauri.p0.v2c1 "Scattered stash" pos=(334.0, 27.6753, -232.0) r=1.6 depth=1.2676 diff=1 passes=2 signal=0.3354 seed=798850888 hint=(320.1286, 25.9279, -224.026)
+    site site.alpha_centauri.p0.v2c2 "Scattered stash" pos=(186.0, 16.6831, -146.0) r=1.6 depth=1.0388 diff=1 passes=1 signal=0.2527 seed=1930562012 hint=(172.0989, 16.9237, -138.0779)
+    site site.alpha_centauri.p0.v2c3 "Buried cache" pos=(-232.0, 25.9559, 34.0) r=1.6 depth=1.1439 diff=1 passes=2 signal=0.3356 seed=1954741242 hint=(-216.7566, 26.0212, 29.1379)
+    site site.alpha_centauri.p0.v2c4 "Hidden trove" pos=(-314.0, 22.2129, -210.0) r=1.6 depth=1.0609 diff=1 passes=1 signal=0.3107 seed=2053548433 hint=(-299.9298, 22.7125, -202.3824)
+    site site.alpha_centauri.p0.v2c5 "Weak cache" pos=(-58.0, 17.6181, -90.0) r=1.6 depth=1.131 diff=1 passes=1 signal=0.4454 seed=281210815 hint=(-45.8814, 16.8382, -79.553)
+    site site.alpha_centauri.p0.v2c6 "Hidden cache" pos=(-104.0, 27.7468, 180.0) r=1.6 depth=0.8387 diff=1 passes=2 signal=0.4869 seed=1022435371 hint=(-97.1619, 29.3671, 165.5349)
+    site site.alpha_centauri.p0.v2c7 "Scattered trove" pos=(-70.0, 29.7692, -360.0) r=1.6 depth=0.9413 diff=1 passes=1 signal=0.4991 seed=64175205 hint=(-66.5809, 30.4306, -344.3696)
+    site site.alpha_centauri.p0.v2c8 "Faint cache" pos=(90.0, 18.7028, 106.0) r=1.6 depth=1.2251 diff=1 passes=1 signal=0.2434 seed=1230772390 hint=(81.604, 18.3673, 92.3799)
+    site site.alpha_centauri.p0.v2c9 "Shallow scatter" pos=(216.0, 27.3735, 114.0) r=1.6 depth=0.9185 diff=1 passes=1 signal=0.3864 seed=469249041 hint=(202.9721, 24.473, 104.7116)
+    site site.alpha_centauri.p0.v2c10 "Faint trove" pos=(68.0, 18.4119, -208.0) r=1.6 depth=1.2164 diff=1 passes=2 signal=0.4568 seed=758241849 hint=(61.9969, 17.7558, -193.1689)
+    site site.alpha_centauri.p0.v2c11 "Hidden scatter" pos=(-360.0, 29.8658, -18.0) r=1.6 depth=1.1369 diff=1 passes=1 signal=0.2349 seed=314525074 hint=(-344.0298, 29.5196, -18.976)
   body body.alpha_centauri.p1 "Alpha Centauri c" kind=Planet au=0.7063 period=216.8 radiusKm=4412.0 g=0.5 potential=0.76 seed=2136719141 scene=Surface_Procedural base=(0.0, 18.6941, -40.0) env=env.gen.body.alpha_centauri.p1 gravity=4.905
-    recipe type=Rocky seed=2136719141 relief=67.4124 freq=0.004195 offset=(406.8212, 435.314) low=(0.4125, 0.375, 0.315) high=(0.64, 0.6, 0.536) pads=5 holes=2
+    recipe type=Rocky seed=2136719141 relief=67.4124 freq=0.004195 offset=(406.8212, 435.314) low=(0.4125, 0.375, 0.315) high=(0.64, 0.6, 0.536) pads=33 holes=16
       pad (0.0, -40.0, 26.0)
       pad (164.0, 214.0, 14.0)
       pad (147.7272, 188.7969, 12.0)
       pad (-172.0, -136.0, 14.0)
       pad (-145.8041, -121.379, 12.0)
+      pad (296.0, 246.0, 14.0)
+      pad (274.4255, 225.1544, 12.0)
+      pad (-118.0, 236.0, 14.0)
+      pad (-106.2066, 208.4153, 12.0)
+      pad (178.0, -44.0, 14.0)
+      pad (148.0076, -43.326, 12.0)
+      pad (36.0, -334.0, 14.0)
+      pad (32.3538, -304.2224, 12.0)
+      pad (40.0, 296.0, 14.0)
+      pad (36.4536, 266.2104, 12.0)
+      pad (24.0, -134.0, 8.0)
+      pad (20.0419, -118.4973, 8.0)
+      pad (-346.0, -96.0, 8.0)
+      pad (-330.2055, -93.4437, 8.0)
+      pad (-126.0, 304.0, 8.0)
+      pad (-120.4971, 288.9761, 8.0)
+      pad (198.0, 126.0, 8.0)
+      pad (185.739, 115.7206, 8.0)
+      pad (78.0, 158.0, 8.0)
+      pad (72.1356, 143.1135, 8.0)
+      pad (-166.0, -380.0, 8.0)
+      pad (-158.9802, -365.6221, 8.0)
+      pad (-278.0, 224.0, 8.0)
+      pad (-266.3979, 212.9822, 8.0)
+      pad (-210.0, 26.0, 8.0)
+      pad (-194.7361, 21.2028, 8.0)
+      pad (-130.0, -198.0, 8.0)
+      pad (-119.8342, -185.6446, 8.0)
     site site.alpha_centauri.p1.s0 "Old relay" pos=(164.0, 20.4512, 214.0) r=4.0 depth=1.5648 diff=2 passes=1 signal=0.5139 seed=238355922 hint=(147.7272, 17.0052, 188.7969)
       find artifact.unknown_lump cell=(10, 3, 9) footprint=1
       find artifact.unknown_lump cell=(7, 1, 24) footprint=1
     site site.alpha_centauri.p1.s1 "Silent relay" pos=(-172.0, 19.4879, -136.0) r=4.0 depth=1.6271 diff=2 passes=2 signal=0.6065 seed=304247430 hint=(-145.8041, 21.8519, -121.379)
       find artifact.unknown_lump cell=(12, 3, 20) footprint=1
       find artifact.unknown_lump cell=(24, 3, 22) footprint=1
+    site site.alpha_centauri.p1.v2m0 "Hollow spire" pos=(296.0, 26.6526, 246.0) r=4.0 depth=1.7177 diff=1 passes=2 signal=0.7514 seed=1959224292 hint=(274.4255, 28.3805, 225.1544)
+      find artifact.unknown_lump cell=(9, 2, 11) footprint=1
+      find artifact.unknown_lump cell=(10, 2, 19) footprint=1
+      find artifact.unknown_lump cell=(8, 2, 6) footprint=1
+      find artifact.unknown_lump cell=(21, 2, 22) footprint=1
+    site site.alpha_centauri.p1.v2m1 "Sunken outpost" pos=(-118.0, 22.6578, 236.0) r=4.0 depth=1.6258 diff=3 passes=1 signal=0.5379 seed=1487655469 hint=(-106.2066, 17.8574, 208.4153)
+      find artifact.unknown_lump cell=(16, 2, 25) footprint=1
+      find artifact.unknown_lump cell=(24, 4, 26) footprint=1
+      find artifact.unknown_lump cell=(23, 2, 22) footprint=1
+      find artifact.unknown_lump cell=(6, 1, 17) footprint=1
+    site site.alpha_centauri.p1.v2m2 "Fused shrine" pos=(178.0, 26.3195, -44.0) r=4.0 depth=1.7046 diff=2 passes=1 signal=0.6537 seed=1198628558 hint=(148.0076, 27.5864, -43.326)
+      find artifact.unknown_lump cell=(25, 1, 6) footprint=1
+      find artifact.unknown_lump cell=(5, 3, 27) footprint=1
+      find artifact.unknown_lump cell=(15, 1, 16) footprint=1
+    site site.alpha_centauri.p1.v2m3 "Fused spire" pos=(36.0, 27.1612, -334.0) r=4.0 depth=1.681 diff=3 passes=2 signal=0.6369 seed=480912733 hint=(32.3538, 22.9104, -304.2224)
+      find artifact.unknown_lump cell=(20, 2, 25) footprint=1
+      find artifact.unknown_lump cell=(19, 4, 11) footprint=1
+      find artifact.unknown_lump cell=(7, 2, 5) footprint=1
+      find artifact.unknown_lump cell=(20, 2, 14) footprint=1
+      find artifact.unknown_lump cell=(17, 1, 22) footprint=1
+    site site.alpha_centauri.p1.v2m4 "Shattered cache" pos=(40.0, 33.2368, 296.0) r=4.0 depth=1.7378 diff=3 passes=1 signal=0.5469 seed=1845534534 hint=(36.4536, 34.6131, 266.2104)
+      find artifact.unknown_lump cell=(7, 4, 17) footprint=1
+      find artifact.unknown_lump cell=(11, 1, 9) footprint=1
+      find artifact.unknown_lump cell=(16, 4, 4) footprint=1
+      find artifact.unknown_lump cell=(27, 3, 20) footprint=1
+      find artifact.unknown_lump cell=(7, 2, 23) footprint=1
+    site site.alpha_centauri.p1.v2c0 "Buried deposit" pos=(24.0, 24.4351, -134.0) r=1.6 depth=1.0738 diff=1 passes=1 signal=0.3076 seed=1829939777 hint=(20.0419, 21.7772, -118.4973)
+    site site.alpha_centauri.p1.v2c1 "Scattered deposit" pos=(-346.0, 24.9243, -96.0) r=1.6 depth=1.0242 diff=1 passes=1 signal=0.4395 seed=774484449 hint=(-330.2055, 25.1611, -93.4437)
+    site site.alpha_centauri.p1.v2c2 "Faint cache" pos=(-126.0, 23.4423, 304.0) r=1.6 depth=0.9139 diff=1 passes=2 signal=0.4753 seed=1047085157 hint=(-120.4971, 23.2149, 288.9761)
+    site site.alpha_centauri.p1.v2c3 "Shallow stash" pos=(198.0, 15.3785, 126.0) r=1.6 depth=0.9827 diff=1 passes=2 signal=0.467 seed=79556599 hint=(185.739, 15.7666, 115.7206)
+    site site.alpha_centauri.p1.v2c4 "Hidden trove" pos=(78.0, 24.151, 158.0) r=1.6 depth=0.8045 diff=1 passes=1 signal=0.499 seed=765224500 hint=(72.1356, 22.8564, 143.1135)
+    site site.alpha_centauri.p1.v2c5 "Shallow trove" pos=(-166.0, 24.5767, -380.0) r=1.6 depth=1.086 diff=1 passes=1 signal=0.274 seed=505771990 hint=(-158.9802, 25.9956, -365.6221)
+    site site.alpha_centauri.p1.v2c6 "Faint trove" pos=(-278.0, 23.0698, 224.0) r=1.6 depth=1.0973 diff=1 passes=1 signal=0.2807 seed=2048550976 hint=(-266.3979, 23.1947, 212.9822)
+    site site.alpha_centauri.p1.v2c7 "Weak scatter" pos=(-210.0, 30.5002, 26.0) r=1.6 depth=1.2919 diff=1 passes=2 signal=0.3275 seed=1454955075 hint=(-194.7361, 29.8355, 21.2028)
+    site site.alpha_centauri.p1.v2c8 "Faint deposit" pos=(-130.0, 21.0166, -198.0) r=1.6 depth=1.1327 diff=1 passes=1 signal=0.4034 seed=1928815685 hint=(-119.8342, 21.3459, -185.6446)
   body body.alpha_centauri.p2 "Alpha Centauri d" kind=Planet au=1.8849 period=945.2 radiusKm=62522.0 g=2.4 potential=0.0 seed=2002351094 scene= base=(0.0, 0.0, 0.0) env=env.gen.body.alpha_centauri.p2 gravity=23.544
 system sys.barnards_star "Barnard's Star" class=M4V seed=-1531753297 pos=(-0.06, -5.94, 0.49) ftl=5.9605 potential=0.1 known=True reveal=
   body body.barnards_star.star "Barnard's Star" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=-1531753297 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.barnards_star.p0 "Barnard d" kind=Planet au=0.02 period=1.0 radiusKm=3536.0 g=0.87 potential=0.28 seed=1205757018 scene=Surface_Procedural base=(0.0, 16.0407, -40.0) env=env.gen.body.barnards_star.p0 gravity=8.5347
-    recipe type=Barren seed=1205757018 relief=57.1298 freq=0.004894 offset=(372.8053, 75.5163) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=7 holes=3
+    recipe type=Barren seed=1205757018 relief=57.1298 freq=0.004894 offset=(372.8053, 75.5163) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=37 holes=18
       pad (0.0, -40.0, 26.0)
       pad (60.0, -268.0, 14.0)
       pad (52.3652, -238.9878, 12.0)
@@ -50,6 +191,36 @@ system sys.barnards_star "Barnard's Star" class=M4V seed=-1531753297 pos=(-0.06,
       pad (158.1626, 173.8789, 12.0)
       pad (-230.0, 114.0, 14.0)
       pad (-205.0719, 97.309, 12.0)
+      pad (38.0, 392.0, 14.0)
+      pad (35.3713, 362.1154, 12.0)
+      pad (-392.0, 114.0, 14.0)
+      pad (-364.0775, 103.0304, 12.0)
+      pad (-364.0, -96.0, 14.0)
+      pad (-334.3488, -91.4383, 12.0)
+      pad (-264.0, 314.0, 14.0)
+      pad (-246.0653, 289.9512, 12.0)
+      pad (324.0, -54.0, 14.0)
+      pad (294.028, -52.7049, 12.0)
+      pad (292.0, -146.0, 8.0)
+      pad (276.9603, -140.5404, 8.0)
+      pad (226.0, -146.0, 8.0)
+      pad (211.5142, -139.2058, 8.0)
+      pad (-262.0, 38.0, 8.0)
+      pad (-246.6651, 33.4347, 8.0)
+      pad (242.0, 160.0, 8.0)
+      pad (229.6668, 149.8073, 8.0)
+      pad (-104.0, -184.0, 8.0)
+      pad (-94.6322, -171.0291, 8.0)
+      pad (-94.0, 144.0, 8.0)
+      pad (-86.721, 129.7516, 8.0)
+      pad (-2.0, 188.0, 8.0)
+      pad (-1.8597, 172.0006, 8.0)
+      pad (88.0, -334.0, 8.0)
+      pad (83.412, -318.6719, 8.0)
+      pad (292.0, 108.0, 8.0)
+      pad (277.7285, 100.7665, 8.0)
+      pad (-234.0, 232.0, 8.0)
+      pad (-223.5653, 219.8708, 8.0)
     site site.barnards_star.p0.s0 "Silent spire" pos=(60.0, 21.8107, -268.0) r=4.0 depth=1.8836 diff=3 passes=2 signal=0.7706 seed=1639851071 hint=(52.3652, 23.4899, -238.9878)
       find artifact.unknown_lump cell=(20, 3, 11) footprint=1
       find artifact.unknown_lump cell=(16, 4, 17) footprint=1
@@ -61,26 +232,162 @@ system sys.barnards_star "Barnard's Star" class=M4V seed=-1531753297 pos=(-0.06,
       find artifact.unknown_lump cell=(9, 1, 24) footprint=1
       find artifact.unknown_lump cell=(8, 4, 6) footprint=1
       find artifact.unknown_lump cell=(23, 2, 9) footprint=1
+    site site.barnards_star.p0.v2m0 "Old outpost" pos=(38.0, 14.6036, 392.0) r=4.0 depth=1.9473 diff=2 passes=1 signal=0.5862 seed=1771295876 hint=(35.3713, 16.4956, 362.1154)
+      find artifact.unknown_lump cell=(4, 1, 11) footprint=1
+      find artifact.unknown_lump cell=(27, 4, 14) footprint=1
+      find artifact.unknown_lump cell=(10, 4, 6) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 25) footprint=1
+    site site.barnards_star.p0.v2m1 "Sunken shrine" pos=(-392.0, 18.6038, 114.0) r=4.0 depth=1.766 diff=3 passes=1 signal=0.4821 seed=729684068 hint=(-364.0775, 21.0177, 103.0304)
+      find artifact.unknown_lump cell=(11, 4, 6) footprint=1
+      find artifact.unknown_lump cell=(27, 4, 18) footprint=1
+      find artifact.unknown_lump cell=(27, 2, 22) footprint=1
+    site site.barnards_star.p0.v2m2 "Buried cache" pos=(-364.0, 19.156, -96.0) r=4.0 depth=1.9579 diff=2 passes=2 signal=0.4948 seed=726666656 hint=(-334.3488, 19.6119, -91.4383)
+      find artifact.unknown_lump cell=(21, 4, 6) footprint=1
+      find artifact.unknown_lump cell=(14, 2, 15) footprint=1
+      find artifact.unknown_lump cell=(27, 4, 19) footprint=1
+      find artifact.unknown_lump cell=(17, 3, 5) footprint=1
+    site site.barnards_star.p0.v2m3 "Shattered shrine" pos=(-264.0, 26.4755, 314.0) r=4.0 depth=1.924 diff=3 passes=1 signal=0.6124 seed=723268999 hint=(-246.0653, 30.3315, 289.9512)
+      find artifact.unknown_lump cell=(26, 2, 9) footprint=1
+      find artifact.unknown_lump cell=(8, 3, 8) footprint=1
+      find artifact.unknown_lump cell=(22, 4, 11) footprint=1
+      find artifact.unknown_lump cell=(9, 2, 11) footprint=1
+      find artifact.unknown_lump cell=(25, 2, 15) footprint=1
+    site site.barnards_star.p0.v2m4 "Hollow outpost" pos=(324.0, 16.0858, -54.0) r=4.0 depth=2.0256 diff=2 passes=1 signal=0.6486 seed=261817820 hint=(294.028, 22.1257, -52.7049)
+      find artifact.unknown_lump cell=(21, 1, 13) footprint=1
+      find artifact.unknown_lump cell=(21, 3, 21) footprint=1
+      find artifact.unknown_lump cell=(7, 4, 12) footprint=1
+    site site.barnards_star.p0.v2c0 "Faint cache" pos=(292.0, 15.7657, -146.0) r=1.6 depth=1.1038 diff=1 passes=1 signal=0.4833 seed=622511937 hint=(276.9603, 18.1921, -140.5404)
+    site site.barnards_star.p0.v2c1 "Shallow scatter" pos=(226.0, 18.1159, -146.0) r=1.6 depth=1.2448 diff=1 passes=2 signal=0.4858 seed=1126703331 hint=(211.5142, 19.1543, -139.2058)
+    site site.barnards_star.p0.v2c2 "Faint cache" pos=(-262.0, 18.9633, 38.0) r=1.6 depth=0.8242 diff=1 passes=2 signal=0.2304 seed=172258760 hint=(-246.6651, 20.0076, 33.4347)
+    site site.barnards_star.p0.v2c3 "Hidden cache" pos=(242.0, 23.3301, 160.0) r=1.6 depth=0.8592 diff=1 passes=1 signal=0.3606 seed=1288006083 hint=(229.6668, 22.9533, 149.8073)
+    site site.barnards_star.p0.v2c4 "Hidden stash" pos=(-104.0, 17.5889, -184.0) r=1.6 depth=1.2035 diff=1 passes=2 signal=0.3757 seed=1786789530 hint=(-94.6322, 17.3205, -171.0291)
+    site site.barnards_star.p0.v2c5 "Hidden trove" pos=(-94.0, 18.9503, 144.0) r=1.6 depth=1.0627 diff=1 passes=1 signal=0.4393 seed=227197135 hint=(-86.721, 18.6634, 129.7516)
+    site site.barnards_star.p0.v2c6 "Faint scatter" pos=(-2.0, 11.5063, 188.0) r=1.6 depth=0.9626 diff=1 passes=1 signal=0.3938 seed=2115159266 hint=(-1.8597, 10.8615, 172.0006)
+    site site.barnards_star.p0.v2c7 "Faint trove" pos=(88.0, 19.3412, -334.0) r=1.6 depth=1.1022 diff=1 passes=2 signal=0.3258 seed=1213487250 hint=(83.412, 18.4441, -318.6719)
+    site site.barnards_star.p0.v2c8 "Hidden stash" pos=(292.0, 20.8158, 108.0) r=1.6 depth=1.1397 diff=1 passes=1 signal=0.3705 seed=464655643 hint=(277.7285, 20.5368, 100.7665)
+    site site.barnards_star.p0.v2c9 "Hidden deposit" pos=(-234.0, 27.8503, 232.0) r=1.6 depth=1.2065 diff=1 passes=2 signal=0.3055 seed=1315901180 hint=(-223.5653, 25.9152, 219.8708)
   body body.barnards_star.p1 "Barnard b" kind=Planet au=0.0229 period=1.3 radiusKm=7874.0 g=0.87 potential=0.7 seed=1138447863 scene=Surface_Procedural base=(0.0, 13.921, -40.0) env=env.gen.body.barnards_star.p1 gravity=8.5347
-    recipe type=Volcanic seed=1138447863 relief=60.0 freq=0.004446 offset=(363.627, 90.6759) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=5 holes=2
+    recipe type=Volcanic seed=1138447863 relief=60.0 freq=0.004446 offset=(363.627, 90.6759) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=39 holes=19
       pad (0.0, -40.0, 26.0)
       pad (-224.0, 152.0, 14.0)
       pad (-201.2223, 132.4763, 12.0)
       pad (180.0, -144.0, 14.0)
       pad (154.024, -128.9917, 12.0)
+      pad (308.0, -40.0, 14.0)
+      pad (278.0, -40.0, 12.0)
+      pad (-220.0, 40.0, 14.0)
+      pad (-191.8062, 29.7477, 12.0)
+      pad (90.0, 218.0, 14.0)
+      pad (80.1188, 189.674, 12.0)
+      pad (-158.0, -384.0, 14.0)
+      pad (-145.4785, -356.7381, 12.0)
+      pad (-274.0, 284.0, 14.0)
+      pad (-254.6281, 261.093, 12.0)
+      pad (-172.0, -186.0, 14.0)
+      pad (-149.1287, -166.586, 12.0)
+      pad (92.0, 350.0, 8.0)
+      pad (88.3265, 334.4274, 8.0)
+      pad (60.0, 68.0, 8.0)
+      pad (52.2297, 54.0135, 8.0)
+      pad (-112.0, -226.0, 8.0)
+      pad (-103.7464, -212.2931, 8.0)
+      pad (116.0, 268.0, 8.0)
+      pad (110.3607, 253.0267, 8.0)
+      pad (-256.0, 340.0, 8.0)
+      pad (-247.0604, 326.7303, 8.0)
+      pad (44.0, -242.0, 8.0)
+      pad (40.5947, -226.3666, 8.0)
+      pad (-112.0, -144.0, 8.0)
+      pad (-100.2753, -133.1128, 8.0)
+      pad (-330.0, -248.0, 8.0)
+      pad (-316.4644, -239.4685, 8.0)
+      pad (268.0, 148.0, 8.0)
+      pad (254.9015, 138.8115, 8.0)
+      pad (-52.0, -336.0, 8.0)
+      pad (-49.2316, -320.2413, 8.0)
+      pad (92.0, -114.0, 8.0)
+      pad (79.5326, -103.9719, 8.0)
     site site.barnards_star.p1.s0 "Hollow ash cairn" pos=(-224.0, 15.8712, 152.0) r=4.0 depth=1.9073 diff=3 passes=2 signal=0.5662 seed=493885303 hint=(-201.2223, 12.0228, 132.4763)
       find artifact.unknown_lump cell=(23, 4, 21) footprint=1
       find artifact.unknown_lump cell=(18, 2, 17) footprint=1
     site site.barnards_star.p1.s1 "Sunken vent relay" pos=(180.0, 18.4407, -144.0) r=4.0 depth=1.8717 diff=2 passes=1 signal=0.682 seed=675506438 hint=(154.024, 19.42, -128.9917)
       find artifact.unknown_lump cell=(9, 4, 16) footprint=1
       find artifact.unknown_lump cell=(23, 2, 14) footprint=1
+    site site.barnards_star.p1.v2m0 "Fused vent relay" pos=(308.0, 16.9704, -40.0) r=4.0 depth=1.5934 diff=3 passes=2 signal=0.8398 seed=2103458629 hint=(278.0, 15.9331, -40.0)
+      find artifact.unknown_lump cell=(19, 1, 10) footprint=1
+      find artifact.unknown_lump cell=(27, 1, 17) footprint=1
+      find artifact.unknown_lump cell=(11, 4, 13) footprint=1
+    site site.barnards_star.p1.v2m1 "Fused vent relay" pos=(-220.0, 21.0523, 40.0) r=4.0 depth=1.6149 diff=2 passes=1 signal=0.7917 seed=2017426256 hint=(-191.8062, 23.9374, 29.7477)
+      find artifact.unknown_lump cell=(12, 1, 25) footprint=1
+      find artifact.unknown_lump cell=(9, 3, 12) footprint=1
+      find artifact.unknown_lump cell=(13, 4, 25) footprint=1
+      find artifact.unknown_lump cell=(24, 3, 21) footprint=1
+    site site.barnards_star.p1.v2m2 "Fused vent relay" pos=(90.0, 16.9726, 218.0) r=4.0 depth=2.085 diff=2 passes=1 signal=0.6695 seed=2045967741 hint=(80.1188, 19.8189, 189.674)
+      find artifact.unknown_lump cell=(9, 4, 13) footprint=1
+      find artifact.unknown_lump cell=(12, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(24, 4, 9) footprint=1
+      find artifact.unknown_lump cell=(24, 3, 15) footprint=1
+      find artifact.unknown_lump cell=(27, 2, 18) footprint=1
+    site site.barnards_star.p1.v2m3 "Fused vent relay" pos=(-158.0, 16.5636, -384.0) r=4.0 depth=1.7883 diff=3 passes=1 signal=0.5728 seed=1071881720 hint=(-145.4785, 19.9735, -356.7381)
+      find artifact.unknown_lump cell=(17, 4, 20) footprint=1
+      find artifact.unknown_lump cell=(16, 3, 17) footprint=1
+      find artifact.unknown_lump cell=(16, 1, 17) footprint=1
+    site site.barnards_star.p1.v2m4 "Fused ash cairn" pos=(-274.0, 20.8096, 284.0) r=4.0 depth=1.7222 diff=3 passes=1 signal=0.5878 seed=242296428 hint=(-254.6281, 24.3214, 261.093)
+      find artifact.unknown_lump cell=(12, 2, 9) footprint=1
+      find artifact.unknown_lump cell=(12, 4, 12) footprint=1
+      find artifact.unknown_lump cell=(13, 2, 10) footprint=1
+    site site.barnards_star.p1.v2m5 "Sunken basalt hall" pos=(-172.0, 26.0932, -186.0) r=4.0 depth=2.0688 diff=1 passes=2 signal=0.8214 seed=1679539880 hint=(-149.1287, 25.721, -166.586)
+      find artifact.unknown_lump cell=(6, 3, 26) footprint=1
+      find artifact.unknown_lump cell=(14, 3, 6) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 5) footprint=1
+      find artifact.unknown_lump cell=(18, 2, 23) footprint=1
+      find artifact.unknown_lump cell=(8, 3, 24) footprint=1
+    site site.barnards_star.p1.v2c0 "Faint ash cache" pos=(92.0, 24.6223, 350.0) r=1.6 depth=0.914 diff=1 passes=2 signal=0.4094 seed=188761553 hint=(88.3265, 24.2793, 334.4274)
+    site site.barnards_star.p1.v2c1 "Buried ash cache" pos=(60.0, 15.6297, 68.0) r=1.6 depth=0.9807 diff=1 passes=1 signal=0.4839 seed=330843448 hint=(52.2297, 13.7963, 54.0135)
+    site site.barnards_star.p1.v2c2 "Hidden cinder stash" pos=(-112.0, 19.8156, -226.0) r=1.6 depth=1.2185 diff=1 passes=1 signal=0.2632 seed=560005224 hint=(-103.7464, 16.6683, -212.2931)
+    site site.barnards_star.p1.v2c3 "Shallow vent deposit" pos=(116.0, 20.6488, 268.0) r=1.6 depth=1.2109 diff=1 passes=1 signal=0.4781 seed=1690355295 hint=(110.3607, 20.3458, 253.0267)
+    site site.barnards_star.p1.v2c4 "Scattered cinder stash" pos=(-256.0, 27.6447, 340.0) r=1.6 depth=1.2791 diff=1 passes=1 signal=0.4231 seed=122101984 hint=(-247.0604, 27.2914, 326.7303)
+    site site.barnards_star.p1.v2c5 "Shallow ash cache" pos=(44.0, 25.4145, -242.0) r=1.6 depth=1.1847 diff=1 passes=2 signal=0.4176 seed=1757385111 hint=(40.5947, 27.2328, -226.3666)
+    site site.barnards_star.p1.v2c6 "Faint vent deposit" pos=(-112.0, 19.771, -144.0) r=1.6 depth=1.0101 diff=1 passes=1 signal=0.2234 seed=2106727745 hint=(-100.2753, 18.154, -133.1128)
+    site site.barnards_star.p1.v2c7 "Shallow cinder stash" pos=(-330.0, 29.4124, -248.0) r=1.6 depth=1.0877 diff=1 passes=2 signal=0.2945 seed=276629449 hint=(-316.4644, 32.334, -239.4685)
+    site site.barnards_star.p1.v2c8 "Hidden cinder stash" pos=(268.0, 30.4211, 148.0) r=1.6 depth=1.2738 diff=1 passes=1 signal=0.2748 seed=436507037 hint=(254.9015, 31.455, 138.8115)
+    site site.barnards_star.p1.v2c9 "Hidden cinder stash" pos=(-52.0, 31.9184, -336.0) r=1.6 depth=0.9356 diff=1 passes=2 signal=0.3576 seed=601907455 hint=(-49.2316, 30.8399, -320.2413)
+    site site.barnards_star.p1.v2c10 "Faint cinder stash" pos=(92.0, 19.7487, -114.0) r=1.6 depth=1.2383 diff=1 passes=1 signal=0.3228 seed=620301589 hint=(79.5326, 17.7023, -103.9719)
   body body.barnards_star.p2 "Barnard c" kind=Planet au=0.0274 period=1.7 radiusKm=2704.0 g=0.4 potential=0.83 seed=1139972412 scene=Surface_Procedural base=(0.0, 20.0618, -40.0) env=env.gen.body.barnards_star.p2 gravity=3.924
-    recipe type=Volcanic seed=1139972412 relief=60.0 freq=0.002922 offset=(90.9405, 176.6257) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=5 holes=2
+    recipe type=Volcanic seed=1139972412 relief=60.0 freq=0.002922 offset=(90.9405, 176.6257) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=33 holes=16
       pad (0.0, -40.0, 26.0)
       pad (24.0, 244.0, 14.0)
       pad (21.4738, 214.1066, 12.0)
       pad (-94.0, -234.0, 14.0)
       pad (-80.9186, -207.0023, 12.0)
+      pad (344.0, 66.0, 14.0)
+      pad (315.3302, 57.1657, 12.0)
+      pad (134.0, -288.0, 14.0)
+      pad (119.7389, -261.6064, 12.0)
+      pad (-210.0, 80.0, 14.0)
+      pad (-183.9527, 65.1158, 12.0)
+      pad (100.0, 402.0, 14.0)
+      pad (93.38, 372.7395, 12.0)
+      pad (-270.0, -122.0, 8.0)
+      pad (-254.6905, -117.3504, 8.0)
+      pad (-240.0, -336.0, 8.0)
+      pad (-229.9232, -323.5719, 8.0)
+      pad (12.0, 352.0, 8.0)
+      pad (11.5104, 336.0075, 8.0)
+      pad (-200.0, 280.0, 8.0)
+      pad (-191.52, 266.432, 8.0)
+      pad (-256.0, 266.0, 8.0)
+      pad (-245.7334, 253.7282, 8.0)
+      pad (6.0, -328.0, 8.0)
+      pad (5.6667, -312.0035, 8.0)
+      pad (194.0, -4.0, 8.0)
+      pad (178.2686, -6.9192, 8.0)
+      pad (160.0, 132.0, 8.0)
+      pad (149.1023, 120.285, 8.0)
+      pad (-44.0, -160.0, 8.0)
+      pad (-38.4919, -144.978, 8.0)
+      pad (-354.0, 92.0, 8.0)
+      pad (-339.0083, 86.4099, 8.0)
     site site.barnards_star.p2.s0 "Old basalt hall" pos=(24.0, 28.3246, 244.0) r=4.0 depth=1.7612 diff=3 passes=1 signal=0.6184 seed=99313789 hint=(21.4738, 25.9941, 214.1066)
       find artifact.unknown_lump cell=(11, 3, 11) footprint=1
       find artifact.unknown_lump cell=(15, 4, 22) footprint=1
@@ -88,23 +395,112 @@ system sys.barnards_star "Barnard's Star" class=M4V seed=-1531753297 pos=(-0.06,
     site site.barnards_star.p2.s1 "Buried vent relay" pos=(-94.0, 25.5483, -234.0) r=4.0 depth=1.828 diff=1 passes=1 signal=0.608 seed=2104043268 hint=(-80.9186, 25.527, -207.0023)
       find artifact.unknown_lump cell=(25, 1, 16) footprint=1
       find artifact.unknown_lump cell=(16, 4, 10) footprint=1
+    site site.barnards_star.p2.v2m0 "Old vent relay" pos=(344.0, 18.0765, 66.0) r=4.0 depth=1.7656 diff=2 passes=1 signal=0.5581 seed=1828583779 hint=(315.3302, 15.3233, 57.1657)
+      find artifact.unknown_lump cell=(18, 4, 12) footprint=1
+      find artifact.unknown_lump cell=(11, 4, 13) footprint=1
+      find artifact.unknown_lump cell=(9, 4, 24) footprint=1
+      find artifact.unknown_lump cell=(14, 3, 12) footprint=1
+      find artifact.unknown_lump cell=(25, 3, 4) footprint=1
+    site site.barnards_star.p2.v2m1 "Shattered basalt hall" pos=(134.0, 13.8968, -288.0) r=4.0 depth=2.1266 diff=2 passes=2 signal=0.5434 seed=155261133 hint=(119.7389, 15.1062, -261.6064)
+      find artifact.unknown_lump cell=(7, 1, 19) footprint=1
+      find artifact.unknown_lump cell=(11, 4, 6) footprint=1
+      find artifact.unknown_lump cell=(16, 4, 25) footprint=1
+    site site.barnards_star.p2.v2m2 "Hollow basalt hall" pos=(-210.0, 27.9448, 80.0) r=4.0 depth=2.12 diff=1 passes=2 signal=0.614 seed=1618959288 hint=(-183.9527, 29.5013, 65.1158)
+      find artifact.unknown_lump cell=(18, 2, 25) footprint=1
+      find artifact.unknown_lump cell=(7, 3, 17) footprint=1
+      find artifact.unknown_lump cell=(19, 1, 24) footprint=1
+      find artifact.unknown_lump cell=(6, 4, 13) footprint=1
+      find artifact.unknown_lump cell=(20, 2, 4) footprint=1
+    site site.barnards_star.p2.v2m3 "Shattered basalt hall" pos=(100.0, 27.0693, 402.0) r=4.0 depth=1.9486 diff=3 passes=2 signal=0.6363 seed=746607580 hint=(93.38, 30.5414, 372.7395)
+      find artifact.unknown_lump cell=(23, 2, 11) footprint=1
+      find artifact.unknown_lump cell=(5, 1, 5) footprint=1
+      find artifact.unknown_lump cell=(13, 4, 9) footprint=1
+    site site.barnards_star.p2.v2c0 "Shallow cinder stash" pos=(-270.0, 29.942, -122.0) r=1.6 depth=1.0442 diff=1 passes=2 signal=0.3395 seed=1021276079 hint=(-254.6905, 31.3349, -117.3504)
+    site site.barnards_star.p2.v2c1 "Faint vent deposit" pos=(-240.0, 17.4076, -336.0) r=1.6 depth=1.1103 diff=1 passes=2 signal=0.2866 seed=2143226567 hint=(-229.9232, 17.0279, -323.5719)
+    site site.barnards_star.p2.v2c2 "Scattered ash cache" pos=(12.0, 29.6337, 352.0) r=1.6 depth=0.9161 diff=1 passes=1 signal=0.4711 seed=456015934 hint=(11.5104, 30.8923, 336.0075)
+    site site.barnards_star.p2.v2c3 "Buried ash cache" pos=(-200.0, 23.5601, 280.0) r=1.6 depth=0.8258 diff=1 passes=2 signal=0.2538 seed=2109234493 hint=(-191.52, 23.774, 266.432)
+    site site.barnards_star.p2.v2c4 "Weak ash cache" pos=(-256.0, 21.1841, 266.0) r=1.6 depth=0.9148 diff=1 passes=2 signal=0.2309 seed=1872815148 hint=(-245.7334, 21.3298, 253.7282)
+    site site.barnards_star.p2.v2c5 "Hidden vent deposit" pos=(6.0, 15.749, -328.0) r=1.6 depth=1.2191 diff=1 passes=1 signal=0.4499 seed=1958030069 hint=(5.6667, 17.4527, -312.0035)
+    site site.barnards_star.p2.v2c6 "Hidden vent deposit" pos=(194.0, 14.455, -4.0) r=1.6 depth=0.8888 diff=1 passes=1 signal=0.3624 seed=1542465264 hint=(178.2686, 14.8061, -6.9192)
+    site site.barnards_star.p2.v2c7 "Shallow ash cache" pos=(160.0, 15.4296, 132.0) r=1.6 depth=1.1125 diff=1 passes=2 signal=0.3812 seed=993323828 hint=(149.1023, 15.2309, 120.285)
+    site site.barnards_star.p2.v2c8 "Buried vent deposit" pos=(-44.0, 27.1478, -160.0) r=1.6 depth=0.8582 diff=1 passes=1 signal=0.4717 seed=138470356 hint=(-38.4919, 28.6095, -144.978)
+    site site.barnards_star.p2.v2c9 "Scattered cinder stash" pos=(-354.0, 17.1365, 92.0) r=1.6 depth=1.2352 diff=1 passes=1 signal=0.3603 seed=300461718 hint=(-339.0083, 18.4979, 86.4099)
   body body.barnards_star.p3 "Barnard e" kind=Planet au=0.0381 period=2.7 radiusKm=5425.0 g=0.91 potential=0.79 seed=1072714841 scene=Surface_Procedural base=(0.0, 12.4216, -40.0) env=env.gen.body.barnards_star.p3 gravity=8.9271
-    recipe type=Barren seed=1072714841 relief=45.4649 freq=0.004600 offset=(295.6334, 174.785) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=5 holes=2
+    recipe type=Barren seed=1072714841 relief=45.4649 freq=0.004600 offset=(295.6334, 174.785) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=35 holes=17
       pad (0.0, -40.0, 26.0)
       pad (-302.0, 130.0, 14.0)
       pad (-275.8574, 115.2839, 12.0)
       pad (252.0, -172.0, 14.0)
       pad (225.425, -158.0798, 12.0)
+      pad (316.0, 18.0, 14.0)
+      pad (286.4929, 12.5841, 12.0)
+      pad (88.0, -208.0, 14.0)
+      pad (74.0798, -181.425, 12.0)
+      pad (96.0, -374.0, 14.0)
+      pad (87.7128, -345.1674, 12.0)
+      pad (80.0, 246.0, 14.0)
+      pad (71.9186, 217.109, 12.0)
+      pad (-94.0, -200.0, 8.0)
+      pad (-85.8952, -186.2046, 8.0)
+      pad (190.0, -206.0, 8.0)
+      pad (177.9509, -195.4729, 8.0)
+      pad (-304.0, -144.0, 8.0)
+      pad (-288.8614, -138.821, 8.0)
+      pad (-86.0, -44.0, 8.0)
+      pad (-70.0173, -43.2566, 8.0)
+      pad (-134.0, 100.0, 8.0)
+      pad (-122.9367, 88.4413, 8.0)
+      pad (-380.0, -132.0, 8.0)
+      pad (-364.4492, -128.2351, 8.0)
+      pad (-240.0, -138.0, 8.0)
+      pad (-225.1873, -131.9515, 8.0)
+      pad (272.0, -238.0, 8.0)
+      pad (259.0643, -228.5836, 8.0)
+      pad (-10.0, -344.0, 8.0)
+      pad (-9.474, -328.0086, 8.0)
+      pad (-16.0, 312.0, 8.0)
+      pad (-15.2735, 296.0165, 8.0)
+      pad (70.0, -274.0, 8.0)
+      pad (65.4145, -258.6712, 8.0)
     site site.barnards_star.p3.s0 "Old outpost" pos=(-302.0, 20.388, 130.0) r=4.0 depth=1.9768 diff=2 passes=2 signal=0.5706 seed=213434650 hint=(-275.8574, 20.1659, 115.2839)
       find artifact.unknown_lump cell=(14, 1, 12) footprint=1
       find artifact.unknown_lump cell=(19, 3, 13) footprint=1
     site site.barnards_star.p3.s1 "Buried outpost" pos=(252.0, 15.0139, -172.0) r=4.0 depth=1.6535 diff=2 passes=1 signal=0.7085 seed=1351954126 hint=(225.425, 13.913, -158.0798)
       find artifact.unknown_lump cell=(15, 4, 12) footprint=1
       find artifact.unknown_lump cell=(25, 4, 13) footprint=1
+    site site.barnards_star.p3.v2m0 "Buried outpost" pos=(316.0, 15.1641, 18.0) r=4.0 depth=1.9487 diff=3 passes=1 signal=0.7959 seed=1136708799 hint=(286.4929, 17.6643, 12.5841)
+      find artifact.unknown_lump cell=(18, 2, 11) footprint=1
+      find artifact.unknown_lump cell=(6, 2, 8) footprint=1
+      find artifact.unknown_lump cell=(15, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(5, 3, 7) footprint=1
+      find artifact.unknown_lump cell=(5, 4, 9) footprint=1
+    site site.barnards_star.p3.v2m1 "Silent spire" pos=(88.0, 13.0708, -208.0) r=4.0 depth=2.1531 diff=1 passes=1 signal=0.5629 seed=1400892414 hint=(74.0798, 16.0288, -181.425)
+      find artifact.unknown_lump cell=(24, 4, 21) footprint=1
+      find artifact.unknown_lump cell=(5, 1, 7) footprint=1
+      find artifact.unknown_lump cell=(19, 3, 13) footprint=1
+    site site.barnards_star.p3.v2m2 "Silent cache" pos=(96.0, 14.4417, -374.0) r=4.0 depth=1.5902 diff=1 passes=1 signal=0.65 seed=268508070 hint=(87.7128, 17.2221, -345.1674)
+      find artifact.unknown_lump cell=(11, 1, 13) footprint=1
+      find artifact.unknown_lump cell=(21, 2, 8) footprint=1
+      find artifact.unknown_lump cell=(8, 3, 10) footprint=1
+    site site.barnards_star.p3.v2m3 "Old spire" pos=(80.0, 19.243, 246.0) r=4.0 depth=1.6953 diff=2 passes=2 signal=0.6262 seed=2111334037 hint=(71.9186, 18.3874, 217.109)
+      find artifact.unknown_lump cell=(14, 2, 18) footprint=1
+      find artifact.unknown_lump cell=(12, 1, 10) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 27) footprint=1
+    site site.barnards_star.p3.v2c0 "Shallow deposit" pos=(-94.0, 19.4277, -200.0) r=1.6 depth=1.1846 diff=1 passes=2 signal=0.4539 seed=1016768568 hint=(-85.8952, 18.7961, -186.2046)
+    site site.barnards_star.p3.v2c1 "Scattered cache" pos=(190.0, 12.741, -206.0) r=1.6 depth=1.2586 diff=1 passes=1 signal=0.4236 seed=1675256390 hint=(177.9509, 11.7019, -195.4729)
+    site site.barnards_star.p3.v2c2 "Buried stash" pos=(-304.0, 16.172, -144.0) r=1.6 depth=1.1601 diff=1 passes=2 signal=0.222 seed=1242262724 hint=(-288.8614, 16.4385, -138.821)
+    site site.barnards_star.p3.v2c3 "Faint deposit" pos=(-86.0, 13.8098, -44.0) r=1.6 depth=0.8906 diff=1 passes=1 signal=0.2364 seed=488876420 hint=(-70.0173, 13.0783, -43.2566)
+    site site.barnards_star.p3.v2c4 "Faint scatter" pos=(-134.0, 17.7236, 100.0) r=1.6 depth=1.1153 diff=1 passes=1 signal=0.408 seed=139231461 hint=(-122.9367, 16.7148, 88.4413)
+    site site.barnards_star.p3.v2c5 "Shallow cache" pos=(-380.0, 9.4954, -132.0) r=1.6 depth=1.0142 diff=1 passes=2 signal=0.3731 seed=481945707 hint=(-364.4492, 10.1547, -128.2351)
+    site site.barnards_star.p3.v2c6 "Scattered trove" pos=(-240.0, 14.1541, -138.0) r=1.6 depth=1.1684 diff=1 passes=1 signal=0.3208 seed=619616780 hint=(-225.1873, 14.8464, -131.9515)
+    site site.barnards_star.p3.v2c7 "Hidden trove" pos=(272.0, 11.0629, -238.0) r=1.6 depth=0.9461 diff=1 passes=1 signal=0.351 seed=851516710 hint=(259.0643, 11.7839, -228.5836)
+    site site.barnards_star.p3.v2c8 "Buried scatter" pos=(-10.0, 24.88, -344.0) r=1.6 depth=0.8748 diff=1 passes=1 signal=0.2237 seed=578473870 hint=(-9.474, 24.7865, -328.0086)
+    site site.barnards_star.p3.v2c9 "Faint cache" pos=(-16.0, 13.7135, 312.0) r=1.6 depth=1.0986 diff=1 passes=2 signal=0.3849 seed=1258463057 hint=(-15.2735, 13.7506, 296.0165)
+    site site.barnards_star.p3.v2c10 "Scattered cache" pos=(70.0, 15.6417, -274.0) r=1.6 depth=1.0382 diff=1 passes=2 signal=0.3745 seed=734431915 hint=(65.4145, 15.3355, -258.6712)
 system sys.sirius "Sirius" class=A1V seed=1266246134 pos=(-1.6, 8.1, -2.5) ftl=8.6267 potential=0.1 known=True reveal=
   body body.sirius.star "Sirius" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=1266246134 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.sirius.p0 "Sirius b" kind=Planet au=0.2769 period=53.2 radiusKm=4247.0 g=0.41 potential=0.7 seed=907808273 scene=Surface_Procedural base=(0.0, 23.4269, -40.0) env=env.gen.body.sirius.p0 gravity=4.0221
-    recipe type=Barren seed=907808273 relief=63.7468 freq=0.004382 offset=(60.8497, 195.5781) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=7 holes=3
+    recipe type=Barren seed=907808273 relief=63.7468 freq=0.004382 offset=(60.8497, 195.5781) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=35 holes=17
       pad (0.0, -40.0, 26.0)
       pad (-248.0, -228.0, 14.0)
       pad (-224.0929, -209.8768, 12.0)
@@ -112,6 +508,34 @@ system sys.sirius "Sirius" class=A1V seed=1266246134 pos=(-1.6, 8.1, -2.5) ftl=8
       pad (279.0098, 34.2818, 12.0)
       pad (-128.0, 260.0, 14.0)
       pad (-116.2268, 232.4066, 12.0)
+      pad (-6.0, -380.0, 14.0)
+      pad (-5.4707, -350.0047, 12.0)
+      pad (282.0, -84.0, 14.0)
+      pad (252.3586, -79.3751, 12.0)
+      pad (-262.0, -54.0, 14.0)
+      pad (-232.0427, -52.3992, 12.0)
+      pad (-184.0, 56.0, 14.0)
+      pad (-157.4025, 42.123, 12.0)
+      pad (186.0, 148.0, 8.0)
+      pad (174.7469, 136.6259, 8.0)
+      pad (-82.0, 74.0, 8.0)
+      pad (-72.6571, 61.0111, 8.0)
+      pad (168.0, -382.0, 8.0)
+      pad (160.9455, -367.6391, 8.0)
+      pad (164.0, -146.0, 8.0)
+      pad (150.5625, -137.3148, 8.0)
+      pad (206.0, -76.0, 8.0)
+      pad (190.2389, -73.2456, 8.0)
+      pad (-66.0, -82.0, 8.0)
+      pad (-52.5014, -73.41, 8.0)
+      pad (-6.0, -104.0, 8.0)
+      pad (-4.5065, -88.0699, 8.0)
+      pad (106.0, 24.0, 8.0)
+      pad (92.303, 15.7301, 8.0)
+      pad (44.0, 154.0, 8.0)
+      pad (40.461, 138.3963, 8.0)
+      pad (178.0, 66.0, 8.0)
+      pad (164.2529, 57.8136, 8.0)
     site site.sirius.p0.s0 "Silent shrine" pos=(-248.0, 27.5775, -228.0) r=4.0 depth=1.6843 diff=2 passes=1 signal=0.8626 seed=1402033281 hint=(-224.0929, 24.8619, -209.8768)
       find artifact.unknown_lump cell=(14, 1, 15) footprint=1
       find artifact.unknown_lump cell=(16, 2, 11) footprint=1
@@ -122,12 +546,40 @@ system sys.sirius "Sirius" class=A1V seed=1266246134 pos=(-1.6, 8.1, -2.5) ftl=8
     site site.sirius.p0.s2 "Fused cache" pos=(-128.0, 17.1995, 260.0) r=4.0 depth=1.8733 diff=3 passes=2 signal=0.6712 seed=697596121 hint=(-116.2268, 18.2224, 232.4066)
       find artifact.unknown_lump cell=(23, 1, 21) footprint=1
       find artifact.unknown_lump cell=(20, 1, 21) footprint=1
+    site site.sirius.p0.v2m0 "Silent outpost" pos=(-6.0, 14.7926, -380.0) r=4.0 depth=1.5731 diff=2 passes=2 signal=0.535 seed=31465129 hint=(-5.4707, 19.2633, -350.0047)
+      find artifact.unknown_lump cell=(17, 3, 6) footprint=1
+      find artifact.unknown_lump cell=(6, 4, 16) footprint=1
+      find artifact.unknown_lump cell=(20, 3, 12) footprint=1
+      find artifact.unknown_lump cell=(6, 3, 15) footprint=1
+      find artifact.unknown_lump cell=(14, 1, 13) footprint=1
+    site site.sirius.p0.v2m1 "Silent spire" pos=(282.0, 22.6039, -84.0) r=4.0 depth=1.8028 diff=1 passes=2 signal=0.6752 seed=486261258 hint=(252.3586, 20.5243, -79.3751)
+      find artifact.unknown_lump cell=(21, 2, 4) footprint=1
+      find artifact.unknown_lump cell=(5, 1, 22) footprint=1
+      find artifact.unknown_lump cell=(11, 3, 5) footprint=1
+    site site.sirius.p0.v2m2 "Hollow cache" pos=(-262.0, 29.4542, -54.0) r=4.0 depth=2.1373 diff=2 passes=1 signal=0.7039 seed=1269731011 hint=(-232.0427, 22.6244, -52.3992)
+      find artifact.unknown_lump cell=(19, 4, 24) footprint=1
+      find artifact.unknown_lump cell=(22, 3, 10) footprint=1
+      find artifact.unknown_lump cell=(12, 2, 18) footprint=1
+    site site.sirius.p0.v2m3 "Fused outpost" pos=(-184.0, 23.8872, 56.0) r=4.0 depth=2.0739 diff=3 passes=2 signal=0.5015 seed=1920952010 hint=(-157.4025, 25.5491, 42.123)
+      find artifact.unknown_lump cell=(7, 2, 18) footprint=1
+      find artifact.unknown_lump cell=(17, 3, 20) footprint=1
+      find artifact.unknown_lump cell=(19, 4, 10) footprint=1
+    site site.sirius.p0.v2c0 "Hidden cache" pos=(186.0, 14.2048, 148.0) r=1.6 depth=1.1929 diff=1 passes=2 signal=0.336 seed=237360808 hint=(174.7469, 16.098, 136.6259)
+    site site.sirius.p0.v2c1 "Hidden stash" pos=(-82.0, 27.1615, 74.0) r=1.6 depth=0.8908 diff=1 passes=2 signal=0.3393 seed=544357281 hint=(-72.6571, 29.1798, 61.0111)
+    site site.sirius.p0.v2c2 "Shallow scatter" pos=(168.0, 25.1066, -382.0) r=1.6 depth=1.2327 diff=1 passes=2 signal=0.2659 seed=823380446 hint=(160.9455, 23.7351, -367.6391)
+    site site.sirius.p0.v2c3 "Faint trove" pos=(164.0, 26.7839, -146.0) r=1.6 depth=1.1003 diff=1 passes=2 signal=0.3922 seed=421536738 hint=(150.5625, 25.9871, -137.3148)
+    site site.sirius.p0.v2c4 "Faint stash" pos=(206.0, 19.8491, -76.0) r=1.6 depth=0.8431 diff=1 passes=1 signal=0.4201 seed=1683591202 hint=(190.2389, 21.3382, -73.2456)
+    site site.sirius.p0.v2c5 "Weak stash" pos=(-66.0, 24.1729, -82.0) r=1.6 depth=1.0051 diff=1 passes=1 signal=0.2614 seed=863041714 hint=(-52.5014, 25.0124, -73.41)
+    site site.sirius.p0.v2c6 "Buried deposit" pos=(-6.0, 20.4289, -104.0) r=1.6 depth=0.9218 diff=1 passes=1 signal=0.273 seed=174295486 hint=(-4.5065, 21.5451, -88.0699)
+    site site.sirius.p0.v2c7 "Shallow cache" pos=(106.0, 16.7379, 24.0) r=1.6 depth=1.0278 diff=1 passes=2 signal=0.221 seed=2115833811 hint=(92.303, 17.6171, 15.7301)
+    site site.sirius.p0.v2c8 "Hidden scatter" pos=(44.0, 17.9657, 154.0) r=1.6 depth=0.9143 diff=1 passes=1 signal=0.4987 seed=258701711 hint=(40.461, 17.1504, 138.3963)
+    site site.sirius.p0.v2c9 "Weak stash" pos=(178.0, 14.4055, 66.0) r=1.6 depth=0.9071 diff=1 passes=2 signal=0.3528 seed=546263371 hint=(164.2529, 14.7789, 57.8136)
   body body.sirius.p1 "Sirius c" kind=Planet au=0.6068 period=172.7 radiusKm=68408.0 g=2.4 potential=0.0 seed=975117428 scene= base=(0.0, 0.0, 0.0) env=env.gen.body.sirius.p1 gravity=23.544
 system sys.epsilon_eridani "Epsilon Eridani" class=K2V seed=1255206308 pos=(6.2, 8.3, -1.7) ftl=10.4986 potential=0.1 known=True reveal=
   body body.epsilon_eridani.star "Epsilon Eridani" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=1255206308 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.epsilon_eridani.p0 "Epsilon Eridani b (AEgir)" kind=Planet au=3.5 period=2391.6 radiusKm=73171.0 g=2.4 potential=0.0 seed=231408951 scene= base=(0.0, 0.0, 0.0) env=env.gen.body.epsilon_eridani.p0 gravity=23.544
   body body.epsilon_eridani.p1 "Epsilon Eridani c" kind=Planet au=40.0 period=92401.8 radiusKm=5409.0 g=0.54 potential=0.56 seed=298718106 scene=Surface_Procedural base=(0.0, 7.4775, -40.0) env=env.gen.body.epsilon_eridani.p1 gravity=5.2974
-    recipe type=Ice seed=298718106 relief=35.0 freq=0.004976 offset=(30.3958, 202.9041) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=7 holes=3
+    recipe type=Ice seed=298718106 relief=35.0 freq=0.004976 offset=(30.3958, 202.9041) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=37 holes=18
       pad (0.0, -40.0, 26.0)
       pad (-32.0, 324.0, 14.0)
       pad (-29.3728, 294.1153, 12.0)
@@ -135,6 +587,36 @@ system sys.epsilon_eridani "Epsilon Eridani" class=K2V seed=1255206308 pos=(6.2,
       pad (-264.2518, -148.5966, 12.0)
       pad (304.0, -130.0, 14.0)
       pad (275.2341, -121.4838, 12.0)
+      pad (218.0, -314.0, 14.0)
+      pad (199.3219, -290.5239, 12.0)
+      pad (294.0, -10.0, 14.0)
+      pad (264.155, -13.0454, 12.0)
+      pad (60.0, -278.0, 14.0)
+      pad (52.6664, -248.9102, 12.0)
+      pad (-308.0, 104.0, 14.0)
+      pad (-280.8235, 91.2941, 12.0)
+      pad (-190.0, 320.0, 14.0)
+      pad (-175.9972, 293.4684, 12.0)
+      pad (-344.0, -128.0, 8.0)
+      pad (-328.4991, -124.0347, 8.0)
+      pad (414.0, 158.0, 8.0)
+      pad (399.5659, 151.0967, 8.0)
+      pad (-180.0, -260.0, 8.0)
+      pad (-169.8682, -247.6167, 8.0)
+      pad (-122.0, 310.0, 8.0)
+      pad (-116.7336, 294.8915, 8.0)
+      pad (70.0, 428.0, 8.0)
+      pad (67.6332, 412.176, 8.0)
+      pad (-106.0, -72.0, 8.0)
+      pad (-90.6828, -67.3759, 8.0)
+      pad (396.0, -198.0, 8.0)
+      pad (381.1392, -192.0707, 8.0)
+      pad (6.0, 132.0, 8.0)
+      pad (5.4422, 116.0097, 8.0)
+      pad (416.0, -74.0, 8.0)
+      pad (400.0532, -72.6967, 8.0)
+      pad (316.0, -76.0, 8.0)
+      pad (300.1028, -74.1889, 8.0)
     site site.epsilon_eridani.p1.s0 "Buried rime shrine" pos=(-32.0, 8.5606, 324.0) r=4.0 depth=1.6643 diff=1 passes=2 signal=0.5863 seed=902174426 hint=(-29.3728, 8.8164, 294.1153)
       find artifact.unknown_lump cell=(17, 2, 22) footprint=1
       find artifact.unknown_lump cell=(16, 4, 17) footprint=1
@@ -145,15 +627,80 @@ system sys.epsilon_eridani "Epsilon Eridani" class=K2V seed=1255206308 pos=(6.2,
       find artifact.unknown_lump cell=(20, 1, 19) footprint=1
       find artifact.unknown_lump cell=(15, 3, 22) footprint=1
       find artifact.unknown_lump cell=(24, 3, 14) footprint=1
+    site site.epsilon_eridani.p1.v2m0 "Hollow frozen spire" pos=(218.0, 16.8539, -314.0) r=4.0 depth=2.0613 diff=3 passes=2 signal=0.4967 seed=1288685333 hint=(199.3219, 15.5023, -290.5239)
+      find artifact.unknown_lump cell=(17, 2, 27) footprint=1
+      find artifact.unknown_lump cell=(16, 2, 17) footprint=1
+      find artifact.unknown_lump cell=(7, 3, 26) footprint=1
+    site site.epsilon_eridani.p1.v2m1 "Fused frozen spire" pos=(294.0, 14.048, -10.0) r=4.0 depth=1.6592 diff=2 passes=1 signal=0.7575 seed=105236212 hint=(264.155, 13.3967, -13.0454)
+      find artifact.unknown_lump cell=(22, 2, 27) footprint=1
+      find artifact.unknown_lump cell=(22, 3, 14) footprint=1
+      find artifact.unknown_lump cell=(12, 2, 13) footprint=1
+      find artifact.unknown_lump cell=(20, 1, 27) footprint=1
+    site site.epsilon_eridani.p1.v2m2 "Shattered rime shrine" pos=(60.0, 12.0932, -278.0) r=4.0 depth=2.0449 diff=3 passes=2 signal=0.8197 seed=1748512964 hint=(52.6664, 10.1881, -248.9102)
+      find artifact.unknown_lump cell=(14, 2, 6) footprint=1
+      find artifact.unknown_lump cell=(23, 1, 18) footprint=1
+      find artifact.unknown_lump cell=(19, 3, 4) footprint=1
+      find artifact.unknown_lump cell=(18, 4, 7) footprint=1
+    site site.epsilon_eridani.p1.v2m3 "Silent ice vault" pos=(-308.0, 11.2281, 104.0) r=4.0 depth=1.7463 diff=1 passes=2 signal=0.8153 seed=811104686 hint=(-280.8235, 11.7068, 91.2941)
+      find artifact.unknown_lump cell=(6, 1, 13) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 8) footprint=1
+      find artifact.unknown_lump cell=(22, 3, 19) footprint=1
+      find artifact.unknown_lump cell=(11, 1, 12) footprint=1
+    site site.epsilon_eridani.p1.v2m4 "Shattered rime shrine" pos=(-190.0, 13.9437, 320.0) r=4.0 depth=2.0082 diff=2 passes=1 signal=0.6118 seed=1022624464 hint=(-175.9972, 12.4155, 293.4684)
+      find artifact.unknown_lump cell=(19, 1, 8) footprint=1
+      find artifact.unknown_lump cell=(24, 2, 21) footprint=1
+      find artifact.unknown_lump cell=(17, 3, 10) footprint=1
+    site site.epsilon_eridani.p1.v2c0 "Weak rime stash" pos=(-344.0, 15.8699, -128.0) r=1.6 depth=1.197 diff=1 passes=2 signal=0.2946 seed=481837883 hint=(-328.4991, 15.0746, -124.0347)
+    site site.epsilon_eridani.p1.v2c1 "Shallow frost trove" pos=(414.0, 13.0838, 158.0) r=1.6 depth=1.0464 diff=1 passes=2 signal=0.4014 seed=69950882 hint=(399.5659, 12.5686, 151.0967)
+    site site.epsilon_eridani.p1.v2c2 "Shallow frost trove" pos=(-180.0, 13.7367, -260.0) r=1.6 depth=0.9432 diff=1 passes=1 signal=0.2459 seed=1648625543 hint=(-169.8682, 12.1052, -247.6167)
+    site site.epsilon_eridani.p1.v2c3 "Weak rime stash" pos=(-122.0, 14.0572, 310.0) r=1.6 depth=0.9976 diff=1 passes=1 signal=0.4344 seed=151924036 hint=(-116.7336, 13.0002, 294.8915)
+    site site.epsilon_eridani.p1.v2c4 "Buried frost trove" pos=(70.0, 9.8081, 428.0) r=1.6 depth=1.1053 diff=1 passes=2 signal=0.4908 seed=1357992479 hint=(67.6332, 8.0368, 412.176)
+    site site.epsilon_eridani.p1.v2c5 "Weak rime stash" pos=(-106.0, 8.5237, -72.0) r=1.6 depth=0.9902 diff=1 passes=2 signal=0.2417 seed=1916544539 hint=(-90.6828, 8.019, -67.3759)
+    site site.epsilon_eridani.p1.v2c6 "Buried frost trove" pos=(396.0, 8.2272, -198.0) r=1.6 depth=1.0837 diff=1 passes=1 signal=0.41 seed=861609922 hint=(381.1392, 9.5071, -192.0707)
+    site site.epsilon_eridani.p1.v2c7 "Scattered frost trove" pos=(6.0, 13.9253, 132.0) r=1.6 depth=1.2146 diff=1 passes=2 signal=0.2797 seed=1793124928 hint=(5.4422, 13.758, 116.0097)
+    site site.epsilon_eridani.p1.v2c8 "Buried frost trove" pos=(416.0, 10.8864, -74.0) r=1.6 depth=1.0834 diff=1 passes=2 signal=0.2248 seed=515691428 hint=(400.0532, 10.0388, -72.6967)
+    site site.epsilon_eridani.p1.v2c9 "Hidden frost trove" pos=(316.0, 13.298, -76.0) r=1.6 depth=1.0331 diff=1 passes=2 signal=0.3027 seed=713976228 hint=(300.1028, 13.1819, -74.1889)
 system sys.tau_ceti "Tau Ceti" class=G8V seed=-837112621 pos=(10.3, 5.0, -3.3) ftl=11.9155 potential=0.9 known=False reveal=chain.moon_mars.extrasolar_coords
   body body.tau_ceti.star "Tau Ceti" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=-837112621 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.tau_ceti.p0 "Tau Ceti b" kind=Planet au=0.2477 period=45.0 radiusKm=7107.0 g=0.74 potential=0.7 seed=2112208912 scene=Surface_Procedural base=(0.0, 18.8994, -40.0) env=env.gen.body.tau_ceti.p0 gravity=7.2594
-    recipe type=Volcanic seed=2112208912 relief=60.0 freq=0.004084 offset=(39.6242, 77.6846) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=5 holes=2
+    recipe type=Volcanic seed=2112208912 relief=60.0 freq=0.004084 offset=(39.6242, 77.6846) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=37 holes=18
       pad (0.0, -40.0, 26.0)
       pad (200.0, 222.0, 14.0)
       pad (181.7968, 198.1538, 12.0)
       pad (-146.0, -180.0, 14.0)
       pad (-124.3465, -159.2364, 12.0)
+      pad (334.0, -140.0, 14.0)
+      pad (305.2605, -131.3954, 12.0)
+      pad (-194.0, -76.0, 14.0)
+      pad (-164.5036, -70.5264, 12.0)
+      pad (166.0, -208.0, 14.0)
+      pad (144.9142, -186.6602, 12.0)
+      pad (-86.0, 352.0, 14.0)
+      pad (-79.5713, 322.6969, 12.0)
+      pad (-4.0, 254.0, 14.0)
+      pad (-3.5919, 224.0028, 12.0)
+      pad (6.0, -424.0, 8.0)
+      pad (5.75, -408.002, 8.0)
+      pad (62.0, 188.0, 8.0)
+      pad (57.8016, 172.5607, 8.0)
+      pad (240.0, 336.0, 8.0)
+      pad (231.3914, 322.5132, 8.0)
+      pad (-204.0, 142.0, 8.0)
+      pad (-192.0609, 131.3484, 8.0)
+      pad (-24.0, -330.0, 8.0)
+      pad (-22.6804, -314.0545, 8.0)
+      pad (-108.0, -24.0, 8.0)
+      pad (-92.1727, -26.3448, 8.0)
+      pad (-250.0, -310.0, 8.0)
+      pad (-239.1295, -298.2598, 8.0)
+      pad (-124.0, 114.0, 8.0)
+      pad (-113.9655, 101.5377, 8.0)
+      pad (-52.0, -412.0, 8.0)
+      pad (-49.785, -396.1541, 8.0)
+      pad (154.0, -358.0, 8.0)
+      pad (147.0263, -343.5997, 8.0)
+      pad (38.0, -248.0, 8.0)
+      pad (35.1245, -232.2605, 8.0)
     site site.tau_ceti.p0.s0 "Old ash cairn" pos=(200.0, 29.3414, 222.0) r=4.0 depth=1.9558 diff=1 passes=1 signal=0.889 seed=1497018116 hint=(181.7968, 26.2493, 198.1538)
       find artifact.unknown_lump cell=(6, 3, 8) footprint=1
       find artifact.unknown_lump cell=(19, 1, 12) footprint=1
@@ -162,8 +709,42 @@ system sys.tau_ceti "Tau Ceti" class=G8V seed=-837112621 pos=(10.3, 5.0, -3.3) f
       find artifact.unknown_lump cell=(16, 2, 24) footprint=1
       find artifact.unknown_lump cell=(14, 3, 6) footprint=1
       find artifact.unknown_lump cell=(13, 3, 23) footprint=1
+    site site.tau_ceti.p0.v2m0 "Hollow ash cairn" pos=(334.0, 16.7777, -140.0) r=4.0 depth=1.6318 diff=1 passes=1 signal=0.7705 seed=1900136011 hint=(305.2605, 16.9208, -131.3954)
+      find artifact.unknown_lump cell=(10, 4, 7) footprint=1
+      find artifact.unknown_lump cell=(8, 4, 4) footprint=1
+      find artifact.unknown_lump cell=(16, 4, 27) footprint=1
+    site site.tau_ceti.p0.v2m1 "Fused vent relay" pos=(-194.0, 16.4592, -76.0) r=4.0 depth=1.6942 diff=1 passes=1 signal=0.6129 seed=646650646 hint=(-164.5036, 18.5528, -70.5264)
+      find artifact.unknown_lump cell=(5, 3, 7) footprint=1
+      find artifact.unknown_lump cell=(7, 2, 7) footprint=1
+      find artifact.unknown_lump cell=(16, 1, 6) footprint=1
+      find artifact.unknown_lump cell=(19, 2, 5) footprint=1
+    site site.tau_ceti.p0.v2m2 "Buried vent relay" pos=(166.0, 19.4032, -208.0) r=4.0 depth=2.0154 diff=2 passes=1 signal=0.8307 seed=352261240 hint=(144.9142, 20.8, -186.6602)
+      find artifact.unknown_lump cell=(24, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(15, 4, 8) footprint=1
+      find artifact.unknown_lump cell=(24, 3, 9) footprint=1
+      find artifact.unknown_lump cell=(22, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(9, 4, 14) footprint=1
+    site site.tau_ceti.p0.v2m3 "Shattered ash cairn" pos=(-86.0, 16.182, 352.0) r=4.0 depth=2.1412 diff=3 passes=2 signal=0.6868 seed=2135263586 hint=(-79.5713, 16.3296, 322.6969)
+      find artifact.unknown_lump cell=(18, 2, 22) footprint=1
+      find artifact.unknown_lump cell=(17, 1, 10) footprint=1
+      find artifact.unknown_lump cell=(18, 2, 18) footprint=1
+    site site.tau_ceti.p0.v2m4 "Hollow ash cairn" pos=(-4.0, 24.771, 254.0) r=4.0 depth=1.969 diff=1 passes=1 signal=0.7343 seed=317946840 hint=(-3.5919, 24.7219, 224.0028)
+      find artifact.unknown_lump cell=(16, 3, 4) footprint=1
+      find artifact.unknown_lump cell=(6, 2, 25) footprint=1
+      find artifact.unknown_lump cell=(4, 1, 23) footprint=1
+    site site.tau_ceti.p0.v2c0 "Buried ash cache" pos=(6.0, 23.7773, -424.0) r=1.6 depth=1.0164 diff=1 passes=1 signal=0.2776 seed=850398578 hint=(5.75, 21.5508, -408.002)
+    site site.tau_ceti.p0.v2c1 "Hidden vent deposit" pos=(62.0, 24.0669, 188.0) r=1.6 depth=1.0362 diff=1 passes=1 signal=0.4346 seed=166755993 hint=(57.8016, 23.7388, 172.5607)
+    site site.tau_ceti.p0.v2c2 "Scattered vent deposit" pos=(240.0, 17.4135, 336.0) r=1.6 depth=0.8819 diff=1 passes=2 signal=0.3483 seed=317075309 hint=(231.3914, 18.6287, 322.5132)
+    site site.tau_ceti.p0.v2c3 "Buried cinder stash" pos=(-204.0, 21.748, 142.0) r=1.6 depth=1.073 diff=1 passes=1 signal=0.3149 seed=1144266088 hint=(-192.0609, 20.7969, 131.3484)
+    site site.tau_ceti.p0.v2c4 "Scattered vent deposit" pos=(-24.0, 22.3687, -330.0) r=1.6 depth=1.2521 diff=1 passes=2 signal=0.4249 seed=1971048616 hint=(-22.6804, 19.6096, -314.0545)
+    site site.tau_ceti.p0.v2c5 "Weak ash cache" pos=(-108.0, 20.4774, -24.0) r=1.6 depth=1.1101 diff=1 passes=2 signal=0.3427 seed=2073296768 hint=(-92.1727, 19.9951, -26.3448)
+    site site.tau_ceti.p0.v2c6 "Weak cinder stash" pos=(-250.0, 24.9208, -310.0) r=1.6 depth=1.2866 diff=1 passes=2 signal=0.4704 seed=125069569 hint=(-239.1295, 25.2751, -298.2598)
+    site site.tau_ceti.p0.v2c7 "Shallow cinder stash" pos=(-124.0, 19.9414, 114.0) r=1.6 depth=0.9548 diff=1 passes=1 signal=0.3639 seed=1511172473 hint=(-113.9655, 21.7748, 101.5377)
+    site site.tau_ceti.p0.v2c8 "Hidden cinder stash" pos=(-52.0, 18.9549, -412.0) r=1.6 depth=1.295 diff=1 passes=1 signal=0.264 seed=528325355 hint=(-49.785, 17.8038, -396.1541)
+    site site.tau_ceti.p0.v2c9 "Buried vent deposit" pos=(154.0, 18.2566, -358.0) r=1.6 depth=0.8015 diff=1 passes=1 signal=0.449 seed=1476479736 hint=(147.0263, 18.9827, -343.5997)
+    site site.tau_ceti.p0.v2c10 "Buried vent deposit" pos=(38.0, 18.4624, -248.0) r=1.6 depth=1.1764 diff=1 passes=1 signal=0.3903 seed=1117996456 hint=(35.1245, 16.8264, -232.2605)
   body body.tau_ceti.p1 "Tau Ceti c" kind=Planet au=0.578 period=160.5 radiusKm=2519.0 g=0.64 potential=0.7 seed=166683357 scene=Surface_Procedural base=(0.0, 18.6445, -40.0) env=env.gen.body.tau_ceti.p1 gravity=6.2784
-    recipe type=Desert seed=166683357 relief=54.6601 freq=0.004645 offset=(459.7646, 63.0735) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=7 holes=3
+    recipe type=Desert seed=166683357 relief=54.6601 freq=0.004645 offset=(459.7646, 63.0735) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=39 holes=19
       pad (0.0, -40.0, 26.0)
       pad (202.0, 120.0, 14.0)
       pad (178.4834, 101.3729, 12.0)
@@ -171,6 +752,38 @@ system sys.tau_ceti "Tau Ceti" class=G8V seed=-837112621 pos=(10.3, 5.0, -3.3) f
       pad (-209.8634, 191.7622, 12.0)
       pad (-54.0, -290.0, 14.0)
       pad (-47.6661, -260.6763, 12.0)
+      pad (136.0, -188.0, 14.0)
+      pad (115.7012, -165.9102, 12.0)
+      pad (204.0, -56.0, 14.0)
+      pad (174.0919, -53.6543, 12.0)
+      pad (-56.0, 300.0, 14.0)
+      pad (-51.1245, 270.3988, 12.0)
+      pad (334.0, -140.0, 14.0)
+      pad (305.2605, -131.3954, 12.0)
+      pad (162.0, -278.0, 8.0)
+      pad (152.997, -264.7733, 8.0)
+      pad (-270.0, 6.0, 8.0)
+      pad (-254.2273, 3.3128, 8.0)
+      pad (106.0, -44.0, 8.0)
+      pad (90.0114, -43.3967, 8.0)
+      pad (-172.0, 392.0, 8.0)
+      pad (-166.0815, 377.1349, 8.0)
+      pad (260.0, 266.0, 8.0)
+      pad (249.6399, 253.807, 8.0)
+      pad (-166.0, 282.0, 8.0)
+      pad (-158.6685, 267.7786, 8.0)
+      pad (-310.0, -140.0, 8.0)
+      pad (-294.7727, -135.088, 8.0)
+      pad (276.0, 34.0, 8.0)
+      pad (260.5458, 29.8565, 8.0)
+      pad (-94.0, -10.0, 8.0)
+      pad (-78.7575, -14.8646, 8.0)
+      pad (-102.0, 182.0, 8.0)
+      pad (-95.32, 167.4612, 8.0)
+      pad (-240.0, -184.0, 8.0)
+      pad (-226.2801, -175.7681, 8.0)
+      pad (50.0, -416.0, 8.0)
+      pad (47.8909, -400.1396, 8.0)
     site site.tau_ceti.p1.s0 "Shattered cache" pos=(202.0, 16.502, 120.0) r=4.0 depth=1.9096 diff=1 passes=2 signal=0.8842 seed=374007055 hint=(178.4834, 17.7022, 101.3729)
       find artifact.unknown_lump cell=(25, 1, 23) footprint=1
       find artifact.unknown_lump cell=(14, 4, 11) footprint=1
@@ -181,8 +794,42 @@ system sys.tau_ceti "Tau Ceti" class=G8V seed=-837112621 pos=(10.3, 5.0, -3.3) f
       find artifact.unknown_lump cell=(7, 2, 25) footprint=1
       find artifact.unknown_lump cell=(19, 3, 7) footprint=1
       find artifact.unknown_lump cell=(10, 2, 16) footprint=1
+    site site.tau_ceti.p1.v2m0 "Old spire" pos=(136.0, 20.8574, -188.0) r=4.0 depth=2.1091 diff=3 passes=1 signal=0.6302 seed=1149139998 hint=(115.7012, 18.0754, -165.9102)
+      find artifact.unknown_lump cell=(12, 4, 16) footprint=1
+      find artifact.unknown_lump cell=(4, 4, 5) footprint=1
+      find artifact.unknown_lump cell=(7, 4, 13) footprint=1
+      find artifact.unknown_lump cell=(12, 2, 12) footprint=1
+      find artifact.unknown_lump cell=(23, 1, 14) footprint=1
+    site site.tau_ceti.p1.v2m1 "Hollow cache" pos=(204.0, 11.3167, -56.0) r=4.0 depth=1.5198 diff=1 passes=2 signal=0.6862 seed=1699510438 hint=(174.0919, 12.8157, -53.6543)
+      find artifact.unknown_lump cell=(12, 3, 24) footprint=1
+      find artifact.unknown_lump cell=(26, 1, 4) footprint=1
+      find artifact.unknown_lump cell=(16, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(10, 3, 14) footprint=1
+    site site.tau_ceti.p1.v2m2 "Silent cache" pos=(-56.0, 27.0469, 300.0) r=4.0 depth=1.7026 diff=1 passes=2 signal=0.6088 seed=799664659 hint=(-51.1245, 26.301, 270.3988)
+      find artifact.unknown_lump cell=(10, 1, 9) footprint=1
+      find artifact.unknown_lump cell=(8, 1, 16) footprint=1
+      find artifact.unknown_lump cell=(27, 3, 15) footprint=1
+      find artifact.unknown_lump cell=(10, 3, 19) footprint=1
+    site site.tau_ceti.p1.v2m3 "Hollow cache" pos=(334.0, 16.9308, -140.0) r=4.0 depth=2.0566 diff=2 passes=1 signal=0.567 seed=111167761 hint=(305.2605, 16.0426, -131.3954)
+      find artifact.unknown_lump cell=(18, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(20, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(25, 1, 27) footprint=1
+      find artifact.unknown_lump cell=(4, 4, 13) footprint=1
+      find artifact.unknown_lump cell=(23, 1, 10) footprint=1
+    site site.tau_ceti.p1.v2c0 "Shallow trove" pos=(162.0, 23.3981, -278.0) r=1.6 depth=1.0299 diff=1 passes=2 signal=0.3234 seed=1916601951 hint=(152.997, 22.0932, -264.7733)
+    site site.tau_ceti.p1.v2c1 "Shallow scatter" pos=(-270.0, 18.2107, 6.0) r=1.6 depth=0.8688 diff=1 passes=1 signal=0.3454 seed=155664076 hint=(-254.2273, 18.2851, 3.3128)
+    site site.tau_ceti.p1.v2c2 "Shallow stash" pos=(106.0, 21.9071, -44.0) r=1.6 depth=1.1507 diff=1 passes=2 signal=0.2858 seed=774789677 hint=(90.0114, 23.4126, -43.3967)
+    site site.tau_ceti.p1.v2c3 "Buried scatter" pos=(-172.0, 19.8401, 392.0) r=1.6 depth=1.2086 diff=1 passes=1 signal=0.4422 seed=1079202963 hint=(-166.0815, 19.7887, 377.1349)
+    site site.tau_ceti.p1.v2c4 "Shallow deposit" pos=(260.0, 23.0156, 266.0) r=1.6 depth=1.1786 diff=1 passes=2 signal=0.4939 seed=1970644514 hint=(249.6399, 24.5549, 253.807)
+    site site.tau_ceti.p1.v2c5 "Buried scatter" pos=(-166.0, 24.8769, 282.0) r=1.6 depth=1.2853 diff=1 passes=1 signal=0.4614 seed=1894300147 hint=(-158.6685, 24.7525, 267.7786)
+    site site.tau_ceti.p1.v2c6 "Buried stash" pos=(-310.0, 27.9556, -140.0) r=1.6 depth=1.2493 diff=1 passes=2 signal=0.3786 seed=226903374 hint=(-294.7727, 28.2851, -135.088)
+    site site.tau_ceti.p1.v2c7 "Faint deposit" pos=(276.0, 16.9026, 34.0) r=1.6 depth=0.8376 diff=1 passes=1 signal=0.4185 seed=928584780 hint=(260.5458, 16.9616, 29.8565)
+    site site.tau_ceti.p1.v2c8 "Weak trove" pos=(-94.0, 19.8296, -10.0) r=1.6 depth=0.8469 diff=1 passes=2 signal=0.3024 seed=94943544 hint=(-78.7575, 20.4898, -14.8646)
+    site site.tau_ceti.p1.v2c9 "Buried cache" pos=(-102.0, 26.5655, 182.0) r=1.6 depth=0.8377 diff=1 passes=2 signal=0.3272 seed=266727061 hint=(-95.32, 26.1516, 167.4612)
+    site site.tau_ceti.p1.v2c10 "Weak stash" pos=(-240.0, 20.9959, -184.0) r=1.6 depth=0.8129 diff=1 passes=1 signal=0.4086 seed=979276963 hint=(-226.2801, 22.1497, -175.7681)
+    site site.tau_ceti.p1.v2c11 "Scattered trove" pos=(50.0, 20.5083, -416.0) r=1.6 depth=0.8993 diff=1 passes=2 signal=0.3284 seed=1092269493 hint=(47.8909, 17.1217, -400.1396)
   body body.tau_ceti.p2 "Tau Ceti d" kind=Planet au=1.4221 period=619.4 radiusKm=5693.0 g=1.03 potential=0.29 seed=32108974 scene=Surface_Procedural base=(0.0, 25.4415, -40.0) env=env.gen.body.tau_ceti.p2 gravity=10.1043
-    recipe type=Desert seed=32108974 relief=63.9855 freq=0.004721 offset=(147.2554, 340.1852) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=7 holes=3
+    recipe type=Desert seed=32108974 relief=63.9855 freq=0.004721 offset=(147.2554, 340.1852) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=35 holes=17
       pad (0.0, -40.0, 26.0)
       pad (-106.0, 230.0, 14.0)
       pad (-95.0368, 202.075, 12.0)
@@ -190,6 +837,34 @@ system sys.tau_ceti "Tau Ceti" class=G8V seed=-837112621 pos=(10.3, 5.0, -3.3) f
       pad (-128.2138, -161.3757, 12.0)
       pad (216.0, -6.0, 14.0)
       pad (186.3649, -10.6648, 12.0)
+      pad (-258.0, -70.0, 14.0)
+      pad (-228.2008, -66.535, 12.0)
+      pad (-388.0, -68.0, 14.0)
+      pad (-358.0778, -65.8407, 12.0)
+      pad (334.0, -252.0, 14.0)
+      pad (308.6714, -235.9232, 12.0)
+      pad (342.0, 22.0, 8.0)
+      pad (326.2566, 19.1459, 8.0)
+      pad (-268.0, -302.0, 8.0)
+      pad (-256.559, -290.8151, 8.0)
+      pad (358.0, -64.0, 8.0)
+      pad (342.0358, -62.9298, 8.0)
+      pad (374.0, -208.0, 8.0)
+      pad (359.4049, -201.4439, 8.0)
+      pad (-336.0, -42.0, 8.0)
+      pad (-320.0003, -41.9048, 8.0)
+      pad (-94.0, 388.0, 8.0)
+      pad (-90.5678, 372.3725, 8.0)
+      pad (50.0, 136.0, 8.0)
+      pad (45.6276, 120.609, 8.0)
+      pad (-24.0, 320.0, 8.0)
+      pad (-22.9357, 304.0354, 8.0)
+      pad (-276.0, -10.0, 8.0)
+      pad (-260.0937, -11.729, 8.0)
+      pad (-304.0, 208.0, 8.0)
+      pad (-291.6022, 197.886, 8.0)
+      pad (-64.0, -78.0, 8.0)
+      pad (-50.2423, -69.8314, 8.0)
     site site.tau_ceti.p2.s0 "Shattered shrine" pos=(-106.0, 20.6124, 230.0) r=4.0 depth=1.6581 diff=1 passes=1 signal=0.8265 seed=1018007328 hint=(-95.0368, 18.9555, 202.075)
       find artifact.unknown_lump cell=(21, 3, 7) footprint=1
       find artifact.unknown_lump cell=(17, 2, 10) footprint=1
@@ -199,23 +874,113 @@ system sys.tau_ceti "Tau Ceti" class=G8V seed=-837112621 pos=(10.3, 5.0, -3.3) f
     site site.tau_ceti.p2.s2 "Old outpost" pos=(216.0, 22.4234, -6.0) r=4.0 depth=1.605 diff=2 passes=1 signal=0.5262 seed=226251210 hint=(186.3649, 25.6693, -10.6648)
       find artifact.unknown_lump cell=(25, 3, 10) footprint=1
       find artifact.unknown_lump cell=(7, 4, 14) footprint=1
+    site site.tau_ceti.p2.v2m0 "Old outpost" pos=(-258.0, 20.7746, -70.0) r=4.0 depth=2.1685 diff=1 passes=2 signal=0.546 seed=1659980617 hint=(-228.2008, 24.042, -66.535)
+      find artifact.unknown_lump cell=(18, 1, 18) footprint=1
+      find artifact.unknown_lump cell=(5, 4, 23) footprint=1
+      find artifact.unknown_lump cell=(20, 4, 20) footprint=1
+    site site.tau_ceti.p2.v2m1 "Fused cache" pos=(-388.0, 29.1784, -68.0) r=4.0 depth=1.6281 diff=2 passes=1 signal=0.6628 seed=1777210035 hint=(-358.0778, 25.6634, -65.8407)
+      find artifact.unknown_lump cell=(23, 4, 20) footprint=1
+      find artifact.unknown_lump cell=(5, 1, 22) footprint=1
+      find artifact.unknown_lump cell=(27, 3, 23) footprint=1
+      find artifact.unknown_lump cell=(8, 2, 14) footprint=1
+    site site.tau_ceti.p2.v2m2 "Shattered cache" pos=(334.0, 25.7055, -252.0) r=4.0 depth=1.9749 diff=3 passes=2 signal=0.7673 seed=164333410 hint=(308.6714, 26.4627, -235.9232)
+      find artifact.unknown_lump cell=(19, 4, 9) footprint=1
+      find artifact.unknown_lump cell=(19, 2, 14) footprint=1
+      find artifact.unknown_lump cell=(5, 3, 26) footprint=1
+      find artifact.unknown_lump cell=(19, 1, 27) footprint=1
+    site site.tau_ceti.p2.v2c0 "Shallow stash" pos=(342.0, 18.0923, 22.0) r=1.6 depth=0.8597 diff=1 passes=2 signal=0.3233 seed=268538973 hint=(326.2566, 19.1543, 19.1459)
+    site site.tau_ceti.p2.v2c1 "Weak stash" pos=(-268.0, 26.3311, -302.0) r=1.6 depth=0.8633 diff=1 passes=1 signal=0.4582 seed=1192223707 hint=(-256.559, 24.2639, -290.8151)
+    site site.tau_ceti.p2.v2c2 "Shallow scatter" pos=(358.0, 21.9707, -64.0) r=1.6 depth=1.2937 diff=1 passes=1 signal=0.3427 seed=611169716 hint=(342.0358, 21.0431, -62.9298)
+    site site.tau_ceti.p2.v2c3 "Hidden scatter" pos=(374.0, 22.8926, -208.0) r=1.6 depth=1.0129 diff=1 passes=2 signal=0.3221 seed=1583969866 hint=(359.4049, 25.5274, -201.4439)
+    site site.tau_ceti.p2.v2c4 "Shallow cache" pos=(-336.0, 22.7382, -42.0) r=1.6 depth=1.2333 diff=1 passes=1 signal=0.3198 seed=275449700 hint=(-320.0003, 21.7743, -41.9048)
+    site site.tau_ceti.p2.v2c5 "Scattered deposit" pos=(-94.0, 28.5128, 388.0) r=1.6 depth=0.9943 diff=1 passes=1 signal=0.3029 seed=1486419650 hint=(-90.5678, 26.3743, 372.3725)
+    site site.tau_ceti.p2.v2c6 "Shallow scatter" pos=(50.0, 26.0853, 136.0) r=1.6 depth=1.1749 diff=1 passes=1 signal=0.2205 seed=1272321338 hint=(45.6276, 25.6984, 120.609)
+    site site.tau_ceti.p2.v2c7 "Hidden cache" pos=(-24.0, 27.1979, 320.0) r=1.6 depth=0.8166 diff=1 passes=1 signal=0.4158 seed=1424502787 hint=(-22.9357, 29.2876, 304.0354)
+    site site.tau_ceti.p2.v2c8 "Weak deposit" pos=(-276.0, 18.3463, -10.0) r=1.6 depth=0.8751 diff=1 passes=2 signal=0.4128 seed=1107678869 hint=(-260.0937, 20.2289, -11.729)
+    site site.tau_ceti.p2.v2c9 "Hidden cache" pos=(-304.0, 28.2843, 208.0) r=1.6 depth=1.2059 diff=1 passes=2 signal=0.4709 seed=916962826 hint=(-291.6022, 26.3158, 197.886)
+    site site.tau_ceti.p2.v2c10 "Hidden trove" pos=(-64.0, 27.5889, -78.0) r=1.6 depth=0.8087 diff=1 passes=2 signal=0.4966 seed=898573079 hint=(-50.2423, 26.6, -69.8314)
   body body.tau_ceti.p3 "Tau Ceti e" kind=Planet au=2.6043 period=1535.1 radiusKm=2902.0 g=0.83 potential=0.48 seed=2111509707 scene=Surface_Procedural base=(0.0, 18.0622, -40.0) env=env.gen.body.tau_ceti.p3 gravity=8.1423
-    recipe type=Barren seed=2111509707 relief=48.7596 freq=0.004591 offset=(409.9281, 206.0943) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=5 holes=2
+    recipe type=Barren seed=2111509707 relief=48.7596 freq=0.004591 offset=(409.9281, 206.0943) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=33 holes=16
       pad (0.0, -40.0, 26.0)
       pad (182.0, -224.0, 14.0)
       pad (160.903, -202.6712, 12.0)
       pad (-120.0, 200.0, 14.0)
       pad (-106.5836, 173.1672, 12.0)
+      pad (-382.0, -180.0, 14.0)
+      pad (-353.8321, -169.6767, 12.0)
+      pad (246.0, 184.0, 14.0)
+      pad (223.8181, 163.8019, 12.0)
+      pad (-260.0, -156.0, 14.0)
+      pad (-232.6031, -143.7767, 12.0)
+      pad (-288.0, 230.0, 14.0)
+      pad (-266.1139, 209.4818, 12.0)
+      pad (-180.0, -270.0, 14.0)
+      pad (-161.5108, -246.3748, 12.0)
+      pad (-32.0, 240.0, 14.0)
+      pad (-28.5936, 210.194, 12.0)
+      pad (-28.0, 386.0, 8.0)
+      pad (-26.9506, 370.0345, 8.0)
+      pad (-328.0, -234.0, 8.0)
+      pad (-314.2285, -225.8547, 8.0)
+      pad (84.0, -292.0, 8.0)
+      pad (78.9404, -276.8211, 8.0)
+      pad (312.0, -236.0, 8.0)
+      pad (298.4516, -227.4888, 8.0)
+      pad (70.0, -130.0, 8.0)
+      pad (60.177, -117.3704, 8.0)
+      pad (396.0, -46.0, 8.0)
+      pad (380.0018, -45.7576, 8.0)
+      pad (322.0, 32.0, 8.0)
+      pad (306.3856, 28.5086, 8.0)
+      pad (-46.0, -396.0, 8.0)
+      pad (-43.9496, -380.1319, 8.0)
     site site.tau_ceti.p3.s0 "Buried spire" pos=(182.0, 14.3187, -224.0) r=4.0 depth=1.9473 diff=2 passes=1 signal=0.5429 seed=101230627 hint=(160.903, 9.4863, -202.6712)
       find artifact.unknown_lump cell=(12, 1, 15) footprint=1
       find artifact.unknown_lump cell=(8, 4, 15) footprint=1
     site site.tau_ceti.p3.s1 "Fused outpost" pos=(-120.0, 19.0206, 200.0) r=4.0 depth=1.8945 diff=2 passes=2 signal=0.8176 seed=956666022 hint=(-106.5836, 18.5857, 173.1672)
       find artifact.unknown_lump cell=(19, 1, 12) footprint=1
       find artifact.unknown_lump cell=(17, 2, 15) footprint=1
+    site site.tau_ceti.p3.v2m0 "Hollow outpost" pos=(-382.0, 18.3944, -180.0) r=4.0 depth=1.5118 diff=1 passes=2 signal=0.6908 seed=222943552 hint=(-353.8321, 16.1195, -169.6767)
+      find artifact.unknown_lump cell=(6, 3, 22) footprint=1
+      find artifact.unknown_lump cell=(10, 4, 4) footprint=1
+      find artifact.unknown_lump cell=(17, 3, 17) footprint=1
+    site site.tau_ceti.p3.v2m1 "Hollow spire" pos=(246.0, 18.6897, 184.0) r=4.0 depth=1.9322 diff=1 passes=2 signal=0.8307 seed=1504390270 hint=(223.8181, 17.5205, 163.8019)
+      find artifact.unknown_lump cell=(10, 3, 12) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 26) footprint=1
+      find artifact.unknown_lump cell=(21, 1, 15) footprint=1
+      find artifact.unknown_lump cell=(17, 1, 6) footprint=1
+      find artifact.unknown_lump cell=(25, 2, 20) footprint=1
+    site site.tau_ceti.p3.v2m2 "Hollow relay" pos=(-260.0, 16.8842, -156.0) r=4.0 depth=1.9185 diff=2 passes=1 signal=0.573 seed=103709661 hint=(-232.6031, 15.6297, -143.7767)
+      find artifact.unknown_lump cell=(23, 4, 9) footprint=1
+      find artifact.unknown_lump cell=(26, 2, 19) footprint=1
+      find artifact.unknown_lump cell=(14, 4, 16) footprint=1
+      find artifact.unknown_lump cell=(22, 2, 4) footprint=1
+    site site.tau_ceti.p3.v2m3 "Hollow spire" pos=(-288.0, 15.0761, 230.0) r=4.0 depth=1.8541 diff=2 passes=1 signal=0.7983 seed=718943686 hint=(-266.1139, 15.8229, 209.4818)
+      find artifact.unknown_lump cell=(4, 4, 4) footprint=1
+      find artifact.unknown_lump cell=(21, 1, 18) footprint=1
+      find artifact.unknown_lump cell=(19, 3, 7) footprint=1
+      find artifact.unknown_lump cell=(14, 3, 9) footprint=1
+      find artifact.unknown_lump cell=(13, 2, 5) footprint=1
+    site site.tau_ceti.p3.v2m4 "Sunken shrine" pos=(-180.0, 18.0483, -270.0) r=4.0 depth=1.7922 diff=1 passes=1 signal=0.4537 seed=1045974068 hint=(-161.5108, 15.8504, -246.3748)
+      find artifact.unknown_lump cell=(11, 1, 12) footprint=1
+      find artifact.unknown_lump cell=(23, 4, 4) footprint=1
+      find artifact.unknown_lump cell=(15, 2, 24) footprint=1
+    site site.tau_ceti.p3.v2m5 "Old cache" pos=(-32.0, 18.4343, 240.0) r=4.0 depth=1.5574 diff=1 passes=2 signal=0.8266 seed=824137058 hint=(-28.5936, 17.0572, 210.194)
+      find artifact.unknown_lump cell=(18, 2, 10) footprint=1
+      find artifact.unknown_lump cell=(9, 2, 21) footprint=1
+      find artifact.unknown_lump cell=(14, 1, 20) footprint=1
+    site site.tau_ceti.p3.v2c0 "Weak trove" pos=(-28.0, 16.9209, 386.0) r=1.6 depth=1.025 diff=1 passes=2 signal=0.3487 seed=982611311 hint=(-26.9506, 18.6798, 370.0345)
+    site site.tau_ceti.p3.v2c1 "Shallow scatter" pos=(-328.0, 11.7374, -234.0) r=1.6 depth=0.9526 diff=1 passes=2 signal=0.4075 seed=2058892600 hint=(-314.2285, 11.891, -225.8547)
+    site site.tau_ceti.p3.v2c2 "Shallow deposit" pos=(84.0, 13.7383, -292.0) r=1.6 depth=0.8026 diff=1 passes=2 signal=0.4232 seed=1594879306 hint=(78.9404, 14.1908, -276.8211)
+    site site.tau_ceti.p3.v2c3 "Hidden deposit" pos=(312.0, 16.6759, -236.0) r=1.6 depth=1.2949 diff=1 passes=2 signal=0.2781 seed=1702501045 hint=(298.4516, 17.8179, -227.4888)
+    site site.tau_ceti.p3.v2c4 "Buried scatter" pos=(70.0, 17.7011, -130.0) r=1.6 depth=1.1342 diff=1 passes=2 signal=0.4145 seed=1214971422 hint=(60.177, 18.0428, -117.3704)
+    site site.tau_ceti.p3.v2c5 "Scattered trove" pos=(396.0, 16.2199, -46.0) r=1.6 depth=1.0415 diff=1 passes=2 signal=0.3116 seed=1304242332 hint=(380.0018, 16.8076, -45.7576)
+    site site.tau_ceti.p3.v2c6 "Faint stash" pos=(322.0, 16.2387, 32.0) r=1.6 depth=0.9521 diff=1 passes=2 signal=0.4201 seed=1597989196 hint=(306.3856, 16.9245, 28.5086)
+    site site.tau_ceti.p3.v2c7 "Shallow cache" pos=(-46.0, 14.6379, -396.0) r=1.6 depth=0.8494 diff=1 passes=2 signal=0.4927 seed=1876318439 hint=(-43.9496, 15.3152, -380.1319)
 system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=(-1.55, -1.18, -3.77) ftl=4.2436 potential=0.1 known=True reveal=
   body body.proxima_centauri.star "Proxima Centauri" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=2074220399 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.proxima_centauri.p0 "Proxima d" kind=Planet au=0.029 period=1.8 radiusKm=3332.0 g=0.82 potential=0.26 seed=316490934 scene=Surface_Procedural base=(0.0, 14.8128, -40.0) env=env.gen.body.proxima_centauri.p0 gravity=8.0442
-    recipe type=Volcanic seed=316490934 relief=60.0 freq=0.004027 offset=(331.152, 21.4975) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=7 holes=3
+    recipe type=Volcanic seed=316490934 relief=60.0 freq=0.004027 offset=(331.152, 21.4975) low=(0.4125, 0.21, 0.15) high=(0.64, 0.424, 0.36) pads=39 holes=19
       pad (0.0, -40.0, 26.0)
       pad (108.0, 222.0, 14.0)
       pad (96.5669, 194.264, 12.0)
@@ -223,6 +988,38 @@ system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=
       pad (-217.4031, 28.9327, 12.0)
       pad (162.0, -240.0, 14.0)
       pad (143.1173, -216.6881, 12.0)
+      pad (186.0, -2.0, 14.0)
+      pad (156.6071, -8.005, 12.0)
+      pad (-268.0, 254.0, 14.0)
+      pad (-247.7898, 231.8291, 12.0)
+      pad (254.0, 58.0, 14.0)
+      pad (226.011, 47.2011, 12.0)
+      pad (242.0, 160.0, 14.0)
+      pad (218.8752, 140.8886, 12.0)
+      pad (-326.0, -206.0, 8.0)
+      pad (-311.742, -198.7398, 8.0)
+      pad (356.0, -160.0, 8.0)
+      pad (340.8382, -154.8893, 8.0)
+      pad (-62.0, 292.0, 8.0)
+      pad (-59.0628, 276.2719, 8.0)
+      pad (-114.0, -342.0, 8.0)
+      pad (-108.3494, -327.031, 8.0)
+      pad (-30.0, -134.0, 8.0)
+      pad (-25.1354, -118.7575, 8.0)
+      pad (290.0, -320.0, 8.0)
+      pad (278.4896, -308.8865, 8.0)
+      pad (-170.0, 272.0, 8.0)
+      pad (-162.3447, 257.9502, 8.0)
+      pad (206.0, 338.0, 8.0)
+      pad (198.3436, 323.9508, 8.0)
+      pad (-12.0, -266.0, 8.0)
+      pad (-11.1516, -250.0225, 8.0)
+      pad (-268.0, -266.0, 8.0)
+      pad (-255.7685, -255.6854, 8.0)
+      pad (44.0, -158.0, 8.0)
+      pad (38.4099, -143.0083, 8.0)
+      pad (-146.0, -264.0, 8.0)
+      pad (-137.2634, -250.5959, 8.0)
     site site.proxima_centauri.p0.s0 "Silent vent relay" pos=(108.0, 21.2849, 222.0) r=4.0 depth=1.9004 diff=2 passes=1 signal=0.7145 seed=420530388 hint=(96.5669, 23.1267, 194.264)
       find artifact.unknown_lump cell=(17, 3, 15) footprint=1
       find artifact.unknown_lump cell=(12, 3, 18) footprint=1
@@ -233,8 +1030,40 @@ system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=
     site site.proxima_centauri.p0.s2 "Sunken basalt hall" pos=(162.0, 18.8619, -240.0) r=4.0 depth=1.9794 diff=2 passes=1 signal=0.708 seed=925705506 hint=(143.1173, 22.0882, -216.6881)
       find artifact.unknown_lump cell=(6, 4, 8) footprint=1
       find artifact.unknown_lump cell=(13, 2, 10) footprint=1
+    site site.proxima_centauri.p0.v2m0 "Fused basalt hall" pos=(186.0, 18.7854, -2.0) r=4.0 depth=1.9198 diff=3 passes=1 signal=0.5452 seed=1246077653 hint=(156.6071, 19.2765, -8.005)
+      find artifact.unknown_lump cell=(6, 2, 21) footprint=1
+      find artifact.unknown_lump cell=(22, 3, 15) footprint=1
+      find artifact.unknown_lump cell=(8, 4, 14) footprint=1
+      find artifact.unknown_lump cell=(20, 2, 13) footprint=1
+    site site.proxima_centauri.p0.v2m1 "Silent basalt hall" pos=(-268.0, 27.6088, 254.0) r=4.0 depth=1.6954 diff=1 passes=1 signal=0.8273 seed=1947884639 hint=(-247.7898, 22.9903, 231.8291)
+      find artifact.unknown_lump cell=(25, 4, 17) footprint=1
+      find artifact.unknown_lump cell=(14, 2, 25) footprint=1
+      find artifact.unknown_lump cell=(12, 1, 9) footprint=1
+      find artifact.unknown_lump cell=(4, 3, 8) footprint=1
+    site site.proxima_centauri.p0.v2m2 "Hollow vent relay" pos=(254.0, 17.54, 58.0) r=4.0 depth=1.9009 diff=1 passes=2 signal=0.5394 seed=1281351559 hint=(226.011, 20.4384, 47.2011)
+      find artifact.unknown_lump cell=(11, 1, 16) footprint=1
+      find artifact.unknown_lump cell=(11, 4, 20) footprint=1
+      find artifact.unknown_lump cell=(23, 3, 20) footprint=1
+      find artifact.unknown_lump cell=(15, 1, 17) footprint=1
+      find artifact.unknown_lump cell=(25, 1, 7) footprint=1
+    site site.proxima_centauri.p0.v2m3 "Old basalt hall" pos=(242.0, 15.9707, 160.0) r=4.0 depth=1.6625 diff=1 passes=2 signal=0.5805 seed=2054395276 hint=(218.8752, 21.0456, 140.8886)
+      find artifact.unknown_lump cell=(21, 4, 12) footprint=1
+      find artifact.unknown_lump cell=(27, 3, 26) footprint=1
+      find artifact.unknown_lump cell=(26, 2, 27) footprint=1
+    site site.proxima_centauri.p0.v2c0 "Scattered cinder stash" pos=(-326.0, 28.7487, -206.0) r=1.6 depth=0.9034 diff=1 passes=1 signal=0.3486 seed=20004556 hint=(-311.742, 28.4444, -198.7398)
+    site site.proxima_centauri.p0.v2c1 "Faint cinder stash" pos=(356.0, 19.5076, -160.0) r=1.6 depth=1.1081 diff=1 passes=1 signal=0.4024 seed=164804518 hint=(340.8382, 19.5747, -154.8893)
+    site site.proxima_centauri.p0.v2c2 "Weak cinder stash" pos=(-62.0, 27.105, 292.0) r=1.6 depth=1.1734 diff=1 passes=1 signal=0.4043 seed=1725593345 hint=(-59.0628, 27.3523, 276.2719)
+    site site.proxima_centauri.p0.v2c3 "Hidden ash cache" pos=(-114.0, 25.6049, -342.0) r=1.6 depth=1.2233 diff=1 passes=1 signal=0.2872 seed=409535676 hint=(-108.3494, 25.2649, -327.031)
+    site site.proxima_centauri.p0.v2c4 "Shallow vent deposit" pos=(-30.0, 24.3882, -134.0) r=1.6 depth=1.0202 diff=1 passes=2 signal=0.4694 seed=1119344101 hint=(-25.1354, 24.4577, -118.7575)
+    site site.proxima_centauri.p0.v2c5 "Weak ash cache" pos=(290.0, 25.9481, -320.0) r=1.6 depth=1.1147 diff=1 passes=2 signal=0.4287 seed=800893784 hint=(278.4896, 24.4956, -308.8865)
+    site site.proxima_centauri.p0.v2c6 "Scattered ash cache" pos=(-170.0, 27.9146, 272.0) r=1.6 depth=1.1121 diff=1 passes=2 signal=0.2806 seed=679104164 hint=(-162.3447, 28.5084, 257.9502)
+    site site.proxima_centauri.p0.v2c7 "Hidden cinder stash" pos=(206.0, 16.0726, 338.0) r=1.6 depth=1.1491 diff=1 passes=1 signal=0.2656 seed=1430633791 hint=(198.3436, 14.3182, 323.9508)
+    site site.proxima_centauri.p0.v2c8 "Buried vent deposit" pos=(-12.0, 23.8374, -266.0) r=1.6 depth=1.1182 diff=1 passes=1 signal=0.4126 seed=1700728299 hint=(-11.1516, 24.0366, -250.0225)
+    site site.proxima_centauri.p0.v2c9 "Faint cinder stash" pos=(-268.0, 28.5229, -266.0) r=1.6 depth=0.8871 diff=1 passes=1 signal=0.2212 seed=869788436 hint=(-255.7685, 28.919, -255.6854)
+    site site.proxima_centauri.p0.v2c10 "Scattered ash cache" pos=(44.0, 22.6016, -158.0) r=1.6 depth=1.0832 diff=1 passes=2 signal=0.4756 seed=1150804038 hint=(38.4099, 21.2213, -143.0083)
+    site site.proxima_centauri.p0.v2c11 "Weak cinder stash" pos=(-146.0, 29.4745, -264.0) r=1.6 depth=1.2115 diff=1 passes=2 signal=0.4397 seed=1231947266 hint=(-137.2634, 30.4832, -250.5959)
   body body.proxima_centauri.p1 "Proxima b" kind=Planet au=0.049 period=4.0 radiusKm=7670.0 g=0.82 potential=0.68 seed=249181779 scene=Surface_Procedural base=(0.0, 16.9969, -40.0) env=env.gen.body.proxima_centauri.p1 gravity=8.0442
-    recipe type=Barren seed=249181779 relief=67.5995 freq=0.003580 offset=(239.3681, 396.1996) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=7 holes=3
+    recipe type=Barren seed=249181779 relief=67.5995 freq=0.003580 offset=(239.3681, 396.1996) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=37 holes=18
       pad (0.0, -40.0, 26.0)
       pad (112.0, -320.0, 14.0)
       pad (100.8583, -292.1457, 12.0)
@@ -242,6 +1071,36 @@ system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=
       pad (213.6732, 191.9359, 12.0)
       pad (-316.0, 50.0, 14.0)
       pad (-287.1474, 41.7825, 12.0)
+      pad (190.0, 350.0, 14.0)
+      pad (176.8609, 323.0303, 12.0)
+      pad (388.0, -160.0, 14.0)
+      pad (359.3394, -151.1359, 12.0)
+      pad (-248.0, 338.0, 14.0)
+      pad (-231.5432, 312.9167, 12.0)
+      pad (-206.0, -248.0, 14.0)
+      pad (-184.8895, -226.6846, 12.0)
+      pad (30.0, 372.0, 8.0)
+      pad (28.838, 356.0422, 8.0)
+      pad (-40.0, 88.0, 8.0)
+      pad (-35.2276, 72.7283, 8.0)
+      pad (246.0, -156.0, 8.0)
+      pad (231.5282, -149.1759, 8.0)
+      pad (-190.0, -88.0, 8.0)
+      pad (-174.4874, -84.081, 8.0)
+      pad (92.0, -220.0, 8.0)
+      pad (84.7182, -205.7531, 8.0)
+      pad (-324.0, -236.0, 8.0)
+      pad (-310.31, -227.7184, 8.0)
+      pad (-322.0, 194.0, 8.0)
+      pad (-309.0568, 184.594, 8.0)
+      pad (-92.0, -254.0, 8.0)
+      pad (-85.6807, -239.3008, 8.0)
+      pad (-408.0, 26.0, 8.0)
+      pad (-392.2053, 23.445, 8.0)
+      pad (28.0, -264.0, 8.0)
+      pad (26.0154, -248.1236, 8.0)
+      pad (-14.0, 148.0, 8.0)
+      pad (-12.8118, 132.0442, 8.0)
     site site.proxima_centauri.p1.s0 "Fused outpost" pos=(112.0, 26.3573, -320.0) r=4.0 depth=1.8897 diff=1 passes=2 signal=0.7997 seed=1949427008 hint=(100.8583, 23.4129, -292.1457)
       find artifact.unknown_lump cell=(20, 3, 11) footprint=1
       find artifact.unknown_lump cell=(13, 2, 18) footprint=1
@@ -253,8 +1112,38 @@ system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=
       find artifact.unknown_lump cell=(23, 1, 23) footprint=1
       find artifact.unknown_lump cell=(23, 3, 23) footprint=1
       find artifact.unknown_lump cell=(17, 3, 16) footprint=1
+    site site.proxima_centauri.p1.v2m0 "Fused shrine" pos=(190.0, 23.8545, 350.0) r=4.0 depth=1.5277 diff=2 passes=2 signal=0.5808 seed=1216118140 hint=(176.8609, 27.953, 323.0303)
+      find artifact.unknown_lump cell=(22, 1, 25) footprint=1
+      find artifact.unknown_lump cell=(19, 2, 12) footprint=1
+      find artifact.unknown_lump cell=(21, 2, 9) footprint=1
+      find artifact.unknown_lump cell=(21, 2, 26) footprint=1
+      find artifact.unknown_lump cell=(25, 1, 11) footprint=1
+    site site.proxima_centauri.p1.v2m1 "Old relay" pos=(388.0, 34.0271, -160.0) r=4.0 depth=1.5603 diff=3 passes=1 signal=0.4841 seed=734861762 hint=(359.3394, 30.9851, -151.1359)
+      find artifact.unknown_lump cell=(13, 3, 21) footprint=1
+      find artifact.unknown_lump cell=(23, 2, 5) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 17) footprint=1
+    site site.proxima_centauri.p1.v2m2 "Old relay" pos=(-248.0, 17.8429, 338.0) r=4.0 depth=2.1952 diff=1 passes=2 signal=0.8303 seed=291371587 hint=(-231.5432, 20.5277, 312.9167)
+      find artifact.unknown_lump cell=(16, 1, 4) footprint=1
+      find artifact.unknown_lump cell=(11, 2, 12) footprint=1
+      find artifact.unknown_lump cell=(22, 1, 25) footprint=1
+    site site.proxima_centauri.p1.v2m3 "Sunken cache" pos=(-206.0, 16.6323, -248.0) r=4.0 depth=1.8521 diff=2 passes=2 signal=0.4609 seed=699852717 hint=(-184.8895, 17.6551, -226.6846)
+      find artifact.unknown_lump cell=(5, 4, 7) footprint=1
+      find artifact.unknown_lump cell=(12, 1, 9) footprint=1
+      find artifact.unknown_lump cell=(21, 2, 12) footprint=1
+      find artifact.unknown_lump cell=(4, 3, 13) footprint=1
+    site site.proxima_centauri.p1.v2c0 "Shallow stash" pos=(30.0, 26.6232, 372.0) r=1.6 depth=1.083 diff=1 passes=1 signal=0.3676 seed=934323080 hint=(28.838, 27.0052, 356.0422)
+    site site.proxima_centauri.p1.v2c1 "Hidden deposit" pos=(-40.0, 17.7683, 88.0) r=1.6 depth=1.1097 diff=1 passes=1 signal=0.2667 seed=232701296 hint=(-35.2276, 19.3333, 72.7283)
+    site site.proxima_centauri.p1.v2c2 "Hidden cache" pos=(246.0, 19.1404, -156.0) r=1.6 depth=0.9195 diff=1 passes=2 signal=0.2359 seed=1967852914 hint=(231.5282, 20.0983, -149.1759)
+    site site.proxima_centauri.p1.v2c3 "Scattered trove" pos=(-190.0, 27.4587, -88.0) r=1.6 depth=1.2 diff=1 passes=1 signal=0.4422 seed=254217847 hint=(-174.4874, 28.2037, -84.081)
+    site site.proxima_centauri.p1.v2c4 "Scattered trove" pos=(92.0, 19.7712, -220.0) r=1.6 depth=1.2055 diff=1 passes=1 signal=0.3693 seed=1296660591 hint=(84.7182, 19.7339, -205.7531)
+    site site.proxima_centauri.p1.v2c5 "Scattered cache" pos=(-324.0, 27.565, -236.0) r=1.6 depth=1.0141 diff=1 passes=1 signal=0.3066 seed=1444996325 hint=(-310.31, 26.1549, -227.7184)
+    site site.proxima_centauri.p1.v2c6 "Hidden cache" pos=(-322.0, 23.6458, 194.0) r=1.6 depth=1.1934 diff=1 passes=1 signal=0.2807 seed=1416699270 hint=(-309.0568, 23.6747, 184.594)
+    site site.proxima_centauri.p1.v2c7 "Faint cache" pos=(-92.0, 22.7523, -254.0) r=1.6 depth=1.285 diff=1 passes=1 signal=0.4297 seed=634013999 hint=(-85.6807, 20.2715, -239.3008)
+    site site.proxima_centauri.p1.v2c8 "Shallow scatter" pos=(-408.0, 20.937, 26.0) r=1.6 depth=0.9915 diff=1 passes=2 signal=0.2684 seed=1513656991 hint=(-392.2053, 21.9099, 23.445)
+    site site.proxima_centauri.p1.v2c9 "Shallow deposit" pos=(28.0, 29.8628, -264.0) r=1.6 depth=1.2283 diff=1 passes=1 signal=0.4924 seed=1513979640 hint=(26.0154, 29.6424, -248.1236)
+    site site.proxima_centauri.p1.v2c10 "Weak cache" pos=(-14.0, 18.5322, 148.0) r=1.6 depth=1.0947 diff=1 passes=1 signal=0.3792 seed=1706939344 hint=(-12.8118, 17.1504, 132.0442)
   body body.proxima_centauri.p2 "Proxima c" kind=Planet au=1.49 period=664.3 radiusKm=2500.0 g=0.35 potential=0.8 seed=250706328 scene=Surface_Procedural base=(0.0, 18.0322, -40.0) env=env.gen.body.proxima_centauri.p2 gravity=3.4335
-    recipe type=Barren seed=250706328 relief=52.3558 freq=0.004717 offset=(325.3179, 454.7793) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=7 holes=3
+    recipe type=Barren seed=250706328 relief=52.3558 freq=0.004717 offset=(325.3179, 454.7793) low=(0.465, 0.45, 0.435) high=(0.696, 0.68, 0.664) pads=29 holes=14
       pad (0.0, -40.0, 26.0)
       pad (66.0, 284.0, 14.0)
       pad (60.0119, 254.6037, 12.0)
@@ -262,6 +1151,28 @@ system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=
       pad (-246.1322, -63.1864, 12.0)
       pad (256.0, -92.0, 14.0)
       pad (226.6004, -86.0282, 12.0)
+      pad (-126.0, 272.0, 14.0)
+      pad (-114.7661, 244.1827, 12.0)
+      pad (-66.0, -190.0, 14.0)
+      pad (-53.9178, -162.5405, 12.0)
+      pad (-68.0, 374.0, 14.0)
+      pad (-63.1376, 344.3967, 12.0)
+      pad (134.0, -54.0, 8.0)
+      pad (118.0866, -52.3374, 8.0)
+      pad (-10.0, 420.0, 8.0)
+      pad (-9.6523, 404.0038, 8.0)
+      pad (264.0, 84.0, 8.0)
+      pad (249.5179, 77.1978, 8.0)
+      pad (380.0, -136.0, 8.0)
+      pad (364.4874, -132.081, 8.0)
+      pad (-138.0, 216.0, 8.0)
+      pad (-130.4078, 201.916, 8.0)
+      pad (152.0, 386.0, 8.0)
+      pad (146.6231, 370.9305, 8.0)
+      pad (130.0, 98.0, 8.0)
+      pad (119.0289, 86.3538, 8.0)
+      pad (314.0, -298.0, 8.0)
+      pad (301.6378, -287.8425, 8.0)
     site site.proxima_centauri.p2.s0 "Buried spire" pos=(66.0, 20.9069, 284.0) r=4.0 depth=1.8897 diff=2 passes=2 signal=0.7263 seed=1189595604 hint=(60.0119, 22.2317, 254.6037)
       find artifact.unknown_lump cell=(18, 1, 12) footprint=1
       find artifact.unknown_lump cell=(7, 3, 21) footprint=1
@@ -272,10 +1183,33 @@ system sys.proxima_centauri "Proxima Centauri" class=M5.5Ve seed=2074220399 pos=
     site site.proxima_centauri.p2.s2 "Fused cache" pos=(256.0, 27.3881, -92.0) r=4.0 depth=1.7242 diff=2 passes=2 signal=0.8421 seed=1655635009 hint=(226.6004, 27.3491, -86.0282)
       find artifact.unknown_lump cell=(23, 3, 7) footprint=1
       find artifact.unknown_lump cell=(12, 2, 13) footprint=1
+    site site.proxima_centauri.p2.v2m0 "Buried spire" pos=(-126.0, 19.6751, 272.0) r=4.0 depth=1.8479 diff=3 passes=1 signal=0.4508 seed=823020127 hint=(-114.7661, 20.8017, 244.1827)
+      find artifact.unknown_lump cell=(18, 1, 15) footprint=1
+      find artifact.unknown_lump cell=(8, 1, 5) footprint=1
+      find artifact.unknown_lump cell=(6, 2, 23) footprint=1
+    site site.proxima_centauri.p2.v2m1 "Fused shrine" pos=(-66.0, 21.4527, -190.0) r=4.0 depth=1.9392 diff=3 passes=1 signal=0.622 seed=763861571 hint=(-53.9178, 16.8822, -162.5405)
+      find artifact.unknown_lump cell=(7, 2, 24) footprint=1
+      find artifact.unknown_lump cell=(16, 3, 11) footprint=1
+      find artifact.unknown_lump cell=(14, 1, 22) footprint=1
+      find artifact.unknown_lump cell=(17, 2, 15) footprint=1
+      find artifact.unknown_lump cell=(27, 4, 27) footprint=1
+    site site.proxima_centauri.p2.v2m2 "Hollow cache" pos=(-68.0, 22.6445, 374.0) r=4.0 depth=2.0488 diff=1 passes=1 signal=0.5607 seed=574770087 hint=(-63.1376, 19.8053, 344.3967)
+      find artifact.unknown_lump cell=(26, 4, 22) footprint=1
+      find artifact.unknown_lump cell=(27, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(19, 2, 14) footprint=1
+      find artifact.unknown_lump cell=(4, 3, 26) footprint=1
+    site site.proxima_centauri.p2.v2c0 "Hidden cache" pos=(134.0, 24.1225, -54.0) r=1.6 depth=0.8318 diff=1 passes=2 signal=0.3917 seed=773544355 hint=(118.0866, 22.2843, -52.3374)
+    site site.proxima_centauri.p2.v2c1 "Faint trove" pos=(-10.0, 22.0567, 420.0) r=1.6 depth=1.0296 diff=1 passes=1 signal=0.2361 seed=1939039540 hint=(-9.6523, 22.0687, 404.0038)
+    site site.proxima_centauri.p2.v2c2 "Buried trove" pos=(264.0, 23.0141, 84.0) r=1.6 depth=0.8904 diff=1 passes=1 signal=0.4045 seed=1816386393 hint=(249.5179, 23.4943, 77.1978)
+    site site.proxima_centauri.p2.v2c3 "Shallow scatter" pos=(380.0, 18.023, -136.0) r=1.6 depth=0.8316 diff=1 passes=2 signal=0.3753 seed=226457233 hint=(364.4874, 19.6021, -132.081)
+    site site.proxima_centauri.p2.v2c4 "Faint trove" pos=(-138.0, 17.9286, 216.0) r=1.6 depth=1.1618 diff=1 passes=1 signal=0.3272 seed=924762429 hint=(-130.4078, 17.8516, 201.916)
+    site site.proxima_centauri.p2.v2c5 "Buried scatter" pos=(152.0, 23.7241, 386.0) r=1.6 depth=0.856 diff=1 passes=1 signal=0.2249 seed=1201310182 hint=(146.6231, 24.5467, 370.9305)
+    site site.proxima_centauri.p2.v2c6 "Hidden scatter" pos=(130.0, 18.9399, 98.0) r=1.6 depth=0.965 diff=1 passes=1 signal=0.4163 seed=1827344328 hint=(119.0289, 18.5675, 86.3538)
+    site site.proxima_centauri.p2.v2c7 "Scattered scatter" pos=(314.0, 20.46, -298.0) r=1.6 depth=1.2708 diff=1 passes=1 signal=0.3082 seed=1731118038 hint=(301.6378, 20.4782, -287.8425)
 system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.3586, -5.9268, 7.0665) ftl=9.5197 potential=0.4196 known=False reveal=tech.navdrive
   body body.g93ce5fd0.star "Uncharted XS-9104" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=1767108405 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.g93ce5fd0.p0 "XS-9104 b" kind=Planet au=0.1088 period=13.1 radiusKm=2944.0 g=0.74 potential=0.71 seed=1810078156 scene=Surface_Procedural base=(0.0, 28.9624, -40.0) env=env.gen.body.g93ce5fd0.p0 gravity=7.2594
-    recipe type=Rocky seed=1810078156 relief=66.509 freq=0.002958 offset=(464.7213, 58.4686) low=(0.4125, 0.375, 0.315) high=(0.64, 0.6, 0.536) pads=7 holes=3
+    recipe type=Rocky seed=1810078156 relief=66.509 freq=0.002958 offset=(464.7213, 58.4686) low=(0.4125, 0.375, 0.315) high=(0.64, 0.6, 0.536) pads=39 holes=19
       pad (0.0, -40.0, 26.0)
       pad (38.0, -324.0, 14.0)
       pad (34.0214, -294.265, 12.0)
@@ -283,6 +1217,38 @@ system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.358
       pad (233.1182, 200.4605, 12.0)
       pad (-290.0, 74.0, 14.0)
       pad (-262.0798, 63.0245, 12.0)
+      pad (254.0, -260.0, 14.0)
+      pad (231.3234, -240.3589, 12.0)
+      pad (164.0, 360.0, 14.0)
+      pad (152.6194, 332.2424, 12.0)
+      pad (16.0, 384.0, 14.0)
+      pad (14.8687, 354.0213, 12.0)
+      pad (-142.0, -260.0, 14.0)
+      pad (-125.731, -234.7945, 12.0)
+      pad (-96.0, -216.0, 8.0)
+      pad (-88.3384, -201.9537, 8.0)
+      pad (364.0, 14.0, 8.0)
+      pad (348.1732, 11.6521, 8.0)
+      pad (172.0, -30.0, 8.0)
+      pad (156.027, -30.9287, 8.0)
+      pad (-88.0, 64.0, 8.0)
+      pad (-77.6649, 51.7858, 8.0)
+      pad (176.0, -176.0, 8.0)
+      pad (163.3394, -166.2168, 8.0)
+      pad (-290.0, -184.0, 8.0)
+      pad (-275.6695, -176.8841, 8.0)
+      pad (-364.0, 86.0, 8.0)
+      pad (-348.8802, 80.7662, 8.0)
+      pad (310.0, 166.0, 8.0)
+      pad (296.674, 157.1447, 8.0)
+      pad (172.0, 68.0, 8.0)
+      pad (158.4498, 59.4917, 8.0)
+      pad (-40.0, -194.0, 8.0)
+      pad (-35.9776, -178.5139, 8.0)
+      pad (162.0, -96.0, 8.0)
+      pad (146.878, -90.7726, 8.0)
+      pad (164.0, 210.0, 8.0)
+      pad (155.2238, 196.6217, 8.0)
     site site.g93ce5fd0.p0.s0 "Hollow shrine" pos=(38.0, 26.371, -324.0) r=4.0 depth=1.7023 diff=2 passes=2 signal=0.8399 seed=1350023250 hint=(34.0214, 24.9744, -294.265)
       find artifact.unknown_lump cell=(7, 4, 7) footprint=1
       find artifact.unknown_lump cell=(22, 1, 24) footprint=1
@@ -293,8 +1259,42 @@ system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.358
     site site.g93ce5fd0.p0.s2 "Shattered relay" pos=(-290.0, 20.2687, 74.0) r=4.0 depth=1.7947 diff=2 passes=2 signal=0.6693 seed=1780406602 hint=(-262.0798, 23.1945, 63.0245)
       find artifact.unknown_lump cell=(25, 1, 15) footprint=1
       find artifact.unknown_lump cell=(18, 1, 25) footprint=1
+    site site.g93ce5fd0.p0.v2m0 "Old relay" pos=(254.0, 16.2092, -260.0) r=4.0 depth=1.7175 diff=1 passes=1 signal=0.729 seed=1916794014 hint=(231.3234, 16.3946, -240.3589)
+      find artifact.unknown_lump cell=(19, 2, 27) footprint=1
+      find artifact.unknown_lump cell=(11, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(8, 3, 18) footprint=1
+      find artifact.unknown_lump cell=(24, 3, 17) footprint=1
+    site site.g93ce5fd0.p0.v2m1 "Fused cache" pos=(164.0, 32.6652, 360.0) r=4.0 depth=1.9437 diff=3 passes=2 signal=0.7067 seed=539224431 hint=(152.6194, 29.8172, 332.2424)
+      find artifact.unknown_lump cell=(24, 4, 6) footprint=1
+      find artifact.unknown_lump cell=(25, 2, 12) footprint=1
+      find artifact.unknown_lump cell=(22, 4, 22) footprint=1
+      find artifact.unknown_lump cell=(12, 4, 8) footprint=1
+      find artifact.unknown_lump cell=(11, 2, 10) footprint=1
+    site site.g93ce5fd0.p0.v2m2 "Shattered spire" pos=(16.0, 30.507, 384.0) r=4.0 depth=2.1346 diff=2 passes=2 signal=0.6017 seed=1832080298 hint=(14.8687, 32.6222, 354.0213)
+      find artifact.unknown_lump cell=(18, 3, 17) footprint=1
+      find artifact.unknown_lump cell=(23, 1, 8) footprint=1
+      find artifact.unknown_lump cell=(22, 1, 7) footprint=1
+      find artifact.unknown_lump cell=(27, 3, 14) footprint=1
+    site site.g93ce5fd0.p0.v2m3 "Old cache" pos=(-142.0, 24.4245, -260.0) r=4.0 depth=1.8383 diff=1 passes=1 signal=0.4503 seed=1174007762 hint=(-125.731, 24.6228, -234.7945)
+      find artifact.unknown_lump cell=(5, 1, 22) footprint=1
+      find artifact.unknown_lump cell=(6, 2, 9) footprint=1
+      find artifact.unknown_lump cell=(11, 1, 18) footprint=1
+      find artifact.unknown_lump cell=(6, 1, 8) footprint=1
+      find artifact.unknown_lump cell=(17, 1, 6) footprint=1
+    site site.g93ce5fd0.p0.v2c0 "Faint deposit" pos=(-96.0, 26.1462, -216.0) r=1.6 depth=1.1797 diff=1 passes=1 signal=0.4372 seed=904658344 hint=(-88.3384, 25.9026, -201.9537)
+    site site.g93ce5fd0.p0.v2c1 "Weak stash" pos=(364.0, 13.8993, 14.0) r=1.6 depth=0.814 diff=1 passes=2 signal=0.3147 seed=105803055 hint=(348.1732, 13.8692, 11.6521)
+    site site.g93ce5fd0.p0.v2c2 "Hidden cache" pos=(172.0, 21.2837, -30.0) r=1.6 depth=1.1204 diff=1 passes=2 signal=0.2939 seed=771129870 hint=(156.027, 23.6202, -30.9287)
+    site site.g93ce5fd0.p0.v2c3 "Hidden deposit" pos=(-88.0, 29.9652, 64.0) r=1.6 depth=0.9713 diff=1 passes=1 signal=0.4908 seed=1650284571 hint=(-77.6649, 29.5992, 51.7858)
+    site site.g93ce5fd0.p0.v2c4 "Faint cache" pos=(176.0, 19.8754, -176.0) r=1.6 depth=1.2945 diff=1 passes=2 signal=0.4993 seed=1318353169 hint=(163.3394, 20.111, -166.2168)
+    site site.g93ce5fd0.p0.v2c5 "Hidden cache" pos=(-290.0, 27.5242, -184.0) r=1.6 depth=0.9151 diff=1 passes=1 signal=0.4444 seed=259334018 hint=(-275.6695, 25.6561, -176.8841)
+    site site.g93ce5fd0.p0.v2c6 "Faint stash" pos=(-364.0, 18.7902, 86.0) r=1.6 depth=0.844 diff=1 passes=2 signal=0.3849 seed=610368706 hint=(-348.8802, 18.622, 80.7662)
+    site site.g93ce5fd0.p0.v2c7 "Hidden deposit" pos=(310.0, 16.094, 166.0) r=1.6 depth=1.2348 diff=1 passes=2 signal=0.463 seed=607045726 hint=(296.674, 16.1363, 157.1447)
+    site site.g93ce5fd0.p0.v2c8 "Weak cache" pos=(172.0, 22.4117, 68.0) r=1.6 depth=1.1308 diff=1 passes=2 signal=0.4037 seed=691707030 hint=(158.4498, 24.7294, 59.4917)
+    site site.g93ce5fd0.p0.v2c9 "Faint scatter" pos=(-40.0, 26.52, -194.0) r=1.6 depth=1.2835 diff=1 passes=2 signal=0.4942 seed=622873400 hint=(-35.9776, 26.1976, -178.5139)
+    site site.g93ce5fd0.p0.v2c10 "Scattered trove" pos=(162.0, 22.95, -96.0) r=1.6 depth=0.8126 diff=1 passes=1 signal=0.4995 seed=1096906642 hint=(146.878, 25.1309, -90.7726)
+    site site.g93ce5fd0.p0.v2c11 "Buried cache" pos=(164.0, 17.2748, 210.0) r=1.6 depth=1.2182 diff=1 passes=1 signal=0.4943 seed=2079548550 hint=(155.2238, 16.0918, 196.6217)
   body body.g93ce5fd0.p1 "XS-9104 c" kind=Planet au=0.2861 period=55.9 radiusKm=4696.0 g=0.73 potential=0.65 seed=1743026921 scene=Surface_Procedural base=(0.0, 17.4399, -40.0) env=env.gen.body.g93ce5fd0.p1 gravity=7.1613
-    recipe type=Ice seed=1743026921 relief=35.0 freq=0.004843 offset=(197.1952, 188.2773) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=7 holes=3
+    recipe type=Ice seed=1743026921 relief=35.0 freq=0.004843 offset=(197.1952, 188.2773) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=35 holes=17
       pad (0.0, -40.0, 26.0)
       pad (208.0, -38.0, 14.0)
       pad (178.0014, -38.2885, 12.0)
@@ -302,6 +1302,34 @@ system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.358
       pad (-187.6312, 202.2811, 12.0)
       pad (-160.0, -230.0, 14.0)
       pad (-140.6759, -207.0527, 12.0)
+      pad (120.0, -256.0, 14.0)
+      pad (105.4307, -229.7753, 12.0)
+      pad (-196.0, 26.0, 14.0)
+      pad (-167.5686, 16.4262, 12.0)
+      pad (92.0, 304.0, 14.0)
+      pad (84.2492, 275.0186, 12.0)
+      pad (180.0, 72.0, 14.0)
+      pad (154.5283, 56.1509, 12.0)
+      pad (170.0, 172.0, 8.0)
+      pad (159.9905, 159.5176, 8.0)
+      pad (74.0, 60.0, 8.0)
+      pad (64.4825, 47.1385, 8.0)
+      pad (-390.0, -176.0, 8.0)
+      pad (-374.8922, -170.7317, 8.0)
+      pad (178.0, 334.0, 8.0)
+      pad (171.1241, 319.5528, 8.0)
+      pad (-62.0, -310.0, 8.0)
+      pad (-58.4191, -294.4059, 8.0)
+      pad (-310.0, -132.0, 8.0)
+      pad (-294.6612, -127.4478, 8.0)
+      pad (244.0, -96.0, 8.0)
+      pad (228.4054, -92.4209, 8.0)
+      pad (-178.0, -384.0, 8.0)
+      pad (-170.647, -369.7897, 8.0)
+      pad (-94.0, 340.0, 8.0)
+      pad (-90.1579, 324.4681, 8.0)
+      pad (34.0, 162.0, 8.0)
+      pad (31.3443, 146.2219, 8.0)
     site site.g93ce5fd0.p1.s0 "Old rime shrine" pos=(208.0, 11.274, -38.0) r=4.0 depth=1.9985 diff=2 passes=1 signal=0.8373 seed=615192126 hint=(178.0014, 12.7038, -38.2885)
       find artifact.unknown_lump cell=(22, 2, 19) footprint=1
       find artifact.unknown_lump cell=(17, 4, 16) footprint=1
@@ -313,8 +1341,42 @@ system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.358
     site site.g93ce5fd0.p1.s2 "Sunken rime shrine" pos=(-160.0, 18.3043, -230.0) r=4.0 depth=1.5848 diff=1 passes=1 signal=0.8554 seed=1301148132 hint=(-140.6759, 18.846, -207.0527)
       find artifact.unknown_lump cell=(18, 2, 22) footprint=1
       find artifact.unknown_lump cell=(12, 4, 8) footprint=1
+    site site.g93ce5fd0.p1.v2m0 "Buried frozen spire" pos=(120.0, 12.6389, -256.0) r=4.0 depth=1.7273 diff=3 passes=2 signal=0.7837 seed=2074237201 hint=(105.4307, 8.8332, -229.7753)
+      find artifact.unknown_lump cell=(8, 1, 13) footprint=1
+      find artifact.unknown_lump cell=(22, 2, 7) footprint=1
+      find artifact.unknown_lump cell=(5, 2, 8) footprint=1
+      find artifact.unknown_lump cell=(14, 3, 5) footprint=1
+      find artifact.unknown_lump cell=(11, 1, 11) footprint=1
+    site site.g93ce5fd0.p1.v2m1 "Shattered ice vault" pos=(-196.0, 10.8288, 26.0) r=4.0 depth=1.9407 diff=2 passes=1 signal=0.6335 seed=17075306 hint=(-167.5686, 11.2382, 16.4262)
+      find artifact.unknown_lump cell=(19, 3, 19) footprint=1
+      find artifact.unknown_lump cell=(14, 1, 22) footprint=1
+      find artifact.unknown_lump cell=(20, 2, 15) footprint=1
+      find artifact.unknown_lump cell=(19, 4, 19) footprint=1
+      find artifact.unknown_lump cell=(10, 4, 17) footprint=1
+    site site.g93ce5fd0.p1.v2m2 "Fused rime shrine" pos=(92.0, 11.218, 304.0) r=4.0 depth=1.5622 diff=1 passes=1 signal=0.826 seed=1377295443 hint=(84.2492, 13.5057, 275.0186)
+      find artifact.unknown_lump cell=(22, 2, 25) footprint=1
+      find artifact.unknown_lump cell=(4, 3, 15) footprint=1
+      find artifact.unknown_lump cell=(13, 3, 26) footprint=1
+      find artifact.unknown_lump cell=(27, 1, 19) footprint=1
+      find artifact.unknown_lump cell=(27, 4, 9) footprint=1
+    site site.g93ce5fd0.p1.v2m3 "Silent ice vault" pos=(180.0, 14.3346, 72.0) r=4.0 depth=2.1385 diff=2 passes=1 signal=0.8246 seed=1300054856 hint=(154.5283, 13.187, 56.1509)
+      find artifact.unknown_lump cell=(17, 2, 8) footprint=1
+      find artifact.unknown_lump cell=(27, 4, 20) footprint=1
+      find artifact.unknown_lump cell=(11, 2, 10) footprint=1
+      find artifact.unknown_lump cell=(10, 1, 21) footprint=1
+      find artifact.unknown_lump cell=(14, 4, 8) footprint=1
+    site site.g93ce5fd0.p1.v2c0 "Faint rime stash" pos=(170.0, 11.7445, 172.0) r=1.6 depth=1.1452 diff=1 passes=1 signal=0.3418 seed=1399082469 hint=(159.9905, 13.2278, 159.5176)
+    site site.g93ce5fd0.p1.v2c1 "Faint ice cache" pos=(74.0, 14.5371, 60.0) r=1.6 depth=1.2 diff=1 passes=2 signal=0.4716 seed=1775788821 hint=(64.4825, 12.6471, 47.1385)
+    site site.g93ce5fd0.p1.v2c2 "Buried rime stash" pos=(-390.0, 14.4206, -176.0) r=1.6 depth=0.8391 diff=1 passes=1 signal=0.3645 seed=797614980 hint=(-374.8922, 13.7694, -170.7317)
+    site site.g93ce5fd0.p1.v2c3 "Shallow ice cache" pos=(178.0, 11.4875, 334.0) r=1.6 depth=1.2852 diff=1 passes=1 signal=0.4188 seed=1961611078 hint=(171.1241, 13.7783, 319.5528)
+    site site.g93ce5fd0.p1.v2c4 "Scattered frost trove" pos=(-62.0, 12.0111, -310.0) r=1.6 depth=1.0495 diff=1 passes=2 signal=0.3689 seed=522089309 hint=(-58.4191, 12.7433, -294.4059)
+    site site.g93ce5fd0.p1.v2c5 "Faint frost trove" pos=(-310.0, 13.7671, -132.0) r=1.6 depth=1.0293 diff=1 passes=1 signal=0.3201 seed=672522693 hint=(-294.6612, 13.2143, -127.4478)
+    site site.g93ce5fd0.p1.v2c6 "Faint frost trove" pos=(244.0, 10.0331, -96.0) r=1.6 depth=1.2523 diff=1 passes=2 signal=0.3381 seed=1908742976 hint=(228.4054, 10.8844, -92.4209)
+    site site.g93ce5fd0.p1.v2c7 "Weak ice cache" pos=(-178.0, 9.6716, -384.0) r=1.6 depth=0.9041 diff=1 passes=1 signal=0.4898 seed=580118306 hint=(-170.647, 9.2366, -369.7897)
+    site site.g93ce5fd0.p1.v2c8 "Buried frost trove" pos=(-94.0, 13.273, 340.0) r=1.6 depth=1.2061 diff=1 passes=2 signal=0.3817 seed=1780131280 hint=(-90.1579, 13.2494, 324.4681)
+    site site.g93ce5fd0.p1.v2c9 "Buried rime stash" pos=(34.0, 11.226, 162.0) r=1.6 depth=1.2219 diff=1 passes=2 signal=0.2269 seed=1754553424 hint=(31.3443, 12.8014, 146.2219)
   body body.g93ce5fd0.p2 "XS-9104 d" kind=Planet au=0.5314 period=141.5 radiusKm=3464.0 g=0.63 potential=0.62 seed=1877100778 scene=Surface_Procedural base=(0.0, 14.1061, -40.0) env=env.gen.body.g93ce5fd0.p2 gravity=6.1803
-    recipe type=Ice seed=1877100778 relief=35.0 freq=0.003843 offset=(138.2641, 288.1909) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=7 holes=3
+    recipe type=Ice seed=1877100778 relief=35.0 freq=0.003843 offset=(138.2641, 288.1909) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=29 holes=14
       pad (0.0, -40.0, 26.0)
       pad (-206.0, -8.0, 14.0)
       pad (-176.3555, -12.605, 12.0)
@@ -322,6 +1384,28 @@ system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.358
       pad (47.3512, -197.2737, 12.0)
       pad (164.0, 292.0, 14.0)
       pad (150.7134, 265.1027, 12.0)
+      pad (-130.0, 214.0, 14.0)
+      pad (-116.3318, 187.2945, 12.0)
+      pad (96.0, -366.0, 14.0)
+      pad (87.5255, -337.2218, 12.0)
+      pad (-192.0, -278.0, 14.0)
+      pad (-173.1636, -254.6507, 12.0)
+      pad (66.0, -78.0, 8.0)
+      pad (52.134, -70.0166, 8.0)
+      pad (124.0, 54.0, 8.0)
+      pad (111.2495, 44.3343, 8.0)
+      pad (-178.0, -72.0, 8.0)
+      pad (-162.2525, -69.169, 8.0)
+      pad (188.0, 400.0, 8.0)
+      pad (181.7134, 385.2868, 8.0)
+      pad (-108.0, 322.0, 8.0)
+      pad (-103.4258, 306.6678, 8.0)
+      pad (-142.0, -146.0, 8.0)
+      pad (-129.1784, -136.4289, 8.0)
+      pad (-58.0, 76.0, 8.0)
+      pad (-50.8446, 61.6892, 8.0)
+      pad (374.0, -138.0, 8.0)
+      pad (358.5225, -133.9444, 8.0)
     site site.g93ce5fd0.p2.s0 "Sunken rime shrine" pos=(-206.0, 10.3392, -8.0) r=4.0 depth=1.67 diff=2 passes=1 signal=0.8806 seed=686196593 hint=(-176.3555, 11.9195, -12.605)
       find artifact.unknown_lump cell=(14, 4, 20) footprint=1
       find artifact.unknown_lump cell=(13, 4, 10) footprint=1
@@ -332,10 +1416,35 @@ system sys.gen.93ce5fd0 "Uncharted XS-9104" class=M3V seed=1767108405 pos=(2.358
     site site.g93ce5fd0.p2.s2 "Silent frozen spire" pos=(164.0, 16.765, 292.0) r=4.0 depth=1.8722 diff=3 passes=2 signal=0.8626 seed=1526290386 hint=(150.7134, 16.0727, 265.1027)
       find artifact.unknown_lump cell=(6, 1, 12) footprint=1
       find artifact.unknown_lump cell=(13, 1, 16) footprint=1
+    site site.g93ce5fd0.p2.v2m0 "Shattered ice vault" pos=(-130.0, 9.1976, 214.0) r=4.0 depth=2.0401 diff=1 passes=2 signal=0.6081 seed=679401863 hint=(-116.3318, 10.6301, 187.2945)
+      find artifact.unknown_lump cell=(8, 2, 19) footprint=1
+      find artifact.unknown_lump cell=(19, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(20, 1, 21) footprint=1
+      find artifact.unknown_lump cell=(17, 2, 5) footprint=1
+      find artifact.unknown_lump cell=(26, 3, 23) footprint=1
+    site site.g93ce5fd0.p2.v2m1 "Old ice vault" pos=(96.0, 13.1137, -366.0) r=4.0 depth=1.9744 diff=1 passes=2 signal=0.484 seed=1192791005 hint=(87.5255, 15.0593, -337.2218)
+      find artifact.unknown_lump cell=(16, 2, 10) footprint=1
+      find artifact.unknown_lump cell=(12, 1, 16) footprint=1
+      find artifact.unknown_lump cell=(27, 1, 25) footprint=1
+      find artifact.unknown_lump cell=(18, 4, 18) footprint=1
+      find artifact.unknown_lump cell=(22, 4, 21) footprint=1
+    site site.g93ce5fd0.p2.v2m2 "Old frozen spire" pos=(-192.0, 8.5892, -278.0) r=4.0 depth=1.6343 diff=3 passes=2 signal=0.6058 seed=2046183428 hint=(-173.1636, 9.7926, -254.6507)
+      find artifact.unknown_lump cell=(17, 2, 19) footprint=1
+      find artifact.unknown_lump cell=(19, 2, 21) footprint=1
+      find artifact.unknown_lump cell=(25, 4, 8) footprint=1
+      find artifact.unknown_lump cell=(21, 3, 25) footprint=1
+    site site.g93ce5fd0.p2.v2c0 "Weak ice cache" pos=(66.0, 16.2101, -78.0) r=1.6 depth=0.8198 diff=1 passes=1 signal=0.2772 seed=1802277750 hint=(52.134, 16.4066, -70.0166)
+    site site.g93ce5fd0.p2.v2c1 "Shallow frost trove" pos=(124.0, 13.755, 54.0) r=1.6 depth=0.8497 diff=1 passes=2 signal=0.4447 seed=1628494054 hint=(111.2495, 13.7223, 44.3343)
+    site site.g93ce5fd0.p2.v2c2 "Hidden ice cache" pos=(-178.0, 14.165, -72.0) r=1.6 depth=0.9175 diff=1 passes=2 signal=0.444 seed=2097908542 hint=(-162.2525, 14.1331, -69.169)
+    site site.g93ce5fd0.p2.v2c3 "Shallow ice cache" pos=(188.0, 11.8289, 400.0) r=1.6 depth=0.8411 diff=1 passes=2 signal=0.2689 seed=1920049036 hint=(181.7134, 12.3949, 385.2868)
+    site site.g93ce5fd0.p2.v2c4 "Buried rime stash" pos=(-108.0, 9.4836, 322.0) r=1.6 depth=1.0934 diff=1 passes=2 signal=0.447 seed=1184351846 hint=(-103.4258, 9.7784, 306.6678)
+    site site.g93ce5fd0.p2.v2c5 "Faint ice cache" pos=(-142.0, 16.2897, -146.0) r=1.6 depth=1.1094 diff=1 passes=1 signal=0.3693 seed=2013997704 hint=(-129.1784, 16.2896, -136.4289)
+    site site.g93ce5fd0.p2.v2c6 "Hidden rime stash" pos=(-58.0, 7.9055, 76.0) r=1.6 depth=0.9465 diff=1 passes=1 signal=0.2286 seed=1251716323 hint=(-50.8446, 7.4811, 61.6892)
+    site site.g93ce5fd0.p2.v2c7 "Shallow frost trove" pos=(374.0, 12.5447, -138.0) r=1.6 depth=1.0794 diff=1 passes=1 signal=0.3834 seed=1415554236 hint=(358.5225, 12.9292, -133.9444)
 system sys.gen.94ce6163 "Uncharted XS-3787" class=K1V seed=1977339950 pos=(-6.1871, 0.063, -11.2857) ftl=12.8706 potential=0.5338 known=False reveal=tech.navdrive
   body body.g94ce6163.star "Uncharted XS-3787" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=1977339950 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.g94ce6163.p0 "XS-3787 b" kind=Planet au=0.1704 period=25.7 radiusKm=3143.0 g=0.51 potential=0.38 seed=914193968 scene=Surface_Procedural base=(0.0, 17.4653, -40.0) env=env.gen.body.g94ce6163.p0 gravity=5.0031
-    recipe type=Desert seed=914193968 relief=49.0845 freq=0.003338 offset=(118.475, 215.8074) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=7 holes=3
+    recipe type=Desert seed=914193968 relief=49.0845 freq=0.003338 offset=(118.475, 215.8074) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=37 holes=18
       pad (0.0, -40.0, 26.0)
       pad (260.0, 36.0, 14.0)
       pad (231.205, 27.583, 12.0)
@@ -343,6 +1452,36 @@ system sys.gen.94ce6163 "Uncharted XS-3787" class=K1V seed=1977339950 pos=(-6.18
       pad (-28.3074, 188.2281, 12.0)
       pad (-172.0, -220.0, 14.0)
       pad (-151.2743, -198.3103, 12.0)
+      pad (368.0, -196.0, 14.0)
+      pad (340.3793, -184.2912, 12.0)
+      pad (-62.0, 344.0, 14.0)
+      pad (-57.2182, 314.3835, 12.0)
+      pad (-266.0, -32.0, 14.0)
+      pad (-236.0135, -32.9019, 12.0)
+      pad (184.0, -362.0, 14.0)
+      pad (169.1158, -335.9527, 12.0)
+      pad (-28.0, -252.0, 8.0)
+      pad (-25.905, -236.1378, 8.0)
+      pad (-24.0, -116.0, 8.0)
+      pad (-19.1819, -100.7427, 8.0)
+      pad (-118.0, -62.0, 8.0)
+      pad (-102.271, -59.0675, 8.0)
+      pad (122.0, 350.0, 8.0)
+      pad (117.2231, 334.7297, 8.0)
+      pad (178.0, 344.0, 8.0)
+      pad (171.2711, 329.4837, 8.0)
+      pad (74.0, 90.0, 8.0)
+      pad (66.0848, 76.095, 8.0)
+      pad (260.0, 330.0, 8.0)
+      pad (250.8009, 316.9089, 8.0)
+      pad (-418.0, 6.0, 8.0)
+      pad (-402.096, 4.2498, 8.0)
+      pad (-184.0, 144.0, 8.0)
+      pad (-172.6863, 132.6863, 8.0)
+      pad (158.0, -190.0, 8.0)
+      pad (146.3963, -178.9839, 8.0)
+      pad (-220.0, -320.0, 8.0)
+      pad (-210.1149, -307.4189, 8.0)
     site site.g94ce6163.p0.s0 "Shattered shrine" pos=(260.0, 15.4121, 36.0) r=4.0 depth=1.5905 diff=3 passes=2 signal=0.5752 seed=825588604 hint=(231.205, 14.0623, 27.583)
       find artifact.unknown_lump cell=(19, 4, 6) footprint=1
       find artifact.unknown_lump cell=(25, 2, 25) footprint=1
@@ -353,13 +1492,75 @@ system sys.gen.94ce6163 "Uncharted XS-3787" class=K1V seed=1977339950 pos=(-6.18
     site site.g94ce6163.p0.s2 "Shattered outpost" pos=(-172.0, 17.0303, -220.0) r=4.0 depth=1.5481 diff=3 passes=1 signal=0.55 seed=749570720 hint=(-151.2743, 18.1288, -198.3103)
       find artifact.unknown_lump cell=(11, 3, 18) footprint=1
       find artifact.unknown_lump cell=(9, 2, 10) footprint=1
+    site site.g94ce6163.p0.v2m0 "Hollow spire" pos=(368.0, 13.7435, -196.0) r=4.0 depth=1.773 diff=1 passes=2 signal=0.5432 seed=1626762061 hint=(340.3793, 13.0122, -184.2912)
+      find artifact.unknown_lump cell=(21, 3, 23) footprint=1
+      find artifact.unknown_lump cell=(22, 1, 11) footprint=1
+      find artifact.unknown_lump cell=(7, 3, 23) footprint=1
+      find artifact.unknown_lump cell=(14, 2, 13) footprint=1
+    site site.g94ce6163.p0.v2m1 "Sunken outpost" pos=(-62.0, 19.4336, 344.0) r=4.0 depth=2.0757 diff=3 passes=1 signal=0.7026 seed=961655014 hint=(-57.2182, 22.4214, 314.3835)
+      find artifact.unknown_lump cell=(15, 2, 20) footprint=1
+      find artifact.unknown_lump cell=(21, 3, 5) footprint=1
+      find artifact.unknown_lump cell=(14, 4, 5) footprint=1
+    site site.g94ce6163.p0.v2m2 "Sunken relay" pos=(-266.0, 15.0316, -32.0) r=4.0 depth=1.549 diff=2 passes=1 signal=0.8481 seed=101982745 hint=(-236.0135, 14.5945, -32.9019)
+      find artifact.unknown_lump cell=(5, 1, 26) footprint=1
+      find artifact.unknown_lump cell=(23, 3, 24) footprint=1
+      find artifact.unknown_lump cell=(25, 1, 8) footprint=1
+    site site.g94ce6163.p0.v2m3 "Sunken relay" pos=(184.0, 24.6985, -362.0) r=4.0 depth=2.0966 diff=1 passes=2 signal=0.6641 seed=1068426765 hint=(169.1158, 23.195, -335.9527)
+      find artifact.unknown_lump cell=(7, 2, 15) footprint=1
+      find artifact.unknown_lump cell=(27, 3, 4) footprint=1
+      find artifact.unknown_lump cell=(10, 2, 5) footprint=1
+    site site.g94ce6163.p0.v2c0 "Scattered stash" pos=(-28.0, 16.4866, -252.0) r=1.6 depth=0.883 diff=1 passes=2 signal=0.414 seed=182446194 hint=(-25.905, 16.6683, -236.1378)
+    site site.g94ce6163.p0.v2c1 "Faint trove" pos=(-24.0, 12.3122, -116.0) r=1.6 depth=1.0617 diff=1 passes=1 signal=0.4515 seed=2008899438 hint=(-19.1819, 13.4282, -100.7427)
+    site site.g94ce6163.p0.v2c2 "Faint deposit" pos=(-118.0, 10.3592, -62.0) r=1.6 depth=1.1858 diff=1 passes=2 signal=0.3302 seed=1374706 hint=(-102.271, 10.594, -59.0675)
+    site site.g94ce6163.p0.v2c3 "Weak trove" pos=(122.0, 19.5899, 350.0) r=1.6 depth=1.2902 diff=1 passes=2 signal=0.4284 seed=1658448177 hint=(117.2231, 19.9226, 334.7297)
+    site site.g94ce6163.p0.v2c4 "Scattered cache" pos=(178.0, 15.8084, 344.0) r=1.6 depth=0.8503 diff=1 passes=1 signal=0.4559 seed=885980571 hint=(171.2711, 15.8447, 329.4837)
+    site site.g94ce6163.p0.v2c5 "Shallow trove" pos=(74.0, 20.8865, 90.0) r=1.6 depth=0.8696 diff=1 passes=2 signal=0.343 seed=1736422217 hint=(66.0848, 22.1996, 76.095)
+    site site.g94ce6163.p0.v2c6 "Weak cache" pos=(260.0, 12.9509, 330.0) r=1.6 depth=0.83 diff=1 passes=2 signal=0.2662 seed=1600054043 hint=(250.8009, 13.1329, 316.9089)
+    site site.g94ce6163.p0.v2c7 "Hidden deposit" pos=(-418.0, 17.9826, 6.0) r=1.6 depth=0.8484 diff=1 passes=1 signal=0.3882 seed=1613171633 hint=(-402.096, 18.2817, 4.2498)
+    site site.g94ce6163.p0.v2c8 "Faint scatter" pos=(-184.0, 13.827, 144.0) r=1.6 depth=1.1348 diff=1 passes=1 signal=0.2815 seed=1679369494 hint=(-172.6863, 13.2938, 132.6863)
+    site site.g94ce6163.p0.v2c9 "Buried scatter" pos=(158.0, 13.9646, -190.0) r=1.6 depth=1.1209 diff=1 passes=2 signal=0.4656 seed=368835490 hint=(146.3963, 13.6315, -178.9839)
+    site site.g94ce6163.p0.v2c10 "Buried cache" pos=(-220.0, 18.8715, -320.0) r=1.6 depth=1.1833 diff=1 passes=2 signal=0.2245 seed=763305995 hint=(-210.1149, 17.6043, -307.4189)
   body body.g94ce6163.p1 "XS-3787 c" kind=Planet au=0.4896 period=125.1 radiusKm=7926.0 g=0.21 potential=0.75 seed=1115378301 scene=Surface_Procedural base=(0.0, 9.6279, -40.0) env=env.gen.body.g94ce6163.p1 gravity=2.0601
-    recipe type=Ice seed=1115378301 relief=35.0 freq=0.002535 offset=(146.0411, 45.3571) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=5 holes=2
+    recipe type=Ice seed=1115378301 relief=35.0 freq=0.002535 offset=(146.0411, 45.3571) low=(0.5625, 0.66, 0.75) high=(0.8, 0.904, 1.0) pads=39 holes=19
       pad (0.0, -40.0, 26.0)
       pad (216.0, -202.0, 14.0)
       pad (192.0, -184.0, 12.0)
       pad (-142.0, 236.0, 14.0)
       pad (-128.2752, 209.3236, 12.0)
+      pad (-272.0, 234.0, 14.0)
+      pad (-250.8646, 212.7092, 12.0)
+      pad (408.0, 4.0, 14.0)
+      pad (378.1729, 0.7834, 12.0)
+      pad (-12.0, -334.0, 14.0)
+      pad (-10.7765, -304.025, 12.0)
+      pad (214.0, 16.0, 14.0)
+      pad (184.9772, 8.4053, 12.0)
+      pad (-310.0, -282.0, 14.0)
+      pad (-286.3523, -263.5396, 12.0)
+      pad (38.0, 410.0, 8.0)
+      pad (36.6537, 394.0567, 8.0)
+      pad (80.0, 202.0, 8.0)
+      pad (74.978, 186.8086, 8.0)
+      pad (-302.0, 306.0, 8.0)
+      pad (-291.4787, 293.9458, 8.0)
+      pad (-146.0, 74.0, 8.0)
+      pad (-133.389, 64.1531, 8.0)
+      pad (-74.0, -148.0, 8.0)
+      pad (-64.9563, -134.8011, 8.0)
+      pad (-154.0, -142.0, 8.0)
+      pad (-140.6606, -133.1648, 8.0)
+      pad (114.0, -154.0, 8.0)
+      pad (102.6863, -142.6863, 8.0)
+      pad (106.0, 398.0, 8.0)
+      pad (102.2365, 382.4489, 8.0)
+      pad (-48.0, 148.0, 8.0)
+      pad (-44.0419, 132.4973, 8.0)
+      pad (-254.0, -154.0, 8.0)
+      pad (-239.4028, -147.4485, 8.0)
+      pad (-200.0, 178.0, 8.0)
+      pad (-189.1835, 166.21, 8.0)
+      pad (-62.0, -78.0, 8.0)
+      pad (-48.3584, -69.639, 8.0)
     site site.g94ce6163.p1.s0 "Fused ice vault" pos=(216.0, 11.2295, -202.0) r=4.0 depth=1.6386 diff=1 passes=1 signal=0.5837 seed=405173946 hint=(192.0, 12.0999, -184.0)
       find artifact.unknown_lump cell=(12, 2, 23) footprint=1
       find artifact.unknown_lump cell=(16, 1, 20) footprint=1
@@ -368,16 +1569,91 @@ system sys.gen.94ce6163 "Uncharted XS-3787" class=K1V seed=1977339950 pos=(-6.18
       find artifact.unknown_lump cell=(22, 3, 11) footprint=1
       find artifact.unknown_lump cell=(17, 4, 25) footprint=1
       find artifact.unknown_lump cell=(8, 2, 17) footprint=1
+    site site.g94ce6163.p1.v2m0 "Silent ice vault" pos=(-272.0, 13.056, 234.0) r=4.0 depth=2.0721 diff=3 passes=1 signal=0.5979 seed=1567009607 hint=(-250.8646, 14.3318, 212.7092)
+      find artifact.unknown_lump cell=(21, 2, 27) footprint=1
+      find artifact.unknown_lump cell=(20, 1, 16) footprint=1
+      find artifact.unknown_lump cell=(27, 1, 5) footprint=1
+      find artifact.unknown_lump cell=(14, 4, 16) footprint=1
+      find artifact.unknown_lump cell=(15, 3, 6) footprint=1
+    site site.g94ce6163.p1.v2m1 "Old frozen spire" pos=(408.0, 8.2075, 4.0) r=4.0 depth=2.0254 diff=1 passes=1 signal=0.6201 seed=126941479 hint=(378.1729, 8.2779, 0.7834)
+      find artifact.unknown_lump cell=(18, 1, 4) footprint=1
+      find artifact.unknown_lump cell=(23, 2, 17) footprint=1
+      find artifact.unknown_lump cell=(26, 1, 13) footprint=1
+      find artifact.unknown_lump cell=(11, 2, 4) footprint=1
+      find artifact.unknown_lump cell=(11, 4, 21) footprint=1
+    site site.g94ce6163.p1.v2m2 "Shattered ice vault" pos=(-12.0, 12.517, -334.0) r=4.0 depth=1.9995 diff=2 passes=1 signal=0.6363 seed=1983868018 hint=(-10.7765, 12.8582, -304.025)
+      find artifact.unknown_lump cell=(21, 4, 9) footprint=1
+      find artifact.unknown_lump cell=(20, 2, 26) footprint=1
+      find artifact.unknown_lump cell=(6, 1, 5) footprint=1
+      find artifact.unknown_lump cell=(14, 1, 19) footprint=1
+      find artifact.unknown_lump cell=(11, 1, 21) footprint=1
+    site site.g94ce6163.p1.v2m3 "Old ice vault" pos=(214.0, 6.6433, 16.0) r=4.0 depth=1.6082 diff=2 passes=1 signal=0.7733 seed=634866589 hint=(184.9772, 5.5347, 8.4053)
+      find artifact.unknown_lump cell=(26, 3, 10) footprint=1
+      find artifact.unknown_lump cell=(12, 2, 14) footprint=1
+      find artifact.unknown_lump cell=(22, 3, 10) footprint=1
+      find artifact.unknown_lump cell=(21, 3, 20) footprint=1
+    site site.g94ce6163.p1.v2m4 "Buried ice vault" pos=(-310.0, 8.2723, -282.0) r=4.0 depth=1.737 diff=1 passes=1 signal=0.5254 seed=1822767466 hint=(-286.3523, 9.1079, -263.5396)
+      find artifact.unknown_lump cell=(18, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(17, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(8, 2, 21) footprint=1
+      find artifact.unknown_lump cell=(24, 1, 22) footprint=1
+      find artifact.unknown_lump cell=(15, 1, 22) footprint=1
+    site site.g94ce6163.p1.v2c0 "Hidden rime stash" pos=(38.0, 9.5173, 410.0) r=1.6 depth=1.2503 diff=1 passes=1 signal=0.4271 seed=445656057 hint=(36.6537, 9.2575, 394.0567)
+    site site.g94ce6163.p1.v2c1 "Hidden rime stash" pos=(80.0, 9.5638, 202.0) r=1.6 depth=1.0017 diff=1 passes=2 signal=0.2884 seed=1820089147 hint=(74.978, 9.6119, 186.8086)
+    site site.g94ce6163.p1.v2c2 "Weak ice cache" pos=(-302.0, 12.8347, 306.0) r=1.6 depth=1.1062 diff=1 passes=1 signal=0.2314 seed=929457911 hint=(-291.4787, 12.9925, 293.9458)
+    site site.g94ce6163.p1.v2c3 "Shallow rime stash" pos=(-146.0, 16.2571, 74.0) r=1.6 depth=0.8718 diff=1 passes=2 signal=0.2513 seed=189773815 hint=(-133.389, 15.4629, 64.1531)
+    site site.g94ce6163.p1.v2c4 "Shallow rime stash" pos=(-74.0, 12.8672, -148.0) r=1.6 depth=1.0612 diff=1 passes=1 signal=0.4466 seed=925626816 hint=(-64.9563, 12.3879, -134.8011)
+    site site.g94ce6163.p1.v2c5 "Buried frost trove" pos=(-154.0, 14.4912, -142.0) r=1.6 depth=0.8788 diff=1 passes=2 signal=0.2614 seed=463594735 hint=(-140.6606, 14.9901, -133.1648)
+    site site.g94ce6163.p1.v2c6 "Weak ice cache" pos=(114.0, 9.981, -154.0) r=1.6 depth=1.2226 diff=1 passes=2 signal=0.3038 seed=1324634210 hint=(102.6863, 9.4673, -142.6863)
+    site site.g94ce6163.p1.v2c7 "Buried ice cache" pos=(106.0, 6.8957, 398.0) r=1.6 depth=0.9488 diff=1 passes=1 signal=0.4901 seed=1645799784 hint=(102.2365, 6.719, 382.4489)
+    site site.g94ce6163.p1.v2c8 "Weak frost trove" pos=(-48.0, 13.6827, 148.0) r=1.6 depth=1.2634 diff=1 passes=1 signal=0.3674 seed=1859876520 hint=(-44.0419, 13.8461, 132.4973)
+    site site.g94ce6163.p1.v2c9 "Weak ice cache" pos=(-254.0, 10.5675, -154.0) r=1.6 depth=1.1127 diff=1 passes=1 signal=0.4833 seed=987932916 hint=(-239.4028, 11.4445, -147.4485)
+    site site.g94ce6163.p1.v2c10 "Buried ice cache" pos=(-200.0, 15.627, 178.0) r=1.6 depth=0.8659 diff=1 passes=1 signal=0.2519 seed=1310422971 hint=(-189.1835, 16.873, 166.21)
+    site site.g94ce6163.p1.v2c11 "Weak rime stash" pos=(-62.0, 12.062, -78.0) r=1.6 depth=0.9839 diff=1 passes=2 signal=0.3774 seed=77053313 hint=(-48.3584, 12.0308, -69.639)
   body body.g94ce6163.p2 "XS-3787 d" kind=Planet au=0.9546 period=340.6 radiusKm=62936.0 g=2.4 potential=0.0 seed=979978574 scene= base=(0.0, 0.0, 0.0) env=env.gen.body.g94ce6163.p2 gravity=23.544
 system sys.gen.95ce62f6 "Uncharted XS-6970" class=M1V seed=2065204138 pos=(-12.1832, 3.6692, -4.3778) ftl=13.4558 potential=0.6278 known=False reveal=tech.navdrive
   body body.g95ce62f6.star "Uncharted XS-6970" kind=Star au=0.0 period=0.0 radiusKm=0.0 g=1.0 potential=0.0 seed=2065204138 scene= base=(0.0, 0.0, 0.0) env=- gravity=-
   body body.g95ce62f6.p0 "XS-6970 b" kind=Planet au=0.0861 period=9.2 radiusKm=6537.0 g=0.83 potential=0.77 seed=716210773 scene=Surface_Procedural base=(0.0, 25.1119, -40.0) env=env.gen.body.g95ce62f6.p0 gravity=8.1423
-    recipe type=Desert seed=716210773 relief=60.8418 freq=0.003461 offset=(307.0579, 480.3241) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=5 holes=2
+    recipe type=Desert seed=716210773 relief=60.8418 freq=0.003461 offset=(307.0579, 480.3241) low=(0.645, 0.465, 0.285) high=(0.888, 0.696, 0.504) pads=39 holes=19
       pad (0.0, -40.0, 26.0)
       pad (38.0, -200.0, 14.0)
       pad (31.0678, -170.8119, 12.0)
       pad (6.0, 222.0, 14.0)
       pad (5.3132, 192.0079, 12.0)
+      pad (176.0, 278.0, 14.0)
+      pad (161.4728, 251.752, 12.0)
+      pad (-100.0, -308.0, 14.0)
+      pad (-89.5123, -279.8929, 12.0)
+      pad (-390.0, -152.0, 14.0)
+      pad (-361.1655, -143.7193, 12.0)
+      pad (218.0, -10.0, 14.0)
+      pad (188.2801, -14.0899, 12.0)
+      pad (-56.0, 294.0, 14.0)
+      pad (-51.0393, 264.413, 12.0)
+      pad (364.0, 82.0, 8.0)
+      pad (348.8294, 76.9154, 8.0)
+      pad (-290.0, -120.0, 8.0)
+      pad (-274.5761, -115.7451, 8.0)
+      pad (-106.0, -164.0, 8.0)
+      pad (-95.6035, -151.8381, 8.0)
+      pad (116.0, -290.0, 8.0)
+      pad (109.2656, -275.4863, 8.0)
+      pad (26.0, -258.0, 8.0)
+      pad (24.1052, -242.1126, 8.0)
+      pad (-346.0, 2.0, 8.0)
+      pad (-330.1166, 0.072, 8.0)
+      pad (-84.0, -46.0, 8.0)
+      pad (-68.0407, -44.8601, 8.0)
+      pad (-268.0, -358.0, 8.0)
+      pad (-257.6891, -345.7654, 8.0)
+      pad (128.0, -74.0, 8.0)
+      pad (112.5362, -69.8924, 8.0)
+      pad (70.0, -72.0, 8.0)
+      pad (55.4484, -65.3479, 8.0)
+      pad (238.0, 130.0, 8.0)
+      pad (224.9803, 120.7002, 8.0)
+      pad (-6.0, 392.0, 8.0)
+      pad (-5.7778, 376.0016, 8.0)
     site site.g95ce62f6.p0.s0 "Buried outpost" pos=(38.0, 18.0902, -200.0) r=4.0 depth=1.7135 diff=1 passes=1 signal=0.6801 seed=1515840242 hint=(31.0678, 20.4495, -170.8119)
       find artifact.unknown_lump cell=(12, 3, 18) footprint=1
       find artifact.unknown_lump cell=(15, 4, 7) footprint=1
@@ -386,13 +1662,80 @@ system sys.gen.95ce62f6 "Uncharted XS-6970" class=M1V seed=2065204138 pos=(-12.1
       find artifact.unknown_lump cell=(11, 1, 8) footprint=1
       find artifact.unknown_lump cell=(18, 2, 13) footprint=1
       find artifact.unknown_lump cell=(18, 4, 9) footprint=1
+    site site.g95ce62f6.p0.v2m0 "Silent relay" pos=(176.0, 20.3139, 278.0) r=4.0 depth=1.8111 diff=1 passes=1 signal=0.5057 seed=1171632835 hint=(161.4728, 17.5247, 251.752)
+      find artifact.unknown_lump cell=(17, 2, 17) footprint=1
+      find artifact.unknown_lump cell=(20, 4, 8) footprint=1
+      find artifact.unknown_lump cell=(21, 4, 15) footprint=1
+      find artifact.unknown_lump cell=(15, 3, 19) footprint=1
+      find artifact.unknown_lump cell=(16, 1, 13) footprint=1
+    site site.g95ce62f6.p0.v2m1 "Silent relay" pos=(-100.0, 14.4131, -308.0) r=4.0 depth=1.8313 diff=1 passes=2 signal=0.6637 seed=1643528511 hint=(-89.5123, 12.8867, -279.8929)
+      find artifact.unknown_lump cell=(14, 1, 19) footprint=1
+      find artifact.unknown_lump cell=(21, 2, 5) footprint=1
+      find artifact.unknown_lump cell=(4, 3, 21) footprint=1
+      find artifact.unknown_lump cell=(21, 1, 19) footprint=1
+    site site.g95ce62f6.p0.v2m2 "Silent spire" pos=(-390.0, 25.9664, -152.0) r=4.0 depth=1.6024 diff=3 passes=2 signal=0.505 seed=520010426 hint=(-361.1655, 24.7141, -143.7193)
+      find artifact.unknown_lump cell=(10, 1, 14) footprint=1
+      find artifact.unknown_lump cell=(14, 2, 9) footprint=1
+      find artifact.unknown_lump cell=(12, 2, 13) footprint=1
+      find artifact.unknown_lump cell=(27, 2, 5) footprint=1
+    site site.g95ce62f6.p0.v2m3 "Hollow outpost" pos=(218.0, 16.1286, -10.0) r=4.0 depth=1.9023 diff=3 passes=1 signal=0.7729 seed=1654130565 hint=(188.2801, 17.1145, -14.0899)
+      find artifact.unknown_lump cell=(27, 2, 11) footprint=1
+      find artifact.unknown_lump cell=(25, 2, 14) footprint=1
+      find artifact.unknown_lump cell=(6, 4, 6) footprint=1
+      find artifact.unknown_lump cell=(6, 2, 22) footprint=1
+      find artifact.unknown_lump cell=(20, 1, 7) footprint=1
+    site site.g95ce62f6.p0.v2m4 "Silent relay" pos=(-56.0, 16.5224, 294.0) r=4.0 depth=2.1706 diff=3 passes=1 signal=0.5501 seed=1677393989 hint=(-51.0393, 20.9658, 264.413)
+      find artifact.unknown_lump cell=(11, 3, 5) footprint=1
+      find artifact.unknown_lump cell=(14, 4, 7) footprint=1
+      find artifact.unknown_lump cell=(17, 1, 9) footprint=1
+      find artifact.unknown_lump cell=(8, 1, 25) footprint=1
+    site site.g95ce62f6.p0.v2c0 "Hidden stash" pos=(364.0, 18.678, 82.0) r=1.6 depth=1.0283 diff=1 passes=1 signal=0.3908 seed=1314484570 hint=(348.8294, 18.4571, 76.9154)
+    site site.g95ce62f6.p0.v2c1 "Buried cache" pos=(-290.0, 24.6186, -120.0) r=1.6 depth=0.9774 diff=1 passes=2 signal=0.397 seed=307750003 hint=(-274.5761, 23.055, -115.7451)
+    site site.g95ce62f6.p0.v2c2 "Shallow stash" pos=(-106.0, 11.2923, -164.0) r=1.6 depth=1.0202 diff=1 passes=1 signal=0.434 seed=1840234036 hint=(-95.6035, 12.1413, -151.8381)
+    site site.g95ce62f6.p0.v2c3 "Faint cache" pos=(116.0, 23.8358, -290.0) r=1.6 depth=0.8815 diff=1 passes=1 signal=0.493 seed=116755758 hint=(109.2656, 23.5486, -275.4863)
+    site site.g95ce62f6.p0.v2c4 "Scattered scatter" pos=(26.0, 18.283, -258.0) r=1.6 depth=1.249 diff=1 passes=2 signal=0.4139 seed=78772782 hint=(24.1052, 16.5649, -242.1126)
+    site site.g95ce62f6.p0.v2c5 "Shallow stash" pos=(-346.0, 25.2514, 2.0) r=1.6 depth=1.2006 diff=1 passes=1 signal=0.4856 seed=1856152050 hint=(-330.1166, 22.305, 0.072)
+    site site.g95ce62f6.p0.v2c6 "Weak deposit" pos=(-84.0, 23.3087, -46.0) r=1.6 depth=1.0317 diff=1 passes=2 signal=0.226 seed=1795434006 hint=(-68.0407, 24.4065, -44.8601)
+    site site.g95ce62f6.p0.v2c7 "Buried deposit" pos=(-268.0, 18.834, -358.0) r=1.6 depth=1.0292 diff=1 passes=1 signal=0.2762 seed=645018664 hint=(-257.6891, 20.9931, -345.7654)
+    site site.g95ce62f6.p0.v2c8 "Scattered stash" pos=(128.0, 23.0415, -74.0) r=1.6 depth=0.9984 diff=1 passes=1 signal=0.4856 seed=866897881 hint=(112.5362, 23.5908, -69.8924)
+    site site.g95ce62f6.p0.v2c9 "Weak stash" pos=(70.0, 23.3447, -72.0) r=1.6 depth=1.1338 diff=1 passes=1 signal=0.3491 seed=312083201 hint=(55.4484, 22.9125, -65.3479)
+    site site.g95ce62f6.p0.v2c10 "Scattered stash" pos=(238.0, 16.8225, 130.0) r=1.6 depth=1.0242 diff=1 passes=2 signal=0.4997 seed=1214268957 hint=(224.9803, 17.3747, 120.7002)
+    site site.g95ce62f6.p0.v2c11 "Scattered deposit" pos=(-6.0, 13.3609, 392.0) r=1.6 depth=0.9373 diff=1 passes=2 signal=0.2979 seed=1941899759 hint=(-5.7778, 13.8981, 376.0016)
   body body.g95ce62f6.p1 "XS-6970 c" kind=Planet au=0.1516 period=21.6 radiusKm=2723.0 g=0.81 potential=0.42 seed=514820104 scene=Surface_Procedural base=(0.0, 28.2732, -40.0) env=env.gen.body.g95ce62f6.p1 gravity=7.9461
-    recipe type=Rocky seed=514820104 relief=58.9101 freq=0.004686 offset=(275.6274, 355.997) low=(0.4125, 0.375, 0.315) high=(0.64, 0.6, 0.536) pads=5 holes=2
+    recipe type=Rocky seed=514820104 relief=58.9101 freq=0.004686 offset=(275.6274, 355.997) low=(0.4125, 0.375, 0.315) high=(0.64, 0.6, 0.536) pads=33 holes=16
       pad (0.0, -40.0, 26.0)
       pad (-82.0, 228.0, 14.0)
       pad (-73.2226, 199.3128, 12.0)
       pad (234.0, -244.0, 14.0)
       pad (211.3868, -224.2859, 12.0)
+      pad (238.0, -44.0, 14.0)
+      pad (208.0042, -43.4959, 12.0)
+      pad (240.0, 88.0, 14.0)
+      pad (213.5294, 73.8824, 12.0)
+      pad (-190.0, 168.0, 14.0)
+      pad (-169.7669, 145.8501, 12.0)
+      pad (84.0, -320.0, 14.0)
+      pad (75.3796, -291.2652, 12.0)
+      pad (-228.0, 268.0, 14.0)
+      pad (-210.1507, 243.8877, 12.0)
+      pad (-150.0, -62.0, 8.0)
+      pad (-134.1694, -59.6782, 8.0)
+      pad (352.0, -200.0, 8.0)
+      pad (337.4341, -193.3792, 8.0)
+      pad (62.0, -200.0, 8.0)
+      pad (56.2189, -185.0809, 8.0)
+      pad (182.0, 24.0, 8.0)
+      pad (166.906, 18.6922, 8.0)
+      pad (114.0, 408.0, 8.0)
+      pad (110.0543, 392.4941, 8.0)
+      pad (-324.0, 134.0, 8.0)
+      pad (-309.9041, 126.43, 8.0)
+      pad (-78.0, -128.0, 8.0)
+      pad (-67.3871, -116.0265, 8.0)
+      pad (-422.0, -134.0, 8.0)
+      pad (-406.3828, -130.5213, 8.0)
+      pad (304.0, -88.0, 8.0)
+      pad (288.1958, -85.5046, 8.0)
     site site.g95ce62f6.p1.s0 "Old outpost" pos=(-82.0, 17.9155, 228.0) r=4.0 depth=1.5353 diff=1 passes=2 signal=0.5571 seed=263998432 hint=(-73.2226, 14.6236, 199.3128)
       find artifact.unknown_lump cell=(25, 2, 23) footprint=1
       find artifact.unknown_lump cell=(24, 4, 12) footprint=1
@@ -401,5 +1744,39 @@ system sys.gen.95ce62f6 "Uncharted XS-6970" class=M1V seed=2065204138 pos=(-12.1
       find artifact.unknown_lump cell=(13, 1, 7) footprint=1
       find artifact.unknown_lump cell=(17, 1, 14) footprint=1
       find artifact.unknown_lump cell=(16, 1, 12) footprint=1
+    site site.g95ce62f6.p1.v2m0 "Shattered relay" pos=(238.0, 17.0165, -44.0) r=4.0 depth=1.9961 diff=1 passes=2 signal=0.456 seed=1558398346 hint=(208.0042, 15.2379, -43.4959)
+      find artifact.unknown_lump cell=(16, 1, 16) footprint=1
+      find artifact.unknown_lump cell=(16, 4, 8) footprint=1
+      find artifact.unknown_lump cell=(27, 2, 23) footprint=1
+      find artifact.unknown_lump cell=(23, 1, 25) footprint=1
+      find artifact.unknown_lump cell=(16, 4, 24) footprint=1
+    site site.g95ce62f6.p1.v2m1 "Shattered relay" pos=(240.0, 14.1277, 88.0) r=4.0 depth=2.0281 diff=3 passes=2 signal=0.7561 seed=336141664 hint=(213.5294, 12.7735, 73.8824)
+      find artifact.unknown_lump cell=(13, 4, 5) footprint=1
+      find artifact.unknown_lump cell=(16, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(23, 1, 9) footprint=1
+    site site.g95ce62f6.p1.v2m2 "Hollow relay" pos=(-190.0, 26.637, 168.0) r=4.0 depth=1.852 diff=2 passes=1 signal=0.7775 seed=834581145 hint=(-169.7669, 26.4148, 145.8501)
+      find artifact.unknown_lump cell=(25, 3, 15) footprint=1
+      find artifact.unknown_lump cell=(25, 4, 27) footprint=1
+      find artifact.unknown_lump cell=(7, 1, 17) footprint=1
+      find artifact.unknown_lump cell=(25, 1, 20) footprint=1
+    site site.g95ce62f6.p1.v2m3 "Shattered relay" pos=(84.0, 13.1086, -320.0) r=4.0 depth=2.0368 diff=1 passes=2 signal=0.7807 seed=1971144503 hint=(75.3796, 14.9005, -291.2652)
+      find artifact.unknown_lump cell=(18, 2, 15) footprint=1
+      find artifact.unknown_lump cell=(12, 4, 24) footprint=1
+      find artifact.unknown_lump cell=(24, 2, 17) footprint=1
+    site site.g95ce62f6.p1.v2m4 "Buried spire" pos=(-228.0, 26.4646, 268.0) r=4.0 depth=1.6619 diff=3 passes=1 signal=0.7798 seed=1449977313 hint=(-210.1507, 24.8234, 243.8877)
+      find artifact.unknown_lump cell=(23, 3, 13) footprint=1
+      find artifact.unknown_lump cell=(12, 3, 25) footprint=1
+      find artifact.unknown_lump cell=(23, 3, 6) footprint=1
+      find artifact.unknown_lump cell=(8, 3, 6) footprint=1
+      find artifact.unknown_lump cell=(20, 3, 21) footprint=1
+    site site.g95ce62f6.p1.v2c0 "Weak trove" pos=(-150.0, 17.9153, -62.0) r=1.6 depth=0.9222 diff=1 passes=2 signal=0.4768 seed=2099043453 hint=(-134.1694, 20.2216, -59.6782)
+    site site.g95ce62f6.p1.v2c1 "Scattered cache" pos=(352.0, 15.9256, -200.0) r=1.6 depth=0.9965 diff=1 passes=1 signal=0.3645 seed=1062154882 hint=(337.4341, 16.3124, -193.3792)
+    site site.g95ce62f6.p1.v2c2 "Hidden deposit" pos=(62.0, 24.0071, -200.0) r=1.6 depth=0.8859 diff=1 passes=1 signal=0.4346 seed=1273838685 hint=(56.2189, 25.0575, -185.0809)
+    site site.g95ce62f6.p1.v2c3 "Faint scatter" pos=(182.0, 10.3203, 24.0) r=1.6 depth=0.8633 diff=1 passes=1 signal=0.3708 seed=1050042392 hint=(166.906, 10.2397, 18.6922)
+    site site.g95ce62f6.p1.v2c4 "Buried scatter" pos=(114.0, 19.09, 408.0) r=1.6 depth=1.0646 diff=1 passes=1 signal=0.2671 seed=1890415540 hint=(110.0543, 18.7747, 392.4941)
+    site site.g95ce62f6.p1.v2c5 "Shallow trove" pos=(-324.0, 16.6635, 134.0) r=1.6 depth=0.8906 diff=1 passes=1 signal=0.4189 seed=585272025 hint=(-309.9041, 14.5174, 126.43)
+    site site.g95ce62f6.p1.v2c6 "Weak cache" pos=(-78.0, 24.6571, -128.0) r=1.6 depth=1.2348 diff=1 passes=1 signal=0.3813 seed=273352545 hint=(-67.3871, 23.9487, -116.0265)
+    site site.g95ce62f6.p1.v2c7 "Shallow stash" pos=(-422.0, 22.9734, -134.0) r=1.6 depth=0.9684 diff=1 passes=1 signal=0.4683 seed=1000348936 hint=(-406.3828, 21.6644, -130.5213)
+    site site.g95ce62f6.p1.v2c8 "Shallow trove" pos=(304.0, 19.6182, -88.0) r=1.6 depth=0.8828 diff=1 passes=2 signal=0.2618 seed=962528166 hint=(288.1958, 17.6249, -85.5046)
   body body.g95ce62f6.p2 "XS-6970 d" kind=Planet au=0.2489 period=45.4 radiusKm=69372.0 g=2.4 potential=0.0 seed=513501891 scene= base=(0.0, 0.0, 0.0) env=env.gen.body.g95ce62f6.p2 gravity=23.544
-totals systems=9 bodies=36 sites=56 finds=137
+totals systems=9 bodies=36 sites=384 finds=530

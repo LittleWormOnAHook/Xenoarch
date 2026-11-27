@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: b0233619de8c7594a8327b4c69c8b9a6, type: 3}
   m_Name: CacheLoot
-  m_EditorClassIdentifier: DMI.Xenoarch.Runtime:DMI.Xenoarch.Valuables:LootTableDefinition
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Valuables.LootTableDefinition
   id: loot.valuable_cache
   tiers:
   - tier: 0
-    weight: 60
+    weight: 50
     items:
     - itemId: item.valuable.copper_nugget
       min: 1
@@ -23,9 +23,21 @@ MonoBehaviour:
     - itemId: item.valuable.meteoric_iron
       min: 1
       max: 3
+    - itemId: material.iron_ore
+      min: 1
+      max: 3
+    - itemId: material.regolith
+      min: 2
+      max: 4
+    - itemId: material.mineral_salts
+      min: 1
+      max: 3
+    - itemId: material.water_ice
+      min: 1
+      max: 3
     extraRolls: 1
   - tier: 1
-    weight: 28
+    weight: 30
     items:
     - itemId: item.valuable.silver_nugget
       min: 1
@@ -33,9 +45,15 @@ MonoBehaviour:
     - itemId: item.valuable.quartz_geode
       min: 1
       max: 2
+    - itemId: material.copper_sulfide
+      min: 1
+      max: 3
+    - itemId: material.nickel_iron_ore
+      min: 1
+      max: 3
     extraRolls: 0
   - tier: 2
-    weight: 10
+    weight: 15
     items:
     - itemId: item.valuable.gold_nugget
       min: 1
@@ -46,9 +64,18 @@ MonoBehaviour:
     - itemId: item.valuable.vael_coin
       min: 1
       max: 1
+    - itemId: material.platinoid_ore
+      min: 1
+      max: 2
+    - itemId: material.helium3
+      min: 1
+      max: 2
+    - itemId: material.methane_frost
+      min: 1
+      max: 2
     extraRolls: 0
   - tier: 3
-    weight: 2
+    weight: 5
     items:
     - itemId: item.valuable.iridium_core
       min: 1
@@ -56,4 +83,7 @@ MonoBehaviour:
     - itemId: item.valuable.starstone
       min: 1
       max: 1
+    - itemId: material.auriferous_quartz
+      min: 1
+      max: 2
     extraRolls: 0

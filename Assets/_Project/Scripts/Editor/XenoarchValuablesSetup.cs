@@ -77,8 +77,8 @@ namespace DMI.Xenoarch.EditorTools
             var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
             var loot = config != null ? config.valuableLoot : null;
             if (loot == null) { check(true, "4D valuables: setup not run yet - skipped"); return; }
-            bool allIds = loot.tiers.SelectMany(t => t.items).All(e => config.itemRegistry.TryGetItem(e.itemId, out var d) && d.category == ItemCategory.Valuable);
-            check(loot.tiers.Count == 4 && loot.tiers.All(t => t.items.Count > 0) && allIds, $"4D valuables: loot table has 4 tiers, every entry is a registered Valuable item");
+            bool allIds = loot.tiers.SelectMany(t => t.items).All(e => config.itemRegistry.TryGetItem(e.itemId, out var d) && (d.category == ItemCategory.Valuable || d.category == ItemCategory.Resource));
+            check(loot.tiers.Count == 4 && loot.tiers.All(t => t.items.Count > 0) && allIds, $"4D valuables: loot table has 4 tiers, every entry is a registered Valuable or Resource item");
             var rng = new System.Random(5); var counts = new int[4];
             for (int i = 0; i < 4000; i++) counts[(int)loot.RollTier(rng)]++;
             check(counts[0] > counts[1] && counts[1] > counts[2] && counts[2] > counts[3] && counts[3] > 0, $"4D valuables: tier rolls {string.Join("/", counts)} (common > uncommon > rare > super rare > 0)");

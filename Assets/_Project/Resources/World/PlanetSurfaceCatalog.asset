@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a7e28d4b6f4c0e9d31a8f5b2c74e91, type: 3}
+  m_Name: PlanetSurfaceCatalog
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.World.PlanetSurfaceCatalog
+  entries:
+  - type: 1
+    layers:
+    - {fileID: 8574412962073106934, guid: 775b9e70a113d5249aeb5af03520c687, type: 2}
+    - {fileID: 8574412962073106934, guid: 60a15312d6908c643b15a6db2ab65e6e, type: 2}
+    - {fileID: 8574412962073106934, guid: 41599414cd13740448cc2791ca0021f9, type: 2}
+    - {fileID: 8574412962073106934, guid: be55e4cc6f9ec79478c337621453d5a9, type: 2}
+    generateIceLayer: 0
+    iceColor: {r: 0.78, g: 0.88, b: 0.95, a: 1}
+    scatterTint: {r: 1, g: 0.62, b: 0.43, a: 1}
+    scatterCount: 440
+    slopeClusters: 40
+    majorStyle: {fileID: 11400000, guid: 0c4ee46dd559da84ca73710929fc4ce4, type: 2}
+    cacheStyle: {fileID: 11400000, guid: f4970b68c6c677e419d448bc68c8c89b, type: 2}
+  - type: 4
+    layers:
+    - {fileID: 8574412962073106934, guid: 775b9e70a113d5249aeb5af03520c687, type: 2}
+    - {fileID: 8574412962073106934, guid: 60a15312d6908c643b15a6db2ab65e6e, type: 2}
+    - {fileID: 8574412962073106934, guid: 41599414cd13740448cc2791ca0021f9, type: 2}
+    - {fileID: 8574412962073106934, guid: be55e4cc6f9ec79478c337621453d5a9, type: 2}
+    generateIceLayer: 0
+    iceColor: {r: 0.78, g: 0.88, b: 0.95, a: 1}
+    scatterTint: {r: 0.45, g: 0.28, b: 0.24, a: 1}
+    scatterCount: 400
+    slopeClusters: 50
+    majorStyle: {fileID: 11400000, guid: 0c4ee46dd559da84ca73710929fc4ce4, type: 2}
+    cacheStyle: {fileID: 11400000, guid: f4970b68c6c677e419d448bc68c8c89b, type: 2}
+  - type: 2
+    layers:
+    - {fileID: 8574412962073106934, guid: 8d0e762bc0155ac41b6a425d47e62c64, type: 2}
+    - {fileID: 8574412962073106934, guid: 96c6f5f66e02afd4cba2aa37b17f04be, type: 2}
+    - {fileID: 8574412962073106934, guid: da4842eddcf2f914c821932d6e37f7a1, type: 2}
+    generateIceLayer: 1
+    iceColor: {r: 0.78, g: 0.88, b: 0.95, a: 1}
+    scatterTint: {r: 0.86, g: 0.9, b: 0.95, a: 1}
+    scatterCount: 360
+    slopeClusters: 35
+    majorStyle: {fileID: 11400000, guid: d108ad1e1fdf7ef46944c53edee0976a, type: 2}
+    cacheStyle: {fileID: 11400000, guid: ffb25ef01128f1c48ba96237fe32df71, type: 2}
+  - type: 3
+    layers:
+    - {fileID: 8574412962073106934, guid: 8d0e762bc0155ac41b6a425d47e62c64, type: 2}
+    - {fileID: 8574412962073106934, guid: 96c6f5f66e02afd4cba2aa37b17f04be, type: 2}
+    - {fileID: 8574412962073106934, guid: da4842eddcf2f914c821932d6e37f7a1, type: 2}
+    generateIceLayer: 0
+    iceColor: {r: 0.78, g: 0.88, b: 0.95, a: 1}
+    scatterTint: {r: 0.86, g: 0.86, b: 0.88, a: 1}
+    scatterCount: 480
+    slopeClusters: 45
+    majorStyle: {fileID: 11400000, guid: ffb25ef01128f1c48ba96237fe32df71, type: 2}
+    cacheStyle: {fileID: 11400000, guid: ffb25ef01128f1c48ba96237fe32df71, type: 2}
+  - type: 0
+    layers:
+    - {fileID: 8574412962073106934, guid: 8d0e762bc0155ac41b6a425d47e62c64, type: 2}
+    - {fileID: 8574412962073106934, guid: 96c6f5f66e02afd4cba2aa37b17f04be, type: 2}
+    - {fileID: 8574412962073106934, guid: da4842eddcf2f914c821932d6e37f7a1, type: 2}
+    generateIceLayer: 0
+    iceColor: {r: 0.78, g: 0.88, b: 0.95, a: 1}
+    scatterTint: {r: 0.7, g: 0.64, b: 0.56, a: 1}
+    scatterCount: 400
+    slopeClusters: 40
+    majorStyle: {fileID: 11400000, guid: ffb25ef01128f1c48ba96237fe32df71, type: 2}
+    cacheStyle: {fileID: 11400000, guid: ffb25ef01128f1c48ba96237fe32df71, type: 2}

@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e90bb84484bf3a4c90e819cafa7b9e6, type: 3}
+  m_Name: Strata_desert
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Materials.StrataProfile
+  bodyIds: []
+  forProceduralType: 1
+  proceduralType: 1
+  bands:
+  - label: regolith
+    minDepth: 0
+    maxDepth: 0.6
+    itemId: material.regolith
+    volumePerUnit: 0.12
+    chance: 1
+  - label: mineral salts
+    minDepth: 0.3
+    maxDepth: 1.2
+    itemId: material.mineral_salts
+    volumePerUnit: 0.18
+    chance: 0.8
+  - label: copper sulfide layer
+    minDepth: 0.6
+    maxDepth: 2.2
+    itemId: material.copper_sulfide
+    volumePerUnit: 0.22
+    chance: 0.75
+  - label: nickel-iron layer
+    minDepth: 1
+    maxDepth: 3
+    itemId: material.nickel_iron_ore
+    volumePerUnit: 0.25
+    chance: 0.6
+  - label: gold-bearing quartz
+    minDepth: 1.5
+    maxDepth: 4
+    itemId: material.auriferous_quartz
+    volumePerUnit: 0.35
+    chance: 0.4
+  - label: platinoid seam
+    minDepth: 2
+    maxDepth: 5
+    itemId: material.platinoid_ore
+    volumePerUnit: 0.4
+    chance: 0.2

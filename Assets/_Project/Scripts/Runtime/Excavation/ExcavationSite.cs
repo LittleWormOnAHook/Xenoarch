@@ -116,6 +116,7 @@ namespace DMI.Xenoarch.Excavation
         void Init(ArchaeologicalSiteDefinition def, float surfaceY)
         {
             Definition = def;
+            if (def != null && def.isSurveyCache) IsCache = true;
             if (!Underground)
                 foreach (var mb in FindObjectsByType<MonoBehaviour>())
                     if (mb is IExcavationSurface s && mb.gameObject.scene == gameObject.scene) { _surface = s; break; }
@@ -585,6 +586,42 @@ namespace DMI.Xenoarch.Excavation
 
         /// <summary>ZEN-26: marks a dig site (not a cache) cleared once it had finds and all are recovered. True when it
         /// was cleared just now. Also run by the scanner, so sites cleared in older saves catch up.</summary>
+
+        void TryAwardSurveyCache()
+        {
+            if (!IsCache || Definition == null || !Definition.isSurveyCache || Grid == null || Underground) return;
+            var session = XenoarchRuntime.Session;
+            var vs = session?.Valuables;
+            if (vs == null || vs.IsCollected(Definition.Id)) return;
+            int cx = Grid.nx / 2, cz = Grid.nz / 2;
+            float dug = 0f;
+            for (int dx = -1; dx <= 0; dx++)
+                for (int dz = -1; dz <= 0; dz++)
+                    if (Grid.InBounds(cx + dx, cz + dz)) dug = Mathf.Max(dug, Grid.TopDepth(cx + dx, cz + dz));
+            if (dug + Grid.cell * 0.5f < Definition.depth) return;
+            var table = session.Config != null ? session.Config.valuableLoot : null;
+            var rng = new System.Random(Definition.seed);
+            var tier = table != null ? table.RollTier(rng) : DMI.Xenoarch.Valuables.LootTier.Common;
+            var loot = table != null ? table.Roll(tier, rng) : new List<(string, int)>();
+            if (session.Inventory != null && session.Inventory.FreeSlots < loot.Count)
+            {
+                DMI.Xenoarch.UI.Toast.Show("Survey cache found, but the inventory is full. Make room to lift it.");
+                return;
+            }
+            var names = new List<string>();
+            foreach (var (id, n) in loot)
+            {
+                int leftover = session.Inventory != null ? session.Inventory.Add(id, n) : n;
+                int added = n - leftover;
+                string label = session.Items != null && session.Items.TryGetItem(id, out var item) && item != null ? item.DisplayNameOrId : id;
+                names.Add($"{label} x{added}");
+            }
+            vs.Reveal(Definition.Id);
+            vs.Collect(Definition.Id, tier);
+            ShowBorder(false);
+            string who = DMI.Xenoarch.Valuables.ValuableSiteDirector.TierName(tier);
+            DMI.Xenoarch.UI.Toast.Show($"{who.ToUpperInvariant()} survey cache: {string.Join(", ", names)}", 7f);
+        }
         public bool UpdateCleared()
         {
             if (IsCache || Grid == null || Definition == null || Grid.artifacts.Count == 0) return false;
@@ -612,6 +649,7 @@ namespace DMI.Xenoarch.Excavation
         void Update()
         {
             if (_dirty && Time.unscaledTime >= _saveAt) Flush();
+            TryAwardSurveyCache();
             for (int n = 0; n < 4 && _pendingCarves.Count > 0 && !_replaying; n++)   // capped per frame
             {
                 var (pos, rad, tex) = _pendingCarves.Peek();

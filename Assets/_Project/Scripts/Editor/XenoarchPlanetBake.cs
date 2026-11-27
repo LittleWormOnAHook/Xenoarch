@@ -1,0 +1,454 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Exploration;
+using DMI.Xenoarch.Galaxy;
+using DMI.Xenoarch.Player;
+using DMI.Xenoarch.World;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace DMI.Xenoarch.EditorTools
+{
+    /// <summary>
+    /// t262u: bake each generated planet once into its own landing scene (terrain asset, lighting, landing zones,
+    /// spawn, Digger when it is safe). Never overwrites a baked scene (use Rebake Terrain Only to refresh terrain
+    /// without touching placed objects). Never saves or closes the currently open scene. Trigger:
+    /// Temp/xenoarch_planet_bake.trig containing "all", "digger", or a body id (log: Logs/xenoarch_planet_bake.txt).
+    /// </summary>
+    [InitializeOnLoad]
+    public static class XenoarchPlanetBake
+    {
+        public const string Trigger = "Temp/xenoarch_planet_bake.trig";
+        public const string LogFile = "Logs/xenoarch_planet_bake.txt";
+        public const string ScenesFolder = XenoarchSetup.ScenesFolder + "/Generated";
+        public const string TerrainFolder = XenoarchSetup.Root + "/Data/Terrain/Generated";
+        public const string RegistryPath = "Assets/_Project/Resources/Galaxy/BakedPlanetRegistry.asset";
+        public const string CatalogPath = "Assets/_Project/Resources/World/PlanetSurfaceCatalog.asset";
+
+        static XenoarchPlanetBake() => EditorApplication.update += Poll;
+        static double _next;
+        static void Poll()
+        {
+            if (EditorApplication.timeSinceStartup < _next) return;
+            _next = EditorApplication.timeSinceStartup + 1.0;
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling) return;
+            if (!File.Exists(Trigger)) return;
+            string cmd = File.ReadAllText(Trigger).Trim();
+            File.Delete(Trigger);
+            if (cmd.Equals("digger", StringComparison.OrdinalIgnoreCase)) AddDiggerToBaked();
+            else if (cmd.Equals("rebake", StringComparison.OrdinalIgnoreCase)) RebakeAllTerrain();
+            else if (string.IsNullOrEmpty(cmd) || cmd.Equals("all", StringComparison.OrdinalIgnoreCase)) BakeAll();
+            else BakeBody(cmd);
+        }
+
+        static void Log(string s)
+        {
+            Debug.Log("[Xenoarch] Planet bake: " + s);
+            try { Directory.CreateDirectory("Logs"); File.AppendAllText(LogFile, $"{DateTime.Now:HH:mm:ss} {s}\n"); } catch { }
+        }
+
+        [MenuItem("Xenoarch/Planets/Bake Generated Surfaces", priority = 80)]
+        public static void BakeAll()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var log = new StringBuilder();
+            try
+            {
+                EnsureSupportAssets(log);
+                var bodies = LandableGenerated(out var galaxy);
+                if (bodies.Count == 0) { Log("no generated landable planets (is the galaxy set up?)"); return; }
+                int made = 0, skipped = 0, failed = 0;
+                foreach (var b in bodies)
+                {
+                    string msg = BakeOne(b, galaxy, overwriteTerrain: false, log);
+                    if (msg == "made") made++;
+                    else if (msg == "skipped") skipped++;
+                    else failed++;
+                }
+                RegisterBuildSettings(log);
+                AssetDatabase.SaveAssetIfDirty(AssetDatabase.LoadAssetAtPath<BakedPlanetRegistry>(RegistryPath));
+                Log($"done: {made} baked, {skipped} already existed (left alone), {failed} failed.\n{log}");
+            }
+            catch (Exception e) { Log("FAILED " + e); }
+        }
+
+        [MenuItem("Xenoarch/Planets/Add Digger to Baked Surfaces", priority = 81)]
+        public static void AddDiggerToBaked()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var other = OtherTerrainScenes(null);
+            if (other.Count > 0)
+            {
+                Log("Digger setup skipped: close these terrain scenes first (the open scene will not be saved or closed for you): " + string.Join(", ", other));
+                return;
+            }
+            var log = new StringBuilder();
+            var reg = AssetDatabase.LoadAssetAtPath<BakedPlanetRegistry>(RegistryPath);
+            if (reg == null || reg.entries == null) { Log("no baked planets yet"); return; }
+            int n = 0;
+            foreach (var e in reg.entries)
+            {
+                if (e == null || string.IsNullOrEmpty(e.scenePath) || !File.Exists(e.scenePath)) continue;
+                if (IsUserOpenScene(e.scenePath)) { log.AppendLine($"{e.sceneName}: open in the Editor, skipped (close it and re-run)"); continue; }
+                var scene = EditorSceneManager.OpenScene(e.scenePath, OpenSceneMode.Additive);
+                try
+                {
+                    if (SetupDigger(scene, log)) { EditorSceneManager.SaveScene(scene, e.scenePath); n++; }
+                }
+                finally { EditorSceneManager.CloseScene(scene, true); }
+            }
+            Log($"Digger pass finished ({n} scene(s) updated).\n{log}");
+        }
+
+        [MenuItem("Xenoarch/Planets/Rebake Terrain Only (keep placed objects)", priority = 82)]
+        public static void RebakeAllTerrain()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var log = new StringBuilder();
+            try
+            {
+                EnsureSupportAssets(log);
+                var bodies = LandableGenerated(out var galaxy);
+                int n = 0;
+                foreach (var b in bodies)
+                {
+                    if (!BakedPlanetRegistry.TryGetScene(b.Id, out _, out var path) || string.IsNullOrEmpty(path) || !File.Exists(path)) continue;
+                    if (IsUserOpenScene(path)) { log.AppendLine($"{b.displayName}: scene is open, skipped (close it and re-run)"); continue; }
+                    if (RebakeTerrain(b, path, log)) n++;
+                }
+                Log($"rebake finished ({n} scene(s)).\n{log}");
+            }
+            catch (Exception e) { Log("FAILED " + e); }
+        }
+
+        public static void BakeBody(string bodyId)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var log = new StringBuilder();
+            try
+            {
+                EnsureSupportAssets(log);
+                var bodies = LandableGenerated(out var galaxy);
+                var b = bodies.FirstOrDefault(x => x.Id == bodyId || string.Equals(x.displayName, bodyId, StringComparison.OrdinalIgnoreCase));
+                if (b == null) { Log("no generated body matches '" + bodyId + "'"); return; }
+                string msg = BakeOne(b, galaxy, overwriteTerrain: false, log);
+                RegisterBuildSettings(log);
+                AssetDatabase.SaveAssetIfDirty(AssetDatabase.LoadAssetAtPath<BakedPlanetRegistry>(RegistryPath));
+                Log($"{b.displayName}: {msg}\n{log}");
+            }
+            catch (Exception e) { Log("FAILED " + e); }
+        }
+
+        static string BakeOne(CelestialBodyDefinition b, GalaxyDefinition galaxy, bool overwriteTerrain, StringBuilder log)
+        {
+            var rec = ProceduralGalaxy.Recipe(b.Id);
+            if (rec == null) { log.AppendLine($"{b.Id}: no recipe"); return "failed"; }
+            string sceneName = SceneNameFor(b);
+            string scenePath = $"{ScenesFolder}/{sceneName}.unity";
+            string terrainPath = $"{TerrainFolder}/{sceneName}_Terrain.asset";
+            if (File.Exists(scenePath) && !overwriteTerrain)
+            {
+                Remember(b, sceneName, scenePath);
+                log.AppendLine($"{b.displayName}: {scenePath} exists, left alone");
+                return "skipped";
+            }
+            if (IsUserOpenScene(scenePath)) { log.AppendLine($"{b.displayName}: destination is the open scene, skipped"); return "failed"; }
+
+            XenoarchSetup.EnsureFolder(ScenesFolder);
+            XenoarchSetup.EnsureFolder(TerrainFolder);
+            var previous = SceneManager.GetActiveScene();
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            try
+            {
+                SceneManager.SetActiveScene(scene);
+                var env = b.environment;
+                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+                RenderSettings.ambientLight = env != null ? env.ambientColor : new Color(0.16f, 0.15f, 0.15f);
+                if (env != null && env.fog) { RenderSettings.fog = true; RenderSettings.fogColor = env.fogColor; RenderSettings.fogMode = FogMode.Exponential; RenderSettings.fogDensity = env.fogDensity; }
+                if (env != null && env.skybox != null) RenderSettings.skybox = env.skybox;
+
+                var data = ProceduralSurface.CreateTerrainData(rec, cutHoles: false);
+                data.name = sceneName + "_Terrain";
+                AssetDatabase.CreateAsset(data, terrainPath);
+
+                float half = ProceduralGalaxy.TerrainSize * 0.5f;
+                var go = Terrain.CreateTerrainGameObject(data);
+                go.name = sceneName + "_Terrain";
+                go.transform.position = new Vector3(-half, 0f, -half);
+                var terrain = go.GetComponent<Terrain>();
+                var mat = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/TerrainLit.mat");
+                if (mat != null) terrain.materialTemplate = mat;
+                terrain.drawInstanced = true; terrain.heightmapPixelError = 4f; terrain.basemapDistance = 400f;
+                terrain.Flush();
+
+                var sun = new GameObject("Sun", typeof(Light));
+                sun.transform.rotation = Quaternion.Euler(42f, -35f, 0f);
+                var light = sun.GetComponent<Light>();
+                light.type = LightType.Directional; light.color = new Color(1f, 0.95f, 0.88f); light.intensity = 1.3f; light.shadows = LightShadows.Soft;
+                RenderSettings.sun = light;
+
+                float gy = env != null ? env.gravity : 9.81f;
+                var spawnPos = new Vector3(0f, rec.Height(0f, -40f) + 0.1f, -40f);
+                XenoarchPlayerBuilder.InstantiatePlayer(spawnPos, 0f, gy);
+                if (PlayerSpawnPoint.Find(PlayerSpawnIds.Default) == null)
+                {
+                    var sp = new GameObject("Spawn_Default");
+                    sp.transform.position = spawnPos;
+                    sp.AddComponent<PlayerSpawnPoint>();
+                }
+
+                PlaceZone("", "LandingZone_Base", new Vector3(0f, rec.Height(0f, -40f), -40f), Vector3.forward);
+                foreach (var site in ProceduralGalaxy.Sites)
+                {
+                    if (site == null || site.bodyId != b.Id || !site.hasLandingHint) continue;
+                    var p = site.landingHint;
+                    var look = site.position - p; look.y = 0f;
+                    PlaceZone(site.Id, "LandingZone_" + site.Id.Replace('.', '_'), p, look.sqrMagnitude > 0.01f ? look.normalized : Vector3.forward);
+                }
+
+                bool digger = false;
+                var other = OtherTerrainScenes(scene);
+                if (other.Count > 0) log.AppendLine($"{b.displayName}: Digger not set up (other terrain scenes open: {string.Join(", ", other)}). Close them and run Xenoarch/Planets/Add Digger to Baked Surfaces.");
+                else digger = SetupDigger(scene, log);
+
+                EditorSceneManager.SaveScene(scene, scenePath);
+                Remember(b, sceneName, scenePath);
+                b.sceneName = sceneName;
+                foreach (var s in ProceduralGalaxy.Sites) if (s != null && s.bodyId == b.Id) s.sceneName = sceneName;
+                log.AppendLine($"{b.displayName}: wrote {scenePath} (Digger {(digger ? "yes" : "pending")})");
+                return "made";
+            }
+            finally
+            {
+                if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
+                if (scene.IsValid() && scene.isLoaded) EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        static bool RebakeTerrain(CelestialBodyDefinition b, string scenePath, StringBuilder log)
+        {
+            var rec = ProceduralGalaxy.Recipe(b.Id);
+            if (rec == null) { log.AppendLine($"{b.Id}: no recipe"); return false; }
+            var previous = SceneManager.GetActiveScene();
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            try
+            {
+                SceneManager.SetActiveScene(scene);
+                Terrain terrain = null;
+                foreach (var r in scene.GetRootGameObjects()) { terrain = r.GetComponentInChildren<Terrain>(true); if (terrain != null) break; }
+                if (terrain == null || terrain.terrainData == null) { log.AppendLine($"{b.displayName}: no terrain"); return false; }
+                var path = AssetDatabase.GetAssetPath(terrain.terrainData);
+                var fresh = ProceduralSurface.CreateTerrainData(rec, cutHoles: false);
+                var dst = terrain.terrainData;
+                dst.heightmapResolution = fresh.heightmapResolution;
+                dst.size = fresh.size;
+                dst.SetHeights(0, 0, fresh.GetHeights(0, 0, fresh.heightmapResolution, fresh.heightmapResolution));
+                dst.terrainLayers = fresh.terrainLayers;
+                dst.alphamapResolution = fresh.alphamapResolution;
+                dst.SetAlphamaps(0, 0, fresh.GetAlphamaps(0, 0, fresh.alphamapResolution, fresh.alphamapResolution));
+                EditorUtility.SetDirty(dst);
+                if (!string.IsNullOrEmpty(path)) AssetDatabase.SaveAssetIfDirty(dst);
+                UnityEngine.Object.DestroyImmediate(fresh);
+                // Do not move or delete anything except a baked rock root if we had written one (runtime scatter uses this name only when present).
+                log.AppendLine($"{b.displayName}: terrain refreshed, placed objects kept");
+                if (!IsUserOpenScene(scenePath)) EditorSceneManager.SaveScene(scene, scenePath);
+                return true;
+            }
+            finally
+            {
+                if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
+                if (scene.IsValid() && scene.isLoaded && !IsUserOpenScene(scenePath)) EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        static void PlaceZone(string siteId, string name, Vector3 pos, Vector3 forward)
+        {
+            var go = new GameObject(name);
+            go.transform.position = pos;
+            if (forward.sqrMagnitude > 0.001f) go.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+            var z = go.AddComponent<LandingZone>();
+            z.siteId = siteId ?? "";
+            z.footprint = 8f;
+            z.autoPlaced = true;
+            z.autoPosition = pos;
+        }
+
+        static bool SetupDigger(Scene scene, StringBuilder log)
+        {
+            var masterT = FindType("Digger.Modules.Core.Sources.DiggerMaster");
+            var runtimeT = FindType("Digger.Modules.Runtime.Sources.DiggerMasterRuntime");
+            var surfaceT = FindType("DMI.Xenoarch.Integrations.Digger.DiggerExcavationSurface");
+            if (masterT == null || runtimeT == null || surfaceT == null) { log.AppendLine($"{scene.name}: Digger PRO not installed, skipped"); return false; }
+            var other = OtherTerrainScenes(scene);
+            if (other.Count > 0) { log.AppendLine($"{scene.name}: Digger skipped, other terrain scenes: {string.Join(", ", other)}"); return false; }
+            Component Find(System.Type t) => scene.GetRootGameObjects().Select(r => r.GetComponentInChildren(t, true)).FirstOrDefault(c => c != null);
+            var prev = SceneManager.GetActiveScene();
+            SceneManager.SetActiveScene(scene);
+            try
+            {
+                bool had = Find(runtimeT) != null && Find(masterT) != null;
+                var master = Find(masterT);
+                if (master == null)
+                {
+                    var go = new GameObject("Digger Master");
+                    SceneManager.MoveGameObjectToScene(go, scene);
+                    master = go.AddComponent(masterT);
+                    masterT.GetProperty("ResolutionMult")?.SetValue(master, XenoarchPhase1CSetup.DiggerResolutionMult);
+                    masterT.GetMethod("CreateDirs")?.Invoke(master, null);
+                }
+                if (!had && !EditorApplication.ExecuteMenuItem("Tools/Digger/Setup for runtime"))
+                { log.AppendLine($"{scene.name}: Digger menu 'Tools/Digger/Setup for runtime' not found"); return false; }
+                var rt = Find(runtimeT);
+                if (rt == null) { log.AppendLine($"{scene.name}: Digger runtime object missing after setup"); return false; }
+                if (rt.GetComponent(surfaceT) == null) rt.gameObject.AddComponent(surfaceT);
+                log.AppendLine($"{scene.name}: Digger ready");
+                return true;
+            }
+            finally { if (prev.IsValid() && prev.isLoaded) SceneManager.SetActiveScene(prev); }
+        }
+
+        static System.Type FindType(string fullName) =>
+            AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType(fullName)).FirstOrDefault(t => t != null);
+
+        static List<CelestialBodyDefinition> LandableGenerated(out GalaxyDefinition galaxy)
+        {
+            galaxy = null;
+            var list = new List<CelestialBodyDefinition>();
+            var config = AssetDatabase.LoadAssetAtPath<XenoarchConfig>(XenoarchSetup.ConfigPath);
+            if (config == null || config.galaxy == null) return list;
+            galaxy = config.galaxy;
+            var pool = new List<string>(DMI.Xenoarch.Galaxy.ProceduralArtifactPools.V1);
+            // Ensure must not leak DontSave objects into the open scene; it only creates ScriptableObjects.
+            ProceduralGalaxy.Ensure(galaxy, pool);
+            foreach (var sys in galaxy.AllSystems)
+                foreach (var b in sys.AllBodies)
+                    if (b != null && ProceduralGalaxy.IsGenerated(b.Id) && b.HasLanding)
+                        list.Add(b);
+            return list;
+        }
+
+        static void Remember(CelestialBodyDefinition b, string sceneName, string scenePath)
+        {
+            var reg = AssetDatabase.LoadAssetAtPath<BakedPlanetRegistry>(RegistryPath);
+            if (reg == null) return;
+            var e = reg.entries.FirstOrDefault(x => x != null && x.bodyId == b.Id);
+            if (e == null) { e = new BakedPlanetRegistry.Entry(); reg.entries.Add(e); }
+            e.bodyId = b.Id; e.sceneName = sceneName; e.scenePath = scenePath;
+            EditorUtility.SetDirty(reg);
+            BakedPlanetRegistry.UnloadCache();
+        }
+
+        static void RegisterBuildSettings(StringBuilder log)
+        {
+            var list = EditorBuildSettings.scenes.ToList();
+            bool changed = false;
+            var reg = AssetDatabase.LoadAssetAtPath<BakedPlanetRegistry>(RegistryPath);
+            if (reg != null && reg.entries != null)
+                foreach (var e in reg.entries)
+                {
+                    if (e == null || string.IsNullOrEmpty(e.scenePath) || !File.Exists(e.scenePath)) continue;
+                    if (list.Any(s => s.path == e.scenePath)) continue;
+                    list.Add(new EditorBuildSettingsScene(e.scenePath, true));
+                    changed = true;
+                    log.AppendLine("Build Settings: added " + e.scenePath);
+                }
+            if (changed) EditorBuildSettings.scenes = list.ToArray();
+        }
+
+        public static void EnsureSupportAssets(StringBuilder log)
+        {
+            XenoarchSetup.EnsureFolder("Assets/_Project/Resources/Galaxy");
+            XenoarchSetup.EnsureFolder("Assets/_Project/Resources/World");
+            if (AssetDatabase.LoadAssetAtPath<BakedPlanetRegistry>(RegistryPath) == null)
+            {
+                var reg = ScriptableObject.CreateInstance<BakedPlanetRegistry>();
+                AssetDatabase.CreateAsset(reg, RegistryPath);
+                log?.AppendLine("created " + RegistryPath);
+            }
+            var cat = AssetDatabase.LoadAssetAtPath<PlanetSurfaceCatalog>(CatalogPath);
+            if (cat == null)
+            {
+                cat = ScriptableObject.CreateInstance<PlanetSurfaceCatalog>();
+                AssetDatabase.CreateAsset(cat, CatalogPath);
+                log?.AppendLine("created " + CatalogPath);
+            }
+            FillCatalog(cat);
+            EditorUtility.SetDirty(cat);
+            AssetDatabase.SaveAssetIfDirty(cat);
+        }
+
+        static void FillCatalog(PlanetSurfaceCatalog cat)
+        {
+            TerrainLayer Layer(string path) => AssetDatabase.LoadAssetAtPath<TerrainLayer>(path);
+            var mars = new[]
+            {
+                Layer("Assets/_Project/Data/Terrain/Layers/TL_Mars_Regolith.terrainlayer"),
+                Layer("Assets/_Project/Data/Terrain/Mars_Soil.terrainlayer"),
+                Layer("Assets/_Project/Data/Terrain/Layers/TL_Mars_Rock.terrainlayer"),
+                Layer("Assets/_Project/Data/Terrain/Layers/TL_Mars_CrackedCrust.terrainlayer"),
+            };
+            var moon = new[]
+            {
+                Layer("Assets/_Project/Data/Terrain/Layers/TL_Moon_Regolith.terrainlayer"),
+                Layer("Assets/_Project/Data/Terrain/Moon_Soil.terrainlayer"),
+                Layer("Assets/_Project/Data/Terrain/Layers/TL_Moon_Rock.terrainlayer"),
+            };
+            var canyon = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_canyon_sediment.asset");
+            var dune = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_dune_shrine.asset");
+            var ice = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_ice_vault.asset");
+            var cache = AssetDatabase.LoadAssetAtPath<DMI.Xenoarch.Excavation.DigSiteStyle>("Assets/_Project/Data/Excavation/DigStyle_regolith_cache.asset");
+            void Set(ProceduralPlanetType type, TerrainLayer[] layers, bool iceLayer, Color tint, int count, int clusters, DMI.Xenoarch.Excavation.DigSiteStyle major, DMI.Xenoarch.Excavation.DigSiteStyle cstyle)
+            {
+                var e = cat.entries.FirstOrDefault(x => x != null && x.type == type);
+                if (e == null) { e = new PlanetSurfaceCatalog.Entry { type = type }; cat.entries.Add(e); }
+                if (e.layers == null || e.layers.Length == 0) e.layers = layers;
+                e.generateIceLayer = iceLayer;
+                e.scatterTint = tint; e.scatterCount = count; e.slopeClusters = clusters;
+                if (e.majorStyle == null) e.majorStyle = major;
+                if (e.cacheStyle == null) e.cacheStyle = cstyle;
+            }
+            Set(ProceduralPlanetType.Desert, mars, false, new Color(1f, 0.62f, 0.43f), 440, 40, canyon, dune);
+            Set(ProceduralPlanetType.Volcanic, mars, false, new Color(0.45f, 0.28f, 0.24f), 400, 50, canyon, dune);
+            Set(ProceduralPlanetType.Ice, moon, true, new Color(0.86f, 0.9f, 0.95f), 360, 35, ice, cache);
+            Set(ProceduralPlanetType.Barren, moon, false, new Color(0.86f, 0.86f, 0.88f), 480, 45, cache, cache);
+            Set(ProceduralPlanetType.Rocky, moon, false, new Color(0.7f, 0.64f, 0.56f), 400, 40, cache, cache);
+        }
+
+        static string SceneNameFor(CelestialBodyDefinition b)
+        {
+            string slug = (b.Id ?? "body").StartsWith("body.") ? b.Id.Substring(5) : b.Id;
+            return "Surface_" + slug.Replace('.', '_').Replace(' ', '_');
+        }
+
+        static bool IsUserOpenScene(string path)
+        {
+            var active = SceneManager.GetActiveScene();
+            if (active.IsValid() && string.Equals(active.path, path, StringComparison.OrdinalIgnoreCase)) return true;
+            // If it is the only loaded scene and already open, treat it as the user's scene.
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var s = SceneManager.GetSceneAt(i);
+                if (s.isLoaded && string.Equals(s.path, path, StringComparison.OrdinalIgnoreCase) && s == active) return true;
+            }
+            return false;
+        }
+
+        static List<string> OtherTerrainScenes(Scene? except)
+        {
+            var names = new List<string>();
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var s = SceneManager.GetSceneAt(i);
+                if (!s.isLoaded || (except.HasValue && s == except.Value)) continue;
+                if (s.GetRootGameObjects().Any(r => r.GetComponentInChildren<Terrain>(true) != null)) names.Add(s.name);
+            }
+            return names;
+        }
+    }
+}

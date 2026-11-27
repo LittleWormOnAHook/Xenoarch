@@ -19,13 +19,13 @@ MonoBehaviour:
   surfaceScanner: {fileID: 11400000, guid: b49a5fd836d440a4a875840d9c5826e6, type: 2}
   valuableLoot: {fileID: 11400000, guid: 19e3e134203c5dd448e27c1472cc119e, type: 2}
   valuableSites:
-    perBody: 7
-    spacing: 40
+    perBody: 28
+    spacing: 30
     clearance: 18
     minDepth: 0.5
     maxDepth: 1
     maxSlope: 28
-    perLandingZone: 1
+    perLandingZone: 4
     zoneRing: {x: 30, y: 110}
   civilizations:
   - {fileID: 11400000, guid: 24616c20fc2f11649915297b6d5e5d7a, type: 2}
@@ -45,6 +45,11 @@ MonoBehaviour:
   strata:
   - {fileID: 11400000, guid: aeadaeac54a7f6d4e92b10688e42bd31, type: 2}
   - {fileID: 11400000, guid: e7ba8fd688b83bf40b9616a3045093c3, type: 2}
+  - {fileID: 11400000, guid: 11a1b2c3d4e5f607189a0b1c2d3e4f50, type: 2}
+  - {fileID: 11400000, guid: 21a1b2c3d4e5f607189a0b1c2d3e4f51, type: 2}
+  - {fileID: 11400000, guid: 31a1b2c3d4e5f607189a0b1c2d3e4f52, type: 2}
+  - {fileID: 11400000, guid: 41a1b2c3d4e5f607189a0b1c2d3e4f53, type: 2}
+  - {fileID: 11400000, guid: 51a1b2c3d4e5f607189a0b1c2d3e4f54, type: 2}
   craftRecipes:
   - {fileID: 11400000, guid: 84e9af93940600c4ca647d7702b9590e, type: 2}
   - {fileID: 11400000, guid: c8b683ee6b0555f4487d01a730f09f42, type: 2}

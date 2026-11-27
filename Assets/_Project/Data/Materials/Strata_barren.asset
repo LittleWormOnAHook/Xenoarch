@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e90bb84484bf3a4c90e819cafa7b9e6, type: 3}
+  m_Name: Strata_barren
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Materials.StrataProfile
+  bodyIds: []
+  forProceduralType: 1
+  proceduralType: 3
+  bands:
+  - label: regolith
+    minDepth: 0
+    maxDepth: 0.7
+    itemId: material.regolith
+    volumePerUnit: 0.12
+    chance: 1
+  - label: nickel-iron layer
+    minDepth: 0.6
+    maxDepth: 2.5
+    itemId: material.nickel_iron_ore
+    volumePerUnit: 0.22
+    chance: 0.7
+  - label: iron ore
+    minDepth: 0.8
+    maxDepth: 3
+    itemId: material.iron_ore
+    volumePerUnit: 0.2
+    chance: 0.65
+  - label: platinoid seam
+    minDepth: 2
+    maxDepth: 5
+    itemId: material.platinoid_ore
+    volumePerUnit: 0.4
+    chance: 0.18

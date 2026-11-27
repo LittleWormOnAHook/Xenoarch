@@ -56,8 +56,10 @@ namespace DMI.Xenoarch.Galaxy
     /// Barnard's Star, Epsilon Eridani, Tau Ceti, Sirius, Alpha Centauri) with a star and planets, and adds a few uncharted
     /// systems revealed by the navigation drive. Everything is derived from the galaxy seed and stable ids, so saves
     /// (discovery, sites, excavation) keep working; nothing is written to assets (runtime lists are NonSerialized).
-    /// Generated planets land in one shared scene, <see cref="SurfaceScene"/>, whose terrain is rebuilt from the
-    /// recipe of the ship's current body (<see cref="DMI.Xenoarch.World.ProceduralSurface"/>).
+    /// Generated planets land in a baked per-body scene when one exists (<see cref="BakedPlanetRegistry"/>); otherwise
+    /// they share <see cref="SurfaceScene"/>, whose terrain is rebuilt from the recipe of the ship's current body
+    /// (<see cref="DMI.Xenoarch.World.ProceduralSurface"/>). V1 site ids and positions are frozen; extra major sites and
+    /// orbital survey caches come from the independent <c>sites.v2</c> stream.
     /// </summary>
     public static class ProceduralGalaxy
     {
@@ -198,7 +200,7 @@ namespace DMI.Xenoarch.Galaxy
                 b.orbitView = View(type, b, views, br);
                 b.description = Describe(type, b);
                 sys.generatedBodies.Add(b);
-                if (!giant) BuildSurface(b, type, br, pool);
+                if (!giant) BuildSurface(b, type, br, pool, g.seed);
                 idx++;
             }
         }
@@ -286,7 +288,7 @@ namespace DMI.Xenoarch.Galaxy
             _ => "Rocky world with a thin atmosphere. Generated survey data.",
         };
 
-        static void BuildSurface(CelestialBodyDefinition b, ProceduralPlanetType type, System.Random r, IList<string> pool)
+        static void BuildSurface(CelestialBodyDefinition b, ProceduralPlanetType type, System.Random r, IList<string> pool, int galaxySeed)
         {
             var rec = new ProceduralPlanetRecipe
             {
@@ -334,7 +336,7 @@ namespace DMI.Xenoarch.Galaxy
                 }
                 _sites.Add(site); _siteById[site.Id] = site; made.Add(site);
             }
-            // Heights after every pad is known.
+            // Heights after every v1 pad is known (v2 pads are added afterwards so they cannot move these).
             b.baseLanding.y = rec.Height(0f, -40f);
             for (int i = 0; i < made.Count; i++)
             {
@@ -342,9 +344,115 @@ namespace DMI.Xenoarch.Galaxy
                 made[i].position = new Vector3(h.x, rec.Height(h.x, h.y), h.y);
                 made[i].landingHint.y = rec.Height(made[i].landingHint.x, made[i].landingHint.z);
             }
+            AddV2Sites(b, type, rec, made, pool, galaxySeed);
+            ApplyBakedScene(b);
             float half = 420f;
             b.surfaceMapRect = new Rect(-half, -half, half * 2f, half * 2f);
             b.surfaceMap = BakeMap(rec, b.surfaceMapRect, 256);
+        }
+
+        /// <summary>t262u v2: extra major sites and orbital survey caches from an independent stream. Never changes
+        /// v1 site ids, positions, or the original per-body RNG. New pads stay far enough from v1 pads that they do not
+        /// reshape the already-recorded v1 surface heights.</summary>
+        static void AddV2Sites(CelestialBodyDefinition b, ProceduralPlanetType type, ProceduralPlanetRecipe rec, List<ArchaeologicalSiteDefinition> v1, IList<string> pool, int galaxySeed)
+        {
+            var rng = Stream(b.Id, "sites.v2", galaxySeed);
+            int addMajor = Mathf.Max(0, 6 + rng.Next(3) - v1.Count);
+            int wantSurvey = 8 + rng.Next(5);
+            var profile = DMI.Xenoarch.World.PlanetSurfaceCatalog.For(type);
+            var avoid = new List<Vector2>();
+            foreach (var p in rec.pads) avoid.Add(new Vector2(p.x, p.y));
+            string slug = b.Id != null && b.Id.StartsWith("body.") ? b.Id.Substring(5) : b.Id;
+
+            bool Place(float minDist, float maxDist, float clearance, out float x, out float z)
+            {
+                x = 0f; z = 0f;
+                for (int t = 0; t < 90; t++)
+                {
+                    float ang = (float)rng.NextDouble() * Mathf.PI * 2f;
+                    float dist = minDist + (float)rng.NextDouble() * (maxDist - minDist);
+                    float px = Mathf.Round(Mathf.Cos(ang) * dist / 2f) * 2f;
+                    float pz = Mathf.Round(Mathf.Sin(ang) * dist / 2f) * 2f;
+                    if (Mathf.Max(Mathf.Abs(px), Mathf.Abs(pz)) > TerrainSize * 0.42f) continue;
+                    bool ok = true;
+                    foreach (var a in avoid) if ((a - new Vector2(px, pz)).sqrMagnitude < clearance * clearance) { ok = false; break; }
+                    if (!ok) continue;
+                    x = px; z = pz; return true;
+                }
+                return false;
+            }
+
+            void Register(ArchaeologicalSiteDefinition site, float x, float z, float padR)
+            {
+                rec.pads.Add(new Vector3(x, z, padR));
+                rec.holes.Add(new Vector3(x, z, site.radius));
+                float hintDist = site.isSurveyCache ? 16f : 30f;
+                var toBase = new Vector2(0f - x, -40f - z);
+                if (toBase.sqrMagnitude < 1e-4f) toBase = Vector2.down;
+                toBase.Normalize();
+                var hint = new Vector2(x, z) + toBase * hintDist;
+                rec.pads.Add(new Vector3(hint.x, hint.y, site.isSurveyCache ? 8f : 12f));
+                site.landingHint = new Vector3(hint.x, 0f, hint.y); site.hasLandingHint = true;
+                site.position = new Vector3(x, rec.Height(x, z), z);
+                site.landingHint.y = rec.Height(site.landingHint.x, site.landingHint.z);
+                avoid.Add(new Vector2(x, z));
+                _sites.Add(site); _siteById[site.Id] = site;
+            }
+
+            for (int i = 0; i < addMajor; i++)
+            {
+                if (!Place(180f, 430f, 90f, out float x, out float z)) continue;
+                var site = ScriptableObject.CreateInstance<ArchaeologicalSiteDefinition>();
+                site.hideFlags = HideFlags.DontSave;
+                site.SetIdForTooling($"site.{slug}.v2m{i}"); site.name = site.Id;
+                site.displayName = SiteName(type, rng);
+                site.bodyId = b.Id; site.sceneName = b.sceneName;
+                site.radius = 4f; site.cellSize = 0.25f; site.depth = 1.5f + (float)rng.NextDouble() * 0.7f;
+                site.difficulty = 1 + rng.Next(3); site.orbitalPassesNeeded = 1 + rng.Next(2);
+                site.signalStrength = 0.45f + (float)rng.NextDouble() * 0.4f; site.seed = rng.Next();
+                site.description = "Generated archaeological signature.";
+                if (profile != null && profile.majorStyle != null) site.style = profile.majorStyle;
+                if (pool != null && pool.Count > 0)
+                {
+                    int k = 3 + rng.Next(3);
+                    for (int a = 0; a < k; a++)
+                        site.artifacts.Add(new SiteArtifactSpawn { artifactId = pool[rng.Next(pool.Count)], cell = new Vector3Int(4 + rng.Next(24), 1 + rng.Next(4), 4 + rng.Next(24)), footprint = 1 });
+                }
+                Register(site, x, z, 14f);
+            }
+
+            for (int i = 0; i < wantSurvey; i++)
+            {
+                if (!Place(90f, 450f, 55f, out float x, out float z)) continue;
+                var site = ScriptableObject.CreateInstance<ArchaeologicalSiteDefinition>();
+                site.hideFlags = HideFlags.DontSave;
+                site.SetIdForTooling($"site.{slug}.v2c{i}"); site.name = site.Id;
+                site.displayName = SurveyName(type, rng);
+                site.bodyId = b.Id; site.sceneName = b.sceneName;
+                site.radius = 1.6f; site.cellSize = 0.25f; site.depth = 0.8f + (float)rng.NextDouble() * 0.5f;
+                site.difficulty = 1; site.orbitalPassesNeeded = 1 + rng.Next(2);
+                site.signalStrength = 0.22f + (float)rng.NextDouble() * 0.28f; site.seed = rng.Next();
+                site.description = "Weak cache signature. Small dig, mixed valuables and minerals.";
+                site.isSurveyCache = true;
+                if (profile != null && profile.cacheStyle != null) site.style = profile.cacheStyle;
+                Register(site, x, z, 8f);
+            }
+        }
+
+        static string SurveyName(ProceduralPlanetType t, System.Random r)
+        {
+            string[] a = { "Faint", "Weak", "Buried", "Scattered", "Hidden", "Shallow" };
+            string[] n = t == ProceduralPlanetType.Ice ? new[] { "ice cache", "rime stash", "frost trove" }
+                : t == ProceduralPlanetType.Volcanic ? new[] { "ash cache", "cinder stash", "vent deposit" }
+                : new[] { "cache", "trove", "deposit", "stash", "scatter" };
+            return $"{a[r.Next(a.Length)]} {n[r.Next(n.Length)]}";
+        }
+
+        static void ApplyBakedScene(CelestialBodyDefinition b)
+        {
+            if (b == null || !BakedPlanetRegistry.TryGetScene(b.Id, out var scene)) return;
+            b.sceneName = scene;
+            foreach (var s in _sites) if (s != null && s.bodyId == b.Id) s.sceneName = scene;
         }
 
         static string SiteName(ProceduralPlanetType t, System.Random r)

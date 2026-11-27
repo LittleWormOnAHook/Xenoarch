@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Interaction;
 using DMI.Xenoarch.Items;
@@ -177,6 +178,10 @@ namespace DMI.Xenoarch.EditorTools
                 else Debug.LogWarning($"[Xenoarch] Setup: missing scene {p}");
             }
             foreach (var n in SceneNames.Extra) { var p = ScenePath(n); if (File.Exists(p)) list.Add(new EditorBuildSettingsScene(p, true)); }
+            string gen = ScenesFolder + "/Generated";
+            if (Directory.Exists(gen))
+                foreach (var file in Directory.GetFiles(gen, "Surface_*.unity"))
+                    if (!list.Any(s => s.path == file.Replace("\\", "/"))) list.Add(new EditorBuildSettingsScene(file.Replace("\\", "/"), true));
             EditorBuildSettings.scenes = list.ToArray();
             Debug.Log($"[Xenoarch] Setup: Build Settings = {string.Join(", ", SceneNames.All)} ({list.Count} scenes, Bootstrap first)");
         }

@@ -25,6 +25,8 @@ namespace DMI.Xenoarch.Materials
     public sealed class StrataProfile : ScriptableObject
     {
         public List<string> bodyIds = new List<string>();
+        [Tooltip("Also used for generated planets of this type that have no exact body id match.")] public bool forProceduralType;
+        public DMI.Xenoarch.Galaxy.ProceduralPlanetType proceduralType;
         public List<StrataBand> bands = new List<StrataBand>();
 
         public IEnumerable<StrataBand> BandsAt(float depth)
@@ -35,7 +37,10 @@ namespace DMI.Xenoarch.Materials
         public static StrataProfile For(IEnumerable<StrataProfile> all, string bodyId)
         {
             if (all == null || string.IsNullOrEmpty(bodyId)) return null;
-            foreach (var p in all) if (p != null && p.bodyIds.Contains(bodyId)) return p;
+            foreach (var p in all) if (p != null && p.bodyIds != null && p.bodyIds.Contains(bodyId)) return p;
+            var rec = DMI.Xenoarch.Galaxy.ProceduralGalaxy.Recipe(bodyId);
+            if (rec != null)
+                foreach (var p in all) if (p != null && p.forProceduralType && p.proceduralType == rec.type) return p;
             return null;
         }
     }
