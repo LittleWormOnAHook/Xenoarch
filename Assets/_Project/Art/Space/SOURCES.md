@@ -18,3 +18,7 @@ Art/Shaders/Xenoarch_Planet.shader and Xenoarch_PlanetAtmosphere.shader (rewritt
 materials in Art/Space/PlanetPack reference the vendor textures by GUID (they show untextured on a clone
 without the vendor folder). Used for: Jupiter (Jupiter.jpg), exoplanet arrival views in Proxima (earth5),
 Barnard's Star (earth4), Epsilon Eridani (earth2), and the two nebula skies (Background3/4).
+
+## Loading screen bakes
+Mars, Earth and Moon albedos were also baked into the loading-screen planet sprites (`Resources/UI/Loading/Loading_Planet*.png`). Same CC BY 4.0 credit as above.
+

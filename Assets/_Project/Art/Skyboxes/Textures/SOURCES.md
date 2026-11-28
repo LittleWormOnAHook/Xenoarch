@@ -8,3 +8,7 @@ Telescope magazine (Roger Sinnott and Rick Fienberg) (not used: the plain star m
 NASA SVS imagery is public domain / free to use with the credit above (NASA media guidelines); Gaia data credit
 ESA/Gaia/DPAC (CC BY-SA 3.0 IGO for the Gaia-derived map). Keep this credit line in the game credits.
 Processing: exposure tone-map 1 - exp(-2x), sRGB encode, 8192x4096 JPEG q93 (Python/OpenCV).
+
+## Loading screen crop
+A 2048x1024 crop of this map is used on the FTL loading screen (`Resources/UI/Loading/Loading_MilkyWay.png`). Same credit as above.
+
