@@ -20,6 +20,7 @@ namespace DMI.Xenoarch.Ship
         string _message;
         string _selectedSite;
         SurfaceMapView _surface;
+        readonly SurfaceMapView.ViewState _mapView = new SurfaceMapView.ViewState();
 
         void Reset() => terminalName = "Orbital Scanning Terminal";
 
@@ -71,7 +72,7 @@ namespace DMI.Xenoarch.Ship
             Text(right, "SIGNATURES", "xa-term__h");
             var scroll = new ScrollView(ScrollViewMode.Vertical); scroll.style.flexGrow = 1; scroll.style.minHeight = 0; right.Add(scroll);
             var col = scroll.contentContainer;
-            _surface = new SurfaceMapView(b.surfaceMap, b.surfaceMapRect);
+            _surface = new SurfaceMapView(b.surfaceMap, b.surfaceMapRect, _mapView);
             if (_scanT >= 0f) _surface.Sweep = Mathf.Clamp01(_scanT / passSeconds);
             col.Add(_surface);
             string shuttleSite = x.Ship.shuttleSiteId ?? "";
@@ -103,13 +104,17 @@ namespace DMI.Xenoarch.Ship
             }
             _surface.Clicked += id =>
             {
+                if (string.IsNullOrEmpty(id)) { _selectedSite = null; Refresh(); return; }
                 if (id.StartsWith("landing:")) { SetShuttleSite(id.Substring(8)); return; }
                 _selectedSite = id; Refresh();
             };
-            Text(col, "Red: dig-site signatures (circle = position uncertainty). Green: shuttle landing sites; click one to set the shuttle's destination.", "xa-term__dim");
+            Text(col, "Red: dig-site signatures (circle = position uncertainty). Green: shuttle landing sites; click one to set the shuttle's destination. Wheel zooms, drag or WASD pans, R resets the view.", "xa-term__dim");
             if (sel != null)
             {
                 Text(col, $"Selected: {(x.Site(sel.Id).revealLevel >= 3 ? sel.displayName : "signature")}", "xa-term__h");
+                var info = new VisualElement(); info.AddToClassList("xa-ctx"); info.style.marginBottom = 8;
+                MapSiteInfo.Fill(info, sel.Id, b, MapSiteInfo.PlayerXz());
+                col.Add(info);
                 bool already = shuttleSite == sel.Id;
                 Btn(col, already ? "Shuttle will land here" : "Land the shuttle near this site", () => SetShuttleSite(sel.Id), !already);
             }
@@ -132,3 +137,4 @@ namespace DMI.Xenoarch.Ship
         }
     }
 }
+

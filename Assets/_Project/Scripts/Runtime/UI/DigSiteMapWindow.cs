@@ -25,6 +25,10 @@ namespace DMI.Xenoarch.UI
         UIDocument _doc; VisualElement _veil, _body;
         string _tab = "sites", _selected;
         float _next;
+        SurfaceMapView _surface;
+        readonly SurfaceMapView.ViewState _surfaceView = new SurfaceMapView.ViewState();
+        VisualElement _info;
+        string _surfaceSelected;
         public bool IsOpen => _veil != null;
         public const string Panel = "digsite_maps";
 
@@ -39,7 +43,7 @@ namespace DMI.Xenoarch.UI
                 else if (!UIState.BlocksGameplay && XenoarchRuntime.Instance != null && XenoarchRuntime.Instance.SessionActive && !(XenoarchRuntime.Scenes?.IsLoading ?? true)) { _tab = want; Open(); }
             }
             else if (IsOpen && kb != null && kb.escapeKey.wasPressedThisFrame) Close();
-            if (IsOpen && _tab == "surface" && Time.unscaledTime >= _next) { _next = Time.unscaledTime + 0.5f; Render(); }
+            if (IsOpen && _tab == "surface" && Time.unscaledTime >= _next) { _next = Time.unscaledTime + 0.5f; RefreshSurface(); }
         }
 
         void Open()
@@ -56,7 +60,7 @@ namespace DMI.Xenoarch.UI
             var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.alignItems = Align.Center;
             var title = new Label("MAPS"); title.AddToClassList("xa-title"); title.style.fontSize = 30; title.style.marginRight = 24; head.Add(title);
             Tab(head, "Surface", "surface"); Tab(head, "Dig Sites", "sites");
-            var close = new Label("[M] map   [N] dig sites   Esc close"); close.AddToClassList("xa-hint"); close.style.marginLeft = 20; head.Add(close);
+            var close = new Label("[M] map   [N] dig sites   Wheel zoom   drag pan   WASD   [R] reset   Esc close"); close.AddToClassList("xa-hint"); close.style.marginLeft = 20; head.Add(close);
             win.Add(head);
             _body = new VisualElement(); _body.style.flexGrow = 1; _body.style.flexDirection = FlexDirection.Row; _body.style.marginTop = 10;
             win.Add(_body);
@@ -70,7 +74,7 @@ namespace DMI.Xenoarch.UI
         void Close()
         {
             bool wasOpen = _veil != null;
-            _veil?.RemoveFromHierarchy(); _veil = null; _body = null;
+            _veil?.RemoveFromHierarchy(); _veil = null; _body = null; _surface = null; _info = null;
             UIState.SetOpen(Panel, false);
             if (wasOpen && Time.timeScale == 0f && !UIState.IsOpen(Panels.Pause)) Time.timeScale = _prevTimeScale;
         }
@@ -87,6 +91,7 @@ namespace DMI.Xenoarch.UI
         void Render()
         {
             if (_body == null) return;
+            _surface = null; _info = null;
             _body.Clear();
             if (_tab == "surface") RenderSurface(); else RenderSites();
         }
@@ -98,29 +103,92 @@ namespace DMI.Xenoarch.UI
             var x = s.Exploration;
             var body = x.Galaxy != null ? x.Galaxy.FindBodyByScene(SceneManager.GetActiveScene().name) : null;
             if (body == null || body.surfaceMapRect.width < 10f) { Note(_body, "No surface map here. Land on a body to see its landing region; the Dig Sites tab works anywhere."); return; }
-            var map = new SurfaceMapView(body.surfaceMap, body.surfaceMapRect) { AutoSquare = false };
-            map.style.width = 660; map.style.height = 660; map.ShowLabels = true;
+            _surface = new SurfaceMapView(body.surfaceMap, body.surfaceMapRect, _surfaceView) { AutoSquare = false };
+            _surface.style.width = 660; _surface.style.height = 660; _surface.ShowLabels = true;
+            FillSurfaceMarkers(body);
+            _surface.Clicked += id =>
+            {
+                _surfaceSelected = id;
+                if (!string.IsNullOrEmpty(id) && s.DigMaps.Find(id) != null) _selected = id;
+                FillSurfaceMarkers(body);
+                _surface.Rebuild();
+                RenderInfo(body);
+            };
+            _surface.Rebuild();
+            _body.Add(_surface);
+            _info = new VisualElement(); _info.style.marginLeft = 16; _info.style.flexShrink = 1; _info.style.minWidth = 240; _info.style.maxWidth = 340;
+            _body.Add(_info);
+            RenderInfo(body);
+            _surface.schedule.Execute(() => _surface.Focus());
+        }
+
+        void RefreshSurface()
+        {
+            if (_surface == null || _info == null) { Render(); return; }
+            var s = XenoarchRuntime.Session; if (s == null) return;
+            var x = s.Exploration;
+            var body = x.Galaxy != null ? x.Galaxy.FindBodyByScene(SceneManager.GetActiveScene().name) : null;
+            if (body == null || body.surfaceMapRect.width < 10f) { Render(); return; }
+            FillSurfaceMarkers(body);
+            _surface.Rebuild();
+            // Gameplay is paused while the map is open, so the info panel stays as built.
+        }
+
+        void FillSurfaceMarkers(CelestialBodyDefinition body)
+        {
+            var s = XenoarchRuntime.Session; if (s == null || _surface == null || body == null) return;
+            var x = s.Exploration;
+            string sel = _surfaceSelected;
+            _surface.Markers.Clear();
+            if (body.hasBaseLanding)
+                _surface.Markers.Add(new SurfaceMapView.Marker { id = "landing:", kind = SurfaceMapView.Kind.Base, world = new Vector2(body.baseLanding.x, body.baseLanding.z), label = "Base", selected = sel == "landing:" });
             foreach (var k in KnownSites.OnBody(x, body.Id))   // t182u: orbital + handheld reveals, shared with the minimap
             {
                 var dm = s.DigMaps.Find(k.Def.Id);
-                map.Markers.Add(new SurfaceMapView.Marker { id = k.Def.Id, kind = SurfaceMapView.Kind.Site, world = k.Map, uncertainty = k.Uncertainty,
-                    label = dm != null ? $"{dm.Code} {k.Def.displayName}" + (k.Cleared ? " (cleared)" : "") : k.Label() });
+                string label = dm != null ? $"{dm.Code} {k.Def.displayName}" + (k.Cleared ? " (cleared)" : "") : k.Label();
+                _surface.Markers.Add(new SurfaceMapView.Marker { id = k.Def.Id, kind = SurfaceMapView.Kind.Site, world = k.Map, uncertainty = k.Uncertainty, label = label, selected = sel == k.Def.Id });
+                if (k.Def.hasLandingHint)
+                    _surface.Markers.Add(new SurfaceMapView.Marker { id = "landing:" + k.Def.Id, kind = SurfaceMapView.Kind.Landing, world = new Vector2(k.Def.landingHint.x, k.Def.landingHint.z), label = "Landing zone", selected = sel == "landing:" + k.Def.Id });
             }
             var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
             if (vdir != null)
                 foreach (var v in vdir.Sites)
-                    if (s.Valuables.IsRevealed(v.id) && !s.Valuables.IsCollected(v.id))
-                        map.Markers.Add(new SurfaceMapView.Marker { id = v.id, kind = SurfaceMapView.Kind.Cache, world = new Vector2(v.position.x, v.position.z), label = "Cache" });
+                {
+                    bool collected = s.Valuables.IsCollected(v.id);
+                    if (!s.Valuables.IsRevealed(v.id) && !collected) continue;
+                    _surface.Markers.Add(new SurfaceMapView.Marker { id = v.id, kind = SurfaceMapView.Kind.Cache, world = new Vector2(v.position.x, v.position.z), label = collected ? "Cache (excavated)" : "Cache", selected = sel == v.id });
+                }
             var shuttle = ShuttleDirector.Instance != null ? ShuttleDirector.Instance.Shuttle : null;
-            if (shuttle != null) map.Markers.Add(new SurfaceMapView.Marker { id = "shuttle", kind = SurfaceMapView.Kind.Shuttle, world = new Vector2(shuttle.transform.position.x, shuttle.transform.position.z), label = "Shuttle" });
+            if (shuttle != null) _surface.Markers.Add(new SurfaceMapView.Marker { id = "shuttle", kind = SurfaceMapView.Kind.Shuttle, world = new Vector2(shuttle.transform.position.x, shuttle.transform.position.z), label = "Shuttle" });
             var rig = PlayerRigLocator.Find();
-            if (rig != null) { var p = rig.Root.position; map.Markers.Add(new SurfaceMapView.Marker { id = "player", kind = SurfaceMapView.Kind.Player, world = new Vector2(p.x, p.z), heading = rig.Root.eulerAngles.y }); }
-            map.Clicked += id => { if (s.DigMaps.Find(id) != null) { _selected = id; _tab = "sites"; Render(); } };
-            map.Rebuild();
-            _body.Add(map);
-            var side = new VisualElement(); side.style.marginLeft = 16; side.style.flexShrink = 1;
-            Note(side, $"{body.displayName}: landing region {body.surfaceMapRect.width:0} m. Marked dig sites show their code (e.g. {DigSiteMapsService.PrefixFor(body.displayName)}1). Click one to open its dig map.");
-            _body.Add(side);
+            if (rig != null) { var p = rig.Root.position; _surface.Markers.Add(new SurfaceMapView.Marker { id = "player", kind = SurfaceMapView.Kind.Player, world = new Vector2(p.x, p.z), heading = rig.Root.eulerAngles.y }); }
+        }
+
+        void RenderInfo(CelestialBodyDefinition body)
+        {
+            if (_info == null) return;
+            _info.Clear();
+            var head = new Label(body != null ? body.displayName.ToUpperInvariant() : "SURFACE MAP");
+            head.AddToClassList("xa-term__h"); head.style.marginTop = 0; _info.Add(head);
+            Note(_info, "Click a site, cache or landing zone for details. Wheel zooms toward the cursor; drag or WASD/arrows pan; R or Reset view recentres.");
+            var reset = new Button(() => { _surface?.ResetView(); _surface?.Focus(); }) { text = "Reset view" };
+            reset.AddToClassList("xa-term__btn"); reset.AddToClassList("xa-term__btn--ghost"); reset.style.marginBottom = 10;
+            _info.Add(reset);
+            if (string.IsNullOrEmpty(_surfaceSelected))
+            {
+                Note(_info, body != null ? $"Landing region {body.surfaceMapRect.width:0} m. Marked dig sites show their code (e.g. {DigSiteMapsService.PrefixFor(body.displayName)}1)." : "");
+                return;
+            }
+            var box = new VisualElement();
+            box.AddToClassList("xa-ctx");
+            box.style.marginTop = 6;
+            if (!MapSiteInfo.Fill(box, _surfaceSelected, body, MapSiteInfo.PlayerXz(),
+                openDigMap: () => { if (!string.IsNullOrEmpty(_selected)) { _tab = "sites"; Render(); } }))
+            {
+                Note(_info, "No details for that marker.");
+                return;
+            }
+            _info.Add(box);
         }
 
         // ---------------------------------------------------------------- Dig Sites tab
@@ -254,3 +322,4 @@ namespace DMI.Xenoarch.UI
         static void Post(Painter2D p, Vector2 c) { p.BeginPath(); p.Arc(c, 2.5f, 0f, 360f); p.Fill(); }
     }
 }
+

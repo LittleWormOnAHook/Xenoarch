@@ -63,7 +63,7 @@ namespace DMI.Xenoarch.UI
             _title = new Label { pickingMode = PickingMode.Ignore };
             _title.style.color = XenoarchPalette.Highlight; _title.style.fontSize = 11; _title.style.marginBottom = 3;
             _frame.Add(_title);
-            _map = new SurfaceMapView(_body.surfaceMap, _body.surfaceMapRect) { AutoSquare = false, pickingMode = PickingMode.Ignore };
+            _map = new SurfaceMapView(_body.surfaceMap, _body.surfaceMapRect) { AutoSquare = false, Interactive = false, pickingMode = PickingMode.Ignore };
             _map.style.marginBottom = 0;
             _frame.Add(_map);
             root.Add(_frame);
@@ -125,3 +125,4 @@ namespace DMI.Xenoarch.UI
         }
     }
 }
+
