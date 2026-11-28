@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Inventory;
@@ -68,6 +69,7 @@ namespace DMI.Xenoarch.UI
             if (_cam != null) _cam.enabled = true;
             XenoarchUI.Show(_root, true);
             UIState.SetOpen(PanelId, true);
+            UISound.Play(UISoundEvent.WindowOpen);
         }
 
         void Hide()
@@ -79,6 +81,7 @@ namespace DMI.Xenoarch.UI
             if (_cam != null) _cam.enabled = false;
             XenoarchUI.Show(_root, false);
             UIState.SetOpen(PanelId, false);
+            UISound.Play(UISoundEvent.WindowClose);
         }
 
         void Update()

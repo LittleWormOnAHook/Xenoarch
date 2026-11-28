@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DMI.Xenoarch.Audio;
 using UnityEngine;
 
 namespace DMI.Xenoarch.Footsteps
@@ -88,6 +89,7 @@ namespace DMI.Xenoarch.Footsteps
                     _live = Resources.Load<FootstepSurfaceMap>(ResourcesPath);
                     if (_live == null) _live = CreateInstance<FootstepSurfaceMap>();
                     _live.EnsureDefaults();
+                    ProSoundFootstepCatalog.ApplyTo(_live);
                 }
                 return _live;
             }

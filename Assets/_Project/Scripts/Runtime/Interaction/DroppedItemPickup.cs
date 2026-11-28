@@ -1,3 +1,4 @@
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
@@ -44,6 +45,7 @@ namespace DMI.Xenoarch.Interaction
                         sent => { if (sent > 0 && this != null) Destroy(gameObject); });
                     return false;
                 }
+                UISound.Play(UISoundEvent.Pickup);
                 Destroy(gameObject);
                 return true;
             }
@@ -60,7 +62,8 @@ namespace DMI.Xenoarch.Interaction
                     });
                 return false;
             }
-            if (left > 0) { count = left; return true; }
+            if (left > 0) { count = left; UISound.Play(UISoundEvent.Pickup); return true; }
+            UISound.Play(UISoundEvent.Pickup);
             Destroy(gameObject);
             return true;
         }

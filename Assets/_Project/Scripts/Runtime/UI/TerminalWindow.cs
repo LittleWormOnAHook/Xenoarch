@@ -1,4 +1,5 @@
 using System;
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Interaction;
 using UnityEngine;
@@ -48,6 +49,7 @@ namespace DMI.Xenoarch.UI
             _title.text = terminalName.ToUpperInvariant();
             XenoarchUI.Show(_root, true);
             UIState.SetOpen(PanelId, true);
+            UISound.Play(UISoundEvent.TerminalPowerOn);
             OnOpened();
             Refresh();
         }
@@ -58,6 +60,7 @@ namespace DMI.Xenoarch.UI
             IsOpen = false;
             XenoarchUI.Show(_root, false);
             UIState.SetOpen(PanelId, false);
+            UISound.Play(UISoundEvent.WindowClose);
             OnClosed();
         }
 

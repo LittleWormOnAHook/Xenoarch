@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Save;
 using UnityEngine;
 
@@ -102,6 +103,7 @@ namespace DMI.Xenoarch.Exploration
             _data.points.Add(w);
             if (string.IsNullOrEmpty(_data.trackedId)) _data.trackedId = w.id;
             Changed?.Invoke();
+            UISound.Play(UISoundEvent.MapPing);
             return w;
         }
 
@@ -109,7 +111,7 @@ namespace DMI.Xenoarch.Exploration
         public Waypoint AddOrTrackSite(string bodyId, string siteId, string name, Vector2 xz)
         {
             var existing = FindForSite(bodyId, siteId);
-            if (existing != null) { Track(existing.id); return existing; }
+            if (existing != null) { Track(existing.id); UISound.Play(UISoundEvent.MapPing); return existing; }
             if (CountOn(bodyId) >= MaxPerBody) return null;
             var w = new Waypoint
             {
@@ -123,6 +125,7 @@ namespace DMI.Xenoarch.Exploration
             _data.points.Add(w);
             _data.trackedId = w.id;
             Changed?.Invoke();
+            UISound.Play(UISoundEvent.MapPing);
             return w;
         }
 

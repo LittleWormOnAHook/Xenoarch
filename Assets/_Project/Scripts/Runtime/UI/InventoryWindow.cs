@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Lighting;
@@ -366,8 +367,14 @@ namespace DMI.Xenoarch.UI
 
         void DoDrop(ItemStack st, System.Action remove, string name)
         {
-            if (!DroppedItemPickup.SpawnInFrontOfPlayer(st, Session.Items)) { Toast.Show("Can't drop that here."); return; }
+            if (!DroppedItemPickup.SpawnInFrontOfPlayer(st, Session.Items))
+            {
+                UISound.Play(UISoundEvent.Error);
+                Toast.Show("Can't drop that here.");
+                return;
+            }
             remove();
+            UISound.Play(UISoundEvent.Drop);
             Toast.Show("Dropped " + name + (st.count > 1 ? $" x{st.count}" : "") + ".");
             Refresh();
         }

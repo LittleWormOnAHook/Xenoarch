@@ -1,4 +1,5 @@
 using System;
+using DMI.Xenoarch.Audio;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -78,6 +79,7 @@ namespace DMI.Xenoarch.UI
                 else _ghost.Add(new Label(_pending.itemId) { pickingMode = PickingMode.Ignore, style = { fontSize = 9, whiteSpace = WhiteSpace.Normal } });
                 _root.Add(_ghost);
                 _root.CapturePointer(e.pointerId);
+                UISound.Play(UISoundEvent.SlotDrop);
             }
             if (_ghost == null) return;
             var local = _root.WorldToLocal(e.position);
@@ -97,7 +99,12 @@ namespace DMI.Xenoarch.UI
             for (var v = picked; v != null; v = v.parent)
                 if (v.userData is Zone z)
                 {
-                    if (z.accept == null || z.accept(p)) z.drop?.Invoke(p);
+                    if (z.accept == null || z.accept(p))
+                    {
+                        z.drop?.Invoke(p);
+                        UISound.Play(UISoundEvent.SlotDrop);
+                    }
+                    else UISound.Play(UISoundEvent.Error);
                     return;
                 }
         }

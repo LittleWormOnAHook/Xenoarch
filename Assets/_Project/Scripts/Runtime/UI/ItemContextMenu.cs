@@ -1,4 +1,5 @@
 using System;
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Interaction;
@@ -147,6 +148,7 @@ namespace DMI.Xenoarch.UI
                         MenuScreens.Confirm(req.Host, q, () =>
                         {
                             req.Remove?.Invoke();
+                            UISound.Play(UISoundEvent.Drop);
                             Toast.Show($"Destroyed {name}.");
                             req.Refresh?.Invoke();
                         });
@@ -231,10 +233,12 @@ namespace DMI.Xenoarch.UI
         {
             if (!DroppedItemPickup.SpawnInFrontOfPlayer(st, XenoarchRuntime.Session?.Items))
             {
+                UISound.Play(UISoundEvent.Error);
                 Toast.Show("Can't drop that here.");
                 return;
             }
             remove?.Invoke();
+            UISound.Play(UISoundEvent.Drop);
             Toast.Show("Dropped " + name + (st.count > 1 ? $" x{st.count}" : "") + ".");
             refresh?.Invoke();
         }

@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a30931d46677c7642ac12e4521c6c2db, type: 3}
+  m_Name: UISoundCatalog
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Audio.UISoundCatalog
+  entries:
+  - evt: 0
+    clip: {fileID: 8300000, guid: 368e8d4829f73ba4f8d73ac7c581187a, type: 3}
+    extras: []
+    volume: 0.7
+    pitch: {x: 0.97, y: 1.03}
+    cooldown: 0.04
+  - evt: 1
+    clip: {fileID: 8300000, guid: 8df8c389f11ada2468f69e112d25119c, type: 3}
+    extras: []
+    volume: 0.28
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0.1
+  - evt: 2
+    clip: {fileID: 8300000, guid: f2dcec8f305e8ca4e94601808d5ea3bd, type: 3}
+    extras: []
+    volume: 0.55
+    pitch: {x: 0.97, y: 1.03}
+    cooldown: 0.05
+  - evt: 3
+    clip: {fileID: 8300000, guid: 8f311f6a3ea232c45998e0fe105d5339, type: 3}
+    extras: []
+    volume: 0.7
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0
+  - evt: 4
+    clip: {fileID: 8300000, guid: f2b82c58aa246b2438a220ba43193f00, type: 3}
+    extras: []
+    volume: 0.65
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0
+  - evt: 5
+    clip: {fileID: 8300000, guid: f74df0e2119c32447a0b66dccab9f4d4, type: 3}
+    extras: []
+    volume: 0.75
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0
+  - evt: 6
+    clip: {fileID: 8300000, guid: 047bbe1a73a047e40964e81cc4503430, type: 3}
+    extras: []
+    volume: 0.65
+    pitch: {x: 0.97, y: 1.03}
+    cooldown: 0
+  - evt: 7
+    clip: {fileID: 8300000, guid: f7cfe4ebac1ed384c987065f7da3d327, type: 3}
+    extras: []
+    volume: 0.8
+    pitch: {x: 0.97, y: 1.03}
+    cooldown: 0
+  - evt: 8
+    clip: {fileID: 8300000, guid: 7e1ee998765a6a34183a81065c3c38c8, type: 3}
+    extras: []
+    volume: 0.6
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0.15
+  - evt: 9
+    clip: {fileID: 8300000, guid: 2db94533572f7784996e7a3f658c6f69, type: 3}
+    extras: []
+    volume: 0.7
+    pitch: {x: 0.97, y: 1.05}
+    cooldown: 0.05
+  - evt: 10
+    clip: {fileID: 8300000, guid: 1f2490126fa08124dae938cbb721ccb8, type: 3}
+    extras: []
+    volume: 0.7
+    pitch: {x: 0.96, y: 1.04}
+    cooldown: 0.05
+  - evt: 11
+    clip: {fileID: 8300000, guid: 007b985fd15f7914ebd926bba6828521, type: 3}
+    extras: []
+    volume: 0.55
+    pitch: {x: 0.97, y: 1.03}
+    cooldown: 0.05
+  - evt: 12
+    clip: {fileID: 8300000, guid: 53023c112bbbd3741acbaaeb47943f7e, type: 3}
+    extras: []
+    volume: 0.35
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0.05
+  - evt: 13
+    clip: {fileID: 8300000, guid: af90fc57e3b51f1409739b979812f052, type: 3}
+    extras: []
+    volume: 0.3
+    pitch: {x: 0.96, y: 1.06}
+    cooldown: 0.045
+  - evt: 14
+    clip: {fileID: 8300000, guid: 536e6834cc2f53344a0c3305eb89fc07, type: 3}
+    extras: []
+    volume: 0.65
+    pitch: {x: 0.97, y: 1.03}
+    cooldown: 0.1
+  - evt: 15
+    clip: {fileID: 8300000, guid: 7657de4d792d0a142b9de2c3b6d9a61d, type: 3}
+    extras: []
+    volume: 0.7
+    pitch: {x: 0.98, y: 1.02}
+    cooldown: 0
+  volume: 1
+  muteWhileLoading: 1

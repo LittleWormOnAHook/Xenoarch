@@ -70,3 +70,33 @@ Desktop.ini
 # Vendor: FPS Starter Pack
 /Assets/FPS_Starter_Pack/
 /Assets/FPS_Starter_Pack.meta
+
+# Vendor: ruins packs and stray models (Anthony's RUINS drop folder)
+/Assets/RUINS/
+/Assets/RUINS.meta
+# Vendor: Pro Sound Collection (Unreal .uasset pack and any converted audio; do not commit)
+/Assets/Pro Sound Collection/
+/Assets/Pro Sound Collection.meta
+/Assets/ProSoundCollection/
+/Assets/ProSoundCollection.meta
+# Vendor: Ancient Empires Music Pack
+/Assets/AncientEmpiresMusicPack/
+/Assets/AncientEmpiresMusicPack.meta
+/Assets/Pro Sound Collection v4.26/
+/Assets/Pro Sound Collection v4.26.meta
+
+# UE4 converter / UModel: vendor-derived output and the extraction tool are NEVER committed
+/Assets/_Vendor/Converted/
+/Assets/[Rr][Uu][Ii][Nn][Ss]/
+/Assets/[Rr][Uu][Ii][Nn][Ss].meta
+/Assets/_Project/[Rr]uins/
+/Assets/_Project/[Rr]uins.meta
+/Assets/Pro Sound Collection/
+/Assets/Pro Sound Collection.meta
+/Assets/_Project/UE4ConvTest/
+/Tools/UModel/
+/UE_Packs/
+
+# Pro Sound Collection (vendor .uasset pack + the audio extracted from it): never committed
+/Assets/Pro Sound Collection*/
+/Assets/Pro Sound Collection*.meta

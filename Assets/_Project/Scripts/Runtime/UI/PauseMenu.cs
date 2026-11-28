@@ -1,3 +1,4 @@
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -61,6 +62,7 @@ namespace DMI.Xenoarch.UI
             ShowMain();
             UIState.SetOpen(Panels.Pause, true);
             Time.timeScale = 0f;
+            UISound.Play(UISoundEvent.WindowOpen);
         }
 
         public void Close()
@@ -69,6 +71,7 @@ namespace DMI.Xenoarch.UI
             _veil = null;
             UIState.SetOpen(Panels.Pause, false);
             Time.timeScale = 1f;
+            UISound.Play(UISoundEvent.WindowClose);
         }
 
         void OnDisable() { if (IsOpen) Close(); }

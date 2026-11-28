@@ -1,3 +1,4 @@
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Items;
 using DMI.Xenoarch.World;
 using UnityEngine;
@@ -50,9 +51,15 @@ namespace DMI.Xenoarch.Interaction
                     });
                 return false;
             }
-            if (left > 0) { count = left; return true; } // partial pickup: object stays with the remainder (not persisted in 1A)
+            if (left > 0)
+            {
+                count = left;
+                UISound.Play(UISoundEvent.Pickup);
+                return true;
+            } // partial pickup: object stays with the remainder (not persisted in 1A)
             s.World.MarkConsumed(_id.Id);
             Debug.Log($"[Xenoarch] Picked up {item.Id} x{count} ({_id.Id})");
+            UISound.Play(UISoundEvent.Pickup);
             gameObject.SetActive(false);
             return true;
         }

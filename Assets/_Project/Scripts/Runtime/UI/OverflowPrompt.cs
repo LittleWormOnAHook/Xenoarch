@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DMI.Xenoarch.Audio;
 using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
@@ -107,6 +108,7 @@ namespace DMI.Xenoarch.UI
             BuildUi();
             XenoarchUI.Show(_root, true);
             UIState.SetOpen(PanelId, true);
+            UISound.Play(UISoundEvent.WindowOpen);
         }
 
         void Hide()
@@ -116,6 +118,7 @@ namespace DMI.Xenoarch.UI
             _queue.Clear();
             XenoarchUI.Show(_root, false);
             UIState.SetOpen(PanelId, false);
+            UISound.Play(UISoundEvent.WindowClose);
         }
 
         void Update()

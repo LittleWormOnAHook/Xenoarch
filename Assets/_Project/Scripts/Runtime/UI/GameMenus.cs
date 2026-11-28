@@ -18,6 +18,8 @@ namespace DMI.Xenoarch.UI
         public static bool AutosaveOnTravel { get => PlayerPrefs.GetInt(P + "autosaveTravel", 1) == 1; set => PlayerPrefs.SetInt(P + "autosaveTravel", value ? 1 : 0); }
         public static bool AutosaveOnDiscovery { get => PlayerPrefs.GetInt(P + "autosaveDiscovery", 1) == 1; set => PlayerPrefs.SetInt(P + "autosaveDiscovery", value ? 1 : 0); }
         public static float MasterVolume { get => PlayerPrefs.GetFloat(P + "masterVolume", 1f); set => PlayerPrefs.SetFloat(P + "masterVolume", Mathf.Clamp01(value)); }
+        /// <summary>UI-only volume, applied on top of <see cref="MasterVolume"/> (no dedicated slider yet).</summary>
+        public static float UiVolume { get => PlayerPrefs.GetFloat(P + "uiVolume", 1f); set => PlayerPrefs.SetFloat(P + "uiVolume", Mathf.Clamp01(value)); }
         public static bool Fullscreen { get => PlayerPrefs.GetInt(P + "fullscreen", Screen.fullScreen ? 1 : 0) == 1; set => PlayerPrefs.SetInt(P + "fullscreen", value ? 1 : 0); }
         public static bool VSync { get => PlayerPrefs.GetInt(P + "vsync", 1) == 1; set => PlayerPrefs.SetInt(P + "vsync", value ? 1 : 0); }
 

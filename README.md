@@ -14,5 +14,8 @@ into the project before opening the scenes:
 | FPS Starter Pack | `Assets/FPS_Starter_Pack` |
 | Creepy Cat - 3D Scifi Kit Vol 3 | `Assets/_Creepy_Cat` |
 | Fast Play (`ca.tim-cstj.fast-play`) | `Packages/ca.tim-cstj.fast-play` (embedded package, tracked) |
+| Pro Sound Collection (Unreal .uasset; convert before use) | `Assets/Pro Sound Collection` (or `Assets/RUINS` while importing) |
+| Ruins / stray vendor models | `Assets/RUINS` |
+| Ancient Empires Music Pack | `Assets/AncientEmpiresMusicPack` |
 
 Unity packages from the registry restore from `Packages/manifest.json`.

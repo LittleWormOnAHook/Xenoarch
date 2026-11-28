@@ -1,3 +1,4 @@
+using DMI.Xenoarch.Audio;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -60,6 +61,7 @@ namespace DMI.Xenoarch.UI
             card.Add(col);
             _stack.Insert(0, card);
             _cur = card; _hideAt = Time.unscaledTime + seconds;
+            if (!string.IsNullOrEmpty(kind)) UISound.Play(UISoundEvent.Notification);
         }
 
         void Update()
