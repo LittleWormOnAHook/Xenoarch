@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Lighting;
 using DMI.Xenoarch.Excavation;
 using DMI.Xenoarch.Exploration;
 using UnityEngine;
@@ -67,6 +68,8 @@ namespace DMI.Xenoarch.Player
                 int i = _dig.Equipped;
                 if (i >= 0 && i < all.Length) return all[i].itemId;
             }
+            var lighting = GetComponent<PlayerLighting>() ?? GetComponentInParent<PlayerLighting>();
+            if (lighting != null && lighting.FlashlightEquipped) return PlayerLighting.FlashlightId;
             return null;
         }
 

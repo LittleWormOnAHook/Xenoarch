@@ -1,4 +1,5 @@
 using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Lighting;
 using DMI.Xenoarch.Player;
 using UnityEngine;
 
@@ -36,6 +37,7 @@ namespace DMI.Xenoarch.Excavation
             if (root.GetComponent<DigTool>() == null) root.gameObject.AddComponent<DigTool>();
             DepthProbeTool.Ensure(root);
             if (root.GetComponent<HeldToolVisuals>() == null) root.gameObject.AddComponent<HeldToolVisuals>();
+            PlayerLighting.Ensure(root);
             _done = root;
         }
     }

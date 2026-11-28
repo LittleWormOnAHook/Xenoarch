@@ -107,6 +107,10 @@ MonoBehaviour:
     count: 8
   - item: {fileID: 11400000, guid: eff4e5e168cd61844a9f346199508bbb, type: 2}
     count: 2
+  - item: {fileID: 11400000, guid: 52f35f3d16bf461c8491c787affb49b5, type: 2}
+    count: 1
+  - item: {fileID: 11400000, guid: 1bcbfbe4059e47f4b282b2526ade5d8f, type: 2}
+    count: 1
   devTestingLoadout: 0
   mainMenuScene: MainMenu
   fadeDuration: 0.35

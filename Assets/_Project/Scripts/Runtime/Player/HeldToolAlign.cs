@@ -32,6 +32,7 @@ namespace DMI.Xenoarch.Player
             {
                 case HeldToolMeshFactory.ScannerId:
                 case HeldToolMeshFactory.DrillId:
+                case DMI.Xenoarch.Lighting.PlayerLighting.FlashlightId:
                     slotPosition = new Vector3(0.025f, 0.008f, 0.035f);
                     break;
                 case HeldToolMeshFactory.ShovelId:

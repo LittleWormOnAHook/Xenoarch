@@ -1,6 +1,7 @@
 using System.Linq;
 using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Lighting;
 using DMI.Xenoarch.Crafting;
 using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Items;
@@ -188,6 +189,15 @@ namespace DMI.Xenoarch.UI
                             else { Toast.Show(r); Refresh(); }
                         }, can);
                     }
+                }
+                if (d.Id == PlayerLighting.FloodLightId)
+                {
+                    int n = inv.Count(d.Id);
+                    Btn(mid, n > 0 ? "Place flood light" : "Place flood light (none carried)", () =>
+                    {
+                        if (PlacedFloodLight.TryPlaceFromPlayer(out var why)) { Toast.Show("Flood light placed. E to pick it up."); Close(); }
+                        else { Toast.Show(why); Refresh(); }
+                    }, n > 0);
                 }
                 if (d is MaterialDefinition m)
                 {

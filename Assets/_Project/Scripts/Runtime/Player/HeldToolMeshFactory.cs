@@ -1,3 +1,4 @@
+using DMI.Xenoarch.Lighting;
 using UnityEngine;
 
 namespace DMI.Xenoarch.Player
@@ -29,6 +30,7 @@ namespace DMI.Xenoarch.Player
             PrecisionId => "Held_PrecisionDual",
             BrushId => "Held_BrushStubby",
             DrillId => "Held_RockDrill",
+            PlayerLighting.FlashlightId => "Held_FlashlightPlaceholder",
             _ => null
         };
 
@@ -84,6 +86,7 @@ namespace DMI.Xenoarch.Player
                 case PrecisionId: BuildPrecision(root.transform, mats); break;
                 case BrushId: BuildBrush(root.transform, mats); break;
                 case DrillId: BuildDrill(root.transform, mats); break;
+                case PlayerLighting.FlashlightId: BuildFlashlight(root.transform, mats); break;
             }
             foreach (var col in root.GetComponentsInChildren<Collider>(true))
                 Object.DestroyImmediate(col);
@@ -159,6 +162,17 @@ namespace DMI.Xenoarch.Player
             Part(p, "BitTip", MeshLib.CylinderZ(0.278f, 0.305f, 0.0025f), m.metalDark);
         }
 
+
+        /// <summary>PLACEHOLDER handheld flashlight: barrel along +Z, rubber grip hanging along -Y, emissive lens.</summary>
+        static void BuildFlashlight(Transform p, Materials m)
+        {
+            Part(p, "Grip", MeshLib.Capsule(new Vector3(0, 0, -0.01f), new Vector3(0, -0.09f, -0.02f), 0.016f), m.rubber);
+            Part(p, "Body", MeshLib.CylinderZ(-0.06f, 0.08f, 0.018f), m.metal);
+            Part(p, "Band", MeshLib.CylinderZ(0.02f, 0.035f, 0.0195f), m.metalDark);
+            Part(p, "Bezel", MeshLib.CylinderZ(0.078f, 0.11f, 0.022f), m.metalDark);
+            Part(p, "Ring", MeshLib.TorusZ(0.11f, 0.022f, 0.003f), m.emit);
+            Part(p, "Lens", MeshLib.Sphere(new Vector3(0, 0, 0.118f), 0.016f), m.emit);
+        }
         static void Part(Transform parent, string name, Mesh mesh, Material mat)
         {
             var go = new GameObject(name);

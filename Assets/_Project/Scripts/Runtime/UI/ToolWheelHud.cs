@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Lighting;
 using DMI.Xenoarch.Excavation;
 using DMI.Xenoarch.Exploration;
 using DMI.Xenoarch.Items;
@@ -188,6 +189,12 @@ namespace DMI.Xenoarch.UI
             if (ti >= 0) return dig != null && dig.Equipped == ti ? "Holster" : "Equip";
             if (id == ScannerId) { var sc = FindAnyObjectByType<SurfaceScannerTool>(); return sc != null && sc.Equipped ? "Holster" : "Equip"; }
             if (id == ProbeId) { var p = FindAnyObjectByType<DepthProbeTool>(); return p != null && p.Equipped ? "Holster" : "Equip"; }
+            if (id == PlayerLighting.FlashlightId)
+            {
+                var pl = FindAnyObjectByType<PlayerLighting>();
+                return pl != null && pl.FlashlightEquipped ? "Holster" : "Equip";
+            }
+            if (id == PlayerLighting.FloodLightId) return "Place";
             return "Select";
         }
 
@@ -216,7 +223,7 @@ namespace DMI.Xenoarch.UI
                 {
                     var d = Def(st.itemId);
                     if (d == null || d is VehicleItemDefinition) continue;
-                    if (d.category == ItemCategory.Tool || d.category == ItemCategory.Consumable) Add(st.itemId);
+                    if (d.category == ItemCategory.Tool || d.category == ItemCategory.Consumable || d.Id == PlayerLighting.FloodLightId) Add(st.itemId);
                 }
             return list;
         }
@@ -254,6 +261,20 @@ namespace DMI.Xenoarch.UI
                 bool on = !probe.Equipped;
                 if (on) dig?.Holster();
                 probe.SetEquipped(on);
+                return;
+            }
+            if (id == PlayerLighting.FlashlightId)
+            {
+                var host = FindAnyObjectByType<FirstPersonController>();
+                var pl = FindAnyObjectByType<PlayerLighting>() ?? (host != null ? PlayerLighting.Ensure(host.transform) : null);
+                if (pl == null) { Toast.Show("The flashlight can't be used here."); return; }
+                pl.SetFlashlightEquipped(!pl.FlashlightEquipped);
+                return;
+            }
+            if (id == PlayerLighting.FloodLightId)
+            {
+                if (PlacedFloodLight.TryPlaceFromPlayer(out var floodWhy)) Toast.Show("Flood light placed. E to pick it up.");
+                else Toast.Show(floodWhy ?? "Couldn't place the flood light.");
                 return;
             }
             if (d != null && d.category == ItemCategory.Consumable)

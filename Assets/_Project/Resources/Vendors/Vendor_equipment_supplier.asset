@@ -63,6 +63,14 @@ MonoBehaviour:
     price: 500
     minRank: 2
     unique: 1
+  - itemId: item.tool.handheld_flashlight
+    price: 80
+    minRank: 0
+    unique: 0
+  - itemId: item.equipment.flood_light
+    price: 200
+    minRank: 0
+    unique: 0
   upgrades:
   - upgradeId: ship.hold
     label: Ship storage

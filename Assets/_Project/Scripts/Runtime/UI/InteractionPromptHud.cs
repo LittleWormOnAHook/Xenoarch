@@ -19,7 +19,7 @@ namespace DMI.Xenoarch.UI
         public const string Uxml = "UI/Hud";
         [SerializeField] private Interactor interactor;
         [SerializeField] private int maxStripSlots = 8;
-        const string HintText = "WASD move   Shift sprint   Space jump   E interact   F5 quick save   F9 quick load";
+        const string HintText = "WASD move   Shift sprint   Space jump   E interact   F helmet lamps   F5 quick save   F9 quick load";
 
         /// <summary>Shown in the E popup when nothing is targeted (e.g. "Stand up" while seated). Null = hidden.</summary>
         public static string IdlePrompt;
