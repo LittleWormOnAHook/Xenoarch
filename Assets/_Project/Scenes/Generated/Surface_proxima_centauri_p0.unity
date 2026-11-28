@@ -746,7 +746,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 297533717}
   guid: d8ec3d302a980a44db0f0a6e848e4421
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Surface_proxima_centauri_p0\d8ec3d302a980a44db0f0a6e848e4421
   cutter: {fileID: 1040279780}
   heightmapScale: {x: 0.5, y: 1, z: 0.5}
@@ -1064,6 +1064,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &1322655591
 MonoBehaviour:
   m_ObjectHideFlags: 0

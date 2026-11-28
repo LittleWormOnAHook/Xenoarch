@@ -623,6 +623,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &475245460
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1054,7 +1055,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 399127712}
   guid: d5a836a749afe664eac76c7de6ccd7f1
-  version: 1
+  version: 2
   basePathData: Assets\DiggerData\Scenes\Surface_epsilon_eridani_p1\d5a836a749afe664eac76c7de6ccd7f1
   cutter: {fileID: 0}
   heightmapScale: {x: 0, y: 0, z: 0}

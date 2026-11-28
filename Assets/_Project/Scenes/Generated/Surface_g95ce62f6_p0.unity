@@ -892,6 +892,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &1262365938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1231,7 +1232,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 612754828}
   guid: 8acf2928d2cbf2440a25a0cfd10d200c
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Surface_g95ce62f6_p0\8acf2928d2cbf2440a25a0cfd10d200c
   cutter: {fileID: 1589072729}
   heightmapScale: {x: 0.5, y: 1, z: 0.5}

@@ -231,7 +231,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 482072917}
   guid: 7546d379b7fe0ed49aa0d6d163e533ec
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Surface_sirius_p0\7546d379b7fe0ed49aa0d6d163e533ec
   cutter: {fileID: 257235786}
   heightmapScale: {x: 0.5, y: 1, z: 0.5}
@@ -1011,6 +1011,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &1353214683
 MonoBehaviour:
   m_ObjectHideFlags: 0

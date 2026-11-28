@@ -2,6 +2,8 @@ using Digger.Modules.Core.Sources;
 using Digger.Modules.Runtime.Sources;
 using DMI.Xenoarch.Excavation;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Rendering;
 
 namespace DMI.Xenoarch.Integrations.Digger
 {
@@ -25,6 +27,8 @@ namespace DMI.Xenoarch.Integrations.Digger
                  "often touches no voxel layer at all, so holes stopped in ~1 m steps with spiky walls. Applied before Digger " +
                  "initialises (Play only, the scene is not changed). 0 = keep the scene setting.")]
         [SerializeField] float runtimeVoxelHeight = 0.1f;
+        [Tooltip("t301u: dug holes cast/receive no shadows so their walls and floor stay lit like the ground around them.")]
+        [SerializeField] bool shadowlessDigs = true;
 
         float _minRadius = 0.15f;
         public bool IsBusy => digger == null || digger.IsRunningAsync;
@@ -32,6 +36,7 @@ namespace DMI.Xenoarch.Integrations.Digger
 
         void Awake()
         {
+            if (shadowlessDigs) HookChunkShadows();
             if (digger == null) digger = FindAnyObjectByType<DiggerMasterRuntime>();
             if (digger == null) { Debug.LogWarning("[Xenoarch] DiggerExcavationSurface: no DiggerMasterRuntime in scene", this); return; }
             digger.BufferSize = Mathf.Max(1, bufferSize);
@@ -51,8 +56,32 @@ namespace DMI.Xenoarch.Integrations.Digger
             }
         }
 
+        // Runs before DiggerMasterRuntime (-10) so chunks it loads or carves come through the hook. Runtime only:
+        // the listener is not serialized, so scenes and the vendor Digger files stay untouched.
+        void HookChunkShadows()
+        {
+            foreach (var ds in FindObjectsByType<DiggerSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (ds.onChunkObjectCreated == null) ds.onChunkObjectCreated = new UnityEvent<ChunkObject>();
+                ds.onChunkObjectCreated.RemoveListener(MakeShadowless);
+                ds.onChunkObjectCreated.AddListener(MakeShadowless);
+            }
+        }
+
+        static void MakeShadowless(ChunkObject chunk)
+        {
+            if (chunk == null) return;
+            foreach (var r in chunk.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                r.receiveShadows = false;
+            }
+        }
+
         void Start()
         {
+            if (shadowlessDigs)
+                foreach (var c in FindObjectsByType<ChunkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None)) MakeShadowless(c);
             var ds = FindAnyObjectByType<DiggerSystem>();
             if (ds != null)
                 Debug.Log($"[Xenoarch] Digger voxels: {ds.HeightmapScale.x:0.###} x {ds.HeightmapScale.y:0.###} m (h x v), min carve radius {_minRadius:0.##} m");

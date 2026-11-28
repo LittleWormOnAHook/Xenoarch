@@ -1117,7 +1117,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 1958233644}
   guid: 91cd70874591f4e4b95c0c5b8d83df5a
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Surface_tau_ceti_p1\91cd70874591f4e4b95c0c5b8d83df5a
   cutter: {fileID: 1629115041}
   heightmapScale: {x: 0.5, y: 1, z: 0.5}
@@ -1175,6 +1175,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &1658293459
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -231,7 +231,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 503698007}
   guid: da51f3afbcc99524ca95a917d86dc15d
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Surface_barnards_star_p0\da51f3afbcc99524ca95a917d86dc15d
   cutter: {fileID: 144847974}
   heightmapScale: {x: 0.5, y: 1, z: 0.5}
@@ -767,6 +767,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &1409904375
 MonoBehaviour:
   m_ObjectHideFlags: 0

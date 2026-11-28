@@ -19,7 +19,7 @@ namespace DMI.Xenoarch.EditorTools
     /// t262u: bake each generated planet once into its own landing scene (terrain asset, lighting, landing zones,
     /// spawn, Digger when it is safe). Never overwrites a baked scene (use Rebake Terrain Only to refresh terrain
     /// without touching placed objects). Never saves or closes the currently open scene. Trigger:
-    /// Temp/xenoarch_planet_bake.trig containing "all", "digger", "rebake", "repair", or a body id (log: Logs/xenoarch_planet_bake.txt).
+    /// Temp/xenoarch_planet_bake.trig containing "all", "digger", "rebake", "repair", "versions", "health", or a body id (log: Logs/xenoarch_planet_bake.txt).
     /// </summary>
     [InitializeOnLoad]
     public static class XenoarchPlanetBake
@@ -44,6 +44,8 @@ namespace DMI.Xenoarch.EditorTools
             if (cmd.Equals("digger", StringComparison.OrdinalIgnoreCase)) AddDiggerToBaked();
             else if (cmd.Equals("rebake", StringComparison.OrdinalIgnoreCase)) RebakeAllTerrain();
             else if (cmd.Equals("repair", StringComparison.OrdinalIgnoreCase)) RepairBakedDigger();
+            else if (cmd.Equals("versions", StringComparison.OrdinalIgnoreCase)) RepairDiggerVersions();
+            else if (cmd.Equals("health", StringComparison.OrdinalIgnoreCase)) CheckDiggerHealth();
             else if (string.IsNullOrEmpty(cmd) || cmd.Equals("all", StringComparison.OrdinalIgnoreCase)) BakeAll();
             else BakeBody(cmd);
         }
@@ -157,6 +159,143 @@ namespace DMI.Xenoarch.EditorTools
                 Log($"repair finished: {moved} Digger folder(s) renamed, {iceFixed} ice terrain(s) restored, {diggerFixed} Digger runtime(s) added, {deleted} leftover Untitled folder(s) removed, {skipped} open scene(s) skipped.\n{log}");
             }
             catch (Exception e) { Log("FAILED " + e); }
+        }
+
+        /// <summary>
+        /// t293u: Rebake Terrain Only re-ran Digger's forced setup, which bumps DiggerSystem.version and writes
+        /// current_version.asset, but the scene was never marked dirty so the .unity kept the old number. At Play,
+        /// Digger saw the mismatch, took its editor-only undo path before any chunks existed, threw an NRE and never
+        /// initialised, so digging did nothing. This copies the persisted number back into each baked scene. It only
+        /// changes the DiggerSystem version field; nothing is moved. Trigger: "versions".
+        /// </summary>
+        [MenuItem("Xenoarch/Planets/Repair Digger Versions", priority = 84)]
+        public static void RepairDiggerVersions()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var log = new StringBuilder();
+            try
+            {
+                var systemT = FindType("Digger.Modules.Core.Sources.DiggerSystem");
+                if (systemT == null) { Log("Digger not installed"); return; }
+                var getPersisted = systemT.GetMethod("GetLastPersistedVersion",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+                if (getPersisted == null) { Log("Digger GetLastPersistedVersion not found"); return; }
+                string[] scenes = Directory.Exists(ScenesFolder) ? Directory.GetFiles(ScenesFolder, "Surface_*.unity") : Array.Empty<string>();
+                int fixedScenes = 0, ok = 0, skipped = 0;
+                foreach (var file in scenes)
+                {
+                    string path = ToAssetPath(file);
+                    string name = Path.GetFileNameWithoutExtension(path);
+                    if (IsUserOpenScene(path)) { log.AppendLine($"{name}: open in the Editor, skipped (close it and re-run)"); skipped++; continue; }
+                    var existing = SceneManager.GetSceneByPath(path);
+                    bool wasLoaded = existing.IsValid() && existing.isLoaded;
+                    var scene = wasLoaded ? existing : EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                    try
+                    {
+                        int changed = 0;
+                        foreach (var root in scene.GetRootGameObjects())
+                        foreach (var d in root.GetComponentsInChildren(systemT, true))
+                        {
+                            long persisted = Convert.ToInt64(getPersisted.Invoke(d, null));
+                            var so = new SerializedObject(d);
+                            var prop = so.FindProperty("version");
+                            if (prop == null) { log.AppendLine($"{name}: Digger version field not found"); continue; }
+                            if (persisted <= 0 || prop.longValue == persisted) { ok++; continue; }
+                            log.AppendLine($"{name}: Digger version {prop.longValue} -> {persisted}");
+                            prop.longValue = persisted;
+                            so.ApplyModifiedPropertiesWithoutUndo();
+                            changed++;
+                        }
+                        if (changed > 0)
+                        {
+                            EditorSceneManager.MarkSceneDirty(scene);
+                            EditorSceneManager.SaveScene(scene, path);
+                            fixedScenes++;
+                        }
+                    }
+                    finally
+                    {
+                        if (!wasLoaded && scene.IsValid() && scene.isLoaded) EditorSceneManager.CloseScene(scene, true);
+                    }
+                }
+                Log($"Digger version repair finished: {fixedScenes} scene(s) fixed, {ok} already in sync, {skipped} skipped.\n{log}");
+                CheckDiggerHealth();
+            }
+            catch (Exception e) { Log("Digger version repair FAILED " + e); }
+        }
+
+        /// <summary>
+        /// t300u: read-only Digger health report for every baked Surface_* scene plus the Moon and Mars references.
+        /// Every dig type (fenced major sites, survey caches, hidden caches, landing-zone caches) carves through the
+        /// scene's DiggerExcavationSurface -> DiggerMasterRuntime -> DiggerSystem, so one broken link stops them all.
+        /// Opens closed scenes additively and closes them without saving. Trigger: "health".
+        /// </summary>
+        [MenuItem("Xenoarch/Planets/Check Digger Health", priority = 85)]
+        public static void CheckDiggerHealth()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Log("exit Play Mode first"); return; }
+            var systemT = FindType("Digger.Modules.Core.Sources.DiggerSystem");
+            var masterT = FindType("Digger.Modules.Core.Sources.DiggerMaster");
+            var runtimeT = FindType("Digger.Modules.Runtime.Sources.DiggerMasterRuntime");
+            var surfaceT = FindType("DMI.Xenoarch.Integrations.Digger.DiggerExcavationSurface");
+            if (systemT == null || masterT == null || runtimeT == null) { Log("health: Digger not installed"); return; }
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            var getPersisted = systemT.GetMethod("GetLastPersistedVersion", flags);
+            var basePath = systemT.GetProperty("BasePathData", flags);
+            var paths = new List<string>();
+            if (Directory.Exists(ScenesFolder)) paths.AddRange(Directory.GetFiles(ScenesFolder, "Surface_*.unity").Select(ToAssetPath).OrderBy(p => p));
+            foreach (var refName in new[] { "Moon_Excavation_01", "Mars_Excavation_01" })
+                paths.AddRange(AssetDatabase.FindAssets(refName + " t:Scene").Select(AssetDatabase.GUIDToAssetPath).Where(p => Path.GetFileNameWithoutExtension(p) == refName));
+            var log = new StringBuilder();
+            int healthy = 0, broken = 0;
+            foreach (var path in paths)
+            {
+                string name = Path.GetFileNameWithoutExtension(path);
+                var existing = SceneManager.GetSceneByPath(path);
+                bool wasLoaded = existing.IsValid() && existing.isLoaded;
+                Scene scene;
+                try { scene = wasLoaded ? existing : EditorSceneManager.OpenScene(path, OpenSceneMode.Additive); }
+                catch (Exception e) { log.AppendLine($"BROKEN  {name}: could not open ({e.Message})"); broken++; continue; }
+                try
+                {
+                    var issues = new List<string>();
+                    var roots = scene.GetRootGameObjects();
+                    Component Find(Type t) => roots.Select(r => r.GetComponentInChildren(t, true)).FirstOrDefault(c => c != null);
+                    if (Find(masterT) == null) issues.Add("no DiggerMaster");
+                    if (Find(runtimeT) == null) issues.Add("no DiggerMasterRuntime");
+                    if (surfaceT != null && Find(surfaceT) == null) issues.Add("no DiggerExcavationSurface");
+                    var terrain = roots.Select(r => r.GetComponentInChildren<Terrain>(true)).FirstOrDefault(c => c != null);
+                    if (terrain == null || terrain.terrainData == null) issues.Add("no terrain");
+                    var systems = roots.SelectMany(r => r.GetComponentsInChildren(systemT, true)).ToList();
+                    if (systems.Count == 0) issues.Add("no DiggerSystem");
+                    string ver = "-";
+                    foreach (var d in systems)
+                    {
+                        var so = new SerializedObject(d);
+                        long v = so.FindProperty("version")?.longValue ?? -1;
+                        long persisted = getPersisted != null ? Convert.ToInt64(getPersisted.Invoke(d, null)) : -1;
+                        ver = $"{v}/{persisted}";
+                        if (persisted > 0 && v != persisted) issues.Add($"version mismatch (scene {v}, persisted {persisted}: Digger will throw at Play and never dig)");
+                        string bp = basePath?.GetValue(d) as string;
+                        if (string.IsNullOrEmpty(bp) || !Directory.Exists(bp)) issues.Add($"data folder missing ({bp})");
+                        var dt = so.FindProperty("Terrain")?.objectReferenceValue as Terrain;
+                        if (terrain != null && dt != null && dt != terrain) issues.Add("DiggerSystem points at another terrain");
+                    }
+                    if (terrain != null)
+                    {
+                        var mat = terrain.materialTemplate;
+                        string shader = mat != null && mat.shader != null ? mat.shader.name : "none";
+                        if (shader.IndexOf("Digger", StringComparison.OrdinalIgnoreCase) < 0) issues.Add($"terrain material is not a Digger shader ({shader})");
+                    }
+                    if (issues.Count == 0) { healthy++; log.AppendLine($"OK      {name}: version {ver}"); }
+                    else { broken++; log.AppendLine($"BROKEN  {name}: {string.Join("; ", issues)}"); }
+                }
+                finally
+                {
+                    if (!wasLoaded && scene.IsValid() && scene.isLoaded) EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+            Log($"Digger health: {healthy} OK, {broken} broken.\n{log}");
         }
 
         [MenuItem("Xenoarch/Planets/Rebake Terrain Only (keep placed objects)", priority = 82)]
@@ -323,6 +462,7 @@ namespace DMI.Xenoarch.EditorTools
                 string shape = profile != null ? profile.shape.ToString() : "legacy-noise";
                 // Do not move or delete anything except a baked rock root if we had written one (runtime scatter uses this name only when present).
                 log.AppendLine($"{b.displayName}: terrain refreshed ({dst.heightmapResolution} res, {dst.size.y:0} m relief, {shape}, {n} layers: {names}), snapped {snapped} object(s), Digger sync {digger}");
+                EditorSceneManager.MarkSceneDirty(scene);
                 if (!IsUserOpenScene(scenePath)) EditorSceneManager.SaveScene(scene, scenePath);
                 return true;
             }
@@ -372,9 +512,13 @@ namespace DMI.Xenoarch.EditorTools
                 foreach (var d in root.GetComponentsInChildren(systemT, true))
                 {
                     init.Invoke(null, new object[] { d, true });
+                    // Digger's forced Init bumps DiggerSystem.version and writes current_version.asset; dirty it so the
+                    // scene keeps the same number, or Play hits Digger's editor undo path and never loads chunks (t293u).
+                    EditorUtility.SetDirty(d);
                     n++;
                 }
             }
+            if (n > 0) EditorSceneManager.MarkSceneDirty(scene);
             return n;
         }
 

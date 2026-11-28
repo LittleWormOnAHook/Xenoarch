@@ -407,7 +407,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Digger.Core::Digger.Modules.Core.Sources.DiggerSystem
   master: {fileID: 377983740}
   guid: 37b11f4d94d51be4e87ab3d14c586608
-  version: 2
+  version: 3
   basePathData: Assets\DiggerData\Scenes\Surface_alpha_centauri_p1\37b11f4d94d51be4e87ab3d14c586608
   cutter: {fileID: 569599447}
   heightmapScale: {x: 0.5, y: 1, z: 0.5}
@@ -665,6 +665,7 @@ MonoBehaviour:
   brush: 0
   bufferSize: 512
   runtimeVoxelHeight: 0.1
+  shadowlessDigs: 1
 --- !u!114 &836334729
 MonoBehaviour:
   m_ObjectHideFlags: 0
