@@ -155,5 +155,16 @@ namespace DMI.Xenoarch.Vehicles
             else if (step == 2) { distance = chaseDistanceFar; height = chaseHeightFar; }
             else { distance = chaseDistanceMid; height = chaseHeightMid; }
         }
+
+#if UNITY_EDITOR
+        /// <summary>Editor Play only: raised from OnValidate so a live rover can reapply every field immediately.</summary>
+        public static event System.Action<RoverPhysicsProfile> Changed;
+
+        void OnValidate()
+        {
+            if (!Application.isPlaying) return;
+            Changed?.Invoke(this);
+        }
+#endif
     }
 }

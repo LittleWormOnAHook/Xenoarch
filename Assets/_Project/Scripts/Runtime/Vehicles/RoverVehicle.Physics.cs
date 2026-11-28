@@ -51,9 +51,8 @@ namespace DMI.Xenoarch.Vehicles
             _profile = RoverPhysicsProfile.LoadOrDefault();
             _zoomStep = Mathf.Clamp(PlayerPrefs.GetInt(ZoomPref, 1), 0, 2);
             EnsureWorldScaleWheelRoot();
+            SubscribeProfileChanges();
             ApplyProfile();
-            AlignWheelCollidersToVisuals();
-            ApplySuspensionSprings();
             BindPivots();
             StartParkedPhysics(true);
             ApplyPresence(false);
@@ -86,7 +85,31 @@ namespace DMI.Xenoarch.Vehicles
             _motorTorque = mass * acceleration * r / n;
             _brakeTorque = mass * brakeDecel * r / n;
             ApplyHandlingFromProfile();
-            ApplySuspensionSprings();
+            AlignWheelCollidersToVisuals();
+            ApplySuspensionSprings(); // AdaptToPlanet(true) refreshes _appliedSpring/_appliedDamper for the watchdog
+            ApplyCom();
+        }
+
+        void SubscribeProfileChanges()
+        {
+#if UNITY_EDITOR
+            RoverPhysicsProfile.Changed -= OnProfileChanged;
+            RoverPhysicsProfile.Changed += OnProfileChanged;
+#endif
+        }
+
+        void UnsubscribeProfileChanges()
+        {
+#if UNITY_EDITOR
+            RoverPhysicsProfile.Changed -= OnProfileChanged;
+#endif
+        }
+
+        void OnProfileChanged(RoverPhysicsProfile p)
+        {
+            if (!Live || !isActiveAndEnabled) return;
+            if (p != null && _profile != null && p != _profile) return;
+            ApplyProfile();
         }
 
         int WheelCount()

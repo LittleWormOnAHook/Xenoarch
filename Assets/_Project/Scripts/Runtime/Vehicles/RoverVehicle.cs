@@ -561,7 +561,20 @@ namespace DMI.Xenoarch.Vehicles
             RefreshSeatedFlags();
         }
 
-        void OnDisable() { if (Live && _state != State.Parked && _player != null) { ClearDriverArms(); if (_player.Seated) _player.EndSeat(); Release(); } if (SeatedRover == this) SeatedRover = null; AnySeated = false; ChaseActive = false; if (Live) ApplyPresence(false); }
+        void OnEnable()
+        {
+            if (Live) SubscribeProfileChanges();
+        }
+
+        void OnDisable()
+        {
+            UnsubscribeProfileChanges();
+            if (Live && _state != State.Parked && _player != null) { ClearDriverArms(); if (_player.Seated) _player.EndSeat(); Release(); }
+            if (SeatedRover == this) SeatedRover = null;
+            AnySeated = false;
+            ChaseActive = false;
+            if (Live) ApplyPresence(false);
+        }
 
         void HideBody(FirstPersonController p, bool hide)
         {
