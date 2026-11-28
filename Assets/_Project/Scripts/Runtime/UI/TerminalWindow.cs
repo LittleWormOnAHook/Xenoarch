@@ -17,6 +17,9 @@ namespace DMI.Xenoarch.UI
         public string terminalName = "Terminal";
         [Tooltip("Optional point the interaction raycast/prompt uses (defaults to this transform).")]
         public Transform interactionPoint;
+        [Tooltip("How close (m) you must be to the device (eye to its geometry) to use it, and you must be looking at it.")]
+        [Range(0.5f, 6f)] public float interactDistance = 2f;
+        public virtual float MaxInteractDistance => interactDistance;
 
         protected VisualElement Body { get; private set; }
         DragDrop _drag;

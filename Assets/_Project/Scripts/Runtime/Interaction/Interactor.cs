@@ -48,7 +48,7 @@ namespace DMI.Xenoarch.Interaction
         void Update()
         {
             if (_rig == null || _rig.ViewCamera == null) return;
-            if (!_rig.InputEnabled || UIState.BlocksGameplay) { ClearTarget(); return; }
+            if (!_rig.InputEnabled || UIState.BlocksGameplay || UIState.ConsoleCursor) { ClearTarget(); return; } // free cursor (Alt at a console / screen focus): nothing under the reticle is usable
 
             var ctx = BuildContext();
             if (Time.unscaledTime >= _nextRefresh || Target == null)
@@ -108,13 +108,13 @@ namespace DMI.Xenoarch.Interaction
         IInteractable FindTarget(in InteractionContext ctx)
         {
             float maxDist = range + 0.5f;
-            var best = Probe(ctx, Physics.RaycastNonAlloc(ctx.ViewRay, _hits, maxDist, interactMask, QueryTriggerInteraction.Collide));
+            var best = Probe(ctx, Physics.RaycastNonAlloc(ctx.ViewRay, _hits, maxDist, interactMask, QueryTriggerInteraction.Collide), false);
             if (best == null && aimAssistRadius > 0f)
-                best = Probe(ctx, Physics.SphereCastNonAlloc(ctx.ViewRay, aimAssistRadius, _hits, maxDist, interactMask, QueryTriggerInteraction.Collide));
+                best = Probe(ctx, Physics.SphereCastNonAlloc(ctx.ViewRay, aimAssistRadius, _hits, maxDist, interactMask, QueryTriggerInteraction.Collide), true);
             return best;
         }
 
-        IInteractable Probe(in InteractionContext ctx, int count)
+        IInteractable Probe(in InteractionContext ctx, int count, bool sphere)
         {
             System.Array.Sort(_hits, 0, count, HitDistanceComparer.Instance);
             var root = _rig.Root;
@@ -130,11 +130,70 @@ namespace DMI.Xenoarch.Interaction
                     if (!h.collider.isTrigger) return null; // solid blocker in front
                     continue;
                 }
-                if (h.distance > range) continue;
+                if (!Reachable(usable, h, ctx.ViewRay, sphere)) continue;
                 if (usable.GetPriority(ctx) < 0f) continue;
                 return usable; // nearest usable wins (first-person: what you look at)
             }
             return null;
+        }
+
+        // ---- reach: the eye must be close to the DEVICE (not just inside a big trigger volume) and looking at it.
+        readonly Dictionary<Component, Renderer[]> _deviceRenderers = new Dictionary<Component, Renderer[]>();
+
+        static float ReachOf(IInteractable u)
+        {
+            if (u is Component c)
+            {
+                var o = c.GetComponent<InteractionReach>();
+                if (o != null) return Mathf.Clamp(o.maxDistance, 0.5f, 6f);
+            }
+            return Mathf.Clamp(u.MaxInteractDistance, 0.5f, 6f);
+        }
+
+        /// <summary>World bounds of the device's own renderers (not other devices nested in it). False when it has none.</summary>
+        bool DeviceBounds(IInteractable u, out Bounds b)
+        {
+            b = default;
+            if (!(u is Component c)) return false;
+            if (!_deviceRenderers.TryGetValue(c, out var rs) || rs == null)
+            {
+                if (_deviceRenderers.Count > 128) _deviceRenderers.Clear();
+                var all = c.GetComponentsInChildren<Renderer>(false);
+                var list = new List<Renderer>(all.Length);
+                foreach (var r in all)
+                {
+                    if (r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer) continue;
+                    if (!ReferenceEquals(r.GetComponentInParent<IInteractable>(), u)) continue;
+                    list.Add(r);
+                }
+                rs = list.ToArray();
+                _deviceRenderers[c] = rs;
+            }
+            bool any = false;
+            foreach (var r in rs)
+            {
+                if (r == null || !r.enabled) continue;
+                if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+            }
+            return any;
+        }
+
+        /// <summary>Solid hit: distance to the surface you are looking at. Trigger hit (a volume that may be far larger than
+        /// the device): distance to the device's real geometry, and the view ray must pass through it (small pad for aim assist).</summary>
+        bool Reachable(IInteractable u, in RaycastHit h, Ray ray, bool sphere)
+        {
+            float reach = ReachOf(u);
+            Vector3 eye = ray.origin;
+            if (!h.collider.isTrigger)
+            {
+                bool overlap = h.distance <= 0.0001f && h.point == Vector3.zero; // sphere started inside the collider: no valid point
+                float d = overlap ? Vector3.Distance(eye, h.collider.bounds.ClosestPoint(eye)) : Vector3.Distance(eye, h.point);
+                return d <= reach;
+            }
+            if (!DeviceBounds(u, out var b)) b = h.collider.bounds; // no renderers (e.g. buried): the collider is all we have
+            if (Vector3.Distance(eye, b.ClosestPoint(eye)) > reach) return false;
+            b.Expand(aimAssistRadius * 2f + 0.1f);
+            return b.IntersectRay(ray);
         }
 
         sealed class HitDistanceComparer : IComparer<RaycastHit>

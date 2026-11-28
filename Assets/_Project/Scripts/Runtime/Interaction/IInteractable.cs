@@ -15,6 +15,9 @@ namespace DMI.Xenoarch.Interaction
         float GetHoldDuration(in InteractionContext context);
         bool TryInteract(in InteractionContext context);
         Transform InteractionTransform { get; }
+        /// <summary>How close (m) the eye must be to this device's geometry to use it. Default 2 m. Override in a class,
+        /// or add an <see cref="InteractionReach"/> component to the object (no scene object has to be edited).</summary>
+        float MaxInteractDistance => InteractionReach.DefaultDistance;
     }
 
     /// <summary>Snapshot passed to interactables. Controller-agnostic: only the IPlayerRig adapter and the session.</summary>

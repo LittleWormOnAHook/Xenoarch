@@ -89,6 +89,7 @@ namespace DMI.Xenoarch.Ship
             public float t;
             public string regionId;
             public Camera cam;
+            public ScreenFace face; // screen currently focused
         }
 
         sealed class ScreenFace
@@ -233,24 +234,20 @@ namespace DMI.Xenoarch.Ship
             { best = dL; face = _left; uv = uvL; hitPoint = pL; }
             if (TryMeshUv(_right, ray, 4.5f, out var uvR, out var pR, out var dR) && dR < best)
             { best = dR; face = _right; uv = uvR; hitPoint = pR; }
+            bool focused = _zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In;
             if (face == null)
             {
-                if (_zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In) StartZoom(ZoomKind.Out, default, 0f, 0f);
-                Debug.Log($"[CockpitClick] hit=none uv=- element=- sp={sp} cursor={UIState.ConsoleCursor}");
+                if (focused) StartZoom(ZoomKind.Out, default, 0f, 0f);                                   // click outside the screen: blend back
+                else if (UIState.ConsoleCursor) CockpitSeat.Occupied.TryClickConsole(ray);              // Alt + click the console body: ship console menu
+                Debug.Log($"[CockpitClick] hit=none uv=- element=- sp={sp} cursor={UIState.ConsoleCursor} focused={focused}");
                 return;
             }
             var region = RegionAt(face, uv);
             string id = region != null ? region.id : (face.left ? "left-region" : "right-region");
             Debug.Log($"[CockpitClick] hit={face.transform.name} uv={uv.x:F3},{uv.y:F3} element={id} flipU={face.flipU} flipV={face.flipV} cursor={UIState.ConsoleCursor}");
-            if ((_zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In) && _zoom.regionId == id)
-            {
-                StartZoom(ZoomKind.Out, default, 0f, 0f);
-                return;
-            }
-            float dist = region != null && region.isGauge ? GaugeZoomDist : RegionZoomDist;
-            float fov = region != null && region.isGauge ? GaugeZoomFov : RegionZoomFov;
+            if (focused && _zoom.face == face) return;   // already focused on this screen: the click lands on its UI (element logged above)
             _zoom.regionId = id;
-            StartZoom(ZoomKind.In, hitPoint, dist, fov);
+            StartFocus(face);                            // focus this screen (from rest, or blending from the other screen)
         }
 
         static Camera CameraOf(CockpitSeat seat)
@@ -299,20 +296,73 @@ namespace DMI.Xenoarch.Ship
                 _zoom.regionId = null;
                 return;
             }
-            Vector3 normal = (_left != null && Vector3.Distance(worldPoint, _left.renderer.bounds.center) < Vector3.Distance(worldPoint, _right != null ? _right.renderer.bounds.center : worldPoint + Vector3.one * 100f)
-                ? _left.transform : _right.transform).forward;
-            // Face the camera toward the screen; many cockpit screens point their forward through the glass (or the opposite).
-            Vector3 toCam = cam.transform.position - worldPoint;
-            if (Vector3.Dot(normal, toCam) < 0f) normal = -normal;
-            Vector3 dest = worldPoint + normal * dist;
+        }
+
+        const float FocusFill = 0.9f; // the screen fills this much of the limiting view dimension
+
+        /// <summary>Blend the camera (eased, <see cref="ZoomSeconds"/>) to a pose that frames a whole screen square-on.</summary>
+        void StartFocus(ScreenFace face)
+        {
+            var cam = CameraOf(CockpitSeat.Occupied);
+            if (cam == null || face == null) return;
+            if (_zoom.cam == null || _zoom.kind == ZoomKind.None)
+            {
+                _zoom.restPos = cam.transform.position;
+                _zoom.restRot = cam.transform.rotation;
+                _zoom.restFov = cam.fieldOfView;
+                _zoom.cam = cam;
+            }
+            if (!ComputeFocusPose(face, cam, _zoom.restPos, _zoom.restRot * Vector3.up, _zoom.restFov, out var pos, out var rot)) return;
             _zoom.fromPos = cam.transform.position;
             _zoom.fromRot = cam.transform.rotation;
             _zoom.fromFov = cam.fieldOfView;
-            _zoom.toPos = dest;
-            _zoom.toRot = Quaternion.LookRotation((worldPoint - dest).normalized, _zoom.restRot * Vector3.up);
-            _zoom.toFov = fov;
+            _zoom.toPos = pos;
+            _zoom.toRot = rot;
+            _zoom.toFov = _zoom.restFov;   // the framing distance is computed for the seat FOV, which stays unchanged
+            _zoom.face = face;
             _zoom.kind = ZoomKind.In;
             _zoom.t = 0f;
+        }
+
+        /// <summary>
+        /// Pose that frames the screen mesh: centre of its mesh bounds, camera on the side facing the viewer along the
+        /// screen normal (thinnest mesh axis), up = the screen plane's direction closest to the seat camera's up. The
+        /// distance comes from the screen's extents along that right/up, the vertical FOV and the camera aspect, so it
+        /// fits any screen and any window aspect ratio.
+        /// </summary>
+        static bool ComputeFocusPose(ScreenFace face, Camera cam, Vector3 eye, Vector3 upHint, float fovDeg, out Vector3 pos, out Quaternion rot)
+        {
+            pos = default; rot = Quaternion.identity;
+            if (face == null || face.filter == null || face.filter.sharedMesh == null) return false;
+            var t = face.transform;
+            Bounds lb = face.filter.sharedMesh.bounds;
+            Vector3 size = lb.size;
+            int ax = size.x <= size.y && size.x <= size.z ? 0 : (size.y <= size.z ? 1 : 2);
+            Vector3 axisL = ax == 0 ? Vector3.right : ax == 1 ? Vector3.up : Vector3.forward;
+            Vector3 center = t.TransformPoint(lb.center);
+            Vector3 normal = t.TransformDirection(axisL).normalized;
+            if (Vector3.Dot(normal, eye - center) < 0f) normal = -normal;            // the side the viewer is on
+            Vector3 up = Vector3.ProjectOnPlane(upHint, normal);
+            if (up.sqrMagnitude < 1e-4f) up = Vector3.ProjectOnPlane(t.TransformDirection(ax == 1 ? Vector3.forward : Vector3.up), normal);
+            up.Normalize();
+            Vector3 right = Vector3.Cross(up, -normal).normalized;                   // camera right when looking along -normal
+            float hw = 0f, hh = 0f, hd = 0f;
+            Vector3 e = lb.extents;
+            for (int i = 0; i < 8; i++)
+            {
+                var local = lb.center + new Vector3((i & 1) == 0 ? -e.x : e.x, (i & 2) == 0 ? -e.y : e.y, (i & 4) == 0 ? -e.z : e.z);
+                Vector3 d = t.TransformPoint(local) - center;
+                hw = Mathf.Max(hw, Mathf.Abs(Vector3.Dot(d, right)));
+                hh = Mathf.Max(hh, Mathf.Abs(Vector3.Dot(d, up)));
+                hd = Mathf.Max(hd, Mathf.Abs(Vector3.Dot(d, normal)));
+            }
+            float tanV = Mathf.Tan(Mathf.Deg2Rad * Mathf.Clamp(fovDeg, 5f, 120f) * 0.5f);
+            float tanH = tanV * Mathf.Max(0.1f, cam.aspect);
+            float dist = Mathf.Max(hh / tanV, hw / tanH) / FocusFill + hd;
+            dist = Mathf.Max(dist, cam.nearClipPlane * 2f + hd);
+            pos = center + normal * dist;
+            rot = Quaternion.LookRotation(-normal, up);
+            return true;
         }
 
         void TickZoom()

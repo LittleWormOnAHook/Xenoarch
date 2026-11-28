@@ -52,6 +52,7 @@ namespace DMI.Xenoarch.UI
             _hints = r.Q<Label>("hints");
             if (_hints != null) _hints.text = HintText;
             EnsureHelmetBars();
+            IgnorePicking(_root);
             _stripDirty = true;
         }
 
@@ -108,12 +109,12 @@ namespace DMI.Xenoarch.UI
             string prompt = interactor != null ? interactor.Prompt : null;
             bool targeted = !string.IsNullOrEmpty(prompt);
             // Seated in a cockpit: always show "Stand up · Hold Alt to use screens", even if the helm is under the reticle.
-            if (ForceIdlePrompt && !string.IsNullOrEmpty(IdlePrompt) && !UIState.BlocksGameplay)
+            if (ForceIdlePrompt && !string.IsNullOrEmpty(IdlePrompt) && !UIState.BlocksGameplay && !UIState.ConsoleCursor)
             {
                 prompt = IdlePrompt;
                 targeted = false;
             }
-            else if (!targeted && !UIState.BlocksGameplay && !RoverVehicle.AnySeated) prompt = IdlePrompt;
+            else if (!targeted && !UIState.BlocksGameplay && !UIState.ConsoleCursor && !RoverVehicle.AnySeated) prompt = IdlePrompt; // hidden while Alt is held / a screen is focused / a menu is open
             bool hasPrompt = !string.IsNullOrEmpty(prompt);
             XenoarchUI.Show(_prompt, hasPrompt);
             _crosshair?.EnableInClassList("xa-crosshair--target", targeted);
@@ -142,7 +143,15 @@ namespace DMI.Xenoarch.UI
                 if (bar != null) bar.Changed += MarkDirty;
                 _stripDirty = true;
             }
-            if (_stripDirty) RebuildStrip();
+            if (_stripDirty) { RebuildStrip(); IgnorePicking(_root); }
+        }
+
+        /// <summary>The HUD never takes pointer events, so it can never eat a click meant for a console menu.</summary>
+        static void IgnorePicking(VisualElement e)
+        {
+            if (e == null) return;
+            e.pickingMode = PickingMode.Ignore;
+            foreach (var c in e.Children()) IgnorePicking(c);
         }
 
         void ApplyLayout(bool helmet)

@@ -159,7 +159,7 @@ namespace DMI.Xenoarch.Ship
             p.EnableSeatLook(seatYaw, yawRange, pitchDown, pitchUp);
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
-            InteractionPromptHud.IdlePrompt = "Stand up  ·  Hold Alt to use screens";
+            InteractionPromptHud.IdlePrompt = "Stand up  ·  Hold Alt + click: screens / console";
             InteractionPromptHud.ForceIdlePrompt = true;
             UIState.ConsoleCursor = false;
             PowerUpConsole();
@@ -217,7 +217,7 @@ namespace DMI.Xenoarch.Ship
             if (!Transitioning)
             {
                 // Default: locked cursor and seated mouse look. Hold Alt to click screens; stay free while zoomed.
-                bool alt = Keyboard.current != null && (Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed);
+                bool alt = Application.isFocused && Keyboard.current != null && (Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed); // not focused (Alt+Tab): never stay stuck on a free cursor
                 UIState.ConsoleCursor = alt || CockpitFtlDisplays.ZoomBusy;
             }
             if (Transitioning || !_player.InputEnabled || UIState.BlocksGameplay || Time.unscaledTime - _seatedAt < 0.35f) return;
@@ -225,6 +225,20 @@ namespace DMI.Xenoarch.Ship
             // E always stands while seated so the helm (or anything else under the reticle) cannot eat the key.
             bool e = _input != null && _input.InteractPressed;
             if (space || e) Stand();
+        }
+
+        /// <summary>Alt + click on the console body (not a screen): open the ship console menu (helm, nav map, scanner).</summary>
+        public bool TryClickConsole(Ray ray)
+        {
+            if (!IsOccupied || Transitioning || _helm == null || _helm.IsOpen || _helm.Busy) return false;
+            var rs = _helm.GetComponentsInChildren<Renderer>();
+            if (rs.Length == 0) return false;
+            var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
+            b.Expand(0.1f);
+            if (!b.IntersectRay(ray, out float d) || d > 4.5f) return false;
+            CockpitFtlDisplays.CancelZoom(true);
+            _helm.Open();
+            return _helm.IsOpen;
         }
 
         void OnDisable() { if (IsOccupied && _player != null && _player.Seated) { _player.EndSeat(); } if (IsOccupied) Release(); }
