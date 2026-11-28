@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Item_tool_powered_drill
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Items.ItemDefinition
   id: item.tool.powered_drill
-  displayName: Basic Powered Drill
-  description: Breaks compacted or frozen material. High risk near artifacts.
+  displayName: Sonic Burster
+  description: A focused sonic shock cone for ice and rock. Hard bands that stall
+    the excavator crack open. Shift+scroll sets the reach, R the power. Draws more
+    power and heat than the excavator.
   icon: {fileID: 21300000, guid: 046565f6ba842ffff9c979e3e6712108, type: 3}
   category: 0
   maxStack: 1

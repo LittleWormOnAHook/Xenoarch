@@ -22,9 +22,20 @@ namespace DMI.Xenoarch.Excavation
         {
             if (!Handles(itemId)) return null;
             if (_m == null) _m = HeldToolMeshFactory.MakeRuntimeMaterials();
-            bool brush = SonicTools.KindOf(itemId) == SonicToolKind.Brush;
-            var root = new GameObject(brush ? "Held_SonicBrush" : "Held_SonicExcavator");
-            if (brush)
+            var kind = SonicTools.KindOf(itemId);
+            bool brush = kind == SonicToolKind.Brush, burster = kind == SonicToolKind.Burster;
+            var root = new GameObject(brush ? "Held_SonicBrush" : burster ? "Held_SonicBurster" : "Held_SonicExcavator");
+            if (burster)
+            {
+                Part(root, PrimitiveType.Cube, new Vector3(0f, 0.025f, 0.11f), new Vector3(0.08f, 0.09f, 0.26f), Vector3.zero, _m.metalDark);
+                Part(root, PrimitiveType.Cube, new Vector3(0f, -0.055f, 0.0f), new Vector3(0.045f, 0.12f, 0.055f), new Vector3(-10f, 0f, 0f), _m.rubber);
+                Part(root, PrimitiveType.Cube, new Vector3(0f, 0.073f, 0.11f), new Vector3(0.014f, 0.006f, 0.22f), Vector3.zero, _m.emit);
+                Part(root, PrimitiveType.Cylinder, new Vector3(0.05f, 0.025f, 0.30f), new Vector3(0.025f, 0.07f, 0.025f), new Vector3(90f, 0f, 0f), _m.metal);
+                Part(root, PrimitiveType.Cylinder, new Vector3(-0.05f, 0.025f, 0.30f), new Vector3(0.025f, 0.07f, 0.025f), new Vector3(90f, 0f, 0f), _m.metal);
+                Part(root, PrimitiveType.Cylinder, new Vector3(0f, 0.025f, 0.33f), new Vector3(0.035f, 0.09f, 0.035f), new Vector3(90f, 0f, 0f), _m.emit);
+                Muzzle(root, new Vector3(0f, 0.025f, 0.43f));
+            }
+            else if (brush)
             {
                 Part(root, PrimitiveType.Cube, new Vector3(0f, 0.015f, 0.09f), new Vector3(0.04f, 0.045f, 0.2f), Vector3.zero, _m.metalDark);
                 Part(root, PrimitiveType.Cube, new Vector3(0f, -0.04f, 0.0f), new Vector3(0.035f, 0.09f, 0.045f), new Vector3(-8f, 0f, 0f), _m.rubber);

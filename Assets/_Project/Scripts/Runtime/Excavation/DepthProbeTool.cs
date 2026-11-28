@@ -34,7 +34,7 @@ namespace DMI.Xenoarch.Excavation
         static readonly Color[] TrackColors = { new Color(0.41f, 0.87f, 0.84f), new Color(1f, 0.66f, 0.40f), new Color(0.85f, 0.55f, 1f) };
         static readonly Color WarnColor = new Color(1f, 0.35f, 0.3f);
 
-        struct Track { public Vector3 surface; public float depth, shownDepth, offset; public string dir; }
+        struct Track { public Vector3 surface, buried; public float depth, shownDepth, offset; public string dir; }
 
         static readonly Key[] SlotKeys = { Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8 };
 
@@ -147,7 +147,7 @@ namespace DMI.Xenoarch.Excavation
                 float err = ((Mathf.Abs((key * 2654435761L) % 1000) / 1000f) * 2f - 1f) * tier.noise; // stable per object
                 var surf = new Vector3(top.x, p.y, top.z);
                 if (Physics.Raycast(surf + Vector3.up * 2f, Vector3.down, out var gh, 4f, ~0, QueryTriggerInteraction.Ignore)) surf = gh.point;
-                cands.Add((Mathf.Sqrt(depth * depth + off.sqrMagnitude), new Track { surface = surf, depth = depth, shownDepth = Mathf.Max(0f, depth + err), offset = off.magnitude, dir = Direction(cam.transform, off) }));
+                cands.Add((Mathf.Sqrt(depth * depth + off.sqrMagnitude), new Track { surface = surf, buried = top, depth = depth, shownDepth = Mathf.Max(0f, depth + err), offset = off.magnitude, dir = Direction(cam.transform, off) }));
             }
             foreach (var c in cands.OrderBy(c => c.dist).Take(Mathf.Clamp(tier.tracks, 1, 3))) _tracks.Add(c.t);
             _showUntil = Time.time + _def.readingSeconds;
@@ -164,9 +164,10 @@ namespace DMI.Xenoarch.Excavation
                 lines.Add($"{(_tracks.Count > 1 ? $"[{i + 1}] " : "")}Object {depthText} below, {where}{(close ? "  VERY CLOSE" : "")}");
             }
             if (_tracks.Count == 0) lines.Add($"Nothing within {tier.range:0.0} m across and {tier.maxDepth:0.0} m down.");
-            if (warn) lines.Add("Very close: switch to the brush (4) or precision tool (3).");
+            if (warn) lines.Add("Very close: switch to the brush or the excavator's Fine focus (T).");
             SetText($"{_def.displayName} {tier.label}   tracks {tier.tracks}   reach {tier.range:0.0} m / {tier.maxDepth:0.0} m deep", string.Join("\n", lines), warn);
             DrawMarkers();
+            DrawHologram(tier, p);
         }
 
         static string Direction(Transform cam, Vector3 off)
@@ -225,6 +226,23 @@ namespace DMI.Xenoarch.Excavation
             }
         }
 
+        DepthProbeHologram _holo;
+        readonly List<DepthProbeHologram.Item> _holoItems = new List<DepthProbeHologram.Item>();
+
+        /// <summary>Top tier only: hologram scan volume and wire blobs for the tracked objects.</summary>
+        void DrawHologram(DepthProbeTier tier, Vector3 p)
+        {
+            if (!tier.hologram) { if (_holo != null) _holo.Hide(); return; }
+            if (_holo == null) _holo = gameObject.AddComponent<DepthProbeHologram>();
+            _holoItems.Clear();
+            for (int i = 0; i < _tracks.Count; i++)
+            {
+                var t = _tracks[i];
+                _holoItems.Add(new DepthProbeHologram.Item { surface = t.surface, buried = t.buried, color = t.depth < _def.veryClose ? WarnColor : TrackColors[i % TrackColors.Length] });
+            }
+            _holo.Show(p, tier.range, tier.maxDepth, _holoItems);
+        }
+
         void AnimatePulse()
         {
             float age = Time.time - _pulseAt;
@@ -237,6 +255,7 @@ namespace DMI.Xenoarch.Excavation
 
         void ClearMarkers()
         {
+            if (_holo != null) _holo.Hide();
             foreach (var r in _rings) if (r != null) r.gameObject.SetActive(false);
             if (_pulseRing != null) _pulseRing.gameObject.SetActive(false);
         }

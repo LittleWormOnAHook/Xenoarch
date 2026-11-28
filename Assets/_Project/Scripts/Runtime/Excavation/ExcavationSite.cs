@@ -575,6 +575,7 @@ namespace DMI.Xenoarch.Excavation
             BorderMaterial(new Color(1f, 0.62f, 0.15f, 0.9f));
             BorderMaterial(FencePostColor); BorderMaterial(FenceRopeColor); BorderMaterial(SiteCircleColor);
             DigSiteFlags.Prewarm();
+            SonicFxAssets.Prewarm();
             DMI.Xenoarch.Exploration.SiteMarkerDirector.MarkerMaterial();
         }
 

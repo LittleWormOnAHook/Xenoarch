@@ -8,7 +8,7 @@ namespace DMI.Xenoarch.Excavation
     {
         static Mesh _sphere, _cube, _cone;
         static Texture2D _beamTex;
-        static Material _beamMat, _headMat, _chunkMat;
+        static Material _beamMat, _headMat, _chunkMat, _dustMat;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() { _sphere = _cube = _cone = null; _beamTex = null; _beamMat = _headMat = _chunkMat = null; }
@@ -102,6 +102,36 @@ namespace DMI.Xenoarch.Excavation
                 return Warm(_chunkMat);
             }
         }
+
+        /// <summary>One real rock for the dig chunks: mesh and material come from the project's rock prefabs
+        /// (Resources/World/Rocks, Poly Haven CC0 scans). unit scales the mesh so its longest side is 1 m.</summary>
+        public struct RockVariant { public Mesh mesh; public Material mat; public float unit; public Vector3 center, size; }
+        static RockVariant[] _rocks;
+        public static RockVariant[] Rocks
+        {
+            get
+            {
+                if (_rocks != null) return _rocks;
+                var list = new System.Collections.Generic.List<RockVariant>();
+                foreach (var go in Resources.LoadAll<GameObject>("World/Rocks"))
+                {
+                    var mf = go.GetComponentInChildren<MeshFilter>(true); var mr = go.GetComponentInChildren<MeshRenderer>(true);
+                    if (mf == null || mf.sharedMesh == null || mr == null || mr.sharedMaterial == null) continue;
+                    var b = mf.sharedMesh.bounds; float m = Mathf.Max(b.size.x, b.size.y, b.size.z);
+                    if (m < 1e-5f) continue;
+                    list.Add(new RockVariant { mesh = mf.sharedMesh, mat = Warm(mr.sharedMaterial), unit = 1f / m, center = b.center, size = b.size });
+                }
+                return _rocks = list.ToArray();
+            }
+        }
+
+        /// <summary>Alpha-blended soft dust puff material (dig dust).</summary>
+        public static Material DustMaterial => _dustMat != null ? _dustMat : (_dustMat = Warm(WeatherVisuals.MakeMaterial("XA_Sonic_Dust", WeatherVisuals.SoftDot(), false)));
+
+        /// <summary>Creates and registers every sonic FX material while the loading screen is up, so the hidden warm pass
+        /// draws them in the scene's real lighting. Made lazily at the first dig they compiled asynchronously in the Editor
+        /// and drew as the cyan placeholder (the dust puffs covered the ground around the dig).</summary>
+        public static void Prewarm() { _ = BeamMaterial; _ = HeadMaterial; _ = ChunkMaterial; _ = DustMaterial; _ = Rocks; }
 
         static Material Warm(Material m) { DMI.Xenoarch.Scenes.ShaderPrewarm.Warm(m); return m; }
     }

@@ -17,7 +17,7 @@ namespace DMI.Xenoarch.Excavation
         public Color color;
         [Tooltip("Digger texture (terrain layer) index painted by strokes in this band.")] public int diggerTexture;
         [Tooltip("Tool rating (DigToolSpec.maxHardness) needed to cut this band at all. 0 = every tool can dig it (harder " +
-                 "bands are just slower). Use on later worlds to require an upgraded shovel, a drill, etc.")] public float minToolRating;
+                 "bands are just slower). Use on later worlds to require an upgraded excavator, a burster, etc.")] public float minToolRating;
 
         public static SoilLayer Make(string label, SoilMaterial kind, float thickness, float hardness, Color color, int tex = 0) =>
             new SoilLayer { label = label, kind = kind, thickness = thickness, hardness = hardness, color = color, diggerTexture = tex };
@@ -39,12 +39,12 @@ namespace DMI.Xenoarch.Excavation
     public struct DigToolSpec
     {
         public string itemId, name;
-        [Tooltip("Short HUD name (e.g. shovel).")] public string shortName;
+        [Tooltip("Short HUD name (e.g. excavator).")] public string shortName;
         [Tooltip("Horizontal radius (m) of one stroke.")] public float radius;
         [Tooltip("Chunk size: cell fraction removed per stroke from soft soil (divided by hardness). Crude tools take big chunks, fine tools small bites.")] public float removal;
         [Tooltip("Hardness this tool cuts at full speed. Harder bands are still dug, just more slowly (squared falloff). Only bedrock stops every tool.")] public float maxHardness;
         [Tooltip("Artifact-damage risk: condition loss factor when a crude stroke cuts a visible find (x fragility x removed fraction).")] public float damage;
-        [Tooltip("Crude tools (shovel, drill) can jar or damage finds; fine tools never do.")] public bool crude;
+        [Tooltip("Crude tools (excavator, burster) can jar or damage finds; fine tools never do.")] public bool crude;
         [Tooltip("Strokes per second while the button is held.")] public float rate;
         [Tooltip("Optional cap on cells cut per column per stroke (0 = no cap: the chunk size decides).")] public int cells;
         [Tooltip("Smallest bite (cell fraction) a stroke always takes from the aimed column, however hard the band (0 = 0.03), " +
@@ -55,12 +55,12 @@ namespace DMI.Xenoarch.Excavation
     public static class DigTools
     {
         // Built-in fallbacks (also used by the editor checks). Shovel: 3x the old effective dig speed (ZEN-8 / t104u).
-        public static readonly DigToolSpec Shovel = new DigToolSpec { itemId = "item.tool.excavation_shovel", name = "Excavation shovel", shortName = "shovel", radius = 0.45f, removal = 2f, maxHardness = 2f, damage = 0.6f, rate = 5.6f, crude = true };
+        public static readonly DigToolSpec Shovel = new DigToolSpec { itemId = "item.tool.excavation_shovel", name = "Sonic Excavator", shortName = "excavator", radius = 0.45f, removal = 2f, maxHardness = 2f, damage = 0.6f, rate = 5.6f, crude = true };
         // ZEN-23 (t166u): precision = small shallow controlled bites, narrow; brush = a thin dust/loose-soil skim, wide and soft.
-        public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Precision tool", shortName = "precision", radius = 0.1f, removal = 0.15f, maxHardness = 2f, damage = 0f, rate = 5f, cells = 1, minBite = 0.02f };
-        public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Brush", shortName = "brush", radius = 0.6f, removal = 0.035f, maxHardness = 1f, damage = 0f, rate = 7f, cells = 1, minBite = 0.005f };
+        public static readonly DigToolSpec Precision = new DigToolSpec { itemId = "item.tool.precision_tool", name = "Fine focus", shortName = "fine", radius = 0.1f, removal = 0.15f, maxHardness = 2f, damage = 0f, rate = 5f, cells = 1, minBite = 0.02f };
+        public static readonly DigToolSpec Brush = new DigToolSpec { itemId = "item.tool.brush", name = "Ultrasonic Brush", shortName = "brush", radius = 0.6f, removal = 0.035f, maxHardness = 1f, damage = 0f, rate = 7f, cells = 1, minBite = 0.005f };
         // t209u: removal 1.8 -> 3.5 so the drill clearly out-digs the shovel in ice/rock (about 1.5-1.9x per second); in soft soil it is ~1.25x deeper per second but narrower.
-        public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Powered drill", shortName = "drill", radius = 0.25f, removal = 3.5f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
+        public static readonly DigToolSpec Drill = new DigToolSpec { itemId = "item.tool.powered_drill", name = "Sonic Burster", shortName = "burster", radius = 0.25f, removal = 3.5f, maxHardness = 4f, damage = 0.8f, rate = 4f, crude = true };
         public static readonly DigToolSpec[] Defaults = { Shovel, Precision, Brush, Drill };
 
         public const string ResourceFolder = "Excavation/DigTools";
@@ -148,7 +148,7 @@ namespace DMI.Xenoarch.Excavation
         public float tolerance = 1.5f;
         [Tooltip("How far (m) below a column's grid floor an aim may land and still dig it (Digger's visual hole can run deeper).")]
         public float belowSlack = 1f;
-        /// <summary>Largest share of a find's cell a crude tool (shovel, drill) removes in one stroke.</summary>
+        /// <summary>Largest share of a find's cell a crude tool (excavator, burster) removes in one stroke.</summary>
         public const float CrudeFindBite = 0.5f;
         public float Surface(int x, int z) => surface != null ? surface[x + nx * z] : 0f;
         /// <summary>Local height of the column's current floor (surface minus dug depth).</summary>

@@ -17,8 +17,8 @@ MonoBehaviour:
   enabledInGame: 1
   spec:
     itemId: item.tool.powered_drill
-    name: Powered drill
-    shortName: drill
+    name: Sonic Burster
+    shortName: burster
     radius: 0.25
     removal: 3.5
     maxHardness: 4
@@ -26,3 +26,5 @@ MonoBehaviour:
     crude: 1
     rate: 4
     cells: 0
+    minBite: 0
+    brush: 0

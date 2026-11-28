@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Journal_dig_shovel
   m_EditorClassIdentifier: 
   id: journal.dig_shovel
-  title: "Shovel Discipline"
+  title: "Excavator Discipline"
   author: "Senior Excavator P. Sandoval"
   dateLine: "Field note, Dune Shrine"
   category: 1
-  body: "Every survey season someone learns this the expensive way. The excavation shovel (key 2) moves big, crude chunks fast. That's exactly what you want for overburden, and exactly what you don't want near a find.\n\nIf the shovel cuts into an artifact, it damages it, and its condition drops on the spot. Dig hard enough right above one and you'll jar it before you even see it. The HUD will shout at you; listen.\n\nWhen the ground starts giving things back, put the shovel away. The precision tool (3) and the brush (4) take small bites and never damage a find. The brush is the gentlest of all, and works best in soft soil."
+  body: "Every survey season someone learns this the expensive way. The Sonic Excavator (key 2) moves big, crude chunks fast. That's exactly what you want for overburden, and exactly what you don't want near a find.\n\nIf the excavator beam cuts into an artifact, it damages it, and its condition drops on the spot. Dig hard enough right above one and you'll jar it before you even see it. The HUD will shout at you; listen.\n\nWhen the ground starts giving things back, put the excavator away. The excavator's Fine focus (key 3, or T) and the Ultrasonic Brush (4) take small bites and never damage a find. The brush is the gentlest of all, and works best in soft soil."
   placement: 2
   bodyId: 
   siteIndex: 0

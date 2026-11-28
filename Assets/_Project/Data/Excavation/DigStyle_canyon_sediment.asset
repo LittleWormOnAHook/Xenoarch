@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Excavation.DigSiteStyle
   id: digstyle.canyon_sediment
   displayName: Canyon sediment
-  description: 'Layered canyon sediments with a hard rock band: drill through it,
+  description: 'Layered canyon sediments with a hard rock band: burst through it,
     then go careful.'
   layers:
   - label: surface dust

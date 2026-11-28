@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Craft_powered_drill
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Crafting.CraftRecipe
   id: craft.powered_drill
-  displayName: Powered Drill
-  description: A drill for rock the shovel can't cut.
+  displayName: Sonic Burster
+  description: A burster for rock the excavator can't cut.
   category: 1
   ingredients:
   - itemId: item.component.alloy_plate

@@ -50,10 +50,10 @@ namespace DMI.Xenoarch.EditorTools
             var items = new List<ItemDefinition>
             {
                 Item("item.tool.handheld_scanner", "Handheld Surface Scanner Mk I", ItemCategory.Tool, 1, false, 2.5f, 400, "Basic handheld scanner for locating buried objects in a small area."),
-                Item("item.tool.excavation_shovel", "Excavation Shovel", ItemCategory.Tool, 1, false, 2f, 60, "Moves loose material quickly. Too coarse near fragile objects."),
-                Item("item.tool.precision_tool", "Precision Excavation Tool", ItemCategory.Tool, 1, false, 0.4f, 150, "Fine trowel/probe for working close to finds."),
-                Item("item.tool.brush", "Excavation Brush", ItemCategory.Tool, 1, false, 0.1f, 20, "Removes the last layer of dust without damaging surfaces."),
-                Item("item.tool.powered_drill", "Basic Powered Drill", ItemCategory.Tool, 1, false, 6f, 900, "Breaks compacted or frozen material. High risk near artifacts."),
+                Item("item.tool.excavation_shovel", "Sonic Excavator", ItemCategory.Tool, 1, false, 2f, 60, "Sonic head that shakes loose material fast. Switch to Fine focus near fragile objects."),
+                Item("item.tool.precision_tool", "Excavator Fine Focus", ItemCategory.Tool, 1, false, 0.4f, 150, "Narrow sonic point (the excavator's Fine focus) for working close to finds."),
+                Item("item.tool.brush", "Ultrasonic Brush", ItemCategory.Tool, 1, false, 0.1f, 20, "Removes the last layer of dust without damaging surfaces."),
+                Item("item.tool.powered_drill", "Sonic Burster", ItemCategory.Tool, 1, false, 6f, 900, "Breaks compacted or frozen material. High risk near artifacts."),
                 Item("item.consumable.sample_container", "Sample Container", ItemCategory.Consumable, 20, false, 0.1f, 5, "Sealed container for soil and material samples."),
                 Item("item.test.unique_fragment", "Unidentified Fragment (test)", ItemCategory.Artifact, 1, true, 0.3f, 0, "Foundation test item: unique-instance handling. Real artifacts arrive in Phase 1C."),
             };

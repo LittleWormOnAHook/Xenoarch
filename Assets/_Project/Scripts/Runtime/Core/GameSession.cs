@@ -90,7 +90,7 @@ namespace DMI.Xenoarch.Core
             Saves.Register(new JsonStateSection<PlayerLocationState>(LocationKey, 0, () => Location, v => Location = v));
             Saves.Register(new InventorySection(InventoryKey, 0, Inventory, config.inventoryCapacity));
             Hotbar = new Hotbar(() => Config.surfaceScanner != null ? Config.surfaceScanner.itemId : "item.tool.handheld_scanner",
-                () => { var l = new System.Collections.Generic.List<string>(); foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) l.Add(t.itemId); l.Add(DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().itemId); return l; });
+                () => { var l = new System.Collections.Generic.List<string>(); foreach (var t in DMI.Xenoarch.Excavation.DigTools.All) { l.Add(t.itemId); if (t.itemId == DMI.Xenoarch.Excavation.SonicTools.ExcavatorId) l.Add(DMI.Xenoarch.Excavation.SonicTools.LegacyPrecisionId); } l.Add(DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().itemId); return l; });
             Saves.Register(new JsonStateSection<HotbarData>(Hotbar.Key, 0, () => Hotbar.Data, v => Hotbar.Set(v)));
             Inventory.ExtraStacks = () => Hotbar.StoredStacks;
             Inventory.ExtraRemove = (id, n) => Hotbar.Remove(id, n);
@@ -245,6 +245,9 @@ namespace DMI.Xenoarch.Core
             UpgradeHandheldScanner => Exploration.Ship.handheldScannerLevel,
             UpgradeOrbitalScanner => Exploration.Ship.orbitalRangeLevel,
             UpgradeDepthProbe => Exploration.Ship.depthProbeLevel,
+            DMI.Xenoarch.Excavation.SonicTools.UpgradeExcavator => Exploration.Ship.sonicExcavatorLevel,
+            DMI.Xenoarch.Excavation.SonicTools.UpgradeBrush => Exploration.Ship.sonicBrushLevel,
+            DMI.Xenoarch.Excavation.SonicTools.UpgradeBurster => Exploration.Ship.sonicBursterLevel,
             UpgradeEmergencyShuttle => Exploration.Ship.emergencyShuttleLevel,
             UpgradeEmergencyRover => Exploration.Ship.emergencyRoverLevel,
             _ => 0,
@@ -261,6 +264,7 @@ namespace DMI.Xenoarch.Core
             UpgradeHandheldScanner => Top(Config.surfaceScanner?.rangeByLevel),
             UpgradeOrbitalScanner => Top(Config.starterShip?.orbitalScanRadiusByLevel),
             UpgradeDepthProbe => DMI.Xenoarch.Excavation.DepthProbeDefinition.Load().MaxLevel,
+            DMI.Xenoarch.Excavation.SonicTools.UpgradeExcavator or DMI.Xenoarch.Excavation.SonicTools.UpgradeBrush or DMI.Xenoarch.Excavation.SonicTools.UpgradeBurster => 3,
             UpgradeEmergencyShuttle => 1,
             UpgradeEmergencyRover => 1,
             _ => 0,
@@ -280,6 +284,9 @@ namespace DMI.Xenoarch.Core
                 case UpgradeHandheldScanner: s.handheldScannerLevel++; return true;
                 case UpgradeOrbitalScanner: s.orbitalRangeLevel++; return true;
                 case UpgradeDepthProbe: s.depthProbeLevel++; return true;
+                case DMI.Xenoarch.Excavation.SonicTools.UpgradeExcavator: s.sonicExcavatorLevel++; return true;
+                case DMI.Xenoarch.Excavation.SonicTools.UpgradeBrush: s.sonicBrushLevel++; return true;
+                case DMI.Xenoarch.Excavation.SonicTools.UpgradeBurster: s.sonicBursterLevel++; return true;
                 case UpgradeEmergencyShuttle: s.emergencyShuttleLevel++; return true;
                 case UpgradeEmergencyRover: s.emergencyRoverLevel++; return true;
             }

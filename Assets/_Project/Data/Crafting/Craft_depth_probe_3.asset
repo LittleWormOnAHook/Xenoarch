@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d799ebf045304cf47ab127bbfc99b2fa, type: 3}
+  m_Name: Craft_depth_probe_3
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Crafting.CraftRecipe
+  id: craft.depth_probe_3
+  displayName: Depth Probe Mk IV (Hologram)
+  description: 'Ground-penetrating hologram scan: a 3D wire view of the scanned volume
+    with a pulsing marker per buried object. 4.5 m across and down.'
+  category: 3
+  ingredients:
+  - itemId: item.component.sensor_array
+    count: 2
+  - itemId: item.component.circuit
+    count: 3
+  - itemId: material.platinum_ingot
+    count: 2
+  outputItemId: 
+  outputAmount: 1
+  upgradeId: scanner.depth_probe
+  upgradeLevel: 3
+  craftSeconds: 10
+  station: 1
+  unlockFact: 

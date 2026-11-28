@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Excavation.DigSiteStyle
   id: digstyle.regolith_cache
   displayName: Regolith cache
-  description: Shallow cache under grey regolith. Shovel the dust, precision tool
+  description: Shallow cache under grey regolith. Excavate the dust, Fine focus
     near finds.
   layers:
   - label: surface dust

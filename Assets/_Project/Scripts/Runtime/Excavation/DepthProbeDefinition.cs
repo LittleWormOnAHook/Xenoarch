@@ -15,6 +15,7 @@ namespace DMI.Xenoarch.Excavation
         [Tooltip("Deepest object it can sense below the probed surface (m).")] public float maxDepth = 1.2f;
         [Tooltip("Coarse tier: report depth bands only (no metre figure).")] public bool bandsOnly = true;
         [Tooltip("Depth error (m, +/-) on the metre figure; stable per object.")] public float noise = 0.1f;
+        [Tooltip("Top tier: draws a hologram scan volume with a wire blob per tracked object.")] public bool hologram;
     }
 
     /// <summary>
@@ -34,6 +35,7 @@ namespace DMI.Xenoarch.Excavation
             new DepthProbeTier { label = "Mk I", tracks = 1, range = 1.5f, maxDepth = 1.2f, bandsOnly = true, noise = 0.12f },
             new DepthProbeTier { label = "Mk II", tracks = 2, range = 2.5f, maxDepth = 2f, bandsOnly = false, noise = 0.08f },
             new DepthProbeTier { label = "Mk III", tracks = 3, range = 3.5f, maxDepth = 3f, bandsOnly = false, noise = 0.03f },
+            new DepthProbeTier { label = "Mk IV Holo", tracks = 3, range = 4.5f, maxDepth = 4.5f, bandsOnly = false, noise = 0.02f, hologram = true },
         };
         [Tooltip("Band edges (m) for coarse readings: < first, first-second, ..., deep.")] public float[] bandEdges = { 0.10f, 0.30f, 0.60f };
         [Tooltip("Under this depth (m) the probe warns: very close, switch to the brush.")] public float veryClose = 0.12f;

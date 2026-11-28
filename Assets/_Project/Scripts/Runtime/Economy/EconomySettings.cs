@@ -33,8 +33,8 @@ namespace DMI.Xenoarch.Economy
         [Tooltip("Rank rewards. Defaults only announce the vendor rank gates; no star system is unlocked by rank until that is decided.")]
         public RankUnlock[] rankUnlocks =
         {
-            new RankUnlock { rank = 1, setFact = "notoriety.unlock.supplier_tier1", message = "Equipment Supplier: circuits, precision tool, depth probe and scanner upgrades now offered." },
-            new RankUnlock { rank = 2, setFact = "notoriety.unlock.supplier_tier2", message = "Equipment Supplier: sensor arrays, powered drill and depth probe upgrades now offered." },
+            new RankUnlock { rank = 1, setFact = "notoriety.unlock.supplier_tier1", message = "Equipment Supplier: circuits, Excavator Fine Focus, depth probe and scanner upgrades now offered." },
+            new RankUnlock { rank = 2, setFact = "notoriety.unlock.supplier_tier2", message = "Equipment Supplier: sensor arrays, Sonic Burster and depth probe upgrades now offered." },
             new RankUnlock { rank = 3, setFact = "notoriety.unlock.renowned", message = "Buyers pay more for your finds (rank bonus)." },
         };
         [Tooltip("Selling an artifact to a buyer (small: museums pay in reputation too).")] public int artifactSold = 1;

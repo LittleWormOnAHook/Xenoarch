@@ -135,7 +135,7 @@ namespace DMI.Xenoarch.Excavation
             var cam = _rig?.ViewCamera != null ? _rig.ViewCamera : Camera.main;
             ExcavationSite site = null; RaycastHit hit = default;
             bool aimed = cam != null && Aim(cam, out hit);
-            bool inReach = aimed && hit.distance <= (sonic ? SonicTools.Reach : Reach);
+            bool inReach = aimed && hit.distance <= (sonic ? SonicTools.ReachFor(_kind) : Reach);
             if (aimed) site = SiteFor(hit);
             var tool = Current;
 

@@ -64,7 +64,7 @@ namespace DMI.Xenoarch.Excavation
         }
 
         /// <summary>radius = effective head radius (m); status = overheat / power warning or null.</summary>
-        public void Refresh(bool visible, SonicToolKind kind, float radius, string status)
+        public void Refresh(bool visible, SonicToolKind kind, float radius, string status, int cells = 0)
         {
             if (_bars == null) return;
             bool show = visible && kind != SonicToolKind.None;
@@ -81,16 +81,22 @@ namespace DMI.Xenoarch.Excavation
             _ePct.text = $"{e * 100f:0}%"; _hPct.text = $"{h * 100f:0}%";
 
             string pw = SonicTools.Power.ToString().ToUpperInvariant();
-            if (kind == SonicToolKind.Brush)
+            string cellHint = "    X power cell (" + cells + ")";
+            if (kind == SonicToolKind.Burster)
             {
-                _dials.text = $"SPREAD {SonicTools.Spread:0.00} m   REACH {SonicTools.Reach:0.0} m   POWER {pw}   Mk {SonicTools.MkText}";
-                _hint.text = "WHEEL spread    SHIFT+WHEEL reach    R power";
+                _dials.text = $"SHOCK CONE {radius:0.00} m   REACH {SonicTools.ReachFor(kind):0.0} m   POWER {pw}   Mk {SonicTools.MkText}";
+                _hint.text = "SHIFT+WHEEL reach    R power" + cellHint;
+            }
+            else if (kind == SonicToolKind.Brush)
+            {
+                _dials.text = $"SPREAD {SonicTools.Spread:0.00} m   REACH {SonicTools.ReachFor(kind):0.0} m   POWER {pw}   Mk {SonicTools.MkText}";
+                _hint.text = "WHEEL spread    SHIFT+WHEEL reach    R power" + cellHint;
             }
             else
             {
                 string head = SonicTools.IsFine(kind) ? "FINE WAVE" : SonicTools.Head.ToString().ToUpperInvariant();
-                _dials.text = $"{head} {radius:0.00} m   REACH {SonicTools.Reach:0.0} m   POWER {pw}   FOCUS {SonicTools.Focus.ToString().ToUpperInvariant()}   Mk {SonicTools.MkText}";
-                _hint.text = "WHEEL size    SHIFT+WHEEL reach    Q head    R power    T focus (Fine = precision)";
+                _dials.text = $"{head} {radius:0.00} m   REACH {SonicTools.ReachFor(kind):0.0} m   POWER {pw}   FOCUS {SonicTools.Focus.ToString().ToUpperInvariant()}   Mk {SonicTools.MkText}";
+                _hint.text = "WHEEL size    SHIFT+WHEEL reach    Q head    R power    T focus (Fine = precision)" + cellHint;
                 for (int i = 0; i < 4; i++)
                 {
                     bool on = i == (int)SonicTools.Head;

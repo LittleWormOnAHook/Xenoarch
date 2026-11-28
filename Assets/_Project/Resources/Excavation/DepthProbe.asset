@@ -22,18 +22,28 @@ MonoBehaviour:
     maxDepth: 1.2
     bandsOnly: 1
     noise: 0.12
+    hologram: 0
   - label: Mk II
     tracks: 2
     range: 2.5
     maxDepth: 2
     bandsOnly: 0
     noise: 0.08
+    hologram: 0
   - label: Mk III
     tracks: 3
     range: 3.5
     maxDepth: 3
     bandsOnly: 0
     noise: 0.03
+    hologram: 0
+  - label: Mk IV Holo
+    tracks: 3
+    range: 4.5
+    maxDepth: 4.5
+    bandsOnly: 0
+    noise: 0.02
+    hologram: 1
   bandEdges:
   - 0.1
   - 0.3

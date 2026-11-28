@@ -305,13 +305,13 @@ namespace DMI.Xenoarch.EditorTools
             Color moon = SoilPalette.Surface("moon"), mars = SoilPalette.Surface("mars");
             var defs = new (string id, string name, string desc, Color border, SoilLayer[] layers)[]
             {
-                ("digstyle.regolith_cache", "Regolith cache", "Shallow cache under grey regolith. Shovel the dust, precision tool near finds.", new Color(1f, 0.62f, 0.15f, 0.9f),
+                ("digstyle.regolith_cache", "Regolith cache", "Shallow cache under grey regolith. Excavate the dust, Fine focus near finds.", new Color(1f, 0.62f, 0.15f, 0.9f),
                     new[] { L("surface dust", SoilMaterial.Dust, 0.25f, 0.5f, moon), L("loose regolith", SoilMaterial.Loose, 0.75f, 1f, moon * 0.82f), L("compacted regolith", SoilMaterial.Compacted, 0f, 2f, moon * 0.64f) }),
-                ("digstyle.ice_vault", "Ice-bound vault", "Deep vault sealed under an ice-cemented band: only the drill cuts the ice.", new Color(0.55f, 0.85f, 1f, 0.9f),
+                ("digstyle.ice_vault", "Ice-bound vault", "Deep vault sealed under an ice-cemented band: only the burster cuts the ice.", new Color(0.55f, 0.85f, 1f, 0.9f),
                     new[] { L("surface dust", SoilMaterial.Dust, 0.2f, 0.5f, moon), L("loose regolith", SoilMaterial.Loose, 0.6f, 1f, moon * 0.82f), L("ice-cemented regolith", SoilMaterial.Ice, 0.8f, 3f, new Color(0.62f, 0.7f, 0.76f)), L("compacted regolith", SoilMaterial.Compacted, 0f, 2f, moon * 0.6f) }),
                 ("digstyle.dune_shrine", "Dune shrine", "Soft wind-blown sand over a shrine floor. Easy digging, fragile finds.", new Color(1f, 0.78f, 0.35f, 0.9f),
                     new[] { L("drift sand", SoilMaterial.Dust, 0.5f, 0.5f, mars * 1.08f), L("packed sand", SoilMaterial.Loose, 1.0f, 1f, mars * 0.9f), L("compacted sand", SoilMaterial.Compacted, 0f, 2f, mars * 0.7f) }),
-                ("digstyle.canyon_sediment", "Canyon sediment", "Layered canyon sediments with a hard rock band: drill through it, then go careful.", new Color(1f, 0.45f, 0.25f, 0.9f),
+                ("digstyle.canyon_sediment", "Canyon sediment", "Layered canyon sediments with a hard rock band: burst through it, then go careful.", new Color(1f, 0.45f, 0.25f, 0.9f),
                     new[] { L("surface dust", SoilMaterial.Dust, 0.15f, 0.5f, mars), L("loose sediment", SoilMaterial.Loose, 0.6f, 1f, mars * 0.85f), L("cemented sediment", SoilMaterial.Compacted, 0.75f, 2f, mars * 0.7f), L("rock band", SoilMaterial.Rock, 0.25f, 3f, new Color(0.3f, 0.2f, 0.17f)), L("cemented sediment", SoilMaterial.Compacted, 0f, 2f, mars * 0.62f) }),
             };
             var map = new Dictionary<string, DigSiteStyle>();

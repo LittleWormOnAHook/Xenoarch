@@ -23,6 +23,7 @@ namespace DMI.Xenoarch.Excavation
             public SonicToolKind kind;
             public bool aimed, inReach, firing, nearFind, locked;
             public Vector3 point, normal;
+            public SonicHead head;
             public float radius, spread;
             public Camera cam;
         }
@@ -140,12 +141,12 @@ namespace DMI.Xenoarch.Excavation
             _beam.gameObject.SetActive(head);
             if (head)
             {
-                SetShape(SonicTools.Head);
+                SetShape(f.head);
                 var up = f.normal.sqrMagnitude > 0.01f ? f.normal.normalized : Vector3.up;
                 var rot = Quaternion.FromToRotation(Vector3.up, up);
                 float r = Mathf.Max(0.05f, f.radius);
                 Vector3 scale; float lift;
-                switch (SonicTools.Head)
+                switch (f.head)
                 {
                     case SonicHead.Disc: scale = new Vector3(2.6f * r, 0.7f * r, 2.6f * r); lift = 0.3f; break;
                     case SonicHead.Cube: scale = Vector3.one * 1.7f * r; lift = 0.35f; break;

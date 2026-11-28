@@ -23,7 +23,7 @@ Aim at the floor you have dug and pulse with LMB, or hold LMB for a live reading
 
 The base probe (Mk I) tracks one object and only gives bands: under 10 cm, 10-30 cm, 30-60 cm, or deep. Upgrades, crafted aboard the ship (Upgrades), help. Mk II tracks two objects with a metre reading, and Mk III tracks three, deeper, wider and accurate to a few centimetres. Each tracked object gets its own line and its own coloured ring.
 
-When it says VERY CLOSE, the object is a hand's width down. Put the shovel and drill away and switch to the brush (4) or the precision tool (3)."
+When it says VERY CLOSE, the object is a hand's width down. Put the excavator and burster away and switch to the Ultrasonic Brush (4) or the excavator's Fine focus (3, or T). The Mk IV Holo upgrade, crafted aboard the ship, projects a wire hologram of the scan volume with a blob for each buried object."
   placement: 3
   bodyId: 
   siteIndex: 0

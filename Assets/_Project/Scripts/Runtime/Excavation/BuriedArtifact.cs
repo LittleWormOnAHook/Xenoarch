@@ -119,7 +119,7 @@ namespace DMI.Xenoarch.Excavation
             float e = Exposure;
             string name = Definition != null ? Definition.unidentifiedName : "object";
             if (e >= SafeExposure) return $"Recover {name} (condition {Grid.condition:P0})";
-            return $"Pry out {name} ({e:P0} exposed, about -{PryLoss(e):P0} condition; brush to {SafeExposure:P0} for a clean lift)";
+            return $"Pry out {name} ({e:P0} exposed, about -{PryLoss(e):P0} condition; Ultrasonic Brush to {SafeExposure:P0} for a clean lift)";
         }
 
         /// <summary>Condition lost by prying a find out before it is safely exposed (scaled by fragility).</summary>

@@ -15,7 +15,7 @@ namespace DMI.Xenoarch.Excavation
         sealed class Chunk
         {
             public Transform t; public Rigidbody rb; public Renderer r; public Collider col;
-            public float until, life;
+            public float until, life, unit = 1f;
         }
 
         static SonicDebris _i;
@@ -73,7 +73,7 @@ namespace DMI.Xenoarch.Excavation
             var sz = _dust.sizeOverLifetime; sz.enabled = true;
             sz.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 0.6f, 1f, 1.9f));
             var rend = d.GetComponent<ParticleSystemRenderer>();
-            rend.sharedMaterial = WeatherVisuals.MakeMaterial("XA_Sonic_Dust", WeatherVisuals.SoftDot(), false);
+            rend.sharedMaterial = SonicFxAssets.DustMaterial;
             rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; rend.receiveShadows = false;
             rend.sortingFudge = 2f;
 
@@ -83,7 +83,16 @@ namespace DMI.Xenoarch.Excavation
                 go.name = "Rock chunk"; go.layer = 2;
                 go.transform.SetParent(transform, false);
                 var c = new Chunk { t = go.transform, rb = go.AddComponent<Rigidbody>(), r = go.GetComponent<Renderer>(), col = go.GetComponent<Collider>() };
-                c.r.sharedMaterial = SonicFxAssets.ChunkMaterial;
+                var rocks = SonicFxAssets.Rocks;
+                if (rocks.Length > 0)
+                {
+                    // real rock scans (Resources/World/Rocks), one random variant per pool slot
+                    var rk = rocks[Random.Range(0, rocks.Length)];
+                    go.GetComponent<MeshFilter>().sharedMesh = rk.mesh;
+                    var bc = go.GetComponent<BoxCollider>(); if (bc != null) { bc.center = rk.center; bc.size = rk.size; }
+                    c.r.sharedMaterial = rk.mat; c.unit = rk.unit;
+                }
+                else c.r.sharedMaterial = SonicFxAssets.ChunkMaterial;
                 c.r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 c.rb.mass = 0.05f; c.rb.useGravity = false; c.rb.linearDamping = 0.05f; c.rb.angularDamping = 0.2f;
                 go.SetActive(false);
@@ -137,8 +146,9 @@ namespace DMI.Xenoarch.Excavation
             if (_player != null && _playerCols == null) _playerCols = _player.GetComponentsInChildren<Collider>(true);
             var go = c.t.gameObject;
             go.SetActive(true);
-            float s = Random.Range(0.03f, 0.075f) * (0.7f + radius);
-            c.t.localScale = new Vector3(s * Random.Range(0.7f, 1.4f), s * Random.Range(0.6f, 1.2f), s * Random.Range(0.7f, 1.4f));
+            // 3-12 cm rocks (longest side), random per-axis scale
+            float s = Mathf.Clamp(Random.Range(0.03f, 0.12f) * Mathf.Lerp(0.85f, 1.1f, Mathf.Clamp01(radius)), 0.03f, 0.12f) * c.unit;
+            c.t.localScale = new Vector3(s * Random.Range(0.8f, 1.25f), s * Random.Range(0.7f, 1.15f), s * Random.Range(0.8f, 1.25f));
             var rnd = Random.insideUnitSphere; rnd.y = Mathf.Abs(rnd.y);
             c.t.SetPositionAndRotation(p + n * 0.08f + rnd * radius * 0.4f, Random.rotation);
             if (_playerCols != null) foreach (var pc in _playerCols) if (pc != null && c.col != null) Physics.IgnoreCollision(c.col, pc, true);
@@ -147,7 +157,7 @@ namespace DMI.Xenoarch.Excavation
             c.rb.linearVelocity = dir * Random.Range(1.6f, 3.4f);
             c.rb.angularVelocity = Random.insideUnitSphere * 8f;
             c.life = Random.Range(1.4f, 2.2f); c.until = Time.time + c.life;
-            var col = Color.Lerp(tint, Color.black, Random.Range(0.05f, 0.35f));
+            var col = Color.Lerp(Color.white, Color.Lerp(tint, Color.black, Random.Range(0.05f, 0.35f)), 0.25f); col.a = 1f;   // keep the rock texture, only a hint of the soil colour
             _mpb.SetColor("_BaseColor", col); _mpb.SetColor("_Color", col);
             c.r.SetPropertyBlock(_mpb);
         }

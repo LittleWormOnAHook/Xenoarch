@@ -17,8 +17,8 @@ MonoBehaviour:
   enabledInGame: 0
   spec:
     itemId: item.tool.precision_tool
-    name: Precision tool
-    shortName: precision
+    name: Fine focus
+    shortName: fine
     radius: 0.1
     removal: 0.15
     maxHardness: 2

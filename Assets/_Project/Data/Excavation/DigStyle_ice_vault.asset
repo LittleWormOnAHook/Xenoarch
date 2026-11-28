@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Excavation.DigSiteStyle
   id: digstyle.ice_vault
   displayName: Ice-bound vault
-  description: 'Deep vault sealed under an ice-cemented band: only the drill cuts
+  description: 'Deep vault sealed under an ice-cemented band: only the burster cuts
     the ice.'
   layers:
   - label: surface dust

@@ -71,6 +71,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3a00c84b8dac33c4fbbd681ff9025467, type: 2}
   - {fileID: 11400000, guid: 5ba3dce152ba4b0480cfff5729a18698, type: 2}
   - {fileID: 11400000, guid: 8bf9133ed7ad47c29f9565f24f52eb81, type: 2}
+  - {fileID: 11400000, guid: f4d995f2da4fce947b4a52ddd2ab888e, type: 2}
+  - {fileID: 11400000, guid: 48f263f044fc8a14bb43845442423590, type: 2}
+  - {fileID: 11400000, guid: 67ab6d4aa443c91469af9644f1dbdbca, type: 2}
+  - {fileID: 11400000, guid: cb1436a34654efb44a094cca9751326e, type: 2}
+  - {fileID: 11400000, guid: 463cc585977f7a94aa0134904ccb2821, type: 2}
+  - {fileID: 11400000, guid: de87e0729e8061d4cadf0cdab0619b63, type: 2}
+  - {fileID: 11400000, guid: 1bfde49b3bd6da34c8c970fc6193bc4e, type: 2}
+  - {fileID: 11400000, guid: 3217e50cf7d06434f8c46591de273d06, type: 2}
+  - {fileID: 11400000, guid: 8cdf95548ded2194a87ea6d07975c08e, type: 2}
+  - {fileID: 11400000, guid: 1d93e462a2897a54580b416c4c0907bd, type: 2}
+  - {fileID: 11400000, guid: 28c852594d8bb8146841c54b3d7cfb58, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   defaultSpaceSkybox: {fileID: 2100000, guid: 8ba5043e1a9251278cb647dc04d2b025, type: 2}
   preferOrbitViews: 1
@@ -130,5 +141,39 @@ MonoBehaviour:
     maxRelief: 1.6
     landingOffset: 22
     gridStep: 16
+  economy:
+    startingCredits: 500
+    rankThresholds: 00000000190000004b000000c8000000c2010000e8030000
+    rankNames:
+    - Unknown Explorer
+    - Independent Excavator
+    - Recognized Archaeologist
+    - Renowned Explorer
+    - Galactic Authority
+    - Legendary Discoverer
+    recoverByRarity: 0200000004000000080000000f0000001900000028000000
+    sitePinpointed: 5
+    civilizationIdentified: 15
+    translationPass: 3
+    researchOp: 1
+    cacheCollected: 2
+    techInstalled: 20
+    chamberOpened: 10
+    rankUnlocks:
+    - rank: 1
+      setFact: notoriety.unlock.supplier_tier1
+      unlockSystemId: 
+      message: 'Equipment Supplier: circuits, Excavator Fine Focus, depth probe and
+        scanner upgrades now offered.'
+    - rank: 2
+      setFact: notoriety.unlock.supplier_tier2
+      unlockSystemId: 
+      message: 'Equipment Supplier: sensor arrays, Sonic Burster and depth probe
+        upgrades now offered.'
+    - rank: 3
+      setFact: notoriety.unlock.renowned
+      unlockSystemId: 
+      message: Buyers pay more for your finds (rank bonus).
+    artifactSold: 1
   enableDebugHotkeys: 1
   logShaderWarm: 0

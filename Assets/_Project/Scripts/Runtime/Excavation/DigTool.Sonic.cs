@@ -25,6 +25,7 @@ namespace DMI.Xenoarch.Excavation
         {
             _kind = Equipped >= 0 ? SonicTools.KindOf(DigTools.All[Equipped].itemId) : SonicToolKind.None;
             if (_kind == SonicToolKind.None) return;
+            SonicTools.ActiveKind = _kind;
             SonicDebris.Bind(transform.root);
             _sfx?.Shot(SonicSfx.Equip);
         }
@@ -34,7 +35,7 @@ namespace DMI.Xenoarch.Excavation
             _kind = SonicToolKind.None;
             if (_beam != null) _beam.Hide();
             if (_sfx != null) _sfx.StopLoops();
-            if (_hud != null) _hud.Refresh(false, SonicToolKind.None, 0f, null);
+            if (_hud != null) _hud.Refresh(false, SonicToolKind.None, 0f, null, 0);
         }
 
         /// <summary>Hotbar key press for a dig tool. The legacy precision item (old saves) opens the excavator in Fine focus.</summary>
@@ -59,6 +60,11 @@ namespace DMI.Xenoarch.Excavation
                 if (exc && kb[Key.Q].wasPressedThisFrame) { SonicTools.CycleHead(); _sfx?.Shot(SonicSfx.Change); }
                 if (kb[Key.R].wasPressedThisFrame) { SonicTools.CyclePower(); _sfx?.Shot(SonicSfx.Change); }
                 if (exc && kb[Key.T].wasPressedThisFrame) { SonicTools.CycleFocus(); _sfx?.Shot(SonicSfx.Change); }
+                if (kb[Key.X].wasPressedThisFrame)
+                {
+                    if (SonicTools.UseCell()) { Toast.Show($"Power Cell used: suit power {SonicTools.Energy01:P0}. {SonicTools.Cells} left.", 2.5f); _sfx?.Shot(SonicSfx.Equip); }
+                    else Toast.Show(SonicTools.Cells < 1 ? "No Power Cells. Craft them aboard the ship." : "Suit power is already full.", 2.5f);
+                }
             }
             if (mouse == null) return;
             float sy = mouse.scroll.ReadValue().y;
@@ -67,7 +73,8 @@ namespace DMI.Xenoarch.Excavation
             bool shift = kb != null && (kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed);
             if (shift) SonicTools.AdjustReach(dir);
             else if (exc) SonicTools.AdjustSize(dir);
-            else SonicTools.AdjustSpread(dir);
+            else if (_kind == SonicToolKind.Brush) SonicTools.AdjustSpread(dir);
+            else SonicTools.AdjustReach(dir);
         }
 
         void SonicLocked(string why)
@@ -95,7 +102,7 @@ namespace DMI.Xenoarch.Excavation
             var tint = LayerTint(lay.kind);
             bool fine = SonicTools.IsFine(_kind);
             int dust = fine ? 2 : Mathf.RoundToInt(4f + tool.radius * 14f);
-            int chunks = _kind == SonicToolKind.Brush ? 0 : fine ? 0 : (Random.value < 0.6f ? 1 : 2) + (SonicTools.Power == SonicPower.High ? 1 : 0);
+            int chunks = _kind == SonicToolKind.Brush ? 0 : fine ? 0 : (Random.value < 0.6f ? 1 : 2) + (SonicTools.Power == SonicPower.High ? 1 : 0) + (_kind == SonicToolKind.Burster ? 1 : 0);
             SonicDebris.Burst(hit.point, hit.normal, tint, tool.radius, dust, chunks);
         }
 
@@ -126,7 +133,8 @@ namespace DMI.Xenoarch.Excavation
                 {
                     kind = _kind, aimed = aimed && !UIState.BlocksGameplay, inReach = inReach, firing = firing,
                     nearFind = _nearFind != null || _beam.HeadNear, locked = lockWhy != null,
-                    point = hit.point, normal = hit.normal, radius = rad, spread = tool.radius, cam = cam
+                    point = hit.point, normal = hit.normal, radius = rad, spread = tool.radius, cam = cam,
+                    head = _kind == SonicToolKind.Burster ? SonicHead.Cone : SonicTools.Head
                 });
             }
             if (_sfx != null)
@@ -134,7 +142,7 @@ namespace DMI.Xenoarch.Excavation
                 float pitch = SonicTools.Power == SonicPower.Low ? 0.9f : SonicTools.Power == SonicPower.High ? 1.15f : 1f;
                 _sfx.SetLoop(firing, SonicTools.IsFine(_kind) ? SonicSfx.FanLoop : SonicSfx.BeamLoop, pitch);
             }
-            if (_hud != null) _hud.Refresh(true, _kind, rad, lockWhy);
+            if (_hud != null) _hud.Refresh(true, _kind, rad, lockWhy, SonicTools.Cells);
         }
     }
 }

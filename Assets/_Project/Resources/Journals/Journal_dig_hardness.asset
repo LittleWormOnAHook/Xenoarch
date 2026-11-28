@@ -17,7 +17,7 @@ MonoBehaviour:
   author: "Senior Excavator P. Sandoval"
   dateLine: "Field note, first site"
   category: 1
-  body: "The ground here is layered, and the deeper bands are harder. The bar at the top of your view shows the layer you're aiming at, how hard it is, and whether your tool cuts it cleanly or slowly.\n\nOn this world the shovel and the precision tool will get through every band; they just slow right down in the hard stuff. A powered drill (key 5) chews through rock much faster, but it is as crude as the shovel and just as dangerous to finds. Only bedrock stops every tool.\n\nIf a lump of ground sticks up inside your pit, aim straight at it and keep working: you can level it off."
+  body: "The ground here is layered, and the deeper bands are harder. The bar at the top of your view shows the layer you're aiming at, how hard it is, and whether your tool cuts it cleanly or slowly.\n\nOn this world the Sonic Excavator and its Fine focus will get through every band; they just slow right down in the hard stuff. The Sonic Burster (key 5) chews through rock much faster, but it is as crude as the excavator and just as dangerous to finds. Only bedrock stops every tool.\n\nIf a lump of ground sticks up inside your pit, aim straight at it and keep working: you can level it off."
   placement: 3
   bodyId: 
   siteIndex: 0

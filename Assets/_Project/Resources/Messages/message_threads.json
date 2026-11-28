@@ -24,7 +24,7 @@
         { "id": "a", "text": "Good morning, Captain. All ship systems are nominal. Would you like a summary of the excavation tools?", "choices": [
           { "text": "Yes, please.", "next": "b" },
           { "text": "Not now.", "next": "c" } ] },
-        { "id": "b", "text": "The scanner finds buried signals. The shovel and drill move soil fast; the brush and precision tool expose finds safely. Hold Tab for the tool wheel." },
+        { "id": "b", "text": "The scanner finds buried signals. The Sonic Excavator and Burster move soil fast; the Ultrasonic Brush and the excavator's Fine focus expose finds safely. Hold Tab for the tool wheel." },
         { "id": "c", "text": "Understood. I will be here." }
       ]
     },

@@ -17,7 +17,7 @@ MonoBehaviour:
   author: "Prospector K. Oyelaran"
   dateLine: "Field note, near a cache"
   category: 2
-  body: "A VALUABLE SIGNATURE on the scanner is a cache, not an archaeological site. Caches are shallow, buried less than a metre down, and once revealed they're marked with a gold border. You can dig them with the shovel without guilt.\n\nWhat you'll pull out is mostly minerals: copper, meteoric iron, the odd silver nugget or geode. Once in a while you'll find something rarer. Caches make useful money, but they're not part of the record, so don't confuse them with the real work."
+  body: "A VALUABLE SIGNATURE on the scanner is a cache, not an archaeological site. Caches are shallow, buried less than a metre down, and once revealed they're marked with a gold border. You can dig them with the Sonic Excavator without guilt.\n\nWhat you'll pull out is mostly minerals: copper, meteoric iron, the odd silver nugget or geode. Once in a while you'll find something rarer. Caches make useful money, but they're not part of the record, so don't confuse them with the real work."
   placement: 5
   bodyId: 
   siteIndex: 0

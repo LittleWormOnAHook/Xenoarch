@@ -73,6 +73,15 @@ MonoBehaviour:
     - itemId: material.methane_frost
       min: 1
       max: 2
+    - itemId: item.blueprint.excavator_mk4
+      min: 1
+      max: 1
+    - itemId: item.blueprint.brush_mk4
+      min: 1
+      max: 1
+    - itemId: item.blueprint.burster_mk4
+      min: 1
+      max: 1
     extraRolls: 0
   - tier: 3
     weight: 5
@@ -86,4 +95,13 @@ MonoBehaviour:
     - itemId: material.auriferous_quartz
       min: 1
       max: 2
+    - itemId: item.blueprint.excavator_mk4
+      min: 1
+      max: 1
+    - itemId: item.blueprint.brush_mk4
+      min: 1
+      max: 1
+    - itemId: item.blueprint.burster_mk4
+      min: 1
+      max: 1
     extraRolls: 0
