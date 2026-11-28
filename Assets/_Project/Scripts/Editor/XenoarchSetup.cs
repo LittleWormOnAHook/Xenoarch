@@ -54,7 +54,7 @@ namespace DMI.Xenoarch.EditorTools
                 Item("item.tool.precision_tool", "Excavator Fine Focus", ItemCategory.Tool, 1, false, 0.4f, 150, "Narrow sonic point (the excavator's Fine focus) for working close to finds."),
                 Item("item.tool.brush", "Ultrasonic Brush", ItemCategory.Tool, 1, false, 0.1f, 20, "Removes the last layer of dust without damaging surfaces."),
                 Item("item.tool.powered_drill", "Sonic Burster", ItemCategory.Tool, 1, false, 6f, 900, "Breaks compacted or frozen material. High risk near artifacts."),
-                Item("item.consumable.sample_container", "Sample Container", ItemCategory.Consumable, 20, false, 0.1f, 5, "Sealed container for soil and material samples."),
+                Item("item.consumable.sample_container", "Sample Container", ItemCategory.Consumable, 250, false, 0.1f, 5, "Sealed container for soil and material samples."),
                 Item("item.test.unique_fragment", "Unidentified Fragment (test)", ItemCategory.Artifact, 1, true, 0.3f, 0, "Foundation test item: unique-instance handling. Real artifacts arrive in Phase 1C."),
             };
 

@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Frozen methane. Burns straight in the ship's engines (4 fuel each).
   icon: {fileID: 21300000, guid: eb15282baf892c7be7efa6800ac69ecd, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 6

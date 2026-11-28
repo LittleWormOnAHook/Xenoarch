@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Smelted alloy for ship and tool upgrades (Phase 1D).
   icon: {fileID: 21300000, guid: 7ab80f3e4c0e5009e43adbf1121182eb, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 30

@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Sealed container for soil and material samples.
   icon: {fileID: 21300000, guid: 232513fcc1cd7a4e8ad5c232038565cc, type: 3}
   category: 4
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.1
   baseValue: 5

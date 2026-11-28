@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Nickel-iron from an old impact. Dense and pitted.
   icon: {fileID: 21300000, guid: fa0a1df410b8b52ce5a0ac646f1912fa, type: 3}
   category: 8
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.3
   baseValue: 30

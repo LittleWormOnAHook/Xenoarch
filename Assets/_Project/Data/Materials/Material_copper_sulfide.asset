@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Greenish sulfide ore from the middle layers. Smelt it for copper.
   icon: {fileID: 21300000, guid: 5eb6185a0d13780e296f91dddb305ed6, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.8
   baseValue: 8

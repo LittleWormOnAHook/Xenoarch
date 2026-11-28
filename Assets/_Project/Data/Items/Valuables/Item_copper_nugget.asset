@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Pure copper, weathered green. Sells well at any station.
   icon: {fileID: 21300000, guid: eb705ca521ccf99418de00e58b10d145, type: 3}
   category: 8
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.3
   baseValue: 25

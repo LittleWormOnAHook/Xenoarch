@@ -18,7 +18,7 @@ MonoBehaviour:
     it was for.
   icon: {fileID: 21300000, guid: 7d8b2e199e03482a477077611bb48663, type: 3}
   category: 8
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.3
   baseValue: 1200

@@ -98,7 +98,7 @@ namespace DMI.Xenoarch.EditorTools
             bool made = item == null;
             if (made) { item = ScriptableObject.CreateInstance<ItemDefinition>(); AssetDatabase.CreateAsset(item, itemPath); }
             item.SetIdForTooling(SonicTools.PowerCellId);
-            item.displayName = "Power Cell"; item.category = ItemCategory.Consumable; item.maxStack = 10; item.uniqueInstance = false;
+            item.displayName = "Power Cell"; item.category = ItemCategory.Consumable; item.maxStack = 250; item.uniqueInstance = false;
             item.mass = 0.3f; if (made) item.baseValue = 45;
             item.description = "A sealed energy cell. Press X with a sonic tool out to recharge the suit by 60%.";
             if (item.icon == null) item.icon = AssetDatabase.LoadAssetAtPath<Sprite>(XenoarchCraftingSetup.IconFolder + "/crystal-cluster.png");

@@ -17,7 +17,7 @@ MonoBehaviour:
   description: PLACEHOLDER model: a simple tripod work light until a real mesh is assigned. Place from the inventory or a hotbar slot to light a dig site (about 30 m). E picks it back up.
   icon: {fileID: 21300000, guid: 813c91de2d2344a0955ec8eba0663ef3, type: 3}
   category: 1
-  maxStack: 4
+  maxStack: 250
   uniqueInstance: 0
   mass: 3.5
   baseValue: 200

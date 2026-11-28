@@ -42,7 +42,7 @@ namespace DMI.Xenoarch.EditorTools
                 var a = AssetDatabase.LoadAssetAtPath<ItemDefinition>(path);
                 if (a == null) { a = ScriptableObject.CreateInstance<ItemDefinition>(); AssetDatabase.CreateAsset(a, path); }
                 a.SetIdForTooling(d.id); a.displayName = d.name; a.description = d.desc; a.category = ItemCategory.Valuable;
-                a.maxStack = 20; a.uniqueInstance = false; a.mass = 0.3f; a.baseValue = d.value;
+                a.maxStack = 250; a.uniqueInstance = false; a.mass = 0.3f; a.baseValue = d.value;
                 EditorUtility.SetDirty(a); items.Add(a);
             }
             var reg = config.itemRegistry;

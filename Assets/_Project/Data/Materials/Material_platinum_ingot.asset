@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Refined platinum. Sensors and high-end upgrades.
   icon: {fileID: 21300000, guid: bf5eca89bf18ef173eef7034058c061c, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 1
   baseValue: 200

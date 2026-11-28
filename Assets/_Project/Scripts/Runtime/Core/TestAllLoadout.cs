@@ -40,7 +40,7 @@ namespace DMI.Xenoarch.Core
             FillPlayerInventory(session);
             FillCrates(session);
 
-            Debug.Log("[Xenoarch] New Test All: unlocked travel/tech/recipes, maxed upgrades, granted tools/equipment and filled resource stacks.");
+            Debug.Log("[Xenoarch] New Test All: unlocked travel/tech/recipes, maxed upgrades, granted tools/equipment and filled every stackable item in the backpack and crates to max (250).");
         }
 
         static void UnlockTravelAndRecipes(GameSession session)
@@ -101,10 +101,9 @@ namespace DMI.Xenoarch.Core
             var resources = new List<ItemDefinition>();
             foreach (var def in AllItems(session.Items))
             {
-                if (def.category == ItemCategory.Tool || def.category == ItemCategory.Equipment)
+                if (def.IsStackable) resources.Add(def);
+                else if (def.category == ItemCategory.Tool || def.category == ItemCategory.Equipment)
                     tools.Add(def);
-                else if (def.category == ItemCategory.Resource && !def.uniqueInstance)
-                    resources.Add(def);
             }
 
             foreach (var d in tools)
@@ -141,7 +140,7 @@ namespace DMI.Xenoarch.Core
         {
             var resources = new List<ItemDefinition>();
             foreach (var def in AllItems(session.Items))
-                if (def.category == ItemCategory.Resource && !def.uniqueInstance)
+                if (def.IsStackable)
                     resources.Add(def);
             if (resources.Count == 0) return;
 

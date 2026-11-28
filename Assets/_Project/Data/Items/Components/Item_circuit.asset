@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Gold-contact control board.
   icon: {fileID: 21300000, guid: da907983ac2c083808af691802db9e99, type: 3}
   category: 7
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 160

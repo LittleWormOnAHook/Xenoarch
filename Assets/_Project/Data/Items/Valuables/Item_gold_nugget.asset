@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Heavy, bright and unmistakable.
   icon: {fileID: 21300000, guid: 481d6706df8d8d0b2b0a02559f99abe5, type: 3}
   category: 8
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.3
   baseValue: 220

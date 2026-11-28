@@ -63,7 +63,7 @@ namespace DMI.Xenoarch.EditorTools
             {
                 var a = Asset<MaterialDefinition>($"{MatFolder}/Material_{d.id.Substring("material.".Length)}.asset");
                 a.SetIdForTooling(d.id); a.displayName = d.name; a.description = d.desc;
-                a.category = ItemCategory.Resource; a.uniqueInstance = false; a.maxStack = 50; a.mass = d.refined ? 1f : 0.8f; a.baseValue = d.value;
+                a.category = ItemCategory.Resource; a.uniqueInstance = false; a.maxStack = 250; a.mass = d.refined ? 1f : 0.8f; a.baseValue = d.value;
                 a.refined = d.refined; a.fuelValue = 0f; a.reagentValue = 0; a.tint = d.tint;
                 a.bodies = new List<string>(); a.nodesPerScene = 0; // only found by digging (strata)
                 EditorUtility.SetDirty(a); Reg(a);
@@ -81,7 +81,7 @@ namespace DMI.Xenoarch.EditorTools
             {
                 var a = Asset<ItemDefinition>($"{CompFolder}/Item_{c.id.Substring("item.component.".Length)}.asset");
                 a.SetIdForTooling(c.id); a.displayName = c.name; a.description = c.desc;
-                a.category = ItemCategory.Misc; a.uniqueInstance = false; a.maxStack = 20; a.mass = 0.5f; a.baseValue = c.value;
+                a.category = ItemCategory.Misc; a.uniqueInstance = false; a.maxStack = 250; a.mass = 0.5f; a.baseValue = c.value;
                 EditorUtility.SetDirty(a); Reg(a);
             }
             reg.SetEntries(entries); EditorUtility.SetDirty(reg);

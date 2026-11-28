@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Loose surface rock and dust. Leach it into lab reagent at the refiner.
   icon: {fileID: 21300000, guid: 0305ae331c412d42eca0460ed5422c5c, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 2

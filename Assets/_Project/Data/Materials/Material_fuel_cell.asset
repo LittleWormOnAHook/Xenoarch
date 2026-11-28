@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Refined fuel. 25 units of ship fuel each.
   icon: {fileID: 21300000, guid: 47dc5ef2943ea2e78eb64e1c04819e0a, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 40

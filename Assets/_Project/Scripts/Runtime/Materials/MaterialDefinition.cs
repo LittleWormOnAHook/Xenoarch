@@ -30,7 +30,7 @@ namespace DMI.Xenoarch.Materials
             base.OnValidate(); // keeps the stable-id default (was hidden before)
             category = ItemCategory.Resource;
             uniqueInstance = false;
-            if (maxStack < 2) maxStack = 50;
+            if (maxStack < 2) maxStack = 250;
         }
 #endif
     }

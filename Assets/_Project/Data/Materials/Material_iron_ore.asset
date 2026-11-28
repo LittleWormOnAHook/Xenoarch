@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Iron-rich rock. Smelt into alloy ingots (upgrades, Phase 1D).
   icon: {fileID: 21300000, guid: 273cc3cf4124158ac238d9de5c1e70fd, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 5

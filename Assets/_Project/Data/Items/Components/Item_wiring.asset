@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Copper wiring loom.
   icon: {fileID: 21300000, guid: 93c88f4f412676c0a61b8438a1a64b17, type: 3}
   category: 7
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 45

@@ -365,7 +365,7 @@ namespace DMI.Xenoarch.EditorTools
             {
                 var a = Asset<MaterialDefinition>($"{MaterialsFolder}/Material_{d.id.Substring("material.".Length)}.asset");
                 a.SetIdForTooling(d.id); a.displayName = d.name; a.description = d.desc;
-                a.category = ItemCategory.Resource; a.uniqueInstance = false; a.maxStack = 50; a.mass = 0.5f; a.baseValue = d.value;
+                a.category = ItemCategory.Resource; a.uniqueInstance = false; a.maxStack = 250; a.mass = 0.5f; a.baseValue = d.value;
                 a.refined = d.refined; a.fuelValue = d.fuel; a.reagentValue = d.reagent; a.tint = d.tint;
                 a.bodies = d.bodies.ToList(); a.nodesPerScene = d.nodes; a.unitsPerNode = new Vector2Int(d.min, d.max); a.respawnSeconds = 1200f;
                 EditorUtility.SetDirty(a);

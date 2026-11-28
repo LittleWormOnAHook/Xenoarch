@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Regolith rich in helium-3. With ice it makes three fuel cells.
   icon: {fileID: 21300000, guid: c3f8a1b64d7e4c9a8f215e06b47d90ce, type: 3}
   category: 3
-  maxStack: 50
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 20

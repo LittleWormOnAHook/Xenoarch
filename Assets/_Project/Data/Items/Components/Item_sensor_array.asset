@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Platinum sensor head for scanners.
   icon: {fileID: 21300000, guid: 4e2a9368efaad1705dc53dcd0fc86ef9, type: 3}
   category: 7
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 320

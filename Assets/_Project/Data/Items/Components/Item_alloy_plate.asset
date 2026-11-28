@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Pressed alloy and nickel plate. Hull, hold and tool frames.
   icon: {fileID: 21300000, guid: 0ad05d10afd5eb1b6e6f918847fc5662, type: 3}
   category: 7
-  maxStack: 20
+  maxStack: 250
   uniqueInstance: 0
   mass: 0.5
   baseValue: 60
