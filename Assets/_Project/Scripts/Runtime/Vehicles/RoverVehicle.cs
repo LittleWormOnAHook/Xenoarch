@@ -627,6 +627,9 @@ namespace DMI.Xenoarch.Vehicles
                 }
                 throttle = Mathf.Clamp(throttle, -1f, 1f); steer = Mathf.Clamp(steer, -1f, 1f);
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (RoverDevInput.Active) { throttle = Mathf.Clamp(RoverDevInput.Throttle, -1f, 1f); steer = Mathf.Clamp(RoverDevInput.Steer, -1f, 1f); hand = RoverDevInput.Hand; wantBoost = false; }   // dev rover test only
+#endif
             ApplyDriveInput(throttle, steer, hand, wantBoost);
         }
 

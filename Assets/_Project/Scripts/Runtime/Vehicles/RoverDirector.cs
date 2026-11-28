@@ -94,6 +94,9 @@ namespace DMI.Xenoarch.Vehicles
             }
             if (!rover.PlaceNear(p.transform, vd.deployDistance)) { Destroy(go); why = "No flat ground in front of you."; return false; }
             _rover = rover; _itemId = vd.Id;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (RoverInclinometer.Enabled && go.GetComponent<RoverInclinometer>() == null) go.AddComponent<RoverInclinometer>();   // dev only, default off
+#endif
             Debug.Log($"[Xenoarch] Rover: deployed {vd.Id} at {go.transform.position}");
             return true;
         }

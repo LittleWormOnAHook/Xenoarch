@@ -40,6 +40,9 @@ namespace DMI.Xenoarch.Vehicles
         void InitPhysicsRuntime()
         {
             _profile = RoverPhysicsProfile.LoadOrDefault();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (DiagProfileOverride != null) _profile = DiagProfileOverride;   // dev rover test only: a throw-away clone, never the asset
+#endif
             _zoomStep = Mathf.Clamp(PlayerPrefs.GetInt(ZoomPref, 1), 0, 2);
             SubscribeProfileChanges();
             ApplyProfile();
@@ -236,6 +239,7 @@ namespace DMI.Xenoarch.Vehicles
             if (chassis != null) chassis.enabled = true;
             if (_rb.isKinematic) _rb.isKinematic = false;
             ApplyCom();
+            ApplyPitchInertia();   // colliders are final now; the tensor from Awake time was ~(1,1,1) and got pinned
             foreach (var w in wheels)
             {
                 if (w == null || w.collider == null) continue;

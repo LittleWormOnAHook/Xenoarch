@@ -28,7 +28,13 @@ namespace DMI.Xenoarch.Core
         public bool SessionActive => _sessionActive;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => Instance = null;
+        static void ResetStatics()
+        {
+            Instance = null;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            SuppressSaves = false;
+#endif
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void AutoCreate()
@@ -177,8 +183,46 @@ namespace DMI.Xenoarch.Core
             return true;
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>DEV: set by the dev launch (skip menus) so its throw-away session never overwrites real save slots.</summary>
+        public static bool SuppressSaves;
+
+        /// <summary>DEV / TESTING: fresh Test All session dropped straight on a planet/moon surface (no menus, no ship).
+        /// Nothing is written to disk (see <see cref="SuppressSaves"/>); existing saves are untouched.</summary>
+        public bool DevStartOnPlanet(string bodyId, out string info)
+        {
+            info = null;
+            SuppressSaves = true;
+            _session.StartNewGame();
+            _session.ApplyTestAllLoadout();
+            _sessionActive = true;
+            var x = _session.Exploration; var gal = x != null ? x.Galaxy : null;
+            DMI.Xenoarch.Galaxy.CelestialBodyDefinition body = null;
+            bool Landable(DMI.Xenoarch.Galaxy.CelestialBodyDefinition b) => b != null && b.HasLanding
+                && (b.kind == DMI.Xenoarch.Galaxy.CelestialKind.Planet || b.kind == DMI.Xenoarch.Galaxy.CelestialKind.Moon || b.kind == DMI.Xenoarch.Galaxy.CelestialKind.DwarfPlanet);
+            if (gal != null && !string.IsNullOrEmpty(bodyId)) body = gal.FindBody(bodyId);
+            if (!Landable(body) && x != null && Landable(x.CurrentBody)) body = x.CurrentBody;
+            if (!Landable(body) && gal != null)
+                foreach (var s in gal.AllSystems) { foreach (var b in s.AllBodies) if (Landable(b)) { body = b; break; } if (Landable(body)) break; }
+            if (!Landable(body)) { info = "no landable planet/moon found"; return false; }
+            x.Ship.currentBodyId = body.Id;
+            var sys = gal.SystemOf(body.Id); if (sys != null) x.Ship.currentSystemId = sys.Id;
+            x.SetLanded(true, false);
+            x.Body(body.Id).visited = true;
+            string spawn = string.IsNullOrEmpty(body.arrivalSpawnId) ? PlayerSpawnIds.Default : body.arrivalSpawnId;
+            _session.Location = NewLocation(body.sceneName, spawn);
+            SceneLoader.NextTitle = "Dev: planet test";
+            SceneLoader.NextSubtitle = body.displayName;
+            info = $"{body.Id} ({body.kind}) -> scene {body.sceneName}, spawn {spawn}";
+            return _loader.Load(body.sceneName, SceneLoader.Arrival.AtSpawn(spawn));
+        }
+#endif
+
         public bool SaveGame(string slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (SuppressSaves) { Debug.Log("[Xenoarch] Save suppressed (dev launch session)."); return false; }
+#endif
             var rig = PlayerRigLocator.Find();
             if (!_sessionActive || rig == null) { Debug.LogWarning("[Xenoarch] Save ignored: no active gameplay session/player"); return false; }
             var loc = _session.Location;
