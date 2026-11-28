@@ -91,6 +91,17 @@
 .xa-term__hint { font-size: 13px; color: var(--xa-secondary-text); }
 .xa-term__h { font-size: 15px; -unity-font-style: bold; color: var(--xa-heading); margin: 8px 0 6px 0; letter-spacing: 2px; }
 .xa-term__text { font-size: 15px; color: var(--xa-text); white-space: normal; margin-bottom: 3px; }
+/* t305u: Add Note field — maroon letters on the light UITK input so typed text is visible. */
+.xa-term__field,
+.xa-term__field .unity-base-text-field__input,
+.xa-term__field .unity-text-element {
+    color: var(--xa-panel);
+    cursor-color: var(--xa-panel);
+}
+.xa-term__field .unity-base-text-field__input--placeholder,
+.xa-term__field .unity-base-text-field__input--placeholder .unity-text-element {
+    color: rgba(118, 28, 39, 0.55);
+}
 .xa-term__dim { font-size: 14px; color: var(--xa-secondary-text); white-space: normal; }
 .xa-term__warn { font-size: 15px; color: var(--xa-warn-text); white-space: normal; }
 .xa-term__good { font-size: 15px; color: var(--xa-highlight); white-space: normal; }

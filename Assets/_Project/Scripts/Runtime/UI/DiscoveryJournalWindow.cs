@@ -316,7 +316,7 @@ namespace DMI.Xenoarch.UI
 
             var tools = new VisualElement(); tools.style.flexDirection = FlexDirection.Row; tools.style.marginBottom = 6; tools.style.alignItems = Align.Center;
             var entry = new TextField { multiline = false };
-            entry.AddToClassList("xa-term__text");
+            entry.AddToClassList("xa-term__field");
             entry.style.flexGrow = 1; entry.style.marginRight = 8;
             tools.Add(entry);
             var add = new Button(() =>
