@@ -1,0 +1,26 @@
+Xenoarch footstep audio
+-----------------------
+Source: Dark Matter Interactive studio pack, copied (not modified) from
+  A:\ASH\Assets\Audio\Foot Steps
+The same bank also lives at
+  A:\Dark Matter Genesis\Assets\Audio\Foot Steps
+
+These files sit in each project's own Assets/Audio folder, not under a vendor
+package (not Invector, not HPA). No separate third-party license file was
+present next to the clips. Treated as studio-owned audio shared across DMI
+projects.
+
+Copied sets: Sand, Dirt, Rock, Snow, Concrete, Wood, Water.
+Not copied: the duplicate "Concret Footstep 0X.wav" set, turretDectection.mp3,
+and the tiny .mp3 previews where a .wav of the same step already existed
+(snowFootstep01.mp3, woodFootstep01.mp3, waterFootstep01.mp3).
+
+Footprint albedo and normal maps in
+  Assets/_Project/Art/Decals/Footprints
+(and copies under Resources/Footsteps for runtime loading) were generated for
+Xenoarch and are original.
+
+Runtime code is a rewrite in DMI.Xenoarch.Footsteps, based on the design of
+ASH.Player.ASHFootsteps / ASHFootstepSurfaceMap (URP, project-owned) and the
+terrain alphamap sampling in Genesis DMFootstepManager. Invector vFootStep and
+HPA footstepSystem were not copied.
