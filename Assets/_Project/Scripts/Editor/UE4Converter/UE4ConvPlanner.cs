@@ -14,48 +14,103 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
     {
         static readonly HashSet<string> MeshExt = new HashSet<string> { ".fbx", ".obj" };
         static readonly HashSet<string> TexExt = new HashSet<string> { ".png", ".tga", ".jpg", ".jpeg", ".bmp", ".exr", ".tif", ".tiff", ".psd", ".hdr" };
-        static readonly HashSet<string> AudioExt = new HashSet<string> { ".wav", ".ogg", ".mp3" };
+        static readonly HashSet<string> AudioExt = new HashSet<string> { ".wav", ".ogg", ".mp3", ".flac", ".aif", ".aiff" };
         static readonly HashSet<string> UeExt = new HashSet<string> { ".uasset", ".umap", ".uexp", ".ubulk", ".uptnl", ".upk" };
         static readonly HashSet<string> UnsupportedExt = new HashSet<string> { ".blend", ".ma", ".mb", ".max", ".c4d", ".sbs", ".sbsar", ".spp", ".glb", ".gltf", ".abc", ".usd", ".usda", ".usdc", ".usdz", ".ztl", ".zpr" };
         static readonly Regex SkipRx = new Regex(@"(^|/)(\.git|Intermediate|Saved|__MACOSX|\.vs|Library|Temp)(/|$)", RegexOptions.IgnoreCase);
 
         public static string J(params string[] parts) => string.Join("/", parts.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.Trim('/')));
 
-        public static Plan Build(ConverterOptions o, ConversionReport rep)
+        static readonly HashSet<string> UeCompanion = new HashSet<string> { ".uexp", ".ubulk", ".uptnl" };
+        static readonly HashSet<string> PskExt = new HashSet<string> { ".psk", ".pskx", ".psa", ".psax" };
+        static readonly HashSet<string> BadAudioExt = new HashSet<string> { ".opus", ".at9", ".xma", ".xwma", ".bik", ".fsb", ".wem", ".bnk", ".snd", ".adx" };
+        const int GroupThreshold = 50;
+
+        /// <summary>Lists up to 50 items individually; larger groups become one entry with a count and samples.</summary>
+        static void AddGrouped(ConversionReport rep, ReportKind kind, string category, List<string> rels, string message)
+        {
+            if (rels.Count == 0) return;
+            if (rels.Count <= GroupThreshold) { foreach (var r in rels) rep.Add(kind, category, r, null, message); return; }
+            rep.Add(kind, category, null, null, $"{rels.Count} files (e.g. {string.Join(", ", rels.Take(8))} ...): {message}");
+        }
+
+        public static Plan Build(ConverterOptions o, ConversionReport rep, string stagingRoot = null)
         {
             var p = new Plan { o = o, src = Path.GetFullPath(o.sourceFolder), dest = o.DestFolder };
+            bool staged = !string.IsNullOrEmpty(stagingRoot) && Directory.Exists(stagingRoot);
+            if (staged) p.stagingRoot = Path.GetFullPath(stagingRoot);
+            var roots = new List<string> { p.src };
+            if (staged) roots.Add(p.stagingRoot);
+            bool gltfOk = GltfInstalled();
             var ignored = new Dictionary<string, int>();
             var texEntries = new List<TexEntry>();
+            var ue = new List<(string rel, string cat)>();
+            var unsup = new Dictionary<string, List<string>>();
+            var pskFiles = new List<string>(); var badAudio = new List<string>();
 
-            foreach (var f in Directory.EnumerateFiles(p.src, "*", SearchOption.AllDirectories).OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            foreach (var root in roots)
             {
-                string rel = f.Substring(p.src.Length).TrimStart('\\', '/').Replace('\\', '/');
-                if (SkipRx.IsMatch(rel)) continue;
-                string ext = Path.GetExtension(f).ToLowerInvariant();
-                string relDir = (Path.GetDirectoryName(rel) ?? "").Replace('\\', '/');
-                string stem = Path.GetFileNameWithoutExtension(f);
+                bool fromStaging = staged && root == p.stagingRoot;
+                foreach (var f in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+                {
+                    string rel = f.Substring(root.Length).TrimStart('\\', '/').Replace('\\', '/');
+                    if (SkipRx.IsMatch(rel)) continue;
+                    string ext = Path.GetExtension(f).ToLowerInvariant();
+                    string relDir = (Path.GetDirectoryName(rel) ?? "").Replace('\\', '/');
+                    if (fromStaging) relDir = UE4Names.CleanClassDirs(relDir);
+                    string stem = Path.GetFileNameWithoutExtension(f);
 
-                if (MeshExt.Contains(ext)) p.meshes.Add(MakeMesh(o, rep, f, rel, relDir, ext, stem));
-                else if (TexExt.Contains(ext)) texEntries.Add(MakeTex(f, relDir, ext, stem));
-                else if (AudioExt.Contains(ext))
-                {
-                    if (o.copyAudio) p.audio.Add((f, J(p.dest, "Audio", UE4Names.StripLead(relDir), Path.GetFileName(f))));
+                    if (o.soundsOnly && !AudioExt.Contains(ext) && !BadAudioExt.Contains(ext) && ext != ".uasset" && ext != ".umap") continue;
+                    if (MeshExt.Contains(ext)) p.meshes.Add(MakeMesh(o, rep, f, rel, relDir, ext, stem));
+                    else if (ext == ".glb" || ext == ".gltf")
+                    {
+                        if (gltfOk) p.meshes.Add(MakeMesh(o, rep, f, rel, relDir, ext, stem));
+                        else p.pendingGltf.Add(f);
+                    }
+                    else if (TexExt.Contains(ext)) texEntries.Add(MakeTex(f, relDir, ext, stem));
+                    else if (AudioExt.Contains(ext))
+                    {
+                        if (o.copyAudio) p.audio.Add((f, J(p.dest, o.audioSubfolder, UE4Names.StripLead(relDir), Path.GetFileName(f))));
+                    }
+                    else if (BadAudioExt.Contains(ext)) badAudio.Add(rel);
+                    else if (PskExt.Contains(ext)) { if (!((ext == ".psk" || ext == ".pskx") && File.Exists(Path.ChangeExtension(f, ".obj")))) pskFiles.Add(rel); }
+                    else if (ext == ".bin" && fromStaging) { /* glTF buffer sidecar, copied with its .gltf */ }
+                    else if (ext == ".mtl") p.aux.Add((f, null));   // dest filled after meshes are placed
+                    else if (UeCompanion.Contains(ext)) { /* belongs to a .uasset */ }
+                    else if (ext == ".uasset" || ext == ".umap") ue.Add((rel, UE4Names.UeCategory(f, ext)));
+                    else if (ext == ".uproject" || ext == ".uplugin")
+                        rep.Add(ReportKind.Info, "Unreal project file", rel, null, "UE project/plugin descriptor; nothing to convert. Export the content from UE4.");
+                    else if (UnsupportedExt.Contains(ext))
+                    { if (!unsup.TryGetValue(ext, out var l)) unsup[ext] = l = new List<string>(); l.Add(rel); }
+                    else { ignored.TryGetValue(ext, out int n); ignored[ext] = n + 1; }
                 }
-                else if (ext == ".mtl") p.aux.Add((f, null));   // dest filled after meshes are placed
-                else if (UeExt.Contains(ext))
-                {
-                    string cat = UE4Names.UeCategory(f, ext);
-                    rep.Add(ReportKind.Unconvertible, "Unreal binary: " + cat, rel, null,
-                        ".uasset/.umap cannot be read outside Unreal. In UE4 use Content Browser > Asset Actions > Export (or the pack's Source folder) and convert that export instead.");
-                }
-                else if (ext == ".uproject" || ext == ".uplugin")
-                    rep.Add(ReportKind.Info, "Unreal project file", rel, null, "UE project/plugin descriptor; nothing to convert. Export the content from UE4.");
-                else if (UnsupportedExt.Contains(ext))
-                    rep.Add(ReportKind.Unconvertible, "Unsupported format " + ext, rel, null, "Not handled by this tool (export as FBX/OBJ + PNG/TGA, or import with a Unity package).");
-                else { ignored.TryGetValue(ext, out int n); ignored[ext] = n + 1; }
             }
+            foreach (var kv in unsup) AddGrouped(rep, ReportKind.Unconvertible, "Unsupported format " + kv.Key, kv.Value, "Not handled by this tool (export as FBX/OBJ + PNG/TGA, or import with a Unity package).");
+            AddGrouped(rep, ReportKind.Unconvertible, "UModel PSK/PSA", pskFiles, "Skeletal PSK and PSA animations cannot be imported without a converter. Re-extract with mesh format glTF (needs glTFast), or convert them with Blender. (Static PSKX meshes are converted automatically.)");
+            AddGrouped(rep, ReportKind.Unconvertible, "Audio format", badAudio, "Unity cannot play this container. Convert to WAV/OGG (for example with ffmpeg).");
             foreach (var kv in ignored.OrderBy(k => k.Key))
                 rep.Add(ReportKind.Skipped, "Ignored file type", null, null, $"{kv.Value} x '{(kv.Key.Length == 0 ? "(no extension)" : kv.Key)}'");
+
+            // Unreal binaries: either extracted by UModel (exportable types) or listed with instructions
+            p.ueFiles = ue.Count;
+            if (ue.Count > 0)
+            {
+                if (staged)
+                {
+                    int handled = 0;
+                    foreach (var g in ue.GroupBy(u => u.cat))
+                    {
+                        if (UE4Names.IsExportable(g.Key)) { handled += g.Count(); continue; }
+                        AddGrouped(rep, ReportKind.Unconvertible, "Unreal binary: " + g.Key, g.Select(x => x.rel).ToList(),
+                            "UModel cannot export this asset type; rebuild it by hand in Unity.");
+                    }
+                    rep.Add(ReportKind.Info, "UModel", null, null, $"{ue.Count} .uasset/.umap files in the source; {handled} are mesh/texture/animation/sound types that UModel was asked to extract (see the UModel log for anything it could not read).");
+                }
+                else
+                    foreach (var g in ue.GroupBy(u => u.cat))
+                        AddGrouped(rep, ReportKind.Unconvertible, "Unreal binary: " + g.Key, g.Select(x => x.rel).ToList(),
+                            ".uasset/.umap cannot be read directly. Enable the UModel step (set umodel.exe), or in UE4 use Content Browser > Asset Actions > Export (or the pack's Source folder) and convert that export.");
+            }
 
             // MTL files next to the OBJ that uses them
             for (int i = 0; i < p.aux.Count; i++)
@@ -75,11 +130,19 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                     if (big.objExtent > 20f && big.objExtent <= 200f)
                         rep.Add(ReportKind.Warning, "Scale", big.src, null, $"OBJ extent {big.objExtent:0.#} units is ambiguous (cm or m?). Chose x{big.scale}; set Scale to UE cm or None in the window if the prefab is the wrong size.");
                 }
+
             BuildPrefabJobs(p, rep);
             BuildSets(p, rep, texEntries);
             return p;
         }
 
+        /// <summary>True when a glTF importer package (glTFast) is installed, so .glb/.gltf files import as prefabs.</summary>
+        public static bool GltfInstalled()
+        {
+            foreach (var n in new[] { "com.unity.cloud.gltfast", "com.atteneder.gltfast", "org.khronos.unitygltf" })
+                if (UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/" + n) != null) return true;
+            return false;
+        }
         // ---- meshes ---------------------------------------------------------------------------------------------
 
         static MeshEntry MakeMesh(ConverterOptions o, ConversionReport rep, string f, string rel, string relDir, string ext, string stem)
@@ -102,11 +165,13 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             switch (o.scaleMode)
             {
                 case ConvScaleMode.Auto:
-                    if (ext == ".obj")
+                    if (ext == ".glb" || ext == ".gltf") { m.useFileScale = false; m.scale = 1f; m.scaleNote = "glTF metres (auto x0.01 if the prefab turns out larger than 100 m)"; }
+                    else if (ext == ".obj")
                     {
                         m.objExtent = ObjExtent(f);
                         m.useFileScale = false;
-                        if (m.objExtent > 50f) { m.scale = 0.01f; m.scaleNote = $"OBJ extent {m.objExtent:0.#} units, treated as UE centimetres (x0.01)"; }
+                        if (IsPskObj(f)) { m.scale = 1f; m.scaleNote = $"converted from PSKX, already metres (extent {m.objExtent:0.##} m)"; }
+                        else if (m.objExtent > 50f) { m.scale = 0.01f; m.scaleNote = $"OBJ extent {m.objExtent:0.#} units, treated as UE centimetres (x0.01)"; }
                         else { m.scale = 1f; m.scaleNote = $"OBJ extent {m.objExtent:0.##} units, treated as metres (x1)"; }
 
                     }
@@ -171,6 +236,11 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                 if (k == token.Length) return true;
             }
             return false;
+        }
+
+        static bool IsPskObj(string path)
+        {
+            try { using (var sr = new StreamReader(path)) return (sr.ReadLine() ?? "") == PskToObj.Marker; } catch { return false; }
         }
 
         static float ObjExtent(string path)

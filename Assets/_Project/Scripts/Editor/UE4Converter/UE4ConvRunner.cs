@@ -54,7 +54,12 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                 string err = Validate(o);
                 if (err != null) { rep.Add(ReportKind.Warning, "Setup", null, null, err); return Finish(rep, o); }
                 Registry.Clear(); Registry.Opts = o;
-                var plan = Planner.Build(o, rep);
+                string ign = GitIgnoreWarning(o.DestFolder);
+                if (ign != null) rep.Add(ReportKind.Warning, "Git", null, o.DestFolder, ign);
+                string staging = StageUModel(o, rep);
+                if (rep.cancelled) return Finish(rep, o);
+                if (staging != null && o.useUModel && o.meshFormat == UModelMesh.Psk && !o.soundsOnly) ConvertPsk(staging, rep);
+                var plan = Planner.Build(o, rep, staging);
                 if (o.dryRun) DryReport(plan, rep);
                 else
                 {
@@ -91,6 +96,128 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
 
         static bool Prog(string title, string info, float f) => !EditorUtility.DisplayCancelableProgressBar("UE4 -> Unity: " + title, info, Mathf.Clamp01(f));
 
+        // ---- UModel extraction ------------------------------------------------------------------------------------
+
+        /// <summary>Runs UModel over a .uasset source into Library/UE4Converter/staging/&lt;pack&gt;. Returns the staging folder, or null.</summary>
+        /// <summary>UModel PSKX static meshes -> OBJ/MTL in the staging folder (Unity imports those natively).</summary>
+        static void ConvertPsk(string staging, ConversionReport rep)
+        {
+            if (!Directory.Exists(staging)) return;
+            var r = PskToObj.ConvertTree(staging, name => Prog("Converting PSK meshes", name, 0.5f));
+            EditorUtility.ClearProgressBar();
+            if (r.converted + r.skippedSkeletal + r.failed == 0) return;
+            rep.Add(ReportKind.Info, "PSK -> OBJ", null, null, $"{r.converted} static mesh(es) converted from PSKX to OBJ ({r.tris} new triangles). Winding was set per mesh so faces point outward; normals come from the smoothing groups.");
+            foreach (var s in r.skeletal.Take(30)) rep.Add(ReportKind.Unconvertible, "Skeletal PSK", s.Replace(staging, "").TrimStart('\\', '/'), null, "Skeletal meshes (bones/weights) cannot be converted without glTF. Re-run with mesh format glTF and glTFast installed.");
+            foreach (var e in r.errors) rep.Add(ReportKind.Warning, "PSK -> OBJ", null, null, "failed: " + e);
+        }
+
+        static string StageUModel(ConverterOptions o, ConversionReport rep)
+        {
+            if (!o.useUModel) return null;
+            int pkgs;
+            try { pkgs = Directory.EnumerateFiles(o.sourceFolder, "*.uasset", SearchOption.AllDirectories).Count(); } catch { pkgs = 0; }
+            if (pkgs == 0) return null;
+
+            string exe = UModel.Find(o);
+            string staging = UModel.StagingDir(o.packName);
+            if (exe == null)
+            {
+                rep.Add(ReportKind.Warning, "UModel", null, null, UModel.MissingMessage);
+                rep.umodelSummary = "umodel.exe not found; .uasset files were only listed";
+                return null;
+            }
+            string args = UModel.BuildArgs(o, o.sourceFolder, staging);
+            if (o.dryRun)
+            {
+                rep.Add(ReportKind.Info, "UModel", null, null, $"would extract {pkgs} .uasset packages with: \"{exe}\" {args}");
+                rep.umodelSummary = $"dry run: would extract {pkgs} packages with {exe}";
+                return null;
+            }
+            if (o.reuseStaging && UModel.CountFiles(staging) > 0)
+            {
+                rep.umodelSummary = "reused an earlier extraction (" + UModel.Describe(staging) + ")";
+                rep.Add(ReportKind.Info, "UModel", null, staging, "reusing the earlier extraction; turn off 'Reuse staging' to run UModel again");
+                return staging;
+            }
+            try { if (Directory.Exists(staging)) Directory.Delete(staging, true); Directory.CreateDirectory(staging); }
+            catch (Exception e) { rep.Add(ReportKind.Warning, "UModel", null, staging, "could not prepare staging folder: " + e.Message); return null; }
+
+            string logPath = Path.Combine(ReportFolder, ConverterOptions.Sanitize(o.packName) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_umodel.log");
+            var r = UModel.Run(exe, args, logPath, (line, n) =>
+                EditorUtility.DisplayCancelableProgressBar("UE4 -> Unity: UModel extracting " + o.packName,
+                    $"{n} objects exported ({pkgs} .uasset packages)  {(line != null && line.Length > 90 ? line.Substring(0, 90) : line)}",
+                    Mathf.PingPong((float)EditorApplication.timeSinceStartup * 0.15f, 1f)));
+            rep.umodelLog = logPath;
+            int files = UModel.CountFiles(staging);
+            rep.umodelSummary = $"exit code {r.exitCode}, {files} files extracted ({UModel.Describe(staging)}); exported objects: " +
+                                (r.exported.Count == 0 ? "none logged" : string.Join(", ", r.exported.OrderByDescending(k => k.Value).Select(k => k.Value + " " + k.Key)));
+            if (!r.started) { rep.Add(ReportKind.Warning, "UModel", null, null, r.summary); return null; }
+            if (r.cancelled) { rep.cancelled = true; rep.Add(ReportKind.Warning, "Cancelled", null, null, "UModel extraction cancelled; nothing was converted. Files extracted so far stay in " + staging); return null; }
+            if (r.exitCode != 0) rep.Add(ReportKind.Warning, "UModel", null, null, "UModel exited with code " + r.exitCode + "; see the log.");
+            if (r.errors.Any(e => e.IndexOf("Unversioned", StringComparison.OrdinalIgnoreCase) >= 0))
+                rep.Add(ReportKind.Warning, "UModel", null, null, "UModel says these UE4 packages are unversioned: pick the pack's engine version (for example ue4.26 for 'v4.26' packs) in the UModel section and run again.");
+            foreach (var e in r.errors.Take(15)) rep.Add(ReportKind.Warning, "UModel log", null, null, e);
+            if (r.errors.Count > 15) rep.Add(ReportKind.Warning, "UModel log", null, null, (r.errors.Count - 15) + " more error/warning lines in the log");
+            if (files == 0)
+            {
+                rep.Add(ReportKind.Warning, "UModel", null, null, "UModel produced no files. Usual causes: wrong engine version (-game), packs that need an AES key, or the folder is not a 'Content' folder with .uasset/.uexp pairs.");
+                return null;
+            }
+            return staging;
+        }
+
+        /// <summary>Vendor-derived output must stay out of git. Returns a warning if the destination is NOT ignored (null if ignored or git is unavailable).</summary>
+        public static string GitIgnoreWarning(string destAsset)
+        {
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo("git", "check-ignore -q -- \"" + destAsset + "/x\"")
+                { WorkingDirectory = UModel.ProjectRoot, UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true };
+                using (var p = System.Diagnostics.Process.Start(psi))
+                {
+                    if (!p.WaitForExit(8000)) { try { p.Kill(); } catch { } return null; }
+                    if (p.ExitCode == 1) return "The destination is NOT covered by .gitignore, so vendor-derived assets could be committed. Use Assets/_Vendor/Converted (ignored) or add an ignore pattern.";
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        // ---- batch --------------------------------------------------------------------------------------------------
+
+        [Serializable] sealed class BatchManifest { public List<string> reports = new List<string>(); }
+
+        /// <summary>Converts every folder in o.batchFolders as its own pack (pack name = folder name) under o.destRoot.</summary>
+        public static List<ConversionReport> RunBatch(ConverterOptions o)
+        {
+            var list = new List<ConversionReport>();
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var f in o.batchFolders.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                var c = JsonUtility.FromJson<ConverterOptions>(JsonUtility.ToJson(o));
+                c.batchFolders = new List<string>();
+                c.sourceFolder = f;
+                string n = ConverterOptions.Sanitize(new DirectoryInfo(f.TrimEnd('\\', '/')).Name), u = n;
+                for (int k = 2; !names.Add(u); k++) u = n + "_" + k;
+                c.packName = u;
+                var r = Run(c);
+                list.Add(r);
+                if (r.cancelled) break;
+            }
+            var changed = list.Where(r => !r.dryRun && r.jsonPath != null && r.created.Count + r.overwritten.Count > 0).Select(r => r.jsonPath).ToList();
+            if (changed.Count > 0)
+            {
+                try
+                {
+                    Directory.CreateDirectory(ReportFolder);
+                    string path = Path.Combine(ReportFolder, "batch_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") + ".json");
+                    File.WriteAllText(path, JsonUtility.ToJson(new BatchManifest { reports = changed }, true));
+                    EditorPrefs.SetString(LastReportPref, path);
+                }
+                catch { }
+            }
+            return list;
+        }
         // ---- dry run ----------------------------------------------------------------------------------------------
 
         static void DryReport(Plan p, ConversionReport rep)
@@ -109,7 +236,9 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                     $"{m.kind}{(m.lod >= 0 ? ", LOD" + m.lod : "")}; scale: {m.scaleNote}{(m.hasUcx ? "; has UCX/UBX collision shells" : "")}{(m.hasAnim ? "; has animation takes" : "")}");
             foreach (var j in p.prefabs)
                 rep.Add(ReportKind.Planned, "Prefab", null, j.prefabPath, $"{j.lods.Count} LOD level(s){(j.lods.Count > 1 ? " -> LODGroup" : "")}{(p.o.generateColliders ? ", colliders" : "")}");
-            foreach (var a in p.audio) rep.Add(ReportKind.Planned, "Audio", a.src, a.dest, "copy");
+            if (p.audio.Count <= 200) foreach (var a in p.audio) rep.Add(ReportKind.Planned, "Audio", a.src, a.dest, "copy; load type chosen from clip length (short/UI decompress on load, long streamed)");
+            else foreach (var g in p.audio.GroupBy(a => Path.GetDirectoryName(a.dest).Replace('\\', '/'))) rep.Add(ReportKind.Planned, "Audio", null, g.Key, g.Count() + " clips");
+            if (p.pendingGltf.Count > 0) rep.Add(ReportKind.Warning, "glTF meshes", null, null, GltfMessage(p.pendingGltf.Count));
             rep.Add(ReportKind.Info, "Materials", null, null, "URP Lit materials are matched to texture sets after the meshes are imported (slot names come from the imported FBX/OBJ), so they are not listed in a dry run.");
         }
 
@@ -165,6 +294,11 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                     if (!Prog("Meshes", m.stem, step++ / (float)total)) { c.cancelled = true; break; }
                     if (!CanWrite(c, m.destAsset, m.src, "Mesh", out bool ex)) continue;
                     File.Copy(m.src, Disk(m.destAsset), true);
+                    if (m.IsGltf && m.ext == ".gltf")
+                    {
+                        string bin = Path.ChangeExtension(m.src, ".bin");
+                        if (File.Exists(bin)) { string bd = Path.ChangeExtension(m.destAsset, ".bin"); File.Copy(bin, Disk(bd), true); Wrote(c, bd, false, false); }
+                    }
                     bool human = o.rig == RigMode.Humanoid || (o.rig == RigMode.Auto && (HumanoidRx.IsMatch(m.stem) || HumanoidRx.IsMatch(m.relDir)));
                     Registry.Models[Registry.N(m.destAsset)] = new ModelJob
                     {
@@ -177,14 +311,28 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                 }
 
             if (!c.cancelled)
+            {
+                int skippedAudio = 0, n = 0, audioCount = 0; long audioBytes = 0; var failedAudio = new List<string>(); var perDir = new Dictionary<string, int>();
                 foreach (var a in p.audio)
                 {
-                    if (!Prog("Audio", Path.GetFileName(a.src), step++ / (float)total)) { c.cancelled = true; break; }
-                    if (!CanWrite(c, a.dest, a.src, "Audio", out bool ex)) continue;
-                    File.Copy(a.src, Disk(a.dest), true); Wrote(c, a.dest, ex, false);
-                    rep.Add(ReportKind.Converted, "Audio", a.src, a.dest, "copied");
+                    if ((n++ % 25) == 0 && !Prog("Audio", Path.GetFileName(a.src), step / (float)total)) { c.cancelled = true; break; }
+                    string disk = Disk(a.dest); bool exA = File.Exists(disk);
+                    if (exA && !o.overwrite) { skippedAudio++; continue; }
+                    try { EnsureFolder(Path.GetDirectoryName(a.dest).Replace('\\', '/')); File.Copy(a.src, disk, true); }
+                    catch (Exception e) { failedAudio.Add(a.src + ": " + e.Message); continue; }
+                    audioBytes += new FileInfo(disk).Length; audioCount++;
+                    var job = AudioProbe.Classify(a.dest, AudioProbe.Duration(a.src));
+                    Registry.Audio[Registry.N(a.dest)] = job;
+                    Wrote(c, a.dest, exA, false);
+                    string dir = Path.GetDirectoryName(a.dest).Replace('\\', '/'); perDir.TryGetValue(dir, out int cnt); perDir[dir] = cnt + 1;
+                    if (p.audio.Count <= 200) rep.Add(ReportKind.Converted, "Audio", a.src, a.dest, $"{job.seconds:0.0#} s, load type {job.load}");
                 }
-
+                step += p.audio.Count;
+                if (p.audio.Count > 200) foreach (var kv in perDir) rep.Add(ReportKind.Converted, "Audio", null, kv.Key, kv.Value + " clips (short/UI clips decompress on load, medium compressed in memory, 20 s+ streamed)");
+                if (skippedAudio > 0) rep.Add(ReportKind.Skipped, "Audio", null, null, skippedAudio + " clips already exist (enable Overwrite to replace)");
+                foreach (var fa in failedAudio.Take(30)) rep.Add(ReportKind.Warning, "Audio", null, null, "copy failed: " + fa);
+                if (audioCount > 0 || failedAudio.Count > 0) rep.Add(ReportKind.Info, "Audio totals", null, p.dest, $"{audioCount} clips written, {audioBytes / 1048576.0:0.0} MB, {failedAudio.Count} copy failures");
+            }
             // batched import (textures first so materials can reference them)
             var imports = c.texImports.Concat(c.otherImports).Distinct().ToList();
             const int chunk = 24;
@@ -197,13 +345,36 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             }
 
             if (AssetDatabase.IsValidFolder(p.TmpFolder)) AssetDatabase.DeleteAsset(p.TmpFolder);
+            if (!c.cancelled && p.audio.Count > 0)
+            {
+                int bad = 0, checkedN = 0; var badList = new List<string>();
+                foreach (var a in p.audio)
+                {
+                    if (!Registry.Audio.ContainsKey(Registry.N(a.dest))) continue;
+                    if ((checkedN++ % 200) == 0 && !Prog("Verifying clips", $"{checkedN}", 0.8f)) break;
+                    if (AssetDatabase.LoadAssetAtPath<AudioClip>(a.dest) == null) { bad++; if (badList.Count < 30) badList.Add(a.dest); }
+                }
+                foreach (var b in badList) rep.Add(ReportKind.Warning, "Audio import", null, b, "Unity could not load this clip after import");
+                if (bad > 0) rep.Add(ReportKind.Warning, "Audio import", null, null, bad + " of " + checkedN + " clips failed to import");
+                else rep.Add(ReportKind.Info, "Audio import", null, null, "all " + checkedN + " clips loaded as AudioClip after import");
+            }
             rep.cancelled = c.cancelled;
             if (c.cancelled) { rep.Add(ReportKind.Warning, "Cancelled", null, null, "Cancelled by user; textures/meshes written so far were imported, materials and prefabs were not built."); return; }
 
             Prog("Animations", "rigs, avatars, loops", 0.82f);
             FixAnimations(c, written);
             if (o.makePrefabs) BuildPrefabs(c);
+
+            if (p.pendingGltf.Count > 0) rep.Add(ReportKind.Warning, "glTF meshes", null, null, GltfMessage(p.pendingGltf.Count));
+            if (p.stagingRoot != null)
+            {
+                if (o.keepStaging || p.pendingGltf.Count > 0) rep.Add(ReportKind.Info, "UModel", null, p.stagingRoot, "extraction kept (reused on the next run of this pack while 'Reuse staging' is on)");
+                else try { Directory.Delete(p.stagingRoot, true); } catch (Exception e) { rep.Add(ReportKind.Warning, "UModel", null, p.stagingRoot, "could not delete staging: " + e.Message); }
+            }
         }
+
+        static string GltfMessage(int n) =>
+            n + " mesh(es) were exported by UModel as glTF/GLB, but Unity cannot import glTF without a glTF package. In Window > Package Manager choose + > Add package by name... > com.unity.cloud.gltfast (Unity's glTFast), then run this pack again; the extraction is kept and reused, so UModel does not run twice. Textures and sounds were converted now.";
 
         // ---- textures ---------------------------------------------------------------------------------------------
 
@@ -476,14 +647,24 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             if (File.Exists(Disk(job.prefabPath)) && !o.overwrite) { rep.Add(ReportKind.Skipped, "Prefab", null, job.prefabPath, "already exists (enable Overwrite to replace)"); return; }
             bool existed = File.Exists(Disk(job.prefabPath));
 
-            var insts = new List<GameObject>();
+            var insts = new List<GameObject>(); var instMeshes = new List<MeshEntry>();
             foreach (var m in job.lods)
             {
                 var asset = AssetDatabase.LoadAssetAtPath<GameObject>(m.destAsset);
                 if (asset == null) { rep.Add(ReportKind.Warning, "Prefab", m.src, null, "mesh asset " + m.destAsset + " is not available (import failed?); skipped"); continue; }
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(asset, sc);
                 PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
-                insts.Add(go);
+                insts.Add(go); instMeshes.Add(m);
+                if (m.IsGltf)
+                {
+                    float f = m.scale;
+                    if (o.scaleMode == ConvScaleMode.Auto)
+                    {
+                        var rs = go.GetComponentsInChildren<Renderer>(true);
+                        if (rs.Length > 0) { var bb = rs[0].bounds; foreach (var r in rs) bb.Encapsulate(r.bounds); if (Mathf.Max(bb.size.x, Mathf.Max(bb.size.y, bb.size.z)) > 100f) { f = 0.01f; rep.Add(ReportKind.Info, "Scale", m.src, null, "glTF larger than 100 m, treated as UE centimetres (x0.01)"); } }
+                    }
+                    if (f != 1f) go.transform.localScale *= f;
+                }
             }
             if (insts.Count == 0) return;
 
@@ -658,6 +839,11 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public static string Revert(string jsonPath)
         {
             if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath)) return "No previous conversion report found.";
+            if (Path.GetFileName(jsonPath).StartsWith("batch_"))
+            {
+                var bm = JsonUtility.FromJson<BatchManifest>(File.ReadAllText(jsonPath));
+                return "Batch revert: " + string.Join(" | ", bm.reports.Select(r => Revert(r)));
+            }
             var rep = JsonUtility.FromJson<ConversionReport>(File.ReadAllText(jsonPath));
             int del = 0;
             AssetDatabase.StartAssetEditing();

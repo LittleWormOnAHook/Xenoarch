@@ -107,6 +107,23 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             return string.Join("/", parts);
         }
 
+        static readonly HashSet<string> ClassDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "soundwave", "texture2d", "staticmesh", "skeletalmesh", "animsequence", "animation", "material", "materialinstanceconstant", "texturecube", "soundcue", "texturerendertarget2d" };
+
+        /// <summary>UModel writes one folder per object class (SoundWave, Texture2D, ...); drop them so a mesh and its textures share a folder.</summary>
+        public static string CleanClassDirs(string relDir)
+        {
+            if (string.IsNullOrEmpty(relDir)) return "";
+            var parts = relDir.Split('/').Where(s => s.Length > 0 && !ClassDirs.Contains(s)).ToList();
+            int ci = parts.FindIndex(s => s.Equals("Content", StringComparison.OrdinalIgnoreCase));   // UE cooked layout: <Pack>/.../Content/<Game folders>
+            if (ci >= 0 && ci < parts.Count - 1) parts.RemoveRange(0, ci + 1);
+            return string.Join("/", parts);
+        }
+
+        public static bool IsExportable(string ueCategory) =>
+            ueCategory.StartsWith("Static mesh") || ueCategory.StartsWith("Skeletal mesh") || ueCategory.StartsWith("Texture") ||
+            ueCategory.StartsWith("Animation (") || ueCategory.StartsWith("Sound") || ueCategory.StartsWith("Other Unreal");
+
         public static string UeCategory(string fileName, string ext)
         {
             string n = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();

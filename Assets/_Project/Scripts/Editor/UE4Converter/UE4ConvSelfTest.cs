@@ -22,6 +22,8 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         const string Trigger = "Temp/xenoarch_ue4conv_test.trigger";
         const string LogPath = "Logs/xenoarch_ue4conv_test.txt";
         const string DestRoot = "Assets/_Project/UE4ConvTest";
+        const string UmDest = "Assets/_Project/UE4ConvTestUm";
+        const string UmDest2 = "Assets/_Project/UE4ConvTestUm2";
         static double _next;
 
         static UE4ConverterSelfTest() { EditorApplication.update += Poll; }
@@ -57,8 +59,10 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                 Directory.CreateDirectory(Path.Combine(tmp, "Meshes")); Directory.CreateDirectory(Path.Combine(tmp, "Textures")); Directory.CreateDirectory(Path.Combine(tmp, "Content"));
                 Generate(tmp);
                 NameChecks();
+                UModelChecks(tmp);
+            PskChecks(tmp);
 
-                var o = new ConverterOptions { sourceFolder = tmp, destRoot = "Assets/_Project", packName = "UE4ConvTest", overwrite = true, dryRun = true };
+                var o = new ConverterOptions { sourceFolder = tmp, destRoot = "Assets/_Project", packName = "UE4ConvTest", overwrite = true, dryRun = true, useUModel = false };
                 // pack name is also the destination folder name: Assets/_Project/UE4ConvTest
                 Check(o.DestFolder == DestRoot, "destination path", o.DestFolder);
 
@@ -140,22 +144,26 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                 string msg = UE4Converter.Revert(real.jsonPath);
                 Log.AppendLine("revert: " + msg);
                 Check(!AssetDatabase.IsValidFolder(DestRoot) || AssetDatabase.FindAssets("", new[] { DestRoot }).Length == 0, "Revert last conversion removes the created assets");
+                FakeUModelEndToEnd(tmp);
             }
             catch (Exception e) { Check(false, "test threw an exception", e.ToString()); }
             finally
             {
                 EditorUtility.ClearProgressBar();
                 if (AssetDatabase.IsValidFolder(DestRoot)) AssetDatabase.DeleteAsset(DestRoot);
+                if (AssetDatabase.IsValidFolder(UmDest)) AssetDatabase.DeleteAsset(UmDest);
+                if (AssetDatabase.IsValidFolder(UmDest2)) AssetDatabase.DeleteAsset(UmDest2);
+                try { var st = UModel.StagingDir("UE4ConvTestUm"); if (Directory.Exists(st)) Directory.Delete(st, true); } catch { }
                 if (Directory.Exists(tmp)) try { Directory.Delete(tmp, true); } catch { }
                 try
                 {
                     string rd = UE4Converter.ReportFolder;
-                    if (Directory.Exists(rd)) foreach (var f in Directory.GetFiles(rd, "UE4ConvTest_*")) File.Delete(f);
+                    if (Directory.Exists(rd)) foreach (var f in Directory.GetFiles(rd, "UE4ConvTest*")) File.Delete(f);
                 }
                 catch { }
                 AssetDatabase.Refresh();
                 Check(SceneManager.GetActiveScene().isDirty == dirtyBefore, "active scene dirty flag unchanged", "before " + dirtyBefore + ", after " + SceneManager.GetActiveScene().isDirty);
-                Check(!AssetDatabase.IsValidFolder(DestRoot) && !Directory.Exists(tmp), "scratch folders cleaned up");
+                Check(!AssetDatabase.IsValidFolder(DestRoot) && !AssetDatabase.IsValidFolder(UmDest) && !AssetDatabase.IsValidFolder(UmDest2) && !Directory.Exists(tmp) && !Directory.Exists(UModel.StagingDir("UE4ConvTestUm")), "scratch folders cleaned up");
                 Log.Insert(0, $"UE4 converter self-test {DateTime.Now:s}: {(_fail == 0 ? "ALL PASSED" : _fail + " FAILED")}\n");
                 Directory.CreateDirectory("Logs");
                 File.WriteAllText(LogPath, Log.ToString());
@@ -188,6 +196,163 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             Check(b == "SM_Arch" && lod == 1, "StripLod SM_Arch_LOD1");
         }
 
+        // ---- PSKX -> OBJ -------------------------------------------------------------------------------------
+
+        static void Chunk(BinaryWriter w, string id, int size, int count, Action<BinaryWriter> body)
+        {
+            var name = new byte[20]; Encoding.ASCII.GetBytes(id).CopyTo(name, 0);
+            w.Write(name); w.Write(0); w.Write(size); w.Write(count); body?.Invoke(w);
+        }
+
+        /// <summary>A 100 cm cube with deliberately INWARD winding, one material, one smoothing group per face.</summary>
+        static byte[] CubePskx()
+        {
+            var pts = new float[][] { new[]{-50f,-50f,-50f}, new[]{50f,-50f,-50f}, new[]{50f,50f,-50f}, new[]{-50f,50f,-50f}, new[]{-50f,-50f,50f}, new[]{50f,-50f,50f}, new[]{50f,50f,50f}, new[]{-50f,50f,50f} };
+            int[][] quads = { new[]{0,1,2,3}, new[]{4,5,6,7}, new[]{0,1,5,4}, new[]{1,2,6,5}, new[]{2,3,7,6}, new[]{3,0,4,7} };
+            var ms = new MemoryStream(); var w = new BinaryWriter(ms);
+            Chunk(w, "ACTRHEAD", 0, 0, null);
+            Chunk(w, "PNTS0000", 12, 8, b => { foreach (var p in pts) foreach (var v in p) b.Write(v); });
+            var wedges = new List<int>(); var faces = new List<int[]>();
+            foreach (var q0 in quads)
+            {
+                var q = (int[])q0.Clone();
+                // make the quad outward under the standard cross product, then reverse it: the whole cube ends up consistently INWARD
+                float[] A = pts[q[0]], B = pts[q[1]], C = pts[q[2]];
+                float nx = (B[1]-A[1])*(C[2]-A[2]) - (B[2]-A[2])*(C[1]-A[1]), ny = (B[2]-A[2])*(C[0]-A[0]) - (B[0]-A[0])*(C[2]-A[2]), nz = (B[0]-A[0])*(C[1]-A[1]) - (B[1]-A[1])*(C[0]-A[0]);
+                bool outward = nx * A[0] + ny * A[1] + nz * A[2] > 0;
+                if (outward) Array.Reverse(q);
+                int b0 = wedges.Count; foreach (int pi in q) wedges.Add(pi); faces.Add(new[] { b0, b0 + 1, b0 + 2 }); faces.Add(new[] { b0, b0 + 2, b0 + 3 }); }
+            Chunk(w, "VTXW0000", 16, wedges.Count, b => { foreach (int pi in wedges) { b.Write((ushort)pi); b.Write((ushort)0); b.Write(0.25f); b.Write(0.75f); b.Write((byte)0); b.Write((byte)0); b.Write((ushort)0); } });
+            Chunk(w, "FACE0000", 12, faces.Count, b => { int i = 0; foreach (var f in faces) { b.Write((ushort)f[0]); b.Write((ushort)f[1]); b.Write((ushort)f[2]); b.Write((byte)0); b.Write((byte)0); b.Write((uint)(1 << (i++ / 2))); } });
+            Chunk(w, "MATT0000", 88, 1, b => { var n = new byte[64]; Encoding.ASCII.GetBytes("MI_Cube").CopyTo(n, 0); b.Write(n); b.Write(new byte[24]); });
+            Chunk(w, "REFSKELT", 120, 0, null);
+            Chunk(w, "RAWWEIGHTS", 12, 0, null);
+            w.Flush(); return ms.ToArray();
+        }
+
+        static void PskChecks(string tmp)
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "xenoarch_psk_test"); if (Directory.Exists(dir)) Directory.Delete(dir, true); Directory.CreateDirectory(dir);
+            string psk = Path.Combine(dir, "SM_Cube.pskx"); File.WriteAllBytes(psk, CubePskx());
+            var r = PskToObj.ConvertTree(dir);
+            string obj = Path.Combine(dir, "SM_Cube.obj");
+            Check(r.converted == 1 && r.failed == 0 && File.Exists(obj) && File.Exists(Path.Combine(dir, "SM_Cube.mtl")), "PSKX static mesh converts to OBJ + MTL", $"converted {r.converted}, failed {r.failed}");
+            if (!File.Exists(obj)) return;
+            var lines = File.ReadAllLines(obj); var ci = CultureInfo.InvariantCulture;
+            Check(lines[0] == PskToObj.Marker, "OBJ carries the metres marker");
+            var v = lines.Where(l => l.StartsWith("v ")).Select(l => l.Split(' ').Skip(1).Select(x => float.Parse(x, ci)).ToArray()).ToList();
+            var faces = lines.Where(l => l.StartsWith("f ")).Select(l => l.Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(t => int.Parse(t.Split('/')[0]) - 1).ToArray()).ToList();
+            Check(v.Count == 8 && faces.Count == 12, "cube has 8 points and 12 triangles", v.Count + " / " + faces.Count);
+            float ext = v.Max(p => p[1]) - v.Min(p => p[1]);
+            Check(Mathf.Abs(ext - 1f) < 0.001f && lines.Any(l => l == "usemtl MI_Cube"), "100 cm becomes 1 m and the PSK material name is used", ext.ToString(ci));
+            // what Unity's OBJ importer will produce: x mirrored back, winding reversed back
+            int outward = 0;
+            foreach (var f in faces)
+            {
+                var a = new Vector3(-v[f[0]][0], v[f[0]][1], v[f[0]][2]); var b = new Vector3(-v[f[2]][0], v[f[2]][1], v[f[2]][2]); var c = new Vector3(-v[f[1]][0], v[f[1]][1], v[f[1]][2]);
+                if (Vector3.Dot(Vector3.Cross(b - a, c - a), (a + b + c) / 3f) > 0) outward++;
+            }
+            Check(outward == 12, "inward-wound input is flipped so all faces point outward after Unity import", outward + " / 12");
+            // a skeletal mesh must be skipped, not mangled
+            string sk = Path.Combine(dir, "SK_Bone.psk"); var bytes = CubePskx();
+            var ms = new MemoryStream(); var w = new BinaryWriter(ms); w.Write(bytes); w.Flush();
+            var m2 = new MemoryStream(); var w2 = new BinaryWriter(m2);
+            Chunk(w2, "ACTRHEAD", 0, 0, null); Chunk(w2, "PNTS0000", 12, 1, b => { b.Write(0f); b.Write(0f); b.Write(0f); });
+            Chunk(w2, "VTXW0000", 16, 1, b => b.Write(new byte[16])); Chunk(w2, "FACE0000", 12, 1, b => b.Write(new byte[12]));
+            Chunk(w2, "REFSKELT", 120, 2, b => b.Write(new byte[240])); w2.Flush(); File.WriteAllBytes(sk, m2.ToArray());
+            var r2 = PskToObj.ConvertTree(dir);
+            Check(r2.skippedSkeletal == 1 && !File.Exists(Path.Combine(dir, "SK_Bone.obj")), "skeletal PSK is skipped and reported, not converted");
+            try { Directory.Delete(dir, true); } catch { }
+        }
+        static void UModelChecks(string tmp)
+        {
+            var o = new ConverterOptions { ueGame = "ue4.26", meshFormat = UModelMesh.Gltf, exportPng = true, exportLods = false };
+            string args = UModel.BuildArgs(o, @"C:\x y\Pack\", @"C:\st");
+            Check(args == "-path=\"C:/x y/Pack\" -game=ue4.26 -export -out=\"C:/st\" -sounds -png -gltf \"*.uasset\"", "UModel args: glTF + PNG + sounds, quoted forward-slash paths", args);
+            o.ueGame = "(auto-detect)"; o.meshFormat = UModelMesh.None; o.exportPng = false; o.exportLods = true;
+            args = UModel.BuildArgs(o, @"C:\p", @"C:\st");
+            Check(args == "-path=\"C:/p\" -export -out=\"C:/st\" -sounds -nomesh -nostat -noanim \"*.uasset\"", "UModel args: auto game, no meshes, TGA", args);
+            o.soundsOnly = true; o.meshFormat = UModelMesh.None; o.exportLods = false;
+            args = UModel.BuildArgs(o, @"C:\p", @"C:\st");
+            Check(args == "-path=\"C:/p\" -export -out=\"C:/st\" -sounds -nomesh -nostat -noanim -notex \"*.uasset\"", "UModel args: sounds-only preset", args);
+            o.soundsOnly = false; o.meshFormat = UModelMesh.Psk; o.exportLods = true;
+            Check(UModel.BuildArgs(o, @"C:\p", @"C:\st").Contains("-lods") && !UModel.BuildArgs(o, @"C:\p", @"C:\st").Contains("-gltf"), "UModel args: PSK keeps -lods and omits -gltf");
+
+            var r = new UModelResult();
+            UModel.ParseLog("Loading package Foo\nExporting Texture2D T_A\nExporting SoundWave SW_B to x\nExporting SoundWave SW_C\nERROR: Unversioned UE4 packages are not supported.\nFailed to load Bar\nDone", r);
+            Check(r.exported.TryGetValue("SoundWave", out int sw) && sw == 2 && r.exported["Texture2D"] == 1 && r.errors.Count == 2 && r.errors[0].Contains("Unversioned"), "UModel log parsing counts exports per class and collects error lines", $"{r.exported.Count} classes, {r.errors.Count} errors");
+
+            string fd = Path.Combine(tmp, "tools"); Directory.CreateDirectory(fd);
+            File.WriteAllBytes(Path.Combine(fd, "umodel.exe"), new byte[1]); File.WriteAllBytes(Path.Combine(fd, "umodel_64.exe"), new byte[1]);
+            string found = UModel.Find(new ConverterOptions { umodelExe = "" }, new[] { fd });
+            Check(found != null && Path.GetFileName(found) == "umodel_64.exe" && Path.GetDirectoryName(found) == fd || found != null && !found.StartsWith(tmp), "umodel.exe detection prefers umodel_64.exe in a searched folder", found);
+            Check(UModel.Find(new ConverterOptions { umodelExe = Path.Combine(fd, "umodel.exe") }) == Path.Combine(fd, "umodel.exe"), "explicit umodel.exe path from settings wins");
+
+            string w1 = Path.Combine(tmp, "t1.wav"), w2 = Path.Combine(tmp, "t10.wav"), w3 = Path.Combine(tmp, "t30.wav");
+            Wav(w1, 1f); Wav(w2, 10f); Wav(w3, 30f);
+            Check(Mathf.Abs(AudioProbe.Duration(w1) - 1f) < 0.02f && Mathf.Abs(AudioProbe.Duration(w3) - 30f) < 0.02f, "WAV duration probe", AudioProbe.Duration(w1) + " / " + AudioProbe.Duration(w3));
+            Check(AudioProbe.Classify("a/b.wav", 1f).load == AudioClipLoadType.DecompressOnLoad && AudioProbe.Classify("a/b.wav", 10f).load == AudioClipLoadType.CompressedInMemory && AudioProbe.Classify("a/b.wav", 30f).load == AudioClipLoadType.Streaming
+                  && AudioProbe.Classify("Audio/Menu/click.wav", 6f).load == AudioClipLoadType.DecompressOnLoad, "audio load type: short/UI decompress, mid compressed, 20 s+ streaming");
+            Check(UE4Names.CleanClassDirs("Pack/SoundWave/UI") == "Pack/UI" && UE4Names.CleanClassDirs("Texture2D") == "", "UModel class folders are stripped");
+        }
+
+        static void Wav(string path, float seconds, int rate = 8000)
+        {
+            int n = (int)(seconds * rate);
+            using (var bw = new BinaryWriter(File.Create(path)))
+            {
+                bw.Write(new[] { 'R', 'I', 'F', 'F' }); bw.Write(36 + n); bw.Write(new[] { 'W', 'A', 'V', 'E', 'f', 'm', 't', ' ' });
+                bw.Write(16); bw.Write((short)1); bw.Write((short)1); bw.Write(rate); bw.Write(rate); bw.Write((short)1); bw.Write((short)8);
+                bw.Write(new[] { 'd', 'a', 't', 'a' }); bw.Write(n);
+                bw.Write(new byte[n]);
+            }
+        }
+
+        /// <summary>Runs the whole extraction stage against a FAKE umodel (a .cmd that prints UModel-style lines and copies a prepared fixture into the staging folder). It proves the orchestration, not real UModel.</summary>
+        static void FakeUModelEndToEnd(string tmp)
+        {
+            string fix = Path.Combine(tmp, "fixture"), src = Path.Combine(tmp, "umsrc", "Content");
+            Directory.CreateDirectory(Path.Combine(fix, "Pack", "Texture2D")); Directory.CreateDirectory(Path.Combine(fix, "Pack", "SoundWave", "UI")); Directory.CreateDirectory(Path.Combine(fix, "Pack", "SoundWave", "Amb")); Directory.CreateDirectory(src);
+            Png(Path.Combine(fix, "Pack", "Texture2D", "T_Fake_D.png"), 8, 8, (x, y) => new Color32(10, 20, 30, 255));
+            Wav(Path.Combine(fix, "Pack", "SoundWave", "UI", "SW_Click.wav"), 0.5f); Wav(Path.Combine(fix, "Pack", "SoundWave", "Amb", "SW_Wind.wav"), 25f);
+            bool gltfInstalled = Planner.GltfInstalled();
+            if (!gltfInstalled) { Directory.CreateDirectory(Path.Combine(fix, "Pack", "StaticMesh")); File.WriteAllBytes(Path.Combine(fix, "Pack", "StaticMesh", "SM_Fake.glb"), new byte[] { 1, 2, 3, 4 }); }
+            foreach (var n in new[] { "BP_Door.uasset", "SW_Click.uasset", "T_Fake_D.uasset" }) File.WriteAllBytes(Path.Combine(src, n), new byte[] { 0xC1, 0x83, 0x2A, 0x9E });
+
+            string staging = UModel.StagingDir("UE4ConvTestUm");
+            string cmd = Path.Combine(tmp, "fake_umodel.cmd");
+            File.WriteAllText(cmd, "@echo off\r\necho Fake UModel %*\r\necho Exporting Texture2D T_Fake_D\r\necho Exporting SoundWave SW_Click\r\necho ERROR: fake warning line\r\nxcopy /E /I /Y \"" + fix + "\\*\" \"" + staging + "\\\" >nul\r\nexit /b 0\r\n");
+            var o = new ConverterOptions
+            {
+                sourceFolder = Path.Combine(tmp, "umsrc"), destRoot = "Assets/_Project", packName = "UE4ConvTestUm", overwrite = true, useUModel = true,
+                umodelExe = cmd, reuseStaging = false, keepStaging = false, makePrefabs = true
+            };
+            var rep = UE4Converter.Run(o);
+            Log.AppendLine("--- fake umodel summary ---\n" + rep.Summary() + "\numodel: " + rep.umodelSummary);
+            Check(rep.umodelSummary != null && rep.umodelSummary.Contains("files extracted") && rep.umodelSummary.Contains("exit code 0"), "fake UModel run: summary records exit code and extracted files", rep.umodelSummary);
+            Check(rep.umodelLog != null && File.Exists(rep.umodelLog) && File.ReadAllText(rep.umodelLog).Contains("Exporting SoundWave SW_Click"), "UModel log captured to a file");
+            Check(rep.items.Any(i => i.category == "UModel log" && i.message.Contains("fake warning")), "UModel error lines are copied into the report");
+            var click = AssetImporter.GetAtPath(UmDest + "/Audio/Pack/UI/SW_Click.wav") as AudioImporter;
+            var wind = AssetImporter.GetAtPath(UmDest + "/Audio/Pack/Amb/SW_Wind.wav") as AudioImporter;
+            Check(click != null && click.defaultSampleSettings.loadType == AudioClipLoadType.DecompressOnLoad, "short UI clip imported as DecompressOnLoad", click == null ? "missing" : click.defaultSampleSettings.loadType.ToString());
+            Check(wind != null && wind.defaultSampleSettings.loadType == AudioClipLoadType.Streaming, "25 s ambience imported as Streaming", wind == null ? "missing" : wind.defaultSampleSettings.loadType.ToString());
+            Check(AssetDatabase.LoadAssetAtPath<Texture2D>(UmDest + "/Textures/Pack/T_Fake_D.png") != null, "extracted PNG texture converted into Textures/");
+            Check(rep.items.Any(i => i.kind == "Unconvertible" && i.category.Contains("Blueprint")), "Blueprint .uasset still reported as not convertible");
+            if (!gltfInstalled)
+            {
+                Check(rep.items.Any(i => i.category == "glTF meshes" && i.message.Contains("com.unity.cloud.gltfast")), "glTF meshes reported with the glTFast install instruction");
+                Check(Directory.Exists(staging), "staging kept while glTF meshes are pending");
+            }
+            else Check(!Directory.Exists(staging), "staging removed after a successful conversion");
+
+            // sounds-only preset shape: exact destination, no Audio/ subfolder, nothing but clips
+            o.destOverride = UmDest2; o.audioSubfolder = ""; o.soundsOnly = true; o.meshFormat = UModelMesh.None; o.reuseStaging = true; o.makePrefabs = false;
+            var rep2 = UE4Converter.Run(o);
+            Log.AppendLine("--- sounds-only run ---\n" + rep2.Summary());
+            Check(AssetDatabase.LoadAssetAtPath<AudioClip>(UmDest2 + "/Pack/UI/SW_Click.wav") != null && AssetDatabase.LoadAssetAtPath<AudioClip>(UmDest2 + "/Pack/Amb/SW_Wind.wav") != null, "sounds-only: clips land directly under the destination with the folder structure kept");
+            Check(!AssetDatabase.IsValidFolder(UmDest2 + "/Textures") && !AssetDatabase.IsValidFolder(UmDest2 + "/Models"), "sounds-only: no textures or meshes written");
+            Check(rep2.items.Any(i => i.category == "Audio totals" && i.message.Contains("2 clips")) && rep2.items.Any(i => i.category == "Audio import" && i.message.Contains("all 2 clips")), "sounds-only: clip count, size and import verification reported");
+        }
         // ---- fixtures -------------------------------------------------------------------------------------------
 
         static void Generate(string root)

@@ -49,6 +49,21 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             }
         }
 
+        void OnPreprocessAudio()
+        {
+            if (Registry.Audio.Count == 0 || !Registry.Audio.TryGetValue(assetPath, out var job)) return;
+            var ai = (AudioImporter)assetImporter;
+            var st = ai.defaultSampleSettings;
+            st.loadType = job.load;
+            st.compressionFormat = AudioCompressionFormat.Vorbis;
+            st.quality = 0.7f;
+            st.sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate;
+            ai.defaultSampleSettings = st;
+            st.preloadAudioData = job.load != AudioClipLoadType.Streaming;
+            ai.defaultSampleSettings = st;
+            ai.loadInBackground = job.load == AudioClipLoadType.Streaming || job.seconds > 8f;
+        }
+
         void OnPreprocessModel()
         {
             if (Registry.Models.Count == 0 || !Registry.Models.TryGetValue(assetPath, out var job)) return;

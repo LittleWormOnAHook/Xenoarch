@@ -16,9 +16,10 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         string _status = "";
         List<string> _roots = new List<string>();
         int _rootIdx;
-        bool _fMesh = true, _fPrefab = true, _fTex = true, _fMisc = true;
+        bool _fMesh = true, _fPrefab = true, _fTex = true, _fMisc = true, _fUm = true;
+        string _umFor = "\u0001", _umFound, _gitFor, _gitWarn;
         ConversionReport _last;
-        const string DefaultRoot = "Assets/_Project/Ruins";
+        const string DefaultRoot = "Assets/_Vendor/Converted";   // already covered by .gitignore (/Assets/_Vendor/)
         static readonly int[] Sizes = { 512, 1024, 2048, 4096, 8192 };
         static readonly int[] Yaws = { 0, 90, 180, 270 };
 
@@ -72,6 +73,27 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                     _o.packName = _autoName = ConverterOptions.Sanitize(new DirectoryInfo(_o.sourceFolder.TrimEnd('\\', '/')).Name);
             }
 
+            EditorGUILayout.LabelField("Batch (several packs)", EditorStyles.boldLabel);
+            for (int i = 0; i < _o.batchFolders.Count; i++)
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField(_o.batchFolders[i], EditorStyles.miniLabel);
+                    if (GUILayout.Button("X", GUILayout.Width(24))) { _o.batchFolders.RemoveAt(i); break; }
+                }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Add source above") && Directory.Exists(_o.sourceFolder) && !_o.batchFolders.Contains(_o.sourceFolder)) _o.batchFolders.Add(_o.sourceFolder);
+                if (GUILayout.Button("Add all subfolders of..."))
+                {
+                    string p = EditorUtility.OpenFolderPanel("Folder that contains one subfolder per pack (for example A:/UE_Packs)", "", "");
+                    if (!string.IsNullOrEmpty(p))
+                        foreach (var sub in Directory.GetDirectories(p).OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+                            if (!_o.batchFolders.Contains(sub)) _o.batchFolders.Add(sub);
+                }
+                if (GUILayout.Button("Clear", GUILayout.Width(50))) _o.batchFolders.Clear();
+            }
+            EditorGUILayout.HelpBox("Keep raw UE packs outside the project (for example A:\\UE_Packs\\<PackName>). With folders in this list, Convert runs each one as its own pack under the destination root (pack name = folder name). The Source field above is used when the list is empty.", MessageType.None);
+
             EditorGUILayout.LabelField("Destination", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -91,6 +113,44 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             }
             _o.packName = EditorGUILayout.TextField("Pack name", _o.packName);
             EditorGUILayout.LabelField("Output", _o.DestFolder, EditorStyles.miniLabel);
+            if (_gitFor != _o.DestFolder) { _gitFor = _o.DestFolder; _gitWarn = UE4Converter.GitIgnoreWarning(_o.DestFolder); }
+            if (_gitWarn != null) EditorGUILayout.HelpBox(_gitWarn, MessageType.Warning);
+
+            _fUm = EditorGUILayout.BeginFoldoutHeaderGroup(_fUm, "UModel (extracts .uasset packs)");
+            if (_fUm)
+            {
+                _o.useUModel = EditorGUILayout.Toggle(new GUIContent("Extract .uasset with UModel", "When the source contains .uasset files, run umodel.exe first and convert what it exports."), _o.useUModel);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    _o.umodelExe = EditorGUILayout.TextField("umodel.exe", _o.umodelExe);
+                    if (GUILayout.Button("Browse...", GUILayout.Width(80)))
+                    {
+                        string p = EditorUtility.OpenFilePanel("umodel.exe", Directory.Exists(UModel.RecommendedDir) ? UModel.RecommendedDir : "", "exe");
+                        if (!string.IsNullOrEmpty(p)) { _o.umodelExe = p; GUI.FocusControl(null); }
+                    }
+                    if (GUILayout.Button("Detect", GUILayout.Width(60))) { _umFor = "\u0001"; var d = UModel.Find(new ConverterOptions()); if (d != null) _o.umodelExe = d; }
+                }
+                if (_umFor != _o.umodelExe) { _umFor = _o.umodelExe; _umFound = UModel.Find(_o); }
+                if (_umFound != null) EditorGUILayout.HelpBox("UModel found: " + _umFound, MessageType.Info);
+                else
+                {
+                    EditorGUILayout.HelpBox(UModel.MissingMessage, MessageType.Warning);
+                    if (GUILayout.Button("Open UModel download page")) Application.OpenURL(UModel.DownloadPage);
+                }
+                int gi = Array.IndexOf(UModel.GamePresets, _o.ueGame);
+                int ng = EditorGUILayout.Popup("Engine version (-game)", Mathf.Max(0, gi), UModel.GamePresets);
+                if (ng != Mathf.Max(0, gi)) _o.ueGame = UModel.GamePresets[ng];
+                _o.ueGame = EditorGUILayout.TextField("   custom -game tag", _o.ueGame);
+                EditorGUILayout.HelpBox("Leave on auto-detect unless UModel reports an unknown version. Forcing a tag that does not match the package version makes UModel export nothing (seen with the Pro Sound pack).", MessageType.None);
+                _o.meshFormat = (UModelMesh)EditorGUILayout.EnumPopup(new GUIContent("Mesh export", "glTF: needs the glTFast package to import. PSK/PSA: Unity cannot import them (kept only in the staging folder). None: textures, sounds and animations only."), _o.meshFormat);
+                _o.exportPng = EditorGUILayout.Toggle("Textures as PNG (else TGA)", _o.exportPng);
+                _o.exportLods = EditorGUILayout.Toggle("Export mesh LODs", _o.exportLods);
+                _o.reuseStaging = EditorGUILayout.Toggle(new GUIContent("Reuse staging", "If this pack was already extracted (Library/UE4Converter/staging/<pack>) skip UModel and convert that."), _o.reuseStaging);
+                _o.keepStaging = EditorGUILayout.Toggle("Keep staging afterwards", _o.keepStaging);
+                if (!string.IsNullOrEmpty(_o.sourceFolder)) EditorGUILayout.SelectableLabel(UModel.BuildArgs(_o, _o.sourceFolder, UModel.StagingDir(_o.packName)), EditorStyles.miniLabel, GUILayout.Height(32));
+                if (!UnityEditorGltf()) EditorGUILayout.HelpBox("glTFast is not installed: glTF meshes cannot be imported yet (textures, sounds and OBJ/FBX work). Package Manager > + > Add package by name > com.unity.cloud.gltfast", MessageType.None);
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
 
             _fMesh = EditorGUILayout.BeginFoldoutHeaderGroup(_fMesh, "Meshes, scale, axis, rig");
             if (_fMesh)
@@ -130,6 +190,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             if (_fMisc)
             {
                 _o.copyAudio = EditorGUILayout.Toggle("Copy audio (wav/ogg/mp3)", _o.copyAudio);
+                _o.soundsOnly = EditorGUILayout.Toggle("Sounds only", _o.soundsOnly);
                 _o.overwrite = EditorGUILayout.Toggle(new GUIContent("Overwrite existing", "Off: anything that already exists at the destination is left alone and listed as skipped."), _o.overwrite);
                 _o.dryRun = EditorGUILayout.Toggle(new GUIContent("Dry run", "Scan and report what would happen; writes nothing under Assets."), _o.dryRun);
             }
@@ -139,7 +200,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUI.enabled = !EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling;
-                if (GUILayout.Button(_o.dryRun ? "Dry run" : "Convert", GUILayout.Height(30))) Go();
+                if (GUILayout.Button((_o.dryRun ? "Dry run" : "Convert") + (_o.batchFolders.Count > 0 ? " " + _o.batchFolders.Count + " packs" : ""), GUILayout.Height(30))) Go();
                 GUI.enabled = true;
                 if (GUILayout.Button("Reveal destination", GUILayout.Height(30), GUILayout.Width(130)))
                 {
@@ -174,10 +235,23 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         }
 
         string _autoName;
+        static bool UnityEditorGltf() => Planner.GltfInstalled();
 
         void Go()
         {
             _o.Save();
+            if (_o.batchFolders.Count > 0)
+            {
+                if (!_o.dryRun && !EditorUtility.DisplayDialog("UE4 \u2192 Unity", $"Convert {_o.batchFolders.Count} pack folders into\n{_o.destRoot}?", "Convert", "Cancel")) return;
+                var all = UE4Converter.RunBatch(_o);
+                _last = all.LastOrDefault();
+                var sb = new System.Text.StringBuilder();
+                foreach (var r in all) sb.AppendLine("=== " + r.pack + " ===").AppendLine(r.Summary());
+                _summary = sb.ToString();
+                _status = $"Batch of {all.Count} pack(s). Reports are in Logs/UE4Converter.";
+                Repaint();
+                return;
+            }
             string err = UE4Converter.Validate(_o);
             if (err != null) { _status = err; _summary = ""; return; }
             if (!_o.dryRun && !EditorUtility.DisplayDialog("UE4 \u2192 Unity", $"Convert\n{_o.sourceFolder}\ninto\n{_o.DestFolder}?", "Convert", "Cancel")) return;
@@ -185,6 +259,5 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             _summary = _last.Summary();
             _status = _last.mdPath != null ? "Report: " + _last.mdPath : "";
             Repaint();
-        }
-    }
+        }    }
 }

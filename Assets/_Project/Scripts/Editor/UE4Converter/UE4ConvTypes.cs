@@ -13,13 +13,14 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
     public enum TexRole { Unknown, BaseColor, Normal, Packed, Roughness, Metallic, AO, Emissive, Height, Opacity, Specular }
     public enum MeshKind { Static, Skeletal, AnimOnly }
     public enum ReportKind { Converted, Planned, Skipped, Warning, Unconvertible, Info }
+    public enum UModelMesh { Gltf, Psk, None }
 
     /// <summary>Everything the converter window exposes. Persisted (JSON) in EditorPrefs.</summary>
     [Serializable]
     public class ConverterOptions
     {
         public string sourceFolder = "";
-        public string destRoot = "Assets/_Project/Ruins";
+        public string destRoot = "Assets/_Vendor/Converted";
         public string packName = "";
         public ConvScaleMode scaleMode = ConvScaleMode.Auto;
         public float customScale = 0.01f;
@@ -39,9 +40,24 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public bool copyAudio = true;
         public bool makePrefabs = true;
 
+        // UModel (UE Viewer) extraction for .uasset sources
+        public bool useUModel = true;
+        public string umodelExe = "";
+        public string ueGame = "(auto-detect)";   // forcing a tag breaks packages whose own version differs (the "v4.26" Pro Sound pack is a 4.10-era package)
+        public UModelMesh meshFormat = UModelMesh.Psk;   // Psk is converted to OBJ internally (no package needed); Gltf needs glTFast
+        public bool exportPng = true;
+        public bool exportLods = false;
+        public bool keepStaging = false;
+        public bool soundsOnly = false;                 // skip meshes/textures/animations (UModel -nomesh -nostat -noanim -notex)
+        public string destOverride = "";                // exact destination folder (ignores destRoot/packName)
+        public string audioSubfolder = "Audio";         // "" puts clips straight under the destination
+        public bool reuseStaging = true;
+        // batch: each folder is converted as its own pack (pack name = folder name) under destRoot
+        public List<string> batchFolders = new List<string>();
+
         const string PrefKey = "Xenoarch.UE4Converter.Options";
 
-        public string DestFolder => destRoot.Replace('\\', '/').TrimEnd('/') + "/" + Sanitize(string.IsNullOrEmpty(packName) ? "Pack" : packName);
+        public string DestFolder => !string.IsNullOrWhiteSpace(destOverride) ? destOverride.Replace('\\', '/').TrimEnd('/') : destRoot.Replace('\\', '/').TrimEnd('/') + "/" + Sanitize(string.IsNullOrEmpty(packName) ? "Pack" : packName);
 
         public static string Sanitize(string s)
         {
@@ -74,6 +90,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public List<ReportItem> items = new List<ReportItem>();
         public List<string> created = new List<string>();
         public List<string> overwritten = new List<string>();
+        public string umodelLog, umodelSummary;
         [NonSerialized] public string mdPath, jsonPath;
 
         public void Add(ReportKind k, string category, string source, string dest, string message)
@@ -114,6 +131,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             sb.AppendLine($"- Started: {startedAt}   Finished: {finishedAt}");
             sb.AppendLine($"- Mode: {(dryRun ? "dry run (nothing written)" : "converted")}{(cancelled ? " - CANCELLED, partial result" : "")}");
             sb.AppendLine($"- Converted {Count(ReportKind.Converted)}, planned {Count(ReportKind.Planned)}, skipped {Count(ReportKind.Skipped)}, warnings {Count(ReportKind.Warning)}, not convertible {Count(ReportKind.Unconvertible)}");
+            if (!string.IsNullOrEmpty(umodelSummary)) { sb.AppendLine($"- UModel: {umodelSummary}"); if (!string.IsNullOrEmpty(umodelLog)) sb.AppendLine($"- UModel log: `{umodelLog}`"); }
             sb.AppendLine();
             foreach (var kind in new[] { ReportKind.Warning, ReportKind.Unconvertible, ReportKind.Skipped, ReportKind.Converted, ReportKind.Planned, ReportKind.Info })
             {
@@ -171,6 +189,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public bool useFileScale = true;
         public string scaleNote = "";
         public bool IsObj => ext == ".obj";
+        public bool IsGltf => ext == ".glb" || ext == ".gltf";
     }
 
     internal sealed class PrefabJob
@@ -182,7 +201,9 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
     internal sealed class Plan
     {
         public ConverterOptions o;
-        public string src, dest;
+        public string src, dest, stagingRoot;
+        public int ueFiles;
+        public List<string> pendingGltf = new List<string>();
         public List<MeshEntry> meshes = new List<MeshEntry>();
         public List<SetPlan> sets = new List<SetPlan>();
         public List<PrefabJob> prefabs = new List<PrefabJob>();
@@ -199,6 +220,11 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public MeshKind kind; public bool isObj, hasAnim, useFileScale, humanoid; public float globalScale = 1f; public string stem; public int stage = 1;
     }
 
+    internal sealed class AudioJob
+    {
+        public UnityEngine.AudioClipLoadType load; public float seconds;
+    }
+
     internal sealed class TexJob
     {
         public TexRole role; public bool alpha, cutout, readTemp, metalSmooth;
@@ -208,8 +234,9 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
     {
         public static readonly Dictionary<string, ModelJob> Models = new Dictionary<string, ModelJob>(StringComparer.OrdinalIgnoreCase);
         public static readonly Dictionary<string, TexJob> Tex = new Dictionary<string, TexJob>(StringComparer.OrdinalIgnoreCase);
+        public static readonly Dictionary<string, AudioJob> Audio = new Dictionary<string, AudioJob>(StringComparer.OrdinalIgnoreCase);
         public static ConverterOptions Opts;
-        public static void Clear() { Models.Clear(); Tex.Clear(); Opts = null; }
+        public static void Clear() { Models.Clear(); Tex.Clear(); Audio.Clear(); Opts = null; }
         public static string N(string p) => p.Replace('\\', '/');
     }
 }
