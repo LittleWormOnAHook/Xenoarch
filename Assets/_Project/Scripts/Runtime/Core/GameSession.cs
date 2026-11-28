@@ -62,6 +62,7 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         /// <summary>Dig site maps: fenced site codes (Ma1), refined-scan spots (Ma11) and their dig state.</summary>
         public DMI.Xenoarch.Excavation.DigSiteMapsService DigMaps { get; }
+        public DMI.Xenoarch.Exploration.WaypointService Waypoints { get; }
         public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
         /// <summary>Backpack + the three ship crates as one stock (refiner and crafting take from it, backpack first).</summary>
         public ItemPool Stock { get; }
@@ -103,6 +104,7 @@ namespace DMI.Xenoarch.Core
             Puzzles = new DMI.Xenoarch.Artifacts.ArtifactPuzzleService(Artifacts, Discovery, Saves) { Clock = () => PlaySeconds };
             Excavation = new DMI.Xenoarch.Excavation.ExcavationService(Saves);
             DigMaps = new DMI.Xenoarch.Excavation.DigSiteMapsService(Saves);
+            Waypoints = new DMI.Xenoarch.Exploration.WaypointService(Saves);
             Materials = new DMI.Xenoarch.Materials.MaterialsService(items, Inventory, config.refineRecipes, Saves);
             Valuables = new DMI.Xenoarch.Valuables.ValuableService(Saves);
             Journals = new DMI.Xenoarch.Journals.JournalService(Saves) { Clock = () => PlaySeconds };

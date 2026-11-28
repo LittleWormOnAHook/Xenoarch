@@ -1,4 +1,5 @@
 using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Exploration;
 using DMI.Xenoarch.Galaxy;
 using DMI.Xenoarch.Player;
 using DMI.Xenoarch.Valuables;
@@ -14,7 +15,7 @@ namespace DMI.Xenoarch.UI
     public static class MapSiteInfo
     {
         /// <summary>Fills <paramref name="parent"/> with name, type, distance, status and expected loot for <paramref name="id"/>. Returns false when the id is unknown.</summary>
-        public static bool Fill(VisualElement parent, string id, CelestialBodyDefinition body, Vector2? playerXz, System.Action openDigMap = null)
+        public static bool Fill(VisualElement parent, string id, CelestialBodyDefinition body, Vector2? playerXz, System.Action openDigMap = null, System.Action setWaypoint = null, System.Action track = null, System.Action remove = null)
         {
             if (parent == null || string.IsNullOrEmpty(id)) return false;
             var session = XenoarchRuntime.Session;
@@ -24,8 +25,19 @@ namespace DMI.Xenoarch.UI
             string name, type, status, loot;
             Vector2 world;
             bool canOpenDig = false;
+            bool isWaypoint = WaypointService.IsId(id);
 
-            if (id.StartsWith("landing:"))
+            if (isWaypoint)
+            {
+                var w = session.Waypoints != null ? session.Waypoints.Find(id) : null;
+                if (w == null) return false;
+                name = string.IsNullOrEmpty(w.name) ? "Waypoint" : w.name;
+                type = w.IsCustom ? "Custom waypoint" : "Site waypoint";
+                status = session.Waypoints.IsTracked(id) ? "Tracked" : "Saved";
+                loot = null;
+                world = w.Xz;
+            }
+            else if (id.StartsWith("landing:"))
             {
                 string siteId = id.Substring(8);
                 if (string.IsNullOrEmpty(siteId))
@@ -86,6 +98,31 @@ namespace DMI.Xenoarch.UI
                 b.AddToClassList("xa-term__btn");
                 b.style.marginTop = 8;
                 parent.Add(b);
+            }
+            if (setWaypoint != null && !isWaypoint)
+            {
+                var b = new Button(setWaypoint) { text = "Set waypoint" };
+                b.AddToClassList("xa-term__btn");
+                b.style.marginTop = 8;
+                parent.Add(b);
+            }
+            if (isWaypoint)
+            {
+                if (track != null && (session.Waypoints == null || !session.Waypoints.IsTracked(id)))
+                {
+                    var b = new Button(track) { text = "Track this waypoint" };
+                    b.AddToClassList("xa-term__btn");
+                    b.style.marginTop = 8;
+                    parent.Add(b);
+                }
+                if (remove != null)
+                {
+                    var b = new Button(remove) { text = "Remove waypoint" };
+                    b.AddToClassList("xa-term__btn");
+                    b.AddToClassList("xa-term__btn--ghost");
+                    b.style.marginTop = 8;
+                    parent.Add(b);
+                }
             }
             return true;
         }

@@ -75,7 +75,22 @@ namespace DMI.Xenoarch.UI
             if (_map == null) return;
             float s = _large ? largeSize : smallSize;
             _map.style.width = s; _map.style.height = s; _map.ShowLabels = _large;
-            _title.text = _large ? $"{_body.displayName.ToUpperInvariant()}  -  landing region {_body.surfaceMapRect.width:0} m   [M] close" : $"{_body.displayName.ToUpperInvariant()}   [M] map";
+            SetTitle();
+        }
+
+        void SetTitle()
+        {
+            if (_title == null || _body == null) return;
+            string baseTitle = _large ? $"{_body.displayName.ToUpperInvariant()}  -  landing region {_body.surfaceMapRect.width:0} m   [M] close" : $"{_body.displayName.ToUpperInvariant()}   [M] map";
+            var session = XenoarchRuntime.Session;
+            var tracked = session?.Waypoints != null ? session.Waypoints.TrackedOn(_body.Id) : null;
+            var player = MapSiteInfo.PlayerXz();
+            if (tracked != null && player.HasValue)
+            {
+                string dir = DMI.Xenoarch.Exploration.WaypointService.BearingLabel(player.Value, tracked.Xz, out _);
+                baseTitle += $"   ·  {tracked.name} {dir} {MapSiteInfo.DistanceLabel(player.Value, tracked.Xz)}";
+            }
+            _title.text = baseTitle;
         }
 
         void Update()
@@ -109,6 +124,9 @@ namespace DMI.Xenoarch.UI
                 foreach (var v in vdir.Sites)
                     if (session.Valuables.IsRevealed(v.id) && !session.Valuables.IsCollected(v.id))
                         _map.Markers.Add(new SurfaceMapView.Marker { id = v.id, kind = SurfaceMapView.Kind.Cache, world = new Vector2(v.position.x, v.position.z), label = "Cache" });
+            if (session.Waypoints != null)
+                foreach (var w in session.Waypoints.OnBody(_body.Id))
+                    _map.Markers.Add(new SurfaceMapView.Marker { id = w.id, kind = SurfaceMapView.Kind.Waypoint, world = w.Xz, label = w.name, selected = session.Waypoints.IsTracked(w.id) });
             var shuttle = ShuttleDirector.Instance != null ? ShuttleDirector.Instance.Shuttle : null;
             if (shuttle != null)
                 _map.Markers.Add(new SurfaceMapView.Marker { id = "shuttle", kind = SurfaceMapView.Kind.Shuttle, world = new Vector2(shuttle.transform.position.x, shuttle.transform.position.z), label = "Shuttle" });
@@ -121,6 +139,7 @@ namespace DMI.Xenoarch.UI
                 bool scannerOut = rig.Root.GetComponentInChildren<SurfaceScannerTool>() is SurfaceScannerTool sc && sc.Equipped;
                 _map.ScanCentre = new Vector2(p.x, p.z); _map.ScanRadius = scannerOut || _large ? ScannerStats.HandheldRange() : 0f;
             }
+            SetTitle();
             _map.Rebuild();
         }
     }

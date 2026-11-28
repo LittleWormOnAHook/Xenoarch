@@ -102,18 +102,45 @@ namespace DMI.Xenoarch.Ship
                 row.Add(new Label($"{where}  |  depth ~{(st.revealLevel >= 2 ? $"{site.depth:0.#} m" : "?")}"));
                 rows.Add(row);
             }
+            if (Session.Waypoints != null)
+                foreach (var w in Session.Waypoints.OnBody(b.Id))
+                    _surface.Markers.Add(new SurfaceMapView.Marker { id = w.id, kind = SurfaceMapView.Kind.Waypoint, world = w.Xz,
+                        label = w.name + (Session.Waypoints.IsTracked(w.id) ? " (tracked)" : ""), selected = w.id == _selectedSite || Session.Waypoints.IsTracked(w.id) });
             _surface.Clicked += id =>
             {
                 if (string.IsNullOrEmpty(id)) { _selectedSite = null; Refresh(); return; }
                 if (id.StartsWith("landing:")) { SetShuttleSite(id.Substring(8)); return; }
                 _selectedSite = id; Refresh();
             };
-            Text(col, "Red: dig-site signatures (circle = position uncertainty). Green: shuttle landing sites; click one to set the shuttle's destination. Wheel zooms, drag or WASD pans, R resets the view.", "xa-term__dim");
-            if (sel != null)
+            _surface.Dropped += world =>
+            {
+                var w = Session.Waypoints?.AddCustom(b.Id, world);
+                if (w == null) { _landMsg = Session.Waypoints != null && Session.Waypoints.CountOn(b.Id) >= DMI.Xenoarch.Exploration.WaypointService.MaxPerBody ? $"Waypoint list is full ({DMI.Xenoarch.Exploration.WaypointService.MaxPerBody})." : ""; Refresh(); return; }
+                _selectedSite = w.id; _landMsg = $"Waypoint set: {w.name}"; Refresh();
+            };
+            Text(col, "Red: dig-site signatures (circle = position uncertainty). Green: shuttle landing sites; click one to set the shuttle's destination. Wheel zooms, drag or WASD pans, R resets. Right-click to drop a waypoint.", "xa-term__dim");
+            if (DMI.Xenoarch.Exploration.WaypointService.IsId(_selectedSite))
+            {
+                var info = new VisualElement(); info.AddToClassList("xa-ctx"); info.style.marginBottom = 8;
+                MapSiteInfo.Fill(info, _selectedSite, b, MapSiteInfo.PlayerXz(),
+                    track: () => { Session.Waypoints?.Track(_selectedSite); Refresh(); },
+                    remove: () => { Session.Waypoints?.Remove(_selectedSite); _selectedSite = null; Refresh(); });
+                col.Add(info);
+            }
+            else if (sel != null)
             {
                 Text(col, $"Selected: {(x.Site(sel.Id).revealLevel >= 3 ? sel.displayName : "signature")}", "xa-term__h");
                 var info = new VisualElement(); info.AddToClassList("xa-ctx"); info.style.marginBottom = 8;
-                MapSiteInfo.Fill(info, sel.Id, b, MapSiteInfo.PlayerXz());
+                MapSiteInfo.Fill(info, sel.Id, b, MapSiteInfo.PlayerXz(),
+                    setWaypoint: () =>
+                    {
+                        var st = x.Site(sel.Id);
+                        var est = sel.position + ExplorationService.EstimateOffset(sel, st.revealLevel);
+                        var w = Session.Waypoints?.AddOrTrackSite(b.Id, sel.Id, sel.displayName, new Vector2(est.x, est.z));
+                        _landMsg = w == null ? $"Waypoint list is full ({DMI.Xenoarch.Exploration.WaypointService.MaxPerBody})." : $"Waypoint set: {w.name}";
+                        if (w != null) _selectedSite = w.id;
+                        Refresh();
+                    });
                 col.Add(info);
                 bool already = shuttleSite == sel.Id;
                 Btn(col, already ? "Shuttle will land here" : "Land the shuttle near this site", () => SetShuttleSite(sel.Id), !already);

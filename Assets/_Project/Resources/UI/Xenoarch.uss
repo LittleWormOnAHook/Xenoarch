@@ -588,3 +588,7 @@
 .xa-inspect__actions .xa-term__btn { margin-right: 8px; }
 
 .xa-overflow { position: absolute; left: 50%; top: 22%; width: 420px; margin-left: -210px; padding: 18px 20px; }
+
+/* t310u: existing library waypoint icon for map markers (no new art). */
+.xa-icon--nav-waypoint { background-image: url("/Assets/Xenoarch/UI/Icons/Navigation/icon_nav_waypoint.png"); }
+.xa-map-icon--waypoint { -unity-background-image-tint-color: var(--xa-highlight); }

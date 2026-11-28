@@ -15,7 +15,7 @@ namespace DMI.Xenoarch.UI
     /// </summary>
     public sealed class SurfaceMapView : VisualElement
     {
-        public enum Kind { Site, Landing, Base, Shuttle, Player, Cache }
+        public enum Kind { Site, Landing, Base, Shuttle, Player, Cache, Waypoint }
         public struct Marker { public string id, label; public Kind kind; public Vector2 world; public float uncertainty, heading; public bool selected; }
 
         public sealed class ViewState
@@ -41,6 +41,8 @@ namespace DMI.Xenoarch.UI
         /// <summary>Scan radius ring (world centre x/z, radius m); radius 0 = none.</summary>
         public Vector2 ScanCentre; public float ScanRadius;
         public event Action<string> Clicked;
+        /// <summary>Right-click on empty map: world x/z under the cursor.</summary>
+        public event Action<Vector2> Dropped;
         readonly List<Label> _labels = new List<Label>();
         // Site / cache / base / landing markers are Kenney glyph elements (t155u icon style, classes in Xenoarch.uss).
         readonly List<VisualElement> _icons = new List<VisualElement>(), _halos = new List<VisualElement>();
@@ -191,7 +193,7 @@ namespace DMI.Xenoarch.UI
         }
 
         // ZEN-22: icon library where matched (dig site = anomaly, base = outpost, landing zone); cache has no library icon yet.
-        static string Glyph(Kind k) => k == Kind.Site ? "nav-anomaly" : k == Kind.Cache ? "star" : k == Kind.Base ? "nav-base" : k == Kind.Landing ? "nav-landing" : null;
+        static string Glyph(Kind k) => k == Kind.Site ? "nav-anomaly" : k == Kind.Cache ? "star" : k == Kind.Base ? "nav-base" : k == Kind.Landing ? "nav-landing" : k == Kind.Waypoint ? "nav-waypoint" : null;
 
         int IconSignature()
         {
@@ -266,6 +268,9 @@ namespace DMI.Xenoarch.UI
                     case Kind.Cache:
                         if (m.selected) { p.strokeColor = new Color(0.4f, 1f, 0.55f); p.lineWidth = 1.5f; p.BeginPath(); p.Arc(c, 12f, 0f, 360f); p.Stroke(); }
                         break;
+                    case Kind.Waypoint:
+                        if (m.selected) { p.strokeColor = XenoarchPalette.Highlight; p.lineWidth = 2f; p.BeginPath(); p.Arc(c, 12f, 0f, 360f); p.Stroke(); }
+                        break;
                 }
             }
             p.lineWidth = 1f;
@@ -308,7 +313,7 @@ namespace DMI.Xenoarch.UI
 
         void OnDown(PointerDownEvent e)
         {
-            if (!Interactive || (e.button != 0 && e.button != 2)) return;
+            if (!Interactive || (e.button != 0 && e.button != 1 && e.button != 2)) return;
             _button = e.button; _downPos = _lastPos = (Vector2)e.localPosition; _dragged = false;
             this.CapturePointer(e.pointerId);
             Focus();
@@ -320,7 +325,7 @@ namespace DMI.Xenoarch.UI
             if (!Interactive || _button < 0) return;
             var pos = (Vector2)e.localPosition;
             if (!_dragged && (pos - _downPos).sqrMagnitude >= DragSlop * DragSlop) _dragged = true;
-            if (_dragged)
+            if (_dragged && (_button == 0 || _button == 2))
             {
                 State.pan += FromPx(_lastPos) - FromPx(pos);
                 ClampPan();
@@ -337,8 +342,23 @@ namespace DMI.Xenoarch.UI
             _button = -1; _dragged = false;
             this.ReleasePointer(e.pointerId);
             e.StopPropagation();
-            if (wasDrag || e.button != 0) return;
             var pos = (Vector2)e.localPosition;
+            string best = HitMarker(pos);
+            if (e.button == 1)
+            {
+                if (!wasDrag)
+                {
+                    if (best != null) Clicked?.Invoke(best);
+                    else Dropped?.Invoke(FromPx(pos));
+                }
+                return;
+            }
+            if (wasDrag || e.button != 0) return;
+            Clicked?.Invoke(best);
+        }
+
+        string HitMarker(Vector2 pos)
+        {
             string best = null; float bd = 16f;
             foreach (var m in Markers)
             {
@@ -347,7 +367,7 @@ namespace DMI.Xenoarch.UI
                 float d = (ToPx(m.world) - pos).magnitude;
                 if (d < bd) { bd = d; best = m.id; }
             }
-            Clicked?.Invoke(best);
+            return best;
         }
 
         void OnWheel(WheelEvent e)

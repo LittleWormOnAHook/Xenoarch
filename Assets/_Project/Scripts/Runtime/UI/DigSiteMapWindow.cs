@@ -114,6 +114,7 @@ namespace DMI.Xenoarch.UI
                 _surface.Rebuild();
                 RenderInfo(body);
             };
+            _surface.Dropped += world => DropCustom(body, world);
             _surface.Rebuild();
             _body.Add(_surface);
             _info = new VisualElement(); _info.style.marginLeft = 16; _info.style.flexShrink = 1; _info.style.minWidth = 240; _info.style.maxWidth = 340;
@@ -158,6 +159,10 @@ namespace DMI.Xenoarch.UI
                     if (!s.Valuables.IsRevealed(v.id) && !collected) continue;
                     _surface.Markers.Add(new SurfaceMapView.Marker { id = v.id, kind = SurfaceMapView.Kind.Cache, world = new Vector2(v.position.x, v.position.z), label = collected ? "Cache (excavated)" : "Cache", selected = sel == v.id });
                 }
+            if (s.Waypoints != null)
+                foreach (var w in s.Waypoints.OnBody(body.Id))
+                    _surface.Markers.Add(new SurfaceMapView.Marker { id = w.id, kind = SurfaceMapView.Kind.Waypoint, world = w.Xz,
+                        label = w.name + (s.Waypoints.IsTracked(w.id) ? " (tracked)" : ""), selected = sel == w.id || s.Waypoints.IsTracked(w.id) });
             var shuttle = ShuttleDirector.Instance != null ? ShuttleDirector.Instance.Shuttle : null;
             if (shuttle != null) _surface.Markers.Add(new SurfaceMapView.Marker { id = "shuttle", kind = SurfaceMapView.Kind.Shuttle, world = new Vector2(shuttle.transform.position.x, shuttle.transform.position.z), label = "Shuttle" });
             var rig = PlayerRigLocator.Find();
@@ -170,25 +175,93 @@ namespace DMI.Xenoarch.UI
             _info.Clear();
             var head = new Label(body != null ? body.displayName.ToUpperInvariant() : "SURFACE MAP");
             head.AddToClassList("xa-term__h"); head.style.marginTop = 0; _info.Add(head);
-            Note(_info, "Click a site, cache or landing zone for details. Wheel zooms toward the cursor; drag or WASD/arrows pan; R or Reset view recentres.");
+            Note(_info, "Click a site, cache or landing zone for details. Right-click empty ground to drop a waypoint. Wheel zooms; drag or WASD pans; R resets.");
             var reset = new Button(() => { _surface?.ResetView(); _surface?.Focus(); }) { text = "Reset view" };
             reset.AddToClassList("xa-term__btn"); reset.AddToClassList("xa-term__btn--ghost"); reset.style.marginBottom = 10;
             _info.Add(reset);
             if (string.IsNullOrEmpty(_surfaceSelected))
             {
                 Note(_info, body != null ? $"Landing region {body.surfaceMapRect.width:0} m. Marked dig sites show their code (e.g. {DigSiteMapsService.PrefixFor(body.displayName)}1)." : "");
+                AddWaypointList(_info, body);
                 return;
             }
             var box = new VisualElement();
             box.AddToClassList("xa-ctx");
             box.style.marginTop = 6;
             if (!MapSiteInfo.Fill(box, _surfaceSelected, body, MapSiteInfo.PlayerXz(),
-                openDigMap: () => { if (!string.IsNullOrEmpty(_selected)) { _tab = "sites"; Render(); } }))
+                openDigMap: () => { if (!string.IsNullOrEmpty(_selected)) { _tab = "sites"; Render(); } },
+                setWaypoint: () => SetFromSelected(body),
+                track: () => { XenoarchRuntime.Session?.Waypoints?.Track(_surfaceSelected); FillSurfaceMarkers(body); _surface?.Rebuild(); RenderInfo(body); },
+                remove: () => { XenoarchRuntime.Session?.Waypoints?.Remove(_surfaceSelected); _surfaceSelected = null; FillSurfaceMarkers(body); _surface?.Rebuild(); RenderInfo(body); }))
             {
                 Note(_info, "No details for that marker.");
                 return;
             }
             _info.Add(box);
+            AddWaypointList(_info, body);
+        }
+
+        void DropCustom(CelestialBodyDefinition body, Vector2 world)
+        {
+            var s = XenoarchRuntime.Session;
+            if (s?.Waypoints == null || body == null) return;
+            var w = s.Waypoints.AddCustom(body.Id, world);
+            if (w == null) { Toast.Show($"Waypoint list is full ({DMI.Xenoarch.Exploration.WaypointService.MaxPerBody}). Remove one first."); return; }
+            _surfaceSelected = w.id;
+            FillSurfaceMarkers(body);
+            _surface?.Rebuild();
+            RenderInfo(body);
+        }
+
+        void SetFromSelected(CelestialBodyDefinition body)
+        {
+            var s = XenoarchRuntime.Session;
+            if (s?.Waypoints == null || body == null || _surface == null || string.IsNullOrEmpty(_surfaceSelected)) return;
+            SurfaceMapView.Marker? found = null;
+            foreach (var m in _surface.Markers) if (m.id == _surfaceSelected) { found = m; break; }
+            if (found == null) return;
+            var m0 = found.Value;
+            string name = string.IsNullOrEmpty(m0.label) ? "Waypoint" : m0.label.Replace(" (cleared)", "").Replace(" (tracked)", "").Trim();
+            var w = s.Waypoints.AddOrTrackSite(body.Id, m0.id, name, m0.world);
+            if (w == null) { Toast.Show($"Waypoint list is full ({DMI.Xenoarch.Exploration.WaypointService.MaxPerBody}). Remove one first."); return; }
+            _surfaceSelected = w.id;
+            FillSurfaceMarkers(body);
+            _surface.Rebuild();
+            RenderInfo(body);
+        }
+
+        void AddWaypointList(VisualElement parent, CelestialBodyDefinition body)
+        {
+            var s = XenoarchRuntime.Session;
+            if (s?.Waypoints == null || body == null) return;
+            int n = s.Waypoints.CountOn(body.Id);
+            var h = new Label($"WAYPOINTS  {n}/{DMI.Xenoarch.Exploration.WaypointService.MaxPerBody}");
+            h.AddToClassList("xa-term__h");
+            parent.Add(h);
+            var tracked = s.Waypoints.TrackedOn(body.Id);
+            var player = MapSiteInfo.PlayerXz();
+            if (tracked != null && player.HasValue)
+            {
+                string dir = DMI.Xenoarch.Exploration.WaypointService.BearingLabel(player.Value, tracked.Xz, out _);
+                Note(parent, $"Tracked: {tracked.name}  ·  {dir}  {MapSiteInfo.DistanceLabel(player.Value, tracked.Xz)}");
+            }
+            foreach (var w in s.Waypoints.OnBody(body.Id))
+            {
+                var id = w.id;
+                string tag = s.Waypoints.IsTracked(id) ? "  [tracked]" : "";
+                var b = new Button(() => { _surfaceSelected = id; FillSurfaceMarkers(body); _surface?.Rebuild(); RenderInfo(body); }) { text = w.name + tag };
+                b.AddToClassList("xa-term__row");
+                b.style.marginTop = 2;
+                parent.Add(b);
+            }
+            if (n > 0)
+            {
+                var clear = new Button(() => { s.Waypoints.ClearBody(body.Id); _surfaceSelected = null; FillSurfaceMarkers(body); _surface?.Rebuild(); RenderInfo(body); }) { text = "Clear all waypoints" };
+                clear.AddToClassList("xa-term__btn");
+                clear.AddToClassList("xa-term__btn--ghost");
+                clear.style.marginTop = 8;
+                parent.Add(clear);
+            }
         }
 
         // ---------------------------------------------------------------- Dig Sites tab
