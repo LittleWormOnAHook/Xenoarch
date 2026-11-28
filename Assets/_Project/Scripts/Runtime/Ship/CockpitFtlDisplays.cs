@@ -322,6 +322,11 @@ namespace DMI.Xenoarch.Ship
             face.doc = go.AddComponent<UIDocument>();
             face.doc.panelSettings = face.panelSettings;
             face.doc.sortingOrder = 0;
+            // t400u: these panels draw to a texture on the 3D console. Without this, Unity also
+            // maps the top-left TexWidth x TexHeight of the Game view onto the panel, so the
+            // nav/sys screen UI steals clicks and hover from inventory slots, journal tabs, etc.
+            // (Clicks work with the helmet on a planet because these displays are not in that scene.)
+            face.panelSettings.SetScreenToPanelSpaceFunction(_ => new Vector2(float.NaN, float.NaN));
 
             face.instance = face.original != null ? new Material(face.original) { name = (face.original.name) + " (FTL RT)" } : new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Texture"));
             AssignTex(face.instance, face.rt);
