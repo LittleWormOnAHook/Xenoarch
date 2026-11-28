@@ -102,7 +102,7 @@ namespace DMI.Xenoarch.UI
             host.transform.SetParent(transform, false);
             _doc = host.AddComponent<UIDocument>();
             _doc.panelSettings = XenoarchUI.LoadPanelSettings();
-            _doc.sortingOrder = 40;
+            _doc.sortingOrder = 45; // above the HUD/minimap/tool wheel (40) so they can never take a window's clicks
             var docRoot = _doc.rootVisualElement;
             if (docRoot == null) { Debug.LogError($"[Xenoarch] {terminalName}: UIDocument has no root"); return; }
             XenoarchUI.FillRoot(docRoot); docRoot.pickingMode = PickingMode.Ignore; // full-screen root so the window centres

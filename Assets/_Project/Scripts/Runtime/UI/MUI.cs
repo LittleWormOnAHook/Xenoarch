@@ -35,7 +35,7 @@ namespace DMI.Xenoarch.UI
             var row = new VisualElement(); row.AddToClassList("xa-m-legend"); row.pickingMode = PickingMode.Ignore;
             foreach (var (key, action) in items)
             {
-                var it = new VisualElement(); it.AddToClassList("xa-m-legend__item");
+                var it = new VisualElement { pickingMode = PickingMode.Ignore }; it.AddToClassList("xa-m-legend__item"); // hint only, not a button
                 Key(it, key);
                 L(it, action.ToUpperInvariant(), "xa-m-legend__text");
                 row.Add(it);

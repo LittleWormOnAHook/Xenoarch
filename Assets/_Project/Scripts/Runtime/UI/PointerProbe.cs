@@ -27,10 +27,13 @@ namespace DMI.Xenoarch.UI
         void Update()
         {
             var m = Mouse.current;
-            if (m == null || !m.leftButton.wasPressedThisFrame || !UIState.BlocksGameplay) return;
+            var kb = Keyboard.current;
+            bool hover = kb != null && kb.f9Key.wasPressedThisFrame; // F9: log what sits under the cursor right now (hover over the dead spot, press F9)
+            if (m == null) return;
+            if (!hover && !(m.leftButton.wasPressedThisFrame && UIState.BlocksGameplay)) return;
             Vector2 p = m.position.ReadValue();
             var sb = new StringBuilder(512);
-            sb.Append("[PointerProbe] mouse=").Append(p.ToString("0.#"))
+            sb.Append(hover ? "[PointerProbe] HOVER mouse=" : "[PointerProbe] mouse=").Append(p.ToString("0.#"))
               .Append(" screen=").Append(Screen.width).Append('x').Append(Screen.height)
               .Append(" display=").Append(Display.main.renderingWidth).Append('x').Append(Display.main.renderingHeight)
               .Append(" dpi=").Append(Screen.dpi.ToString("0"))
@@ -62,7 +65,14 @@ namespace DMI.Xenoarch.UI
             if (e == null) return "(none)";
             var wb = e.worldBound;
             string cls = e.GetClasses() != null ? string.Join(".", new System.Collections.Generic.List<string>(e.GetClasses())) : "";
-            return $"{e.GetType().Name} '{e.name}' .{cls} bounds=({wb.x:0},{wb.y:0},{wb.width:0},{wb.height:0})";
+            string chain = "";
+            int n = 0;
+            for (var pa = e.parent; pa != null && n < 4; pa = pa.parent, n++)
+            {
+                string pc = pa.GetClasses() != null ? string.Join(".", new System.Collections.Generic.List<string>(pa.GetClasses())) : "";
+                chain += " <- " + pa.GetType().Name + (pc.Length > 0 ? "." + pc : "") + "[" + pa.pickingMode + "]";
+            }
+            return $"{e.GetType().Name} '{e.name}' .{cls} picking={e.pickingMode} bounds=({wb.x:0},{wb.y:0},{wb.width:0},{wb.height:0}){chain}";
         }
 #endif
     }

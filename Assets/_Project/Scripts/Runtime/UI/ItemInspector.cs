@@ -132,6 +132,22 @@ namespace DMI.Xenoarch.UI
             XenoarchUI.Show(_root, false);
         }
 
+        // Keep the docked panel fully inside the panel at every aspect: nudge it in if an edge would leave the screen.
+        void ClampOnScreen(VisualElement m)
+        {
+            var parent = m.parent;
+            if (parent == null) return;
+            float pw = parent.layout.width;
+            if (float.IsNaN(pw) || pw < 100f) return;
+            var l = m.layout;
+            if (float.IsNaN(l.width) || l.width < 10f) return;
+            const float edge = 12f;
+            float x = Mathf.Clamp(l.x, edge, Mathf.Max(edge, pw - l.width - edge));
+            if (Mathf.Abs(x - l.x) < 0.5f) return;
+            m.style.right = StyleKeyword.Auto;
+            m.style.left = x;
+        }
+
         void EnsureRig()
         {
             if (_rig != null) return;
@@ -567,7 +583,8 @@ namespace DMI.Xenoarch.UI
             _view.Add(hints);
             WireView(_view);
 
-            var side = new ScrollView(); side.AddToClassList("xa-inspect__side"); modal.Add(side);
+            var side = new ScrollView(ScrollViewMode.Vertical) { horizontalScrollerVisibility = ScrollerVisibility.Hidden }; side.AddToClassList("xa-inspect__side"); modal.Add(side);
+            modal.RegisterCallback<GeometryChangedEvent>(_ => ClampOnScreen(modal));
 
             string heading = artInst != null ? s.Artifacts.DisplayName(artInst) : (def != null ? def.DisplayNameOrId : _stack.itemId);
             var kicker = new Label(artDef != null ? "ARTIFACT" : ResourceGroups.GroupLabel(def).ToUpperInvariant());
@@ -734,7 +751,7 @@ namespace DMI.Xenoarch.UI
                 if (!_rotating && !_panning) return;
                 var dlt = (Vector2)e.position - _lastPtr;
                 _lastPtr = (Vector2)e.position;
-                if (_rotating) { _yaw += dlt.x * 0.35f; _pitch = Mathf.Clamp(_pitch - dlt.y * 0.3f, -80f, 80f); }
+                if (_rotating) { _yaw -= dlt.x * 0.35f; _pitch = Mathf.Clamp(_pitch - dlt.y * 0.3f, -80f, 80f); }
                 if (_panning) { _panX -= dlt.x * 0.002f * _dist; _panY += dlt.y * 0.002f * _dist; }
                 ApplyCamera();
                 e.StopPropagation();
