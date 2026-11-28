@@ -22,6 +22,7 @@ namespace DMI.Xenoarch.UI
 
         const int StarCount = 180;
         const int StreakCount = 140;
+        const float EffectDim = 0.65f;
 
         readonly VisualElement _root, _streaks, _spinner, _barFill, _driftA, _driftB;
         readonly Label _title, _subtitle, _status;
@@ -48,7 +49,9 @@ namespace DMI.Xenoarch.UI
             _root = new VisualElement { name = "xa-loading", pickingMode = PickingMode.Ignore };
             _root.style.position = Position.Absolute;
             _root.style.left = 0; _root.style.right = 0; _root.style.top = 0; _root.style.bottom = 0;
-            _root.style.alignItems = Align.Center; _root.style.justifyContent = Justify.Center;
+            _root.style.alignItems = Align.Center;
+            _root.style.justifyContent = Justify.FlexEnd;
+            _root.style.paddingBottom = Length.Percent(4f);
             _root.style.backgroundColor = Color.black;
             _root.style.overflow = Overflow.Hidden;
 
@@ -80,17 +83,19 @@ namespace DMI.Xenoarch.UI
             _driftA = AddDriftPlanet(_root, ResEarth, "xa-loading-earth");
             _driftB = AddDriftPlanet(_root, ResMoon, "xa-loading-moon");
 
-            _spinner = new VisualElement { pickingMode = PickingMode.Ignore };
-            _spinner.style.width = 72; _spinner.style.height = 72; _spinner.style.marginBottom = 26;
-            _spinner.generateVisualContent += DrawSpinner;
-            _root.Add(_spinner);
-
             _title = new Label { pickingMode = PickingMode.Ignore, text = BrandTitle };
             _title.style.fontSize = 34; _title.style.color = XenoarchPalette.Heading; _title.style.unityFontStyleAndWeight = FontStyle.Bold;
             _title.style.letterSpacing = 3;
+            _title.style.marginBottom = 10;
             _root.Add(_title);
+
+            _spinner = new VisualElement { pickingMode = PickingMode.Ignore };
+            _spinner.style.width = 72; _spinner.style.height = 72; _spinner.style.marginBottom = 18;
+            _spinner.generateVisualContent += DrawSpinner;
+            _root.Add(_spinner);
+
             _subtitle = new Label { pickingMode = PickingMode.Ignore };
-            _subtitle.style.fontSize = 18; _subtitle.style.color = XenoarchPalette.SecondaryText; _subtitle.style.marginTop = 4;
+            _subtitle.style.fontSize = 18; _subtitle.style.color = XenoarchPalette.SecondaryText; _subtitle.style.marginTop = 0;
             _root.Add(_subtitle);
             _status = new Label { pickingMode = PickingMode.Ignore };
             _status.style.fontSize = 17; _status.style.color = XenoarchPalette.Text; _status.style.marginTop = 8;
@@ -276,7 +281,7 @@ namespace DMI.Xenoarch.UI
             for (int i = 0; i < _stars.Length; i++)
             {
                 var s = _stars[i];
-                p.fillColor = XenoarchPalette.A(s.color, s.a);
+                p.fillColor = XenoarchPalette.A(s.color, s.a * EffectDim);
                 p.BeginPath();
                 p.Arc(new Vector2(s.u * r.width, s.v * r.height), s.size, 0f, 360f);
                 p.Fill();
@@ -297,7 +302,7 @@ namespace DMI.Xenoarch.UI
                 var tail = new Vector2(cx + ca * dTail, cy + sa * dTail);
                 var head = new Vector2(cx + ca * dHead, cy + sa * dHead);
                 var col = s.color;
-                col.a = Mathf.Clamp01(s.bright * fade);
+                col.a = Mathf.Clamp01(s.bright * fade * EffectDim);
                 p.lineWidth = s.thick;
                 p.strokeColor = col;
                 p.BeginPath();
@@ -305,7 +310,7 @@ namespace DMI.Xenoarch.UI
                 p.LineTo(head);
                 p.Stroke();
                 // bright head
-                p.fillColor = XenoarchPalette.A(s.color, Mathf.Clamp01(s.bright * fade * 0.9f));
+                p.fillColor = XenoarchPalette.A(s.color, Mathf.Clamp01(s.bright * fade * 0.9f * EffectDim));
                 p.BeginPath();
                 p.Arc(head, Mathf.Max(0.8f, s.thick * 0.45f), 0f, 360f);
                 p.Fill();
