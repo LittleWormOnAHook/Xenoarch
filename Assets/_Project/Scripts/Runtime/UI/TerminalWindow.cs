@@ -27,6 +27,9 @@ namespace DMI.Xenoarch.UI
         protected DragDrop Drag => _drag ??= new DragDrop(_root);
         protected Label Status { get; private set; }
         protected Label Hint { get; private set; }
+        /// <summary>The panel frame (.xa-term) and the full-screen root it sits in; for open/close animations.</summary>
+        protected VisualElement Window { get; private set; }
+        protected VisualElement Root => _root;
         protected GameSession Session => XenoarchRuntime.Session;
         public bool IsOpen { get; private set; }
         protected abstract string PanelId { get; }
@@ -57,7 +60,7 @@ namespace DMI.Xenoarch.UI
             Refresh();
         }
 
-        public void Close()
+        public virtual void Close()
         {
             if (!IsOpen) return;
             IsOpen = false;
@@ -108,7 +111,7 @@ namespace DMI.Xenoarch.UI
 
             _root = new VisualElement(); _root.AddToClassList("xa-fill"); _root.AddToClassList("xa-term-root");
             docRoot.Add(_root);
-            var win = new VisualElement(); win.AddToClassList("xa-term"); _root.Add(win);
+            var win = new VisualElement(); win.AddToClassList("xa-term"); _root.Add(win); Window = win;
             var header = new VisualElement(); header.AddToClassList("xa-term__header"); win.Add(header);
             _title = new Label(); _title.AddToClassList("xa-term__title"); header.Add(_title);
             Status = new Label(); Status.AddToClassList("xa-term__status"); header.Add(Status);

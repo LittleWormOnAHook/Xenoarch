@@ -15,18 +15,13 @@ namespace DMI.Xenoarch.Ship
     /// Live NAV/FTL and SYSTEMS/SCAN readouts on the Constellation cockpit's Screen_D and Screen_B. Runtime only:
     /// finds the vendor meshes, instances their materials onto RenderTextures driven by UITK, and never writes the
     /// Creepy Cat assets or the open ship scene. Mouse look stays on in every seat. Hold Alt to free the cursor and
-    /// click a gauge (or a region) to zoom in, or left-click while looking at one (reticle). Esc, right-click or a second click zooms out.
+    /// click a screen to open it flat in a view-only panel (<see cref="ScreenViewWindow">). Esc, right-click or Alt+click closes it.
     /// Screen mapping is derived from each face's mesh UVs. Clicks use a mesh ray, not convex-collider textureCoord.
     /// </summary>
     public sealed class CockpitFtlDisplays : MonoBehaviour
     {
         public const int TexWidth = 1280;
         public const int TexHeight = 960;
-        const float ZoomSeconds = 0.45f;
-        const float GaugeZoomDist = 0.17f;
-        const float RegionZoomDist = 0.3f;
-        const float GaugeZoomFov = 28f;
-        const float RegionZoomFov = 38f;
         const int IgnoreRaycastLayer = 2;
         const float LyPerAu = 1f / 63241f;
         const float SecondsPerYear = 31557600f;
@@ -36,19 +31,14 @@ namespace DMI.Xenoarch.Ship
         static readonly int MainTexId = Shader.PropertyToID("_MainTex");
 
         public static CockpitFtlDisplays Instance { get; private set; }
-        /// <summary>True while a gauge zoom is in progress or held, so FTL must not overwrite the camera FOV.</summary>
-        public static bool ZoomBusy => Instance != null && Instance._zoom.kind != ZoomKind.None;
+        /// <summary>Camera-blend focus was removed (screens open in <see cref="ScreenViewWindow"/>); kept so callers compile.</summary>
+        public static bool ZoomBusy => false;
+        public static bool TryHandleEscape() => false;
 
-        public static bool TryHandleEscape()
-        {
-            if (Instance == null || Instance._zoom.kind == ZoomKind.None) return false;
-            Instance.StartZoom(ZoomKind.Out, default, 0f, 0f);
-            return true;
-        }
-
+        /// <summary>Close the screen view window now (standing up, seat released).</summary>
         public static void CancelZoom(bool snap = false)
         {
-            if (Instance != null) Instance.CancelZoomInternal(snap);
+            if (Instance != null && Instance._view != null) Instance._view.CloseNow();
         }
 
         public static void Ensure()
@@ -77,20 +67,6 @@ namespace DMI.Xenoarch.Ship
 
         static bool LooksLikeShip(string name) =>
             name == SceneNames.ShipStarter || (!string.IsNullOrEmpty(name) && name.IndexOf("Ship", System.StringComparison.OrdinalIgnoreCase) >= 0);
-
-        enum ZoomKind { None, In, Out, Hold }
-
-        struct ZoomState
-        {
-            public ZoomKind kind;
-            public Vector3 fromPos, toPos, restPos;
-            public Quaternion fromRot, toRot, restRot;
-            public float fromFov, toFov, restFov;
-            public float t;
-            public string regionId;
-            public Camera cam;
-            public ScreenFace face; // screen currently focused
-        }
 
         sealed class ScreenFace
         {
@@ -129,7 +105,7 @@ namespace DMI.Xenoarch.Ship
         }
 
         ScreenFace _left, _right;
-        ZoomState _zoom;
+        ScreenViewWindow _view;
         float _nextIdleRepaint;
         bool _bound;
 
@@ -181,7 +157,6 @@ namespace DMI.Xenoarch.Ship
 
         void OnDestroy()
         {
-            CancelZoomInternal(true);
             RestoreFace(_left);
             RestoreFace(_right);
             if (Instance == this) Instance = null;
@@ -196,58 +171,26 @@ namespace DMI.Xenoarch.Ship
                 ApplyLive(false);
                 if (!ftl) _nextIdleRepaint = Time.unscaledTime + 0.2f;
             }
-            TickZoom();
             TickCursorInput();
         }
 
         void TickCursorInput()
         {
-            if (CockpitSeat.Occupied == null || CockpitSeat.Occupied.Transitioning) return;
-            if (UIState.BlocksGameplay) return;
+            var seat = CockpitSeat.Occupied;
+            if (seat == null || seat.Transitioning) return;
+            if (UIState.BlocksGameplay) return;   // the view window (or a menu) is open; it handles its own close keys
             var mouse = Mouse.current;
-            var kb = Keyboard.current;
-            if (mouse != null && mouse.rightButton.wasPressedThisFrame && _zoom.kind != ZoomKind.None)
-            {
-                StartZoom(ZoomKind.Out, default, 0f, 0f);
-                return;
-            }
-            if (kb != null && kb.escapeKey.wasPressedThisFrame && _zoom.kind != ZoomKind.None)
-            {
-                StartZoom(ZoomKind.Out, default, 0f, 0f);
-                return;
-            }
-            if (mouse == null || !mouse.leftButton.wasPressedThisFrame) return;
-            var cam = CameraOf(CockpitSeat.Occupied);
+            if (mouse == null || !mouse.leftButton.wasPressedThisFrame || !UIState.ConsoleCursor) return; // Alt + click only
+            var cam = CameraOf(seat);
             if (cam == null) return;
-            // Locked cursor: click the gauge under the reticle. Free cursor (hold Alt): aim with the pointer.
-            Vector2 sp = UIState.ConsoleCursor
-                ? mouse.position.ReadValue()
-                : new Vector2(cam.pixelWidth * 0.5f, cam.pixelHeight * 0.5f);
-            var ray = cam.ScreenPointToRay(sp);
-            // Convex trigger MeshColliders have no valid textureCoord (they also used to block the helm
-            // walk when solid). Intersect the actual mesh so UV and the hit point stay exact.
+            var ray = cam.ScreenPointToRay(mouse.position.ReadValue());
+            // Mesh ray, not the convex trigger colliders (no valid textureCoord).
             ScreenFace face = null;
-            Vector2 uv = default;
-            Vector3 hitPoint = default;
             float best = float.MaxValue;
-            if (TryMeshUv(_left, ray, 4.5f, out var uvL, out var pL, out var dL) && dL < best)
-            { best = dL; face = _left; uv = uvL; hitPoint = pL; }
-            if (TryMeshUv(_right, ray, 4.5f, out var uvR, out var pR, out var dR) && dR < best)
-            { best = dR; face = _right; uv = uvR; hitPoint = pR; }
-            bool focused = _zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In;
-            if (face == null)
-            {
-                if (focused) StartZoom(ZoomKind.Out, default, 0f, 0f);                                   // click outside the screen: blend back
-                else if (UIState.ConsoleCursor) CockpitSeat.Occupied.TryClickConsole(ray);              // Alt + click the console body: ship console menu
-                Debug.Log($"[CockpitClick] hit=none uv=- element=- sp={sp} cursor={UIState.ConsoleCursor} focused={focused}");
-                return;
-            }
-            var region = RegionAt(face, uv);
-            string id = region != null ? region.id : (face.left ? "left-region" : "right-region");
-            Debug.Log($"[CockpitClick] hit={face.transform.name} uv={uv.x:F3},{uv.y:F3} element={id} flipU={face.flipU} flipV={face.flipV} cursor={UIState.ConsoleCursor}");
-            if (focused && _zoom.face == face) return;   // already focused on this screen: the click lands on its UI (element logged above)
-            _zoom.regionId = id;
-            StartFocus(face);                            // focus this screen (from rest, or blending from the other screen)
+            if (TryMeshUv(_left, ray, 4.5f, out _, out _, out var dL) && dL < best) { best = dL; face = _left; }
+            if (TryMeshUv(_right, ray, 4.5f, out _, out _, out var dR) && dR < best) { best = dR; face = _right; }
+            if (face == null) { seat.TryClickConsole(ray); return; }   // console body: ship console menu
+            OpenView(face, cam);
         }
 
         static Camera CameraOf(CockpitSeat seat)
@@ -272,139 +215,28 @@ namespace DMI.Xenoarch.Ship
             return null;
         }
 
-        void StartZoom(ZoomKind kind, Vector3 worldPoint, float dist, float fov)
+        void OpenView(ScreenFace face, Camera cam)
         {
-            var cam = CameraOf(CockpitSeat.Occupied);
-            if (cam == null) return;
-            if (_zoom.cam == null || _zoom.kind == ZoomKind.None)
+            if (face == null || face.rt == null) return;
+            if (_view == null)
             {
-                _zoom.restPos = cam.transform.position;
-                _zoom.restRot = cam.transform.rotation;
-                _zoom.restFov = cam.fieldOfView;
-                _zoom.cam = cam;
+                var go = new GameObject("Screen View") { hideFlags = HideFlags.DontSave };
+                go.transform.SetParent(transform, false);
+                _view = go.AddComponent<ScreenViewWindow>();
             }
-            if (kind == ZoomKind.Out)
-            {
-                _zoom.fromPos = cam.transform.position;
-                _zoom.fromRot = cam.transform.rotation;
-                _zoom.fromFov = cam.fieldOfView;
-                _zoom.toPos = _zoom.restPos;
-                _zoom.toRot = _zoom.restRot;
-                _zoom.toFov = _zoom.restFov;
-                _zoom.kind = ZoomKind.Out;
-                _zoom.t = 0f;
-                _zoom.regionId = null;
-                return;
-            }
+            _view.Show(face.rt, face.left ? "Navigation Display" : "Systems Display", WorldCorners(face), cam);
         }
 
-        const float FocusFill = 0.9f; // the screen fills this much of the limiting view dimension
-
-        /// <summary>Blend the camera (eased, <see cref="ZoomSeconds"/>) to a pose that frames a whole screen square-on.</summary>
-        void StartFocus(ScreenFace face)
+        /// <summary>The 8 world-space corners of the screen mesh's bounds (for the open/close animation's start rect).</summary>
+        static Vector3[] WorldCorners(ScreenFace face)
         {
-            var cam = CameraOf(CockpitSeat.Occupied);
-            if (cam == null || face == null) return;
-            if (_zoom.cam == null || _zoom.kind == ZoomKind.None)
-            {
-                _zoom.restPos = cam.transform.position;
-                _zoom.restRot = cam.transform.rotation;
-                _zoom.restFov = cam.fieldOfView;
-                _zoom.cam = cam;
-            }
-            if (!ComputeFocusPose(face, cam, _zoom.restPos, _zoom.restRot * Vector3.up, _zoom.restFov, out var pos, out var rot)) return;
-            _zoom.fromPos = cam.transform.position;
-            _zoom.fromRot = cam.transform.rotation;
-            _zoom.fromFov = cam.fieldOfView;
-            _zoom.toPos = pos;
-            _zoom.toRot = rot;
-            _zoom.toFov = _zoom.restFov;   // the framing distance is computed for the seat FOV, which stays unchanged
-            _zoom.face = face;
-            _zoom.kind = ZoomKind.In;
-            _zoom.t = 0f;
-        }
-
-        /// <summary>
-        /// Pose that frames the screen mesh: centre of its mesh bounds, camera on the side facing the viewer along the
-        /// screen normal (thinnest mesh axis), up = the screen plane's direction closest to the seat camera's up. The
-        /// distance comes from the screen's extents along that right/up, the vertical FOV and the camera aspect, so it
-        /// fits any screen and any window aspect ratio.
-        /// </summary>
-        static bool ComputeFocusPose(ScreenFace face, Camera cam, Vector3 eye, Vector3 upHint, float fovDeg, out Vector3 pos, out Quaternion rot)
-        {
-            pos = default; rot = Quaternion.identity;
-            if (face == null || face.filter == null || face.filter.sharedMesh == null) return false;
+            var b = face.filter.sharedMesh.bounds;
             var t = face.transform;
-            Bounds lb = face.filter.sharedMesh.bounds;
-            Vector3 size = lb.size;
-            int ax = size.x <= size.y && size.x <= size.z ? 0 : (size.y <= size.z ? 1 : 2);
-            Vector3 axisL = ax == 0 ? Vector3.right : ax == 1 ? Vector3.up : Vector3.forward;
-            Vector3 center = t.TransformPoint(lb.center);
-            Vector3 normal = t.TransformDirection(axisL).normalized;
-            if (Vector3.Dot(normal, eye - center) < 0f) normal = -normal;            // the side the viewer is on
-            Vector3 up = Vector3.ProjectOnPlane(upHint, normal);
-            if (up.sqrMagnitude < 1e-4f) up = Vector3.ProjectOnPlane(t.TransformDirection(ax == 1 ? Vector3.forward : Vector3.up), normal);
-            up.Normalize();
-            Vector3 right = Vector3.Cross(up, -normal).normalized;                   // camera right when looking along -normal
-            float hw = 0f, hh = 0f, hd = 0f;
-            Vector3 e = lb.extents;
+            var e = b.extents;
+            var c = new Vector3[8];
             for (int i = 0; i < 8; i++)
-            {
-                var local = lb.center + new Vector3((i & 1) == 0 ? -e.x : e.x, (i & 2) == 0 ? -e.y : e.y, (i & 4) == 0 ? -e.z : e.z);
-                Vector3 d = t.TransformPoint(local) - center;
-                hw = Mathf.Max(hw, Mathf.Abs(Vector3.Dot(d, right)));
-                hh = Mathf.Max(hh, Mathf.Abs(Vector3.Dot(d, up)));
-                hd = Mathf.Max(hd, Mathf.Abs(Vector3.Dot(d, normal)));
-            }
-            float tanV = Mathf.Tan(Mathf.Deg2Rad * Mathf.Clamp(fovDeg, 5f, 120f) * 0.5f);
-            float tanH = tanV * Mathf.Max(0.1f, cam.aspect);
-            float dist = Mathf.Max(hh / tanV, hw / tanH) / FocusFill + hd;
-            dist = Mathf.Max(dist, cam.nearClipPlane * 2f + hd);
-            pos = center + normal * dist;
-            rot = Quaternion.LookRotation(-normal, up);
-            return true;
-        }
-
-        void TickZoom()
-        {
-            if (_zoom.kind != ZoomKind.In && _zoom.kind != ZoomKind.Out) return;
-            var cam = _zoom.cam;
-            if (cam == null) { _zoom.kind = ZoomKind.None; return; }
-            _zoom.t += Time.unscaledDeltaTime / ZoomSeconds;
-            float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_zoom.t));
-            cam.transform.position = Vector3.Lerp(_zoom.fromPos, _zoom.toPos, k);
-            cam.transform.rotation = Quaternion.Slerp(_zoom.fromRot, _zoom.toRot, k);
-            cam.fieldOfView = Mathf.Lerp(_zoom.fromFov, _zoom.toFov, k);
-            if (_zoom.t < 1f) return;
-            if (_zoom.kind == ZoomKind.Out)
-            {
-                cam.transform.position = _zoom.restPos;
-                cam.transform.rotation = _zoom.restRot;
-                cam.fieldOfView = _zoom.restFov;
-                _zoom.kind = ZoomKind.None;
-                _zoom.cam = null;
-            }
-            else _zoom.kind = ZoomKind.Hold;
-        }
-
-        void CancelZoomInternal(bool snap)
-        {
-            if (_zoom.kind == ZoomKind.None) return;
-            var cam = _zoom.cam;
-            if (cam != null)
-            {
-                if (snap)
-                {
-                    cam.transform.position = _zoom.restPos;
-                    cam.transform.rotation = _zoom.restRot;
-                    cam.fieldOfView = _zoom.restFov;
-                    _zoom.kind = ZoomKind.None;
-                    _zoom.cam = null;
-                    return;
-                }
-                StartZoom(ZoomKind.Out, default, 0f, 0f);
-            }
-            else { _zoom.kind = ZoomKind.None; }
+                c[i] = t.TransformPoint(b.center + new Vector3((i & 1) == 0 ? -e.x : e.x, (i & 2) == 0 ? -e.y : e.y, (i & 4) == 0 ? -e.z : e.z));
+            return c;
         }
 
         bool TryBindScreens()
