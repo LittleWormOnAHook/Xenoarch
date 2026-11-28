@@ -119,7 +119,7 @@ namespace DMI.Xenoarch.EditorTools
             }
             ps.scaleMode = UnityEngine.UIElements.PanelScaleMode.ScaleWithScreenSize;
             ps.referenceResolution = new Vector2Int(1920, 1080);
-            ps.screenMatchMode = UnityEngine.UIElements.PanelScreenMatchMode.MatchWidthOrHeight;
+            ps.screenMatchMode = UnityEngine.UIElements.PanelScreenMatchMode.Shrink; // t380u: panel is never smaller than 1920x1080 at any aspect (4:3, 16:10, 21:9)
             ps.match = 0.5f;
             var theme = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.ThemeStyleSheet>(ThemePath);
             if (theme != null) ps.themeStyleSheet = theme;

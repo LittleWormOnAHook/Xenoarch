@@ -66,6 +66,9 @@ namespace DMI.Xenoarch.UI
         void OnMove(PointerMoveEvent e)
         {
             if (_pending == null || e.pointerId != _pointer) return;
+            // The release was missed (button let go outside the window / Editor lost focus): end the carry instead of
+            // leaving the pointer captured, which made every later click on other controls do nothing.
+            if ((e.pressedButtons & 1) == 0) { CancelPending(); return; }
             if (!_dragging)
             {
                 if (((Vector2)e.position - _start).sqrMagnitude < ThresholdPx * ThresholdPx) return;

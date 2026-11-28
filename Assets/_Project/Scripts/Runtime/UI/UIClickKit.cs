@@ -36,7 +36,12 @@ namespace DMI.Xenoarch.UI
             root.AddToClassList("xa-clickkit");
             root.schedule.Execute(() =>
             {
-                if (root.panel == null || root.resolvedStyle.display == DisplayStyle.None) return;
+                if (root.panel == null) return;
+                // A UIDocument root is a full-screen container: it must never take the pointer itself (a leftover
+                // Position root at a high sort order silently blocks every window below it). Veils stay modal.
+                if (root.parent != null && root.parent == root.panel.visualTree && root.pickingMode != PickingMode.Ignore)
+                    root.pickingMode = PickingMode.Ignore;
+                if (root.resolvedStyle.display == DisplayStyle.None) return;
                 Walk(root, false);
             }).Every(250);
         }

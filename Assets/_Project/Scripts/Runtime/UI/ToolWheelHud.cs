@@ -366,7 +366,7 @@ namespace DMI.Xenoarch.UI
             if (m == null) return;
             Vector2 p = m.position.ReadValue();
             float dx = p.x - Screen.width * 0.5f, dy = (Screen.height - p.y) - Screen.height * 0.5f;
-            SetHover(new Vector2(dx, dy).magnitude < DeadZone ? -1 : SlotAt(dx, dy));
+            SetHover(new Vector2(dx, dy).magnitude < DeadZone * UIResolutionGuard.PanelScale ? -1 : SlotAt(dx, dy));
         }
 
         static int SlotAt(float dx, float dy)
