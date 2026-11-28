@@ -160,6 +160,7 @@ namespace DMI.Xenoarch.Ship
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
             InteractionPromptHud.IdlePrompt = "Stand up  ·  Hold Alt to use screens";
+            InteractionPromptHud.ForceIdlePrompt = true;
             UIState.ConsoleCursor = false;
             PowerUpConsole();
             onSeated?.Invoke();
@@ -170,6 +171,7 @@ namespace DMI.Xenoarch.Ship
             Transitioning = true;
             var p = _player;
             InteractionPromptHud.IdlePrompt = null;
+            InteractionPromptHud.ForceIdlePrompt = false;
             CockpitFtlDisplays.CancelZoom(true);
             UIState.ConsoleCursor = false;
             if (_power != null) _power.PowerOff();
@@ -220,7 +222,8 @@ namespace DMI.Xenoarch.Ship
             }
             if (Transitioning || !_player.InputEnabled || UIState.BlocksGameplay || Time.unscaledTime - _seatedAt < 0.35f) return;
             bool space = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-            bool e = _input != null && _input.InteractPressed && (_interactor == null || _interactor.Target == null);
+            // E always stands while seated so the helm (or anything else under the reticle) cannot eat the key.
+            bool e = _input != null && _input.InteractPressed;
             if (space || e) Stand();
         }
 
@@ -234,6 +237,7 @@ namespace DMI.Xenoarch.Ship
             HideBody(_player, false);
             if (Occupied == this) Occupied = null;
             InteractionPromptHud.IdlePrompt = null;
+            InteractionPromptHud.ForceIdlePrompt = false;
             Transitioning = false;
             _player = null;
         }

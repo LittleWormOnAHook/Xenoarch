@@ -16,6 +16,7 @@ namespace DMI.Xenoarch.Ship
     /// finds the vendor meshes, instances their materials onto RenderTextures driven by UITK, and never writes the
     /// Creepy Cat assets or the open ship scene. Mouse look stays on in every seat. Hold Alt to free the cursor and
     /// click a gauge (or a region) to zoom in, or left-click while looking at one (reticle). Esc, right-click or a second click zooms out.
+    /// Screen mapping is derived from each face's mesh UVs. Clicks use a mesh ray, not convex-collider textureCoord.
     /// </summary>
     public sealed class CockpitFtlDisplays : MonoBehaviour
     {
@@ -104,6 +105,7 @@ namespace DMI.Xenoarch.Ship
             public PanelSettings panelSettings;
             public UIDocument doc;
             public VisualElement root;
+            public bool flipU, flipV;
             public readonly List<HitRegion> regions = new List<HitRegion>();
             public Labels labels = new Labels();
             public WaveElement waveA, waveB;
@@ -221,20 +223,25 @@ namespace DMI.Xenoarch.Ship
                 ? mouse.position.ReadValue()
                 : new Vector2(cam.pixelWidth * 0.5f, cam.pixelHeight * 0.5f);
             var ray = cam.ScreenPointToRay(sp);
-            if (!Physics.Raycast(ray, out var hit, 4.5f, 1 << IgnoreRaycastLayer, QueryTriggerInteraction.Collide))
-            {
-                if (_zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In) StartZoom(ZoomKind.Out, default, 0f, 0f);
-                return;
-            }
-            var face = FaceFor(hit.collider);
+            // Convex trigger MeshColliders have no valid textureCoord (they also used to block the helm
+            // walk when solid). Intersect the actual mesh so UV and the hit point stay exact.
+            ScreenFace face = null;
+            Vector2 uv = default;
+            Vector3 hitPoint = default;
+            float best = float.MaxValue;
+            if (TryMeshUv(_left, ray, 4.5f, out var uvL, out var pL, out var dL) && dL < best)
+            { best = dL; face = _left; uv = uvL; hitPoint = pL; }
+            if (TryMeshUv(_right, ray, 4.5f, out var uvR, out var pR, out var dR) && dR < best)
+            { best = dR; face = _right; uv = uvR; hitPoint = pR; }
             if (face == null)
             {
                 if (_zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In) StartZoom(ZoomKind.Out, default, 0f, 0f);
+                Debug.Log($"[CockpitClick] hit=none uv=- element=- sp={sp} cursor={UIState.ConsoleCursor}");
                 return;
             }
-            Vector2 uv = hit.textureCoord;
             var region = RegionAt(face, uv);
             string id = region != null ? region.id : (face.left ? "left-region" : "right-region");
+            Debug.Log($"[CockpitClick] hit={face.transform.name} uv={uv.x:F3},{uv.y:F3} element={id} flipU={face.flipU} flipV={face.flipV} cursor={UIState.ConsoleCursor}");
             if ((_zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In) && _zoom.regionId == id)
             {
                 StartZoom(ZoomKind.Out, default, 0f, 0f);
@@ -243,15 +250,7 @@ namespace DMI.Xenoarch.Ship
             float dist = region != null && region.isGauge ? GaugeZoomDist : RegionZoomDist;
             float fov = region != null && region.isGauge ? GaugeZoomFov : RegionZoomFov;
             _zoom.regionId = id;
-            StartZoom(ZoomKind.In, hit.point, dist, fov);
-        }
-
-        ScreenFace FaceFor(Collider c)
-        {
-            if (c == null) return null;
-            if (_left != null && (_left.collider == c || c.transform == _left.transform)) return _left;
-            if (_right != null && (_right.collider == c || c.transform == _right.transform)) return _right;
-            return null;
+            StartZoom(ZoomKind.In, hitPoint, dist, fov);
         }
 
         static Camera CameraOf(CockpitSeat seat)
@@ -262,9 +261,11 @@ namespace DMI.Xenoarch.Ship
 
         HitRegion RegionAt(ScreenFace face, Vector2 uv)
         {
-            // Mesh UVs are y-up; UITK panel y is down. Material _BaseMap scale.y is -1 to match.
-            float px = uv.x * TexWidth;
-            float py = (1f - uv.y) * TexHeight;
+            // Mesh UV, then the same U/V flip applied to the material, then y-up texture to y-down UITK.
+            float ru = face.flipU ? 1f - uv.x : uv.x;
+            float rv = face.flipV ? 1f - uv.y : uv.y;
+            float px = ru * TexWidth;
+            float py = (1f - rv) * TexHeight;
             var pt = new Vector2(px, py);
             foreach (var r in face.regions)
             {
@@ -426,24 +427,14 @@ namespace DMI.Xenoarch.Ship
 
             face.instance = face.original != null ? new Material(face.original) { name = (face.original.name) + " (FTL RT)" } : new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Texture"));
             AssignTex(face.instance, face.rt);
-            face.instance.SetTextureScale(BaseMapId, new Vector2(1f, -1f));
-            face.instance.SetTextureOffset(BaseMapId, new Vector2(0f, 1f));
-            if (face.instance.HasProperty(MainTexId))
-            {
-                face.instance.SetTextureScale(MainTexId, new Vector2(1f, -1f));
-                face.instance.SetTextureOffset(MainTexId, new Vector2(0f, 1f));
-            }
             if (face.instance.HasProperty(EmissionColorId))
             {
                 face.instance.EnableKeyword("_EMISSION");
                 face.instance.SetColor(EmissionColorId, new Color(1.4f, 1.6f, 1.8f));
                 if (face.instance.HasProperty(EmissionMapId))
-                {
                     face.instance.SetTexture(EmissionMapId, face.rt);
-                    face.instance.SetTextureScale(EmissionMapId, new Vector2(1f, -1f));
-                    face.instance.SetTextureOffset(EmissionMapId, new Vector2(0f, 1f));
-                }
             }
+            ApplyScreenMapping(face);
             r.sharedMaterial = face.instance;
             return face;
         }
@@ -452,6 +443,169 @@ namespace DMI.Xenoarch.Ship
         {
             if (m.HasProperty(BaseMapId)) m.SetTexture(BaseMapId, tex);
             if (m.HasProperty(MainTexId)) m.SetTexture(MainTexId, tex);
+        }
+
+        void ApplyScreenMapping(ScreenFace face)
+        {
+            DeriveUvOrientation(face.filter.sharedMesh, face.transform, ViewerHint(face.transform), out face.flipU, out face.flipV);
+            ApplySt(face.instance, BaseMapId, face.flipU, face.flipV);
+            if (face.instance.HasProperty(MainTexId)) ApplySt(face.instance, MainTexId, face.flipU, face.flipV);
+            if (face.instance.HasProperty(EmissionMapId)) ApplySt(face.instance, EmissionMapId, face.flipU, face.flipV);
+            Debug.Log($"[CockpitScreen] {face.transform.name} flipU={face.flipU} flipV={face.flipV}");
+        }
+
+        static void ApplySt(Material m, int id, bool flipU, bool flipV)
+        {
+            m.SetTextureScale(id, new Vector2(flipU ? -1f : 1f, flipV ? -1f : 1f));
+            m.SetTextureOffset(id, new Vector2(flipU ? 1f : 0f, flipV ? 1f : 0f));
+        }
+
+        static Vector3 ViewerHint(Transform screen)
+        {
+            if (CockpitSeat.Occupied != null)
+            {
+                var cam = CameraOf(CockpitSeat.Occupied);
+                if (cam != null) return cam.transform.position;
+                return CockpitSeat.Occupied.transform.position;
+            }
+            var seats = FindObjectsByType<CockpitSeat>(FindObjectsInactive.Exclude);
+            Transform best = null;
+            float bd = float.MaxValue;
+            if (seats != null)
+            {
+                foreach (var s in seats)
+                {
+                    if (s == null) continue;
+                    float d = (s.transform.position - screen.position).sqrMagnitude;
+                    if (d < bd) { bd = d; best = s.transform; }
+                }
+            }
+            return best != null ? best.position : screen.position + screen.TransformDirection(Vector3.back);
+        }
+
+        // Map the RT so visual left is U=0 and visual top is V=1 (Unity texture top = UITK panel top).
+        // The previous hardcoded scale.y = -1 was a vertical mirror: upside down and backwards on both faces.
+        static void DeriveUvOrientation(Mesh mesh, Transform t, Vector3 viewFrom, out bool flipU, out bool flipV)
+        {
+            flipU = false;
+            flipV = false;
+            if (mesh == null || t == null || mesh.vertexCount < 3) return;
+            var verts = mesh.vertices;
+            var uvs = mesh.uv;
+            var tris = mesh.triangles;
+            if (uvs == null || uvs.Length < verts.Length || tris == null || tris.Length < 3) return;
+
+            Vector3 n = Vector3.zero;
+            Vector3 c = Vector3.zero;
+            float areaSum = 0f;
+            for (int i = 0; i < tris.Length; i += 3)
+            {
+                Vector3 a = t.TransformPoint(verts[tris[i]]);
+                Vector3 b = t.TransformPoint(verts[tris[i + 1]]);
+                Vector3 d = t.TransformPoint(verts[tris[i + 2]]);
+                Vector3 cr = Vector3.Cross(b - a, d - a);
+                float area = cr.magnitude;
+                if (area < 1e-12f) continue;
+                n += cr;
+                c += (a + b + d) * (area / 3f);
+                areaSum += area;
+            }
+            if (areaSum < 1e-12f) return;
+            c /= areaSum;
+            n.Normalize();
+            if (Vector3.Dot(n, viewFrom - c) < 0f) n = -n;
+
+            Vector3 upHint = t.root != null ? t.root.up : Vector3.up;
+            Vector3 up = Vector3.ProjectOnPlane(upHint, n);
+            if (up.sqrMagnitude < 1e-6f) up = Vector3.ProjectOnPlane(Vector3.up, n);
+            if (up.sqrMagnitude < 1e-6f) return;
+            up.Normalize();
+            Vector3 right = Vector3.Cross(n, up);
+            if (right.sqrMagnitude < 1e-6f) return;
+            right.Normalize();
+
+            float sumS = 0f, sumT = 0f, sumU = 0f, sumV = 0f, sumSU = 0f, sumTV = 0f;
+            int count = 0;
+            for (int i = 0; i < verts.Length && i < uvs.Length; i++)
+            {
+                Vector3 w = t.TransformPoint(verts[i]);
+                float s = Vector3.Dot(w - c, right);
+                float vt = Vector3.Dot(w - c, up);
+                float u = uvs[i].x;
+                float v = uvs[i].y;
+                sumS += s; sumT += vt; sumU += u; sumV += v;
+                sumSU += s * u; sumTV += vt * v;
+                count++;
+            }
+            if (count < 2) return;
+            float inv = 1f / count;
+            flipU = (sumSU * inv - (sumS * inv) * (sumU * inv)) < 0f;
+            flipV = (sumTV * inv - (sumT * inv) * (sumV * inv)) < 0f;
+        }
+
+        static bool TryMeshUv(ScreenFace face, Ray worldRay, float maxDist, out Vector2 uv, out Vector3 worldPoint, out float dist)
+        {
+            uv = default;
+            worldPoint = default;
+            dist = 0f;
+            if (face == null || face.filter == null || face.filter.sharedMesh == null) return false;
+            var mesh = face.filter.sharedMesh;
+            var t = face.filter.transform;
+            var verts = mesh.vertices;
+            var uvs = mesh.uv;
+            var tris = mesh.triangles;
+            if (uvs == null || uvs.Length < verts.Length || tris == null || tris.Length < 3) return false;
+            Vector3 origin = t.InverseTransformPoint(worldRay.origin);
+            Vector3 dir = t.InverseTransformDirection(worldRay.direction);
+            if (dir.sqrMagnitude < 1e-12f) return false;
+            dir.Normalize();
+
+            float best = float.MaxValue;
+            bool hit = false;
+            Vector2 bestUv = default;
+            Vector3 bestLocal = default;
+            for (int i = 0; i < tris.Length; i += 3)
+            {
+                if (!RayTriangle(origin, dir, verts[tris[i]], verts[tris[i + 1]], verts[tris[i + 2]], out float td, out Vector3 bary))
+                    continue;
+                if (td < 0f) continue;
+                Vector3 local = bary.x * verts[tris[i]] + bary.y * verts[tris[i + 1]] + bary.z * verts[tris[i + 2]];
+                Vector3 world = t.TransformPoint(local);
+                float wd = Vector3.Dot(world - worldRay.origin, worldRay.direction.normalized);
+                if (wd < 0f || wd > maxDist || wd >= best) continue;
+                best = wd;
+                bestUv = bary.x * uvs[tris[i]] + bary.y * uvs[tris[i + 1]] + bary.z * uvs[tris[i + 2]];
+                bestLocal = local;
+                hit = true;
+            }
+            if (!hit) return false;
+            uv = bestUv;
+            worldPoint = t.TransformPoint(bestLocal);
+            dist = best;
+            return true;
+        }
+
+        static bool RayTriangle(Vector3 orig, Vector3 dir, Vector3 v0, Vector3 v1, Vector3 v2, out float t, out Vector3 bary)
+        {
+            const float eps = 1e-6f;
+            t = 0f;
+            bary = default;
+            Vector3 e1 = v1 - v0;
+            Vector3 e2 = v2 - v0;
+            Vector3 p = Vector3.Cross(dir, e2);
+            float det = Vector3.Dot(e1, p);
+            if (det > -eps && det < eps) return false;
+            float inv = 1f / det;
+            Vector3 s = orig - v0;
+            float u = Vector3.Dot(s, p) * inv;
+            if (u < 0f || u > 1f) return false;
+            Vector3 q = Vector3.Cross(s, e1);
+            float v = Vector3.Dot(dir, q) * inv;
+            if (v < 0f || u + v > 1f) return false;
+            t = Vector3.Dot(e2, q) * inv;
+            if (t < 0f) return false;
+            bary = new Vector3(1f - u - v, u, v);
+            return true;
         }
 
         static void RestoreFace(ScreenFace face)

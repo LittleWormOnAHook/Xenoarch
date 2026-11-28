@@ -23,7 +23,9 @@ namespace DMI.Xenoarch.UI
 
         /// <summary>Shown in the E popup when nothing is targeted (e.g. "Stand up" while seated). Null = hidden.</summary>
         public static string IdlePrompt;
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetStatics() => IdlePrompt = null;
+        /// <summary>When true, IdlePrompt is shown even if an interactable is under the reticle (cockpit seated).</summary>
+        public static bool ForceIdlePrompt;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] static void ResetStatics() { IdlePrompt = null; ForceIdlePrompt = false; }
 
         VisualElement _root, _crosshair, _prompt, _holdTrack, _holdFill, _strip, _bottom;
         VisualElement _helmetLeft, _helmetRight, _helmetLeftStrip, _helmetRightStrip;
@@ -105,7 +107,13 @@ namespace DMI.Xenoarch.UI
 
             string prompt = interactor != null ? interactor.Prompt : null;
             bool targeted = !string.IsNullOrEmpty(prompt);
-            if (!targeted && !UIState.BlocksGameplay && !RoverVehicle.AnySeated) prompt = IdlePrompt;
+            // Seated in a cockpit: always show "Stand up · Hold Alt to use screens", even if the helm is under the reticle.
+            if (ForceIdlePrompt && !string.IsNullOrEmpty(IdlePrompt) && !UIState.BlocksGameplay)
+            {
+                prompt = IdlePrompt;
+                targeted = false;
+            }
+            else if (!targeted && !UIState.BlocksGameplay && !RoverVehicle.AnySeated) prompt = IdlePrompt;
             bool hasPrompt = !string.IsNullOrEmpty(prompt);
             XenoarchUI.Show(_prompt, hasPrompt);
             _crosshair?.EnableInClassList("xa-crosshair--target", targeted);

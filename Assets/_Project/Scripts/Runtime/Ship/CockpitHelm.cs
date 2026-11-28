@@ -35,9 +35,10 @@ namespace DMI.Xenoarch.Ship
         public override float GetPriority(in InteractionContext c)
         {
             if (X == null || IsOpen) return -1f;
-            if (CockpitSeat.Occupied != null && CockpitSeat.Occupied.Transitioning) return -1f;
-            // During FTL, allow a standing player to sit back down, but don't steal E from "Stand up" while seated.
-            if (Busy) return CockpitSeat.Occupied == null && NearestFreeSeat(c.Rig.Root.position) != null ? 1f : -1f;
+            // While seated, never steal E or the HUD prompt from "Stand up · Hold Alt to use screens".
+            if (CockpitSeat.Occupied != null) return -1f;
+            // During FTL, allow a standing player to sit back down.
+            if (Busy) return NearestFreeSeat(c.Rig.Root.position) != null ? 1f : -1f;
             return 1f;
         }
 
