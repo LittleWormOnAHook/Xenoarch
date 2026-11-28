@@ -3,6 +3,7 @@ using DMI.Xenoarch.Core;
 using DMI.Xenoarch.Interaction;
 using DMI.Xenoarch.UI;
 using UnityEngine;
+using DMI.Xenoarch.Inventory;
 
 namespace DMI.Xenoarch.Excavation
 {
@@ -137,9 +138,32 @@ namespace DMI.Xenoarch.Excavation
             if (s == null || Definition == null || Grid.recovered) return false;
             float e = Exposure;
             if (e < MinExposure) return false;
-            if (s.Inventory.FreeSlots <= 0) { Toast.Show("Inventory full."); return false; }
             float cond = Grid.condition;
             if (e < SafeExposure) cond = Mathf.Max(0.05f, cond - PryLoss(e));
+            if (s.Inventory.FreeSlots <= 0)
+            {
+                string name = Definition.unidentifiedName ?? Definition.DisplayNameOrId;
+                OverflowPrompt.OfferRoute(new ItemStack(Definition.Id, 1),
+                    $"Backpack is full. Recover {name} straight to the ship, or stash it in a nearby shuttle or rover.",
+                    dest =>
+                    {
+                        if (this == null || dest == null || dest.Inventory == null) return;
+                        if (dest.Inventory.FreeSlots <= 0) { Toast.Show($"{dest.Label} is full."); return; }
+                        Grid.condition = cond;
+                        var inst2 = s.Artifacts.Recover(Definition, cond, Site.Definition.Id, Site.Definition.bodyId);
+                        if (inst2 == null || VehicleCargo.Send(null, dest.Inventory, new ItemStack(Definition.Id, 1, inst2.instanceId), fromWorld: true) <= 0)
+                        {
+                            Toast.Show("Couldn't store that find.");
+                            return;
+                        }
+                        Site.OnRecovered(this, inst2.instanceId);
+                        string quality2 = cond >= 0.9f ? "pristine" : cond >= 0.7f ? "good" : cond >= 0.4f ? "worn" : "badly damaged";
+                        string where = dest.Id == "ship" ? "ship storage" : dest.Id;
+                        Toast.Show($"RECOVERED to the {where}: {Definition.unidentifiedName} ({quality2}, condition {cond:P0}).", 5f);
+                        Destroy(gameObject);
+                    });
+                return false;
+            }
             Grid.condition = cond;
             var inst = s.Artifacts.Recover(Definition, cond, Site.Definition.Id, Site.Definition.bodyId);
             if (inst == null || !s.Inventory.AddInstance(Definition.Id, inst.instanceId)) { Debug.LogWarning("[Xenoarch] Recovery failed (inventory)"); return false; }

@@ -39,14 +39,27 @@ namespace DMI.Xenoarch.Interaction
             {
                 if (!s.Inventory.AddInstance(itemId, instanceId))
                 {
-                    Toast.Show("Inventory full.");
+                    OverflowPrompt.Offer(new ItemStack(itemId, 1, instanceId),
+                        "Backpack is full. Send this item to the ship, or stash it in a nearby shuttle or rover.",
+                        sent => { if (sent > 0 && this != null) Destroy(gameObject); });
                     return false;
                 }
                 Destroy(gameObject);
                 return true;
             }
             int left = s.Inventory.Add(itemId, count);
-            if (left == count) { Toast.Show("Inventory full."); return false; }
+            if (left == count)
+            {
+                OverflowPrompt.Offer(new ItemStack(itemId, count),
+                    "Backpack is full. Send this item to the ship, or stash it in a nearby shuttle or rover.",
+                    sent =>
+                    {
+                        if (this == null) return;
+                        count -= sent;
+                        if (count <= 0) Destroy(gameObject);
+                    });
+                return false;
+            }
             if (left > 0) { count = left; return true; }
             Destroy(gameObject);
             return true;

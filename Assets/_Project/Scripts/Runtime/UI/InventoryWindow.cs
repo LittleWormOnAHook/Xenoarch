@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DMI.Xenoarch.Artifacts;
 using DMI.Xenoarch.Core;
@@ -18,7 +19,7 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.UI
 {
     /// <summary>
-    /// Player inventory (I or Tab): backpack slot grid with icons, item details, ship crate summary, and crafting
+    /// Player inventory (I or Tab): backpack slot grid with icons, shared right-click menu (Inspect / Move / Split / Drop / Destroy), item details, ship crate summary, and crafting
     /// (ASH-style: recipes by category, have/need per ingredient, timed craft). Crafting takes ingredients from the
     /// backpack first, then the three ship crates; products go to the backpack (overflow into a crate).
     /// </summary>
@@ -37,7 +38,7 @@ namespace DMI.Xenoarch.UI
             bool wasOpen = IsOpen;
             base.Update();
             var s = Session;
-            if (wasOpen && IsOpen && !JournalReader.Blocking && Time.unscaledTime - _openTime > 0.2f && Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame) Close();
+            if (wasOpen && IsOpen && !JournalReader.Blocking && !ItemInspector.IsOpen && !ItemInspector.ClosedThisFrame && !OverflowPrompt.IsOpen && Time.unscaledTime - _openTime > 0.2f && Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame) Close();
             if (s == null) return;
             if (!_hooked)
             {
@@ -74,7 +75,7 @@ namespace DMI.Xenoarch.UI
             if (!_menuHooked) { _menuHooked = true; body.RegisterCallback<PointerDownEvent>(e => { if (_menu != null && !_menu.worldBound.Contains(e.position)) HideMenu(); }); }
             var s = Session; var inv = s.Inventory;
             Status.text = $"Backpack {inv.Capacity - inv.FreeSlots}/{inv.Capacity}   |   {s.Economy.Credits:N0} cr   |   {s.Economy.RankName} ({s.Economy.Score})   |   Ship storage level {s.Exploration.Ship.holdLevel + 1}" + (s.AboardShip ? "   |   Aboard: ship workshop available" : "");
-            Hint.text = "I / Tab / Esc: close   |   Right-click an item to drop or destroy   |   Hotbar items do not use backpack space";
+            Hint.text = "I / Tab / Esc: close   |   Right-click: Inspect, Move, Split, Drop, Destroy   |   Hotbar items do not use backpack space";
 
             // ---------------- backpack grid + ship crates
             var left = ScrollCol(body, 0, true);
@@ -83,7 +84,7 @@ namespace DMI.Xenoarch.UI
             grid.style.width = 84 * 6; // six 80px slots with 4px gutters, so 29 slots land on a clean last row of five
             left.Add(grid);
             for (int i = 0; i < inv.Slots.Count; i++) grid.Add(Tile(inv.Slots[i], i));
-            Text(left, "Drag items to rearrange, onto the hotbar, or onto a crate below. Right-click to drop or destroy.", "xa-term__dim");
+            Text(left, "Drag items to rearrange, onto the hotbar, or onto a crate below. Right-click to inspect, move, split, drop or destroy.", "xa-term__dim");
 
             // Hotbar (keys 1-8). Slot 1 is the scanner; drag tools/items onto 2-8, drag off to clear.
             Text(left, "HOTBAR", "xa-term__h");
@@ -99,6 +100,21 @@ namespace DMI.Xenoarch.UI
                 var line = Text(left, $"{kv.Key} crate: {used}/{h.Capacity} slots" + (used > 0 ? $"  ({string.Join(", ", top)}{(h.Slots.Count(x => !x.IsEmpty) > 4 ? ", ..." : "")})" : "") + "   [drop here]", "xa-term__dim");
                 var role = kv.Key; var hold = h;
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToCrate(role, hold, p));
+            }
+            if (!s.AboardShip) Text(left, "On the surface: drop a stack here to send it to the ship.", "xa-term__dim");
+
+            var cargo = s.VehicleCargo;
+            if (cargo != null && VehicleCargo.ShuttleNearby())
+            {
+                var sh = cargo.Shuttle; int used = sh.Capacity - sh.FreeSlots;
+                var line = Text(left, $"Shuttle stash: {used}/{sh.Capacity} slots   [drop here]", "xa-term__dim");
+                DragDrop.Target(line, p => p.kind == "backpack", p => DropToVehicle(sh, "shuttle", p));
+            }
+            if (cargo != null && VehicleCargo.RoverNearby())
+            {
+                var rv = cargo.Rover; int used = rv.Capacity - rv.FreeSlots;
+                var line = Text(left, $"Rover stash: {used}/{rv.Capacity} slots   [drop here]", "xa-term__dim");
+                DragDrop.Target(line, p => p.kind == "backpack", p => DropToVehicle(rv, "rover", p));
             }
 
             Text(left, "EMERGENCY CALLS", "xa-term__h");
@@ -172,8 +188,15 @@ namespace DMI.Xenoarch.UI
             {
                 if (d.icon != null) { var big = new VisualElement(); big.style.width = 120; big.style.height = 120; XenoarchIcons.ApplyItem(big, d); big.style.marginBottom = 6; mid.Add(big); }
                 Text(mid, d.DisplayNameOrId.ToUpperInvariant(), "xa-term__h");
-                Text(mid, $"{d.category}   |   value {d.baseValue}   |   mass {d.mass:0.##}");
+                Text(mid, $"{ResourceGroups.GroupLabel(d)}   |   value {d.baseValue}   |   mass {d.mass:0.##} kg");
+                if (d is MaterialDefinition)
+                    Text(mid, $"Grade / purity: {ResourceGroups.GradeLabel(d, null)}", "xa-term__dim");
                 if (!string.IsNullOrEmpty(d.description)) Text(mid, d.description, "xa-term__dim");
+                Btn(mid, "Inspect", () =>
+                {
+                    var found = inv.Slots.FirstOrDefault(x => !x.IsEmpty && x.itemId == d.Id);
+                    ItemInspector.Open(found != null && !found.IsEmpty ? found.Clone() : new ItemStack(d.Id, 1));
+                });
                 int bp = inv.Count(d.Id), all = s.Stock.Count(d.Id);
                 Text(mid, $"Backpack {bp}   |   Ship crates {all - bp}");
                 if (d is DMI.Xenoarch.Vehicles.VehicleItemDefinition && DMI.Xenoarch.Vehicles.RoverDirector.Instance is DMI.Xenoarch.Vehicles.RoverDirector rd)
@@ -263,8 +286,8 @@ namespace DMI.Xenoarch.UI
 
         VisualElement _menu; bool _menuHooked;
 
-        /// <summary>Right-click menu: Drop, Destroy, and Combine when the item is a puzzle piece. Available whenever
-        /// the item can be selected, not only when the backpack is full.</summary>
+        /// <summary>Right-click menu: Inspect, Move, Split, Drop, Destroy, and Combine when the item is a puzzle piece.
+        /// Shared with storage so every screen stays uniform. Destroy still goes through story-critical eligibility.</summary>
         void ShowItemMenu(ItemStack st, System.Action remove, Vector2 screenPos)
         {
             HideMenu();
@@ -272,59 +295,73 @@ namespace DMI.Xenoarch.UI
             _selItem = st.itemId;
             var s = Session;
             var d = Def(st.itemId);
-            string name = d != null ? d.DisplayNameOrId : st.itemId;
             var art = !string.IsNullOrEmpty(st.instanceId) ? s.Artifacts.Get(st.instanceId) : null;
             var group = art != null ? s.Puzzles.GroupOf(art) : null;
-            var dropGate = s.Eligibility != null ? s.Eligibility.Check(art, ArtifactAction.Discard) : Eligibility.Allowed;
-            var destroyGate = s.Eligibility != null ? s.Eligibility.Check(art, ArtifactAction.Destroy) : Eligibility.Allowed;
-            bool vehicleOut = d is VehicleItemDefinition vd && RoverDirector.Instance is RoverDirector rd && rd.IsDeployed(vd);
+            bool vehicleOut = d is DMI.Xenoarch.Vehicles.VehicleItemDefinition vdef && DMI.Xenoarch.Vehicles.RoverDirector.Instance is DMI.Xenoarch.Vehicles.RoverDirector rd && rd.IsDeployed(vdef);
 
-            _menu = new VisualElement();
-            _menu.AddToClassList("xa-ctx");
-            _menu.style.position = Position.Absolute;
-            _menu.style.minWidth = 280;
-            Text(_menu, name + (st.count > 1 ? $"  x{st.count}" : ""), "xa-term__h");
-            if (group != null)
+            Action onMove = null; string moveLabel = null;
+            if (s.AboardShip && d != null)
             {
-                var puz = s.Puzzles; var spec = ArtifactPuzzleService.Spec(group);
-                int found = puz.Pieces(group).Count;
-                Text(_menu, $"{spec?.title ?? group} piece   ({found} found)", "xa-term__dim");
-                bool can = puz.CanCombine(group);
-                string label = puz.IsSolved(group) ? "View reconstructed star map" : "Combine with other artifact";
-                string inst = st.instanceId, g = group;
-                Btn(_menu, can ? label : "Combine (needs 2 puzzle pieces)", () => { HideMenu(); OpenPuzzle(g, inst); }, can);
-            }
-            if (vehicleOut) Text(_menu, "Recall the vehicle before dropping or destroying it.", "xa-term__warn");
-            else
-            {
-                var dropStack = st.Clone();
-                if (dropGate.IsBlocked) Text(_menu, "Drop: " + dropGate.Message, "xa-term__warn");
-                else Btn(_menu, "Drop", () =>
+                foreach (var kv in s.Holds)
                 {
-                    HideMenu();
-                    void Go() => DoDrop(dropStack, remove, name);
-                    if (dropGate.IsWarning) MenuScreens.Confirm(Body, dropGate.Message + $"\n\nDrop {name} in front of you?", Go);
-                    else Go();
-                });
-                if (destroyGate.IsBlocked) Text(_menu, "Destroy: " + destroyGate.Message, "xa-term__warn");
-                else Btn(_menu, "Destroy", () =>
-                {
-                    HideMenu();
-                    string q = (destroyGate.IsWarning ? destroyGate.Message + "\n\n" : "") + $"Destroy {name}" + (st.count > 1 ? $" x{st.count}" : "") + "? This cannot be undone.";
-                    MenuScreens.Confirm(Body, q, () => { remove(); Toast.Show($"Destroyed {name}."); Refresh(); });
-                });
+                    if (!ShipHold.Accepts(kv.Key, d.category)) continue;
+                    var hold = kv.Value;
+                    var role = kv.Key;
+                    onMove = () => DropToCrate(role, hold, new DragDrop.Payload { kind = "backpack", index = IndexOf(st), itemId = st.itemId, container = s.Inventory });
+                    moveLabel = $"Move to {role} crate";
+                    break;
+                }
             }
-            Btn(_menu, "Cancel", HideMenu).AddToClassList("xa-term__btn--ghost");
-            Body.Add(_menu);
-            var local = Body.WorldToLocal(screenPos);
-            _menu.style.left = local.x; _menu.style.top = local.y;
-            _menu.RegisterCallback<GeometryChangedEvent>(_ =>
+
+            var menu = ItemContextMenu.Show(new ItemContextMenu.Request
             {
-                if (_menu == null) return;
-                var b = Body.contentRect;
-                _menu.style.left = Mathf.Clamp(local.x, 0f, Mathf.Max(0f, b.width - _menu.layout.width));
-                _menu.style.top = Mathf.Clamp(local.y, 0f, Mathf.Max(0f, b.height - _menu.layout.height));
-            });
+                Session = s,
+                Host = Body,
+                Stack = st.Clone(),
+                Inventory = s.Inventory,
+                Index = IndexOf(st),
+                FromHotbar = IndexOf(st) < 0,
+                Remove = remove,
+                Refresh = Refresh,
+                MoveLabel = moveLabel,
+                OnMove = onMove,
+                Warning = vehicleOut ? "Recall the vehicle before dropping or destroying it." : null,
+                BuildExtra = m =>
+                {
+                    if (group == null) return;
+                    var puz = s.Puzzles;
+                    var spec = ArtifactPuzzleService.Spec(group);
+                    int found = puz.Pieces(group).Count;
+                    var line = new Label($"{spec?.title ?? group} piece   ({found} found)");
+                    line.AddToClassList("xa-term__dim"); m.Add(line);
+                    string inst = st.instanceId;
+                    var g = group;
+                    bool can = puz.CanCombine(group);
+                    string label = puz.IsSolved(group) ? "View reconstructed star map" : "Combine with other artifact";
+                    var b = new Button(() => { ItemContextMenu.Hide(Body); OpenPuzzle(g, inst); }) { text = can ? label : "Combine (needs 2 puzzle pieces)" };
+                    b.AddToClassList("xa-term__btn");
+                    b.SetEnabled(can);
+                    m.Add(b);
+                }
+            }, screenPos);
+            _menu = menu;
+        }
+
+        int IndexOf(ItemStack st)
+        {
+            var inv = Session.Inventory;
+            if (!string.IsNullOrEmpty(st.instanceId))
+            {
+                for (int i = 0; i < inv.Slots.Count; i++)
+                    if (inv.Slots[i].instanceId == st.instanceId) return i;
+                return -1;
+            }
+            for (int i = 0; i < inv.Slots.Count; i++)
+            {
+                var s = inv.Slots[i];
+                if (!s.IsEmpty && s.itemId == st.itemId && s.count == st.count && s.SameMeta(st)) return i;
+            }
+            return -1;
         }
 
         void DoDrop(ItemStack st, System.Action remove, string name)
@@ -381,11 +418,25 @@ namespace DMI.Xenoarch.UI
             if (p.index < 0 || p.index >= inv.Slots.Count || inv.Slots[p.index].IsEmpty) return;
             var st = inv.Slots[p.index];
             var d = Def(st.itemId);
-            if (!IsAboardShip()) { Toast.Show("Crates are aboard the ship"); return; }
             if (d != null && !ShipHold.Accepts(role, d.category)) { Toast.Show($"The {role} crate does not take that"); return; }
-            if (ShipHold.Transfer(inv, hold, st.Clone()) == 0) Toast.Show($"{role} crate is full");
+            int moved = VehicleCargo.Send(inv, hold, st.Clone());
+            if (moved == 0) Toast.Show($"{role} crate is full");
+            else if (!IsAboardShip()) Toast.Show($"Sent {moved} to ship storage.");
             Refresh();
         }
+
+
+        void DropToVehicle(InventoryModel hold, string name, DragDrop.Payload p)
+        {
+            var inv = Session.Inventory;
+            if (p == null || p.index < 0 || p.index >= inv.Slots.Count || inv.Slots[p.index].IsEmpty) return;
+            var st = inv.Slots[p.index].Clone();
+            int moved = VehicleCargo.Send(inv, hold, st);
+            if (moved == 0) Toast.Show($"The {name} is full");
+            else Toast.Show($"Stashed {moved} in the {name}.");
+            Refresh();
+        }
+
 
         /// <summary>Hotbar slot dropped on the backpack: the stored stack returns to a backpack slot. Ghost assignments
         /// (default tools not yet owned) just clear the shortcut.</summary>
@@ -518,7 +569,7 @@ namespace DMI.Xenoarch.UI
                 n.style.position = Position.Absolute; n.style.right = 3; n.style.bottom = 1; n.style.fontSize = 12; n.style.color = Color.white;
                 t.Add(n);
             }
-            t.tooltip = (d != null ? d.DisplayNameOrId : st.itemId) + (group != null ? "  (puzzle piece)" : "") + "  (right-click: drop or destroy)";
+            t.tooltip = ItemSlotUI.TooltipFor(d, st, (group != null ? "Puzzle piece. " : "") + "Right-click: Inspect, Move, Split, Drop, Destroy");
             return t;
         }
     }

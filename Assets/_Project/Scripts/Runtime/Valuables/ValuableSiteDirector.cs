@@ -7,6 +7,7 @@ using DMI.Xenoarch.Player;
 using DMI.Xenoarch.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using DMI.Xenoarch.Inventory;
 
 namespace DMI.Xenoarch.Valuables
 {
@@ -124,7 +125,14 @@ namespace DMI.Xenoarch.Valuables
             var loot = table != null ? table.Roll(tier, rng) : new List<(string, int)>();
             if (session.Inventory.FreeSlots < loot.Count)
             {
-                if (Time.time > _fullToastAt) { Toast.Show("Valuable cache found, but the inventory is full. Make room to lift it."); _fullToastAt = Time.time + 6f; }
+                if (Time.time > _fullToastAt)
+                {
+                    _fullToastAt = Time.time + 6f;
+                    var first = loot.Count > 0 ? loot[0] : ("", 0);
+                    OverflowPrompt.OfferRoute(new ItemStack(string.IsNullOrEmpty(first.Item1) ? "material.regolith" : first.Item1, Mathf.Max(1, first.Item2)),
+                        "Valuable cache found, but the backpack is full. Send the cache to the ship, or stash it in a nearby shuttle or rover.",
+                        dest => AwardTo(v, dig, loot, tier, dest.Inventory, dest.Id));
+                }
                 return;
             }
             var names = new List<string>();
@@ -138,6 +146,38 @@ namespace DMI.Xenoarch.Valuables
             dig.ShowBorder(false);
             Toast.Show($"{TierName(tier).ToUpperInvariant()} cache: {string.Join(", ", names)}", 7f);
             Debug.Log($"[Xenoarch] Valuables: {v.id} collected ({tier}): {string.Join(", ", names)}");
+        }
+
+        void AwardTo(ValuableSite v, ExcavationSite dig, List<(string, int)> loot, LootTier tier, InventoryModel dest, string destId)
+        {
+            var session = XenoarchRuntime.Session;
+            if (session == null || dest == null || string.IsNullOrEmpty(v.id)) return;
+            if (session.Valuables.IsCollected(v.id)) return;
+            foreach (var (id, n) in loot)
+            {
+                session.Items.TryGetItem(id, out var def);
+                int can = 0;
+                if (def != null && def.IsStackable)
+                {
+                    foreach (var o in dest.Slots)
+                        if (!o.IsEmpty && o.itemId == id) can += Mathf.Max(0, def.EffectiveMaxStack - o.count);
+                }
+                int room = can + dest.FreeSlots * (def != null ? def.EffectiveMaxStack : n);
+                if (room < n) { Toast.Show("That storage cannot take the whole cache. Make room and dig it out again."); return; }
+            }
+            var labels = new List<string>();
+            foreach (var (id, n) in loot)
+            {
+                int left = dest.Add(id, n);
+                int added = n - left;
+                string label = session.Items != null && session.Items.TryGetItem(id, out var def) && def != null ? def.DisplayNameOrId : id;
+                labels.Add($"{label} x{added}");
+            }
+            session.Valuables.Collect(v.id, tier);
+            if (dig != null) dig.ShowBorder(false);
+            string where = destId == "ship" ? "ship storage" : destId;
+            Toast.Show($"{TierName(tier).ToUpperInvariant()} cache sent to the {where}: {string.Join(", ", labels)}", 7f);
+            Debug.Log($"[Xenoarch] Valuables: {v.id} collected to {where} ({tier}): {string.Join(", ", labels)}");
         }
 
         public static string TierName(LootTier t) => t == LootTier.SuperRare ? "Super rare" : t.ToString();

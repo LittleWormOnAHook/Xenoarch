@@ -9,8 +9,8 @@ using UnityEngine.UIElements;
 namespace DMI.Xenoarch.Ship
 {
     /// <summary>
-    /// Ship Storage crate: E plays a hand reach, the hinged lid swings open, then the shared ship hold opens (click a
-    /// stack to move it between backpack and hold). The lid closes when the panel closes. Every Storage crate shows the
+    /// Ship Storage crate: E plays a hand reach, the hinged lid swings open, then the shared ship hold opens as icon slot grids (click or drag a
+    /// stack to move it between backpack and hold; right-click to inspect). The lid closes when the panel closes. Every Storage crate shows the
     /// role's inventory (<see cref="Core.GameSession.Holds"/>). The lid is only rotated at runtime; its saved transform is untouched.
     /// </summary>
     public sealed class StorageTerminal : TerminalWindow
@@ -134,11 +134,12 @@ namespace DMI.Xenoarch.Ship
             var inv = Session.Inventory; var hold = HoldInv;
             int used = hold.Capacity - hold.FreeSlots;
             Status.text = $"HOLD {used}/{hold.Capacity} SLOTS  -  LEVEL {ShipHold.Level + 1}/{ShipHold.MaxLevel + 1}";
+            Hint.text = "LMB: move / drag   |   RMB: Inspect, Move, Split, Drop, Destroy   |   Esc / Tab / B: close";
 
             var left = ScrollCol(body, 0, true);
             Text(left, $"BACKPACK  ({inv.Capacity - inv.FreeSlots}/{inv.Capacity})", "xa-term__h");
-            Text(left, $"Click or drag a stack to store it here. {Accepts()}");
-            Rows(left, inv, hold, "->");
+            Text(left, $"Click or drag a stack to store it here. {Accepts()}", "xa-term__dim");
+            Grid(left, inv, hold, "backpack", "crate", 7);
             Btn(left, "Store everything this crate takes (not tools in hand)", () =>
             {
                 foreach (var s in Snapshot(inv))
@@ -147,9 +148,9 @@ namespace DMI.Xenoarch.Ship
 
             var right = ScrollCol(body, 1, true);
             Text(right, $"{Title.ToUpperInvariant()}  ({used}/{hold.Capacity})", "xa-term__h");
-            Text(right, "Click or drag a stack to take it.");
-            Rows(right, hold, inv, "<-");
-            if (ShipHold.Level < ShipHold.MaxLevel) Text(right, $"Hold upgrades: {ShipHold.SlotsFor(Session.Config.starterShip, ShipHold.Level + 1)} slots at the next level (ship upgrades, coming with crafting).");
+            Text(right, "Click or drag a stack to take it. Right-click any item to inspect.", "xa-term__dim");
+            Grid(right, hold, inv, "crate", "backpack", 10);
+            if (ShipHold.Level < ShipHold.MaxLevel) Text(right, $"Hold upgrades: {ShipHold.SlotsFor(Session.Config.starterShip, ShipHold.Level + 1)} slots at the next level (ship upgrades, coming with crafting).", "xa-term__dim");
         }
 
         string Accepts() => Role == StorageRole.General ? "Takes anything." : Role == StorageRole.Equipment ? "Takes tools, equipment, consumables and materials." : "Takes artifacts, data records, valuables and materials.";
@@ -161,31 +162,81 @@ namespace DMI.Xenoarch.Ship
             return l;
         }
 
-        void Rows(VisualElement col, InventoryModel from, InventoryModel to, string arrow)
+        void Grid(VisualElement col, InventoryModel from, InventoryModel to, string kind, string otherKind, int columns)
         {
-            bool any = false;
-            string kind = from == HoldInv ? "crate" : "backpack";
-            // Drop zone: the whole column takes stacks dragged from the other side (t108u drag and drop).
-            DragDrop.Target(col, p => p.kind != kind && p.container is InventoryModel, p =>
-            {
-                var src = (InventoryModel)p.container;
-                if (p.index < 0 || p.index >= src.Slots.Count || src.Slots[p.index].IsEmpty) return;
-                var st = src.Slots[p.index].Clone();
-                if (from == HoldInv && Session.Items.TryGetItem(st.itemId, out var dd) && dd != null && !ShipHold.Accepts(Role, dd.category)) { Toast.Show($"{Title} does not take that"); return; }
-                if (ShipHold.Transfer(src, from, st) == 0) Toast.Show(from == HoldInv ? $"{Title} is full" : "Backpack is full");
-            });
+            var grid = ItemSlotUI.Grid(columns);
+            col.Add(grid);
+            DragDrop.Target(grid, p => p.kind == otherKind && p.container is InventoryModel, p => TransferPayload(p, from));
             for (int i = 0; i < from.Slots.Count; i++)
+                grid.Add(Slot(from, i, to, kind, otherKind));
+        }
+
+        void TransferPayload(DragDrop.Payload p, InventoryModel dest)
+        {
+            if (p.container is not InventoryModel src) return;
+            if (p.index < 0 || p.index >= src.Slots.Count || src.Slots[p.index].IsEmpty) return;
+            var st = src.Slots[p.index].Clone();
+            if (dest == HoldInv && Session.Items.TryGetItem(st.itemId, out var dd) && dd != null && !ShipHold.Accepts(Role, dd.category))
+            { Toast.Show($"{Title} does not take that"); return; }
+            if (ShipHold.Transfer(src, dest, st) == 0) Toast.Show(dest == HoldInv ? $"{Title} is full" : "Backpack is full");
+            else Refresh();
+        }
+
+        VisualElement Slot(InventoryModel from, int index, InventoryModel to, string kind, string otherKind)
+        {
+            var st = from.Slots[index];
+            Session.Items.TryGetItem(st.itemId, out var d);
+            var t = ItemSlotUI.Create();
+            ItemSlotUI.Paint(t, d, st, false, "Right-click: Inspect, Move, Split, Drop, Destroy");
+            bool intoHold = to == HoldInv;
+            bool ok = st.IsEmpty || !intoHold || d == null || ShipHold.Accepts(Role, d.category);
+            if (!st.IsEmpty && ok)
+                Drag.Source(t, () =>
+                {
+                    var cur = from.Slots[index];
+                    if (cur.IsEmpty) return null;
+                    Session.Items.TryGetItem(cur.itemId, out var def);
+                    return new DragDrop.Payload { kind = kind, index = index, itemId = cur.itemId, container = from, icon = def != null ? def.icon : null };
+                });
+            DragDrop.Target(t, p => p.kind == otherKind && p.container is InventoryModel, p => TransferPayload(p, from));
+            int slot = index;
+            t.RegisterCallback<PointerUpEvent>(e =>
             {
-                var s = from.Slots[i];
-                if (s.IsEmpty) continue;
-                any = true;
-                string name = Session.Items.TryGetItem(s.itemId, out var d) && d != null ? d.DisplayNameOrId : s.itemId;
-                var stack = s.Clone(); int index = i; var icon = d != null ? d.icon : null;
-                bool ok = to != HoldInv || d == null || ShipHold.Accepts(Role, d.category);
-                var b = Btn(col, arrow == "->" ? $"{name}  x{s.count}   {arrow}" : $"{arrow}   {name}  x{s.count}", () => { }, ok);
-                if (ok) Drag.Source(b, () => new DragDrop.Payload { kind = kind, index = index, itemId = stack.itemId, container = from, icon = icon });
-            }
-            if (!any) Text(col, "(empty)");
+                if (e.button != 0 || Drag.Dragging || from.Slots[slot].IsEmpty) return;
+                var cur = from.Slots[slot].Clone();
+                if (intoHold && Session.Items.TryGetItem(cur.itemId, out var dd) && dd != null && !ShipHold.Accepts(Role, dd.category))
+                { Toast.Show($"{Title} does not take that"); return; }
+                if (ShipHold.Transfer(from, to, cur) == 0) Toast.Show(intoHold ? $"{Title} is full" : "Backpack is full");
+                else Refresh();
+            });
+            t.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.button != 1 || from.Slots[slot].IsEmpty) return;
+                e.StopPropagation();
+                var cur = from.Slots[slot];
+                Session.Items.TryGetItem(cur.itemId, out var def);
+                string moveLabel = kind == "backpack" ? "Move to Hold" : "Move to Backpack";
+                ItemContextMenu.Show(new ItemContextMenu.Request
+                {
+                    Session = Session,
+                    Host = Body,
+                    Stack = cur.Clone(),
+                    Inventory = from,
+                    Index = slot,
+                    Remove = () => from.TakeAt(slot),
+                    Refresh = Refresh,
+                    MoveLabel = moveLabel,
+                    OnMove = () =>
+                    {
+                        var stack = from.Slots[slot].Clone();
+                        if (stack.IsEmpty) return;
+                        if (to == HoldInv && Session.Items.TryGetItem(stack.itemId, out var dd) && dd != null && !ShipHold.Accepts(Role, dd.category))
+                        { Toast.Show($"{Title} does not take that"); return; }
+                        if (ShipHold.Transfer(from, to, stack) == 0) Toast.Show(to == HoldInv ? $"{Title} is full" : "Backpack is full");
+                    }
+                }, e.position);
+            });
+            return t;
         }
     }
 }

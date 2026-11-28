@@ -498,3 +498,93 @@
 .xa-save-row:hover { border-color: var(--xa-highlight); }
 .xa-save-row--off { opacity: 0.5; }
 .xa-save-row__thumb { width: 160px; height: 90px; margin-right: 14px; border-width: 1px; border-color: var(--xa-m-line); flex-shrink: 0; }
+
+/* Approved storage / refiner / inspector slot UI (storage_slots_v1, refiner_slots_v1, inspector_v1) */
+.xa-item-grid { flex-direction: row; flex-wrap: wrap; margin-top: 6px; margin-bottom: 8px; }
+.xa-item-slot { position: relative; overflow: hidden; background-color: rgba(78, 18, 26, 0.72); }
+.xa-item-count { position: absolute; right: 3px; bottom: 1px; font-size: 12px; color: rgb(255, 255, 255); -unity-font-style: bold; }
+
+.xa-recipe {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 0 6px 0;
+    padding: 8px 10px;
+    border-width: 1px;
+    border-color: var(--xa-m-line);
+    background-color: var(--xa-m-tile);
+    border-radius: 0;
+    -unity-text-align: middle-left;
+}
+.xa-recipe:hover { border-color: var(--xa-highlight); background-color: rgba(104, 223, 214, 0.10); }
+.xa-recipe--sel { border-left-width: 3px; border-left-color: var(--xa-highlight); border-color: var(--xa-highlight); background-color: rgba(104, 223, 214, 0.12); }
+.xa-recipe__name { font-size: 14px; letter-spacing: 2px; color: var(--xa-heading); margin-bottom: 2px; }
+
+.xa-refiner-bay { margin: 0 0 10px 0; padding: 10px 12px; border-width: 1px; border-color: var(--xa-m-line); background-color: var(--xa-m-tile); }
+.xa-refiner-bay--empty { opacity: 0.7; }
+
+.xa-split { padding: 14px 16px; min-width: 340px; }
+
+.xa-inspect-root { }
+.xa-inspect-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(8, 2, 4, 0.72); }
+.xa-inspect {
+    position: absolute;
+    left: 6%;
+    top: 7%;
+    width: 88%;
+    height: 86%;
+    flex-direction: row;
+    background-color: var(--xa-m-bg);
+    border-width: 1px;
+    border-color: var(--xa-m-line);
+    padding: 16px;
+}
+.xa-inspect__view {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 52%;
+    margin-right: 16px;
+    background-color: rgb(5, 2, 3);
+    border-width: 1px;
+    border-color: var(--xa-m-line);
+    overflow: hidden;
+    position: relative;
+}
+.xa-inspect__cap {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--xa-secondary-text);
+}
+.xa-inspect__hints {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+}
+.xa-inspect__hint { flex-direction: row; align-items: center; margin-bottom: 4px; }
+.xa-inspect__hint .xa-m-key, .xa-inspect__hint .xa-key { margin-right: 8px; }
+.xa-inspect__side { width: 38%; min-width: 320px; flex-shrink: 0; padding: 4px 8px 8px 8px; overflow: hidden; }
+.xa-inspect__kicker { font-size: 11px; letter-spacing: 3px; color: var(--xa-highlight); margin-bottom: 2px; }
+.xa-inspect__title { font-size: 22px; letter-spacing: 1px; color: var(--xa-heading); white-space: normal; margin-bottom: 8px; }
+.xa-inspect__chips { flex-direction: row; flex-wrap: wrap; margin-bottom: 10px; }
+.xa-inspect__chip {
+    margin: 0 6px 6px 0;
+    padding: 2px 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--xa-highlight);
+    border-width: 1px;
+    border-color: var(--xa-highlight);
+    background-color: rgba(104, 223, 214, 0.10);
+}
+.xa-inspect__insc { margin: 0 0 10px 0; padding: 10px 12px; border-width: 1px; border-color: var(--xa-m-line); background-color: var(--xa-m-tile); }
+.xa-inspect__quote { font-size: 15px; color: var(--xa-text); white-space: normal; margin: 4px 0; }
+.xa-inspect__spec { margin-bottom: 8px; }
+.xa-inspect__row { flex-direction: row; justify-content: space-between; padding: 3px 0; border-bottom-width: 1px; border-bottom-color: rgba(232, 226, 208, 0.08); }
+.xa-inspect__lab { font-size: 13px; color: var(--xa-secondary-text); width: 42%; }
+.xa-inspect__val { font-size: 13px; color: var(--xa-text); width: 58%; -unity-text-align: middle-right; white-space: normal; }
+.xa-inspect__actions { flex-direction: row; flex-wrap: wrap; margin-top: 12px; }
+.xa-inspect__actions .xa-term__btn { margin-right: 8px; }
+
+.xa-overflow { position: absolute; left: 50%; top: 22%; width: 420px; margin-left: -210px; padding: 18px 20px; }

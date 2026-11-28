@@ -217,9 +217,17 @@ namespace DMI.Xenoarch.Excavation
             foreach (var c in r.cut) cuts.Add((c.y, frac));
             foreach (var (id, n) in Materials.StrataYield.Dig(s.Materials, profile, site.Definition.Id, site.Grid.cell, cuts, _strataRng, s.Config.digYieldMultiplier))
             {
-                int lost = s.Inventory.Add(id, n);
+                string bodyId = site.Definition != null ? site.Definition.bodyId : null;
+                string siteId = site.Definition != null ? site.Definition.Id : null;
+                int lost = s.Inventory.Add(id, n, bodyId, siteId, 0f);
                 string name = s.Materials.Name(id);
-                UI.Toast.Show(lost >= n ? $"Backpack full: {name} left in the spoil" : $"+{n - lost} {name}");
+                if (lost > 0)
+                {
+                    DMI.Xenoarch.UI.OverflowPrompt.OfferWorld(id, lost, bodyId, siteId,
+                        $"Backpack is full. Send {name} x{lost} from the spoil to the ship, or stash it in a nearby shuttle or rover.",
+                        null);
+                }
+                else UI.Toast.Show($"+{n} {name}");
             }
         }
 

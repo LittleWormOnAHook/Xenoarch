@@ -57,6 +57,7 @@ namespace DMI.Xenoarch.Core
         /// <summary>True if the player can reach this unique instance: backpack, any ship crate, or held for pickup at the lab.</summary>
         public bool OwnsInstance(string instanceId) =>
             !string.IsNullOrEmpty(instanceId) && (Inventory.ContainsInstance(instanceId) || System.Linq.Enumerable.Any(Holds.Values, h => h.ContainsInstance(instanceId))
+            || DMI.Xenoarch.Inventory.VehicleCargo.OwnsInstance(this, instanceId)
             || (Recovery != null && Recovery.IsPending(instanceId)));
         public DMI.Xenoarch.Excavation.ExcavationService Excavation { get; }
         /// <summary>Dig site maps: fenced site codes (Ma1), refined-scan spots (Ma11) and their dig state.</summary>
@@ -64,6 +65,8 @@ namespace DMI.Xenoarch.Core
         public DMI.Xenoarch.Materials.MaterialsService Materials { get; }
         /// <summary>Backpack + the three ship crates as one stock (refiner and crafting take from it, backpack first).</summary>
         public ItemPool Stock { get; }
+        /// <summary>Shuttle and rover stashes (t303u). Empty in older saves.</summary>
+        public DMI.Xenoarch.Inventory.VehicleCargo VehicleCargo { get; }
         public DMI.Xenoarch.Crafting.CraftingService Crafting { get; }
         public bool AboardShip => Location != null && Location.sceneName == SceneNames.ShipStarter;
         public PlayerLocationState Location { get; internal set; } = new PlayerLocationState();
@@ -109,6 +112,7 @@ namespace DMI.Xenoarch.Core
                 Holds[role] = hold;
                 Saves.Register(new DMI.Xenoarch.Ship.ShipHold.Section(role, hold, () => DMI.Xenoarch.Ship.ShipHold.SlotsFor(config.starterShip, Exploration.Ship.holdLevel)));
             }
+            VehicleCargo = new DMI.Xenoarch.Inventory.VehicleCargo(items);
             Stock = new ItemPool(items, Inventory, HoldOrder);
             Puzzles.Owns = OwnsInstance;
             // Phase 2 M1: one eligibility gate for every artifact path, and recovery for mandatory items.
@@ -119,6 +123,7 @@ namespace DMI.Xenoarch.Core
             System.Func<string, bool> bulkGuard = id => { var a = Artifacts.Get(id); return a == null || !Eligibility.Check(a, DMI.Xenoarch.Artifacts.ArtifactAction.Dismantle).IsBlocked; };
             Inventory.CanBulkRemoveInstance = bulkGuard;
             foreach (var h in Holds.Values) h.CanBulkRemoveInstance = bulkGuard;
+            VehicleCargo.Bind(this);
             Saves.Loaded += _ => Recovery.Ensure("load");
             Materials.Pool = Stock;
             Crafting = new DMI.Xenoarch.Crafting.CraftingService(items, Stock, config.craftRecipes)

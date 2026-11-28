@@ -92,7 +92,24 @@ namespace DMI.Xenoarch.Economy
         {
             var d = Def(s.itemId);
             if (d == null || !Eco.CanAfford(s.price)) return;
-            if (Session.Inventory.Add(s.itemId, 1) > 0) { _message = "Backpack full."; Refresh(); return; }
+            if (Session.Inventory.Add(s.itemId, 1) > 0)
+            {
+                var stock = s; var def = d;
+                OverflowPrompt.OfferRoute(new ItemStack(stock.itemId, 1),
+                    "Backpack is full. Send this purchase to the ship, or stash it in a nearby shuttle or rover.",
+                    dest =>
+                    {
+                        if (VehicleCargo.Send(null, dest.Inventory, new ItemStack(stock.itemId, 1), fromWorld: true) <= 0)
+                        { Toast.Show($"{dest.Label} is full."); return; }
+                        Eco.Spend(stock.price, "buy", vendor.Id, stock.itemId, 1);
+                        if (stock.unique && !Eco.Wallet.boughtUnique.Contains(vendor.Id + ":" + stock.itemId)) Eco.Wallet.boughtUnique.Add(vendor.Id + ":" + stock.itemId);
+                        Toast.Show($"Bought {def.DisplayNameOrId} for {stock.price} cr. Sent to the {(dest.Id == "ship" ? "ship" : dest.Id)}.");
+                        Refresh();
+                    });
+                _message = "Backpack full.";
+                Refresh();
+                return;
+            }
             Eco.Spend(s.price, "buy", vendor.Id, s.itemId, 1);
             if (s.unique && !Eco.Wallet.boughtUnique.Contains(vendor.Id + ":" + s.itemId)) Eco.Wallet.boughtUnique.Add(vendor.Id + ":" + s.itemId);
             _message = $"Bought {d.DisplayNameOrId} for {s.price} cr.";

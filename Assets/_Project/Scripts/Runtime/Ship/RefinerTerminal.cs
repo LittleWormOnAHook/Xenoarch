@@ -1,4 +1,5 @@
 using System.Linq;
+using DMI.Xenoarch.Inventory;
 using DMI.Xenoarch.Materials;
 using DMI.Xenoarch.UI;
 using DMI.Xenoarch.Vehicles;
@@ -53,22 +54,45 @@ namespace DMI.Xenoarch.Ship
         {
             var m = Session.Materials; var x = Session.Exploration; var inv = Session.Inventory;
             UpdateStatus();
+            Hint.text = "E: select   |   Amount   |   Enter: start   |   Esc: close";
 
             var recipes = ScrollCol(body, 0, true);
-            Text(recipes, "RECIPES", "xa-term__h");
+            var rh = new VisualElement(); rh.style.flexDirection = FlexDirection.Row; rh.style.justifyContent = Justify.SpaceBetween; recipes.Add(rh);
+            Text(rh, "RECIPES", "xa-term__h");
+            Text(rh, $"{m.Recipes.Count} INSTALLED", "xa-term__dim");
             if (m.Recipes.Count == 0) Text(recipes, "No recipes installed.");
             if (string.IsNullOrEmpty(_selectedId) && m.Recipes.Count > 0) _selectedId = m.Recipes[0].Id;
             foreach (var r in m.Recipes)
             {
-                string lack = IngredientNote(r, 1);
-                var btn = Btn(recipes, $"{r.displayName}: {Inputs(r, 1)} -> {Outputs(r, 1)} ({r.seconds:0} s)" + (lack != null ? $"\n{lack}" : ""),
-                    () => { _selectedId = r.Id; Refresh(); });
-                if (r.Id == _selectedId)
+                var rec = r;
+                string lack = IngredientNote(rec, 1);
+                var row = new Button(() => { _selectedId = rec.Id; Refresh(); });
+                row.AddToClassList("xa-recipe");
+                if (rec.Id == _selectedId) row.AddToClassList("xa-recipe--sel");
+                var outDef = rec.outputs.Count > 0 && Session.Items.TryGetItem(rec.outputs[0].itemId, out var od) ? od : null;
+                var iconWrap = ItemSlotUI.Create(56, rec.Id == _selectedId);
+                ItemSlotUI.Paint(iconWrap, outDef, rec.outputs.Count > 0 ? new ItemStack(rec.outputs[0].itemId, rec.outputs[0].count) : new ItemStack(), rec.Id == _selectedId);
+                iconWrap.pickingMode = PickingMode.Ignore;
+                row.Add(iconWrap);
+                var info = new VisualElement(); info.style.flexGrow = 1; info.style.marginLeft = 8;
+                var nm = new Label((rec.displayName ?? rec.Id).ToUpperInvariant()); nm.AddToClassList("xa-recipe__name"); info.Add(nm);
+                var io = new VisualElement(); io.style.flexDirection = FlexDirection.Row; io.style.alignItems = Align.Center; io.style.flexWrap = Wrap.Wrap;
+                void AddAmt(ItemAmount a)
                 {
-                    btn.style.borderLeftWidth = 3;
-                    btn.style.borderLeftColor = XenoarchPalette.Highlight;
+                    Session.Items.TryGetItem(a.itemId, out var d);
+                    var chip = new VisualElement(); chip.style.flexDirection = FlexDirection.Row; chip.style.alignItems = Align.Center; chip.style.marginRight = 6;
+                    chip.Add(ItemSlotUI.Icon(d, 20));
+                    var lab = new Label("x" + a.count); lab.AddToClassList("xa-term__dim"); lab.style.fontSize = 12; chip.Add(lab);
+                    io.Add(chip);
                 }
-                else btn.AddToClassList("xa-term__btn--ghost");
+                foreach (var inp in rec.inputs) AddAmt(inp);
+                var arrow = new Label("→"); arrow.style.color = XenoarchPalette.Highlight; arrow.style.marginRight = 6; io.Add(arrow);
+                foreach (var o in rec.outputs) AddAmt(o);
+                var sec = new Label($"{rec.seconds:0} s"); sec.AddToClassList("xa-term__dim"); sec.style.marginLeft = 8; sec.style.fontSize = 12; io.Add(sec);
+                info.Add(io);
+                if (lack != null) { var w = new Label(lack); w.AddToClassList("xa-term__warn"); w.style.fontSize = 12; info.Add(w); }
+                row.Add(info);
+                recipes.Add(row);
             }
 
             var selected = m.Recipe(_selectedId);
@@ -77,7 +101,6 @@ namespace DMI.Xenoarch.Ship
             else BuildAmount(recipes, m, selected);
 
             var mid = ScrollCol(body, 1);
-            Text(mid, "REFINER", "xa-term__h");
             _slotsRoot = new VisualElement();
             mid.Add(_slotsRoot);
             BuildSlots(_slotsRoot);
@@ -108,6 +131,7 @@ namespace DMI.Xenoarch.Ship
             var cargoCol = ScrollCol(body, 2);
             Text(cargoCol, "MATERIALS ABOARD", "xa-term__h");
             Text(cargoCol, "Backpack + ship crates. Inputs come from the backpack first; products go to the backpack, then a crate.", "xa-term__dim");
+            var matRow = new VisualElement(); matRow.style.flexDirection = FlexDirection.Row; matRow.style.flexWrap = Wrap.Wrap; cargoCol.Add(matRow);
             int n = 0;
             var stock = Session.Stock;
             foreach (var id in stock.Ids().ToList())
@@ -115,9 +139,10 @@ namespace DMI.Xenoarch.Ship
                 var md = m.Material(id);
                 if (md == null) continue;
                 n++;
-                string use = md.fuelValue > 0f ? $"fuel {md.fuelValue:0.#}" : md.reagentValue > 0 ? $"reagent {md.reagentValue}" : md.refined ? "refined" : "refine";
-                int bp = inv.Count(id), allStock = stock.Count(id);
-                Text(cargoCol, $"{md.DisplayNameOrId} x{allStock}  ({use})" + (allStock > bp ? $"  [{allStock - bp} in crates]" : ""));
+                int allStock = stock.Count(id);
+                var tile = ItemSlotUI.Create(64, id == _selectedId);
+                ItemSlotUI.Paint(tile, md, new ItemStack(id, allStock), id == _selectedId, ResourceGroups.GroupLabel(md));
+                matRow.Add(tile);
             }
             if (n == 0) Text(cargoCol, "None. Collect deposits on planet surfaces (hold E).");
             Text(cargoCol, $"Lab reagents: {m.ReagentUnits()} units", "xa-term__dim");
@@ -217,15 +242,16 @@ namespace DMI.Xenoarch.Ship
         {
             host.Clear();
             var m = Session.Materials;
+            Text(host, "REFINER BAYS", "xa-term__h");
             for (int slot = 0; slot < MaterialsService.RefinerSlots; slot++)
             {
                 var block = new VisualElement();
-                if (slot > 0) block.style.marginTop = 8;
+                block.AddToClassList("xa-refiner-bay");
                 host.Add(block);
                 if (slot >= m.Jobs.Count)
                 {
-                    Text(block, $"SLOT {slot + 1}  IDLE", "xa-term__h");
-                    Text(block, "Empty.", "xa-term__dim");
+                    block.AddToClassList("xa-refiner-bay--empty");
+                    Text(block, $"BAY {slot + 1}  ·  EMPTY", "xa-term__dim");
                     continue;
                 }
 
@@ -233,9 +259,24 @@ namespace DMI.Xenoarch.Ship
                 var r = m.Recipe(job.recipeId);
                 int n = job.Batches;
                 int uid = job.uid;
-                Text(block, $"SLOT {slot + 1}  {(job.done ? "BATCH READY" : "REFINING")}", "xa-term__h");
-                Text(block, r != null ? $"{r.displayName} ×{n}: {Outputs(r, n)}" : "?");
-                Bar(block, job.elapsed / Mathf.Max(0.01f, job.duration));
+                var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.alignItems = Align.Center;
+                block.Add(row);
+                var outDef = r != null && r.outputs.Count > 0 && Session.Items.TryGetItem(r.outputs[0].itemId, out var od) ? od : null;
+                var icon = ItemSlotUI.Create(56, job.done);
+                ItemSlotUI.Paint(icon, outDef, r != null && r.outputs.Count > 0 ? new ItemStack(r.outputs[0].itemId, r.outputs[0].count * n) : new ItemStack(), job.done);
+                icon.pickingMode = PickingMode.Ignore;
+                row.Add(icon);
+                var info = new VisualElement(); info.style.flexGrow = 1; info.style.marginLeft = 10; row.Add(info);
+                var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.justifyContent = Justify.SpaceBetween;
+                Text(head, r != null ? r.displayName.ToUpperInvariant() : "?", "xa-term__h");
+                if (job.done)
+                {
+                    var badge = new Label("COLLECT"); badge.AddToClassList("xa-inspect__chip"); badge.style.color = XenoarchPalette.Highlight; head.Add(badge);
+                }
+                info.Add(head);
+                if (job.done) Text(info, $"Ready · x{n}", "xa-term__dim");
+                else Text(info, $"{Mathf.Max(0f, job.duration - job.elapsed):0} s left · x{n}", "xa-term__dim");
+                Bar(info, job.elapsed / Mathf.Max(0.01f, job.duration));
                 if (job.done)
                 {
                     Text(block, "Finished. Cargo is full: make room, then collect.", "xa-term__warn");
@@ -247,7 +288,6 @@ namespace DMI.Xenoarch.Ship
                 }
                 else
                 {
-                    Text(block, $"{Mathf.Max(0f, job.duration - job.elapsed):0} s left");
                     Btn(block, "Cancel (returns inputs)", () =>
                     {
                         _message = m.CancelRefineUid(uid) ? "Cancelled. Inputs returned." : "Could not cancel.";

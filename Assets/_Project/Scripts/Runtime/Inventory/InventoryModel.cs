@@ -68,8 +68,12 @@ namespace DMI.Xenoarch.Inventory
             return false;
         }
 
-        /// <summary>Adds up to <paramref name="amount"/>. Returns how many could NOT be added. Unique items get fresh instance ids.</summary>
-        public int Add(string itemId, int amount)
+        /// <summary>Adds up to <paramref name="amount"/>. Returns how many could NOT be added. Unique items get fresh instance ids.
+        /// Optional origin and grade are stored on new stacks and only merge with stacks that share the same metadata
+        /// (older saves have empty origin and grade 0, so they still stack together).</summary>
+        public int Add(string itemId, int amount) => Add(itemId, amount, null, null, 0f);
+
+        public int Add(string itemId, int amount, string originBodyId, string originSiteId, float grade)
         {
             if (amount <= 0) return 0;
             if (!_lookup.TryGetItem(itemId, out var def)) { Debug.LogWarning($"[Xenoarch] Inventory: unknown item '{itemId}'"); return amount; }
@@ -77,17 +81,18 @@ namespace DMI.Xenoarch.Inventory
             int remaining = amount;
             if (def.uniqueInstance)
             {
-                while (remaining > 0 && AddInstanceInternal(def, StableId.NewInstanceId())) remaining--;
+                while (remaining > 0 && AddInstanceInternal(def, StableId.NewInstanceId(), originBodyId, originSiteId, grade)) remaining--;
                 if (remaining != amount) Changed?.Invoke();
                 return remaining;
             }
 
             int max = def.EffectiveMaxStack;
-            // Pass 1: top up existing stacks.
+            var probe = new ItemStack { itemId = itemId, originBodyId = originBodyId, originSiteId = originSiteId, grade = grade };
+            // Pass 1: top up existing stacks with the same origin / grade.
             foreach (var s in _slots)
             {
                 if (remaining <= 0) break;
-                if (s.IsEmpty || s.itemId != itemId || s.count >= max) continue;
+                if (s.IsEmpty || s.itemId != itemId || s.count >= max || !s.SameMeta(probe)) continue;
                 int add = Mathf.Min(max - s.count, remaining);
                 s.count += add; remaining -= add;
             }
@@ -97,10 +102,21 @@ namespace DMI.Xenoarch.Inventory
                 if (remaining <= 0) break;
                 if (!s.IsEmpty) continue;
                 int add = Mathf.Min(max, remaining);
-                s.itemId = itemId; s.count = add; s.instanceId = null; remaining -= add;
+                s.itemId = itemId; s.count = add; s.instanceId = null;
+                s.originBodyId = originBodyId; s.originSiteId = originSiteId; s.grade = grade;
+                remaining -= add;
             }
             if (remaining != amount) Changed?.Invoke();
             return remaining;
+        }
+
+        /// <summary>Adds a stack (or as much as will fit) keeping its origin and grade. Returns how many could not be added.</summary>
+        public int AddStack(ItemStack stack)
+        {
+            if (stack == null || stack.IsEmpty) return 0;
+            if (!string.IsNullOrEmpty(stack.instanceId))
+                return AddInstance(stack.itemId, stack.instanceId) ? 0 : 1;
+            return Add(stack.itemId, stack.count, stack.originBodyId, stack.originSiteId, stack.grade);
         }
 
         /// <summary>Adds one unique instance with a known id (recovered artifact). Refuses duplicates.</summary>
@@ -113,13 +129,17 @@ namespace DMI.Xenoarch.Inventory
             return ok;
         }
 
-        private bool AddInstanceInternal(ItemDefinition def, string instanceId)
+        private bool AddInstanceInternal(ItemDefinition def, string instanceId) =>
+            AddInstanceInternal(def, instanceId, null, null, 0f);
+
+        private bool AddInstanceInternal(ItemDefinition def, string instanceId, string originBodyId, string originSiteId, float grade)
         {
             if (string.IsNullOrEmpty(instanceId) || ContainsInstance(instanceId)) return false;
             foreach (var s in _slots)
             {
                 if (!s.IsEmpty) continue;
                 s.itemId = def.Id; s.count = 1; s.instanceId = instanceId;
+                s.originBodyId = originBodyId; s.originSiteId = originSiteId; s.grade = grade;
                 return true;
             }
             return false;
@@ -177,16 +197,14 @@ namespace DMI.Xenoarch.Inventory
             if (stack == null || stack.IsEmpty) return true;
             if (preferredIndex >= 0 && preferredIndex < _slots.Count && _slots[preferredIndex].IsEmpty)
             {
-                var d = stack.Clone();
-                _slots[preferredIndex].itemId = d.itemId; _slots[preferredIndex].count = d.count; _slots[preferredIndex].instanceId = d.instanceId;
+                _slots[preferredIndex].Assign(stack.Clone());
                 Changed?.Invoke();
                 return true;
             }
             foreach (var s in _slots)
             {
                 if (!s.IsEmpty) continue;
-                var d = stack.Clone();
-                s.itemId = d.itemId; s.count = d.count; s.instanceId = d.instanceId;
+                s.Assign(stack.Clone());
                 Changed?.Invoke();
                 return true;
             }
@@ -205,6 +223,51 @@ namespace DMI.Xenoarch.Inventory
         {
             foreach (var s in _slots) s.Clear();
             Changed?.Invoke();
+        }
+
+
+        /// <summary>Splits <paramref name="amount"/> off the stack at <paramref name="index"/> into another slot
+        /// (same origin and grade). Amount must be between 1 and count-1. False if there is no room or the item cannot split.</summary>
+        public bool SplitAt(int index, int amount)
+        {
+            if (index < 0 || index >= _slots.Count) return false;
+            var s = _slots[index];
+            if (s.IsEmpty || s.count <= 1 || amount <= 0 || amount >= s.count) return false;
+            if (!_lookup.TryGetItem(s.itemId, out var def) || def.uniqueInstance || def.EffectiveMaxStack <= 1) return false;
+            var part = s.Clone();
+            part.count = amount;
+            s.count -= amount;
+            bool placed = false;
+            int max = def.EffectiveMaxStack;
+            var merged = new System.Collections.Generic.List<(ItemStack slot, int add)>();
+            foreach (var o in _slots)
+            {
+                if (o == s || o.IsEmpty || o.itemId != s.itemId || !o.SameMeta(part) || o.count >= max) continue;
+                int add = Mathf.Min(max - o.count, part.count);
+                o.count += add; part.count -= add;
+                merged.Add((o, add));
+                if (part.count <= 0) { placed = true; break; }
+            }
+            if (!placed)
+            {
+                foreach (var o in _slots)
+                {
+                    if (!o.IsEmpty) continue;
+                    o.Assign(part);
+                    part.count = 0;
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed)
+            {
+                foreach (var m in merged) m.slot.count -= m.add;
+                s.count += amount;
+                return false;
+            }
+            if (s.count <= 0) s.Clear();
+            Changed?.Invoke();
+            return true;
         }
 
         public InventorySaveData Capture()
@@ -235,11 +298,14 @@ namespace DMI.Xenoarch.Inventory
                 if (def.uniqueInstance)
                 {
                     if (string.IsNullOrEmpty(src.instanceId) || !seen.Add(src.instanceId)) { Debug.LogWarning($"[Xenoarch] Inventory restore: duplicate/missing instance of '{src.itemId}' dropped"); continue; }
-                    _slots[i].itemId = src.itemId; _slots[i].count = 1; _slots[i].instanceId = src.instanceId;
+                    _slots[i].Assign(src);
+                    _slots[i].count = 1;
                 }
                 else
                 {
-                    _slots[i].itemId = src.itemId; _slots[i].count = Mathf.Clamp(src.count, 1, def.EffectiveMaxStack); _slots[i].instanceId = null;
+                    _slots[i].Assign(src);
+                    _slots[i].count = Mathf.Clamp(src.count, 1, def.EffectiveMaxStack);
+                    _slots[i].instanceId = null;
                 }
             }
             Changed?.Invoke();

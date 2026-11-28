@@ -76,12 +76,35 @@ namespace DMI.Xenoarch.Materials
         {
             var s = c.Session;
             if (s == null || Def == null) return false;
-            int left = s.Inventory.Add(Def.Id, Units);
-            if (left == Units) { Toast.Show("Inventory full."); return false; }
+            string bodyId = s.Exploration?.CurrentBody?.Id ?? s.Exploration?.Ship.currentBodyId;
+            int left = s.Inventory.Add(Def.Id, Units, bodyId, NodeId, 0f);
+            if (left == Units)
+            {
+                OverflowPrompt.OfferWorld(Def.Id, Units, bodyId, NodeId,
+                    $"Backpack is full. Send {Def.DisplayNameOrId} x{Units} to the ship, or stash it in a nearby shuttle or rover.",
+                    sent =>
+                    {
+                        if (sent <= 0) return;
+                        int remain = Units - sent;
+                        if (remain <= 0)
+                        {
+                            s.Materials.MarkHarvested(NodeId, s.PlaySeconds);
+                            SetAvailable(false);
+                        }
+                        else Units = remain;
+                    });
+                return false;
+            }
             int got = Units - left;
             s.Materials.MarkHarvested(NodeId, s.PlaySeconds);
             SetAvailable(false);
-            Toast.Show($"Collected {Def.DisplayNameOrId} x{got}{(left > 0 ? $" ({left} left behind, cargo full)" : "")}. {Hint(Def)}");
+            if (left > 0)
+            {
+                OverflowPrompt.OfferWorld(Def.Id, left, bodyId, NodeId,
+                    $"Backpack is full after collecting x{got}. Send the remaining x{left} to the ship or a nearby vehicle.",
+                    null);
+            }
+            Toast.Show($"Collected {Def.DisplayNameOrId} x{got}{(left > 0 ? $" ({left} not in pack)" : "")}. {Hint(Def)}");
             return true;
         }
 

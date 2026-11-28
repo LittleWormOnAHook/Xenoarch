@@ -34,7 +34,22 @@ namespace DMI.Xenoarch.Interaction
             var s = c.Session;
             if (s == null || item == null || s.World.IsConsumed(_id.Id)) return false;
             int left = s.Inventory.Add(item.Id, count);
-            if (left == count) { Debug.Log("[Xenoarch] Inventory full"); return false; }
+            if (left == count)
+            {
+                DMI.Xenoarch.UI.OverflowPrompt.Offer(new DMI.Xenoarch.Inventory.ItemStack(item.Id, count),
+                    $"Backpack is full. Send {item.DisplayNameOrId} to the ship, or stash it in a nearby shuttle or rover.",
+                    sent =>
+                    {
+                        if (this == null || sent <= 0) return;
+                        count -= sent;
+                        if (count <= 0)
+                        {
+                            s.World.MarkConsumed(_id.Id);
+                            gameObject.SetActive(false);
+                        }
+                    });
+                return false;
+            }
             if (left > 0) { count = left; return true; } // partial pickup: object stays with the remainder (not persisted in 1A)
             s.World.MarkConsumed(_id.Id);
             Debug.Log($"[Xenoarch] Picked up {item.Id} x{count} ({_id.Id})");
