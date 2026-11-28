@@ -68,6 +68,21 @@ namespace DMI.Xenoarch.Ship
         public bool Running { get; private set; }
         public const string PanelId = "ftl";
 
+        public enum Phase { Idle, Spool, Jump, Drop }
+        public static ShipFtlSequence Active { get; private set; }
+        public Phase CurrentPhase { get; private set; }
+        public float JumpElapsed { get; private set; }
+        public float JumpDuration { get; private set; }
+        public float JumpProgress => JumpDuration > 0.001f ? Mathf.Clamp01(JumpElapsed / JumpDuration) : 0f;
+        public float DistanceLy { get; private set; }
+        public float DistanceAU { get; private set; }
+        public bool InterstellarJump { get; private set; }
+        public float ReservedFuel { get; private set; }
+        public CelestialBodyDefinition OriginBody { get; private set; }
+        public CelestialBodyDefinition DestinationBody { get; private set; }
+        public StarSystemDefinition OriginSystem { get; private set; }
+        public StarSystemDefinition DestinationSystem { get; private set; }
+
         public bool Play(IPlayerRig rig, CelestialBodyDefinition to, Vector3 windowDir)
         {
             if (Running || rig == null || to == null) return false;
@@ -78,6 +93,9 @@ namespace DMI.Xenoarch.Ship
         IEnumerator Run(IPlayerRig rig, CelestialBodyDefinition to, Vector3 windowDir)
         {
             Running = true;
+            Active = this;
+            CurrentPhase = Phase.Spool;
+            JumpElapsed = 0f;
             var session = XenoarchRuntime.Session;
             var x = session.Exploration;
             var shipDef = x.ShipDefinition;
@@ -86,13 +104,25 @@ namespace DMI.Xenoarch.Ship
             if (windowDir.sqrMagnitude < 0.01f) windowDir = cam.transform.forward;
             windowDir.y = 0f; windowDir.Normalize();
 
-            bool interstellar = x.IsInterstellar(to);
-            float au = x.DistanceAU(x.CurrentBody, to), ly = interstellar ? x.DistanceLy(to) : 0f;
+            OriginBody = x.CurrentBody;
+            OriginSystem = x.CurrentSystem;
+            DestinationBody = to;
+            DestinationSystem = x.Galaxy != null ? x.Galaxy.SystemOf(to.Id) : null;
+            InterstellarJump = x.IsInterstellar(to);
+            DistanceAU = x.DistanceAU(x.CurrentBody, to);
+            DistanceLy = InterstellarJump ? x.DistanceLy(to) : 0f;
+            ReservedFuel = x.FuelCost(to);
+            bool interstellar = InterstellarJump;
+            float au = DistanceAU, ly = DistanceLy;
             float jumpSeconds = interstellar ? InterstellarSecondsFor(ly) : JumpSecondsFor(au);
+            JumpDuration = jumpSeconds;
             float spool = interstellar ? spoolSeconds * Mathf.Max(1f, interstellarSpoolScale) : spoolSeconds;
             Debug.Log(interstellar ? $"[Xenoarch] FTL: interstellar {ly:0.##} ly -> {jumpSeconds:0.0}s jump" : $"[Xenoarch] FTL: {au:0.###} AU -> {jumpSeconds:0.0}s jump");
 
-            rig.SetInputEnabled(false);
+            // Don't lock the seat. Only disable input while a standing player is turned to face the window.
+            bool startedSeated = rig is IPlayerSeat st0 && st0.Seated;
+            bool disabledInput = false;
+            if (!startedSeated) { rig.SetInputEnabled(false); disabledInput = true; }
             var root = new GameObject("[FTL Sequence]");
             SceneManager.MoveGameObjectToScene(root, gameObject.scene);
             Vector3 eye = cam.transform.position;
@@ -122,12 +152,13 @@ namespace DMI.Xenoarch.Ship
 
             // Spool: turn to face the window, engines wind up.
             var startRot = rig.Root.rotation;
-            bool seated = rig is IPlayerSeat st && st.Seated; // in a cockpit chair already facing the window: don't turn
             var faceRot = Quaternion.LookRotation(windowDir, Vector3.up);
             for (float t = 0f; t < spool; t += Time.deltaTime)
             {
                 float k = t / spool;
-                if (!seated) rig.Teleport(rig.Root.position, Quaternion.Slerp(startRot, faceRot, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(k * 1.5f))));
+                bool seatedNow = rig is IPlayerSeat st && st.Seated;
+                // Don't Teleport a seated player: Teleport calls EndSeat(). Re-check each frame so a mid-spool sit sticks.
+                if (!seatedNow) rig.Teleport(rig.Root.position, Quaternion.Slerp(startRot, faceRot, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(k * 1.5f))));
                 audio.volume = k * 0.35f; audio.pitch = 0.6f + k * 0.3f;
                 vol.weight = k * 0.25f;
                 TunnelTick(tunnelMat, Mathf.Clamp01((k - 0.4f) / 0.6f) * 0.35f, tunnelSpinSign, 0.4f);
@@ -136,7 +167,10 @@ namespace DMI.Xenoarch.Ship
                 yield return null;
             }
 
-            // Jump
+            if (disabledInput) { rig.SetInputEnabled(true); disabledInput = false; }
+
+            // Jump — input stays enabled so the player can stand up or sit back down mid-flight.
+            CurrentPhase = Phase.Jump;
             var hud = CountdownHud.Show(interstellar ? $"INTERSTELLAR JUMP: {to.displayName}" : $"FTL: {to.displayName}", jumpSeconds, hum: false); // arrival countdown (beeps + chime)
             streaks.Play();
             DMI.Xenoarch.Galaxy.SunDirector.Hidden = true; // no sun / lens flare inside the tunnel
@@ -144,13 +178,14 @@ namespace DMI.Xenoarch.Ship
             bool arrived = false;
             for (float t = 0f; t < jumpSeconds; t += Time.deltaTime)
             {
+                JumpElapsed = t;
                 float k = t / jumpSeconds;
                 float env = Mathf.Sin(Mathf.Clamp01(k) * Mathf.PI); // 0 -> 1 -> 0
                 vol.weight = 0.25f + 0.75f * env;
                 lens.intensity.value = -0.55f * env;
                 ca.intensity.value = env;
                 bloom.intensity.value = 2f + 5f * env;
-                cam.fieldOfView = baseFov + 14f * env;
+                if (!CockpitFtlDisplays.ZoomBusy) cam.fieldOfView = baseFov + 14f * env;
                 audio.volume = 0.35f + 0.45f * env; audio.pitch = 0.9f + 0.5f * env;
                 var em = streaks.emission; em.rateOverTime = Mathf.Lerp(600f, 5200f, env);
                 if (hud != null) hud.Tick(t);
@@ -171,6 +206,9 @@ namespace DMI.Xenoarch.Ship
                 yield return null;
             }
 
+            JumpElapsed = jumpSeconds;
+            CurrentPhase = Phase.Drop;
+
             // Drop-out flash
             if (hud != null) hud.Finish($"Arrived: {to.displayName}");
             streaks.Stop(true, ParticleSystemStopBehavior.StopEmitting);
@@ -184,19 +222,21 @@ namespace DMI.Xenoarch.Ship
                 if (k > 0.25f) DMI.Xenoarch.Galaxy.SunDirector.Hidden = false;
                 if (flash != null) flash.style.opacity = Mathf.Clamp01(1f - k * 1.4f) * 0.85f;
                 audio.volume = (1f - k) * 0.4f;
-                cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, baseFov, k);
+                if (!CockpitFtlDisplays.ZoomBusy) cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, baseFov, k);
                 vol.weight = (1f - k) * 0.3f;
                 yield return null;
             }
 
-            cam.fieldOfView = baseFov;
+            if (!CockpitFtlDisplays.ZoomBusy) cam.fieldOfView = baseFov;
             if (tunnelMat != null) Destroy(tunnelMat);
             if (innerMat != null) Destroy(innerMat);
             if (coreMat != null) Destroy(coreMat);
             DMI.Xenoarch.Galaxy.SunDirector.Hidden = false;
             Destroy(root);
-            rig.SetInputEnabled(true);
+            if (disabledInput) rig.SetInputEnabled(true);
             Running = false;
+            CurrentPhase = Phase.Idle;
+            if (Active == this) Active = null;
             var rt = XenoarchRuntime.Instance;
             if (rt != null && !string.IsNullOrEmpty(autosaveSlot)) rt.SaveGame(autosaveSlot);
         }

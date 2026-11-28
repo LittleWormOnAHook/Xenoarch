@@ -59,6 +59,7 @@ namespace DMI.Xenoarch.Ship
             // power the whole console (buttons, panels, screens), not just the helm mesh; never dim the seat itself
             var root = ConsolePower.ResolveRoot(c.transform);
             _power = ConsolePower.Attach(root.gameObject, root != c.transform && transform.IsChildOf(root) ? transform : null); // starts dark
+            CockpitFtlDisplays.Ensure();
         }
 
         /// <summary>Seated: reach a hand to the console and press (click), then the displays blink on.</summary>
@@ -158,6 +159,7 @@ namespace DMI.Xenoarch.Ship
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
             InteractionPromptHud.IdlePrompt = "Stand up";
+            UIState.ConsoleCursor = true;
             PowerUpConsole();
             onSeated?.Invoke();
         }
@@ -167,6 +169,8 @@ namespace DMI.Xenoarch.Ship
             Transitioning = true;
             var p = _player;
             InteractionPromptHud.IdlePrompt = null;
+            CockpitFtlDisplays.CancelZoom(true);
+            UIState.ConsoleCursor = false;
             if (_power != null) _power.PowerOff();
             Vector3 from = p.Root.position, to = SafeExit(p);
             float yaw = p.Root.eulerAngles.y, pitch = p.Pitch;
@@ -217,6 +221,8 @@ namespace DMI.Xenoarch.Ship
 
         void Release()
         {
+            CockpitFtlDisplays.CancelZoom(true);
+            UIState.ConsoleCursor = false;
             if (_power != null) _power.PowerOff();
             HideBody(_player, false);
             if (Occupied == this) Occupied = null;

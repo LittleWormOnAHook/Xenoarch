@@ -32,7 +32,14 @@ namespace DMI.Xenoarch.Ship
         void Reset() => terminalName = "Ship Console";
         void Awake() { if (string.IsNullOrEmpty(terminalName) || terminalName == "Terminal") terminalName = "Ship Console"; }
 
-        public override float GetPriority(in InteractionContext c) => X != null && !Busy && !IsOpen && (CockpitSeat.Occupied == null || !CockpitSeat.Occupied.Transitioning) ? 1f : -1f;
+        public override float GetPriority(in InteractionContext c)
+        {
+            if (X == null || IsOpen) return -1f;
+            if (CockpitSeat.Occupied != null && CockpitSeat.Occupied.Transitioning) return -1f;
+            // During FTL, allow a standing player to sit back down, but don't steal E from "Stand up" while seated.
+            if (Busy) return CockpitSeat.Occupied == null && NearestFreeSeat(c.Rig.Root.position) != null ? 1f : -1f;
+            return 1f;
+        }
 
         public override string GetPrompt(in InteractionContext c)
         {
@@ -42,12 +49,12 @@ namespace DMI.Xenoarch.Ship
 
         public override bool TryInteract(in InteractionContext c)
         {
-            if (Busy) return false;
             if (CockpitSeat.Occupied == null && c.Rig is FirstPersonController fpc)
             {
                 var seat = NearestFreeSeat(fpc.Root.position);
-                if (seat != null) return seat.Sit(fpc, Open);
+                if (seat != null) return seat.Sit(fpc, Busy ? null : Open);
             }
+            if (Busy) return false;
             Open();
             return IsOpen;
         }

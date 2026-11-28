@@ -114,7 +114,7 @@ namespace DMI.Xenoarch.Player
             if (Seated)
             {
                 _planarVelocity = Vector3.zero; _verticalVelocity = 0f; IsSprinting = false;
-                if (canAct && _seatLook) SeatedLook(dt);
+                if (canAct && _seatLook && !UIState.ConsoleCursor) SeatedLook(dt);
                 return;
             }
             if (canAct) Look(dt);

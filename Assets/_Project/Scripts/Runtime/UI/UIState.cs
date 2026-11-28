@@ -13,12 +13,24 @@ namespace DMI.Xenoarch.UI
         static readonly HashSet<string> Open = new HashSet<string>();
         public static event Action Changed;
         public static bool ManageCursor = true;
+        /// <summary>Seated at the cockpit: free cursor for clicking the consoles, without blocking stand-up (E / Space).</summary>
+        static bool _consoleCursor;
+        public static bool ConsoleCursor
+        {
+            get => _consoleCursor;
+            set
+            {
+                if (_consoleCursor == value) return;
+                _consoleCursor = value;
+                ApplyCursor();
+            }
+        }
 
         public static bool BlocksGameplay => Open.Count > 0;
         public static bool IsOpen(string panel) => Open.Contains(panel);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { Open.Clear(); Changed = null; ManageCursor = true; }
+        static void ResetStatics() { Open.Clear(); Changed = null; ManageCursor = true; _consoleCursor = false; }
 
         public static void SetOpen(string panel, bool open)
         {
@@ -39,7 +51,7 @@ namespace DMI.Xenoarch.UI
         public static void ApplyCursor()
         {
             if (!ManageCursor) return;
-            bool free = BlocksGameplay;
+            bool free = BlocksGameplay || ConsoleCursor;
             Cursor.lockState = free ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = free;
         }

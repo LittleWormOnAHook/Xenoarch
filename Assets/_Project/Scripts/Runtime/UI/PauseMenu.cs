@@ -25,6 +25,7 @@ namespace DMI.Xenoarch.UI
             if (pressed)
             {
                 if (IsOpen) Close();
+                else if (DMI.Xenoarch.Ship.CockpitFtlDisplays.TryHandleEscape()) { }
                 else if (CanOpen()) Open();
             }
             _blockedLastFrame = UIState.BlocksGameplay;
