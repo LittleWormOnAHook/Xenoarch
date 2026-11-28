@@ -37,8 +37,8 @@ MonoBehaviour:
   throttleFall: 0.22
   reverseEngageSpeed: 0.35
   antiPitch: 18
-  antiSquat: 10
-  antiDive: 16
+  antiSquat: 0
+  antiDive: 0
   pitchInertia: 1.6
   angularDamping: 2.2
   antiFlip: 16
