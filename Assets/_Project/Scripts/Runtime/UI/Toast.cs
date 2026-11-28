@@ -59,6 +59,8 @@ namespace DMI.Xenoarch.UI
             if (!string.IsNullOrEmpty(kind)) MUI.L(col, kind.ToUpperInvariant(), "xa-m-toast__kind");
             MUI.L(col, text, "xa-m-toast__text");
             card.Add(col);
+            // t362u: toast text/icons used to swallow clicks and hover on whatever sits under the banner (e.g. nav terminal buttons)
+            foreach (var ve in card.Query<VisualElement>().ToList()) ve.pickingMode = PickingMode.Ignore;
             _stack.Insert(0, card);
             _cur = card; _hideAt = Time.unscaledTime + seconds;
             if (!string.IsNullOrEmpty(kind)) UISound.Play(UISoundEvent.Notification);
