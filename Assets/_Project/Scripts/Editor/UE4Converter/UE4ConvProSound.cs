@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -28,6 +29,8 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public const string EgyptLog = "Logs/xenoarch_egypt.txt";
         const string RelocTrigger = "Temp/xenoarch_ue4conv_reloc.trigger";
         public const string RelocLog = "Logs/xenoarch_ue4conv_reloc.txt";
+        const string LightmapTrigger = "Temp/xenoarch_egypt_dellightmaps.trigger";
+        public const string LightmapLog = "Logs/xenoarch_egypt_dellightmaps.txt";
         static double _next;
 
         static UE4ConvProSound() { EditorApplication.update += Poll; }
@@ -41,6 +44,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             else if (File.Exists(RuinsTrigger)) { File.Delete(RuinsTrigger); RunRuins(false); }
             else if (File.Exists(EgyptTrigger)) { File.Delete(EgyptTrigger); RunEgypt(false); }
             else if (File.Exists(RelocTrigger)) { File.Delete(RelocTrigger); RelocateConvertedPacks(); }
+            else if (File.Exists(LightmapTrigger)) { File.Delete(LightmapTrigger); DeleteEgyptLightmaps(); }
             else if (File.Exists("Temp/xenoarch_verify_converted.trigger")) { var p = File.ReadAllText("Temp/xenoarch_verify_converted.trigger").Trim(); File.Delete("Temp/xenoarch_verify_converted.trigger"); VerifyPrefabs(string.IsNullOrEmpty(p) ? RuinsOutput : p); }
         }
 
@@ -85,6 +89,51 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             Directory.CreateDirectory("Logs");
             File.WriteAllText(RelocLog, sb.ToString());
             Debug.Log("[UE4 Converter] relocate:\n" + sb);
+        }
+
+        /// <summary>Deletes only the baked demo-level lightmaps under Textures/Map/*_BuiltData. Pack material textures are left alone.</summary>
+        public static void DeleteEgyptLightmaps()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(DateTime.Now.ToString("s"));
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Directory.CreateDirectory("Logs"); File.WriteAllText(LightmapLog, "Refused: the Editor is in Play mode.\n"); return;
+            }
+            string[] folders =
+            {
+                "Assets/Egypt_Ruins_Environment/Textures/Map/lavel_1_BuiltData",
+                "Assets/Egypt_Ruins_Environment/Textures/Map/map_1_BuiltData",
+            };
+            int deleted = 0; long bytes = 0;
+            foreach (var folder in folders)
+            {
+                if (!Directory.Exists(folder)) { sb.AppendLine("missing " + folder); continue; }
+                foreach (var f in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
+                {
+                    if (f.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)) continue;
+                    try { bytes += new FileInfo(f).Length; } catch { }
+                }
+                int n = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Count(f => !f.EndsWith(".meta", StringComparison.OrdinalIgnoreCase));
+                bool ok = AssetDatabase.DeleteAsset(folder);
+                sb.AppendLine((ok ? "deleted folder " : "FAILED to delete ") + folder + " (" + n + " assets)");
+                if (ok) deleted += n;
+            }
+            string map = "Assets/Egypt_Ruins_Environment/Textures/Map";
+            if (Directory.Exists(map))
+            {
+                var leftover = Directory.GetFiles(map, "*", SearchOption.AllDirectories).Where(f => !f.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (leftover.Length == 0)
+                {
+                    bool ok = AssetDatabase.DeleteAsset(map);
+                    sb.AppendLine((ok ? "deleted empty " : "left ") + map);
+                }
+                else sb.AppendLine("left " + map + " (" + leftover.Length + " files remain)");
+            }
+            AssetDatabase.Refresh();
+            sb.AppendLine("deleted=" + deleted + " bytes=" + bytes);
+            Directory.CreateDirectory("Logs"); File.WriteAllText(LightmapLog, sb.ToString());
+            Debug.Log("[UE4 Converter] delete Egypt lightmaps:\n" + sb);
         }
 
         public static void RunEgypt(bool interactive)
