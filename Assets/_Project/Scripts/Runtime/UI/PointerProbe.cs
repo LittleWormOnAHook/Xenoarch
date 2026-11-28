@@ -18,7 +18,7 @@ namespace DMI.Xenoarch.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot()
         {
-            if (FindFirstObjectByType<PointerProbe>() != null) return;
+            if (FindAnyObjectByType<PointerProbe>() != null) return;
             var go = new GameObject("[PointerProbe]") { hideFlags = HideFlags.HideAndDontSave };
             DontDestroyOnLoad(go);
             go.AddComponent<PointerProbe>();
@@ -39,7 +39,7 @@ namespace DMI.Xenoarch.UI
               .Append(" dpi=").Append(Screen.dpi.ToString("0"))
               .Append(" mode=").Append(Screen.fullScreenMode)
               .Append(" editor=").Append(Application.isEditor);
-            foreach (var doc in FindObjectsByType<UIDocument>(FindObjectsSortMode.None))
+            foreach (var doc in FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude))
             {
                 var root = doc.rootVisualElement;
                 if (root == null || root.panel == null || root.resolvedStyle.display == DisplayStyle.None) continue;

@@ -39,7 +39,7 @@ namespace DMI.Xenoarch.UI
             var ps = XenoarchUI.LoadPanelSettings();
             if (ps != null) ps.scale = ps.scale; // setter re-applies the panel settings (scale/ref resolution) to every panel
             int n = 0;
-            foreach (var d in FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            foreach (var d in FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude))
             {
                 var r = d.rootVisualElement;
                 if (r == null) continue;

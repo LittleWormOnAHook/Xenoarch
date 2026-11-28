@@ -242,7 +242,11 @@ namespace DMI.Xenoarch.Ship
         /// <summary>The 8 world-space corners of the screen mesh's bounds (for the open/close animation's start rect).</summary>
         static Vector3[] WorldCorners(ScreenFace face)
         {
-            var b = face.filter.sharedMesh.bounds;
+            // After static batching, sharedMesh is the combined scene mesh; its bounds cover the whole batch.
+            // renderer.localBounds stays the screen's own box and does not require a readable mesh.
+            var b = face.renderer != null ? face.renderer.localBounds
+                : face.filter != null && face.filter.sharedMesh != null ? face.filter.sharedMesh.bounds
+                : new Bounds(Vector3.zero, Vector3.zero);
             var t = face.transform;
             var e = b.extents;
             var c = new Vector3[8];
@@ -379,15 +383,24 @@ namespace DMI.Xenoarch.Ship
 
         // Map the RT so visual left is U=0 and visual top is V=1 (Unity texture top = UITK panel top).
         // The previous hardcoded scale.y = -1 was a vertical mirror: upside down and backwards on both faces.
+        static bool TryReadMesh(Mesh mesh, out Vector3[] verts, out Vector2[] uvs, out int[] tris)
+        {
+            verts = null;
+            uvs = null;
+            tris = null;
+            // Combined / static-batched meshes are not CPU-readable; accessing vertices/uv/triangles logs an error.
+            if (mesh == null || !mesh.isReadable || mesh.vertexCount < 3) return false;
+            verts = mesh.vertices;
+            uvs = mesh.uv;
+            tris = mesh.triangles;
+            return uvs != null && uvs.Length >= verts.Length && tris != null && tris.Length >= 3;
+        }
+
         static void DeriveUvOrientation(Mesh mesh, Transform t, Vector3 viewFrom, out bool flipU, out bool flipV)
         {
             flipU = false;
             flipV = false;
-            if (mesh == null || t == null || mesh.vertexCount < 3) return;
-            var verts = mesh.vertices;
-            var uvs = mesh.uv;
-            var tris = mesh.triangles;
-            if (uvs == null || uvs.Length < verts.Length || tris == null || tris.Length < 3) return;
+            if (mesh == null || t == null || !TryReadMesh(mesh, out var verts, out var uvs, out var tris)) return;
 
             Vector3 n = Vector3.zero;
             Vector3 c = Vector3.zero;
@@ -445,10 +458,7 @@ namespace DMI.Xenoarch.Ship
             if (face == null || face.filter == null || face.filter.sharedMesh == null) return false;
             var mesh = face.filter.sharedMesh;
             var t = face.filter.transform;
-            var verts = mesh.vertices;
-            var uvs = mesh.uv;
-            var tris = mesh.triangles;
-            if (uvs == null || uvs.Length < verts.Length || tris == null || tris.Length < 3) return false;
+            if (!TryReadMesh(mesh, out var verts, out var uvs, out var tris)) return false;
             Vector3 origin = t.InverseTransformPoint(worldRay.origin);
             Vector3 dir = t.InverseTransformDirection(worldRay.direction);
             if (dir.sqrMagnitude < 1e-12f) return false;

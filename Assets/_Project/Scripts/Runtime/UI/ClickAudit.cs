@@ -31,7 +31,7 @@ namespace DMI.Xenoarch.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot()
         {
-            if (!File.Exists(RunFlag) || FindFirstObjectByType<ClickAudit>() != null) return;
+            if (!File.Exists(RunFlag) || FindAnyObjectByType<ClickAudit>() != null) return;
             var go = new GameObject("[ClickAudit]");
             DontDestroyOnLoad(go);
             go.AddComponent<ClickAudit>();
@@ -102,7 +102,7 @@ namespace DMI.Xenoarch.UI
         static List<UIDocument> Docs()
         {
             var l = new List<UIDocument>();
-            foreach (var d in FindObjectsByType<UIDocument>(FindObjectsSortMode.None))
+            foreach (var d in FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude))
             {
                 var r = d.rootVisualElement;
                 if (r == null || r.panel == null) continue;
@@ -200,6 +200,7 @@ namespace DMI.Xenoarch.UI
         // ------------------------------------------------------------------ real input injection
         Vector2 PanelToScreen(IPanel panel, Vector2 pp)
         {
+            if (panel == null) return pp;
             Vector2 G(float sx, float sy) => RuntimePanelUtils.ScreenToPanel(panel, new Vector2(sx, _flip ? Screen.height - sy : sy));
             var p0 = G(0f, 0f);
             float kx = (G(1000f, 0f).x - p0.x) / 1000f;
@@ -326,7 +327,7 @@ namespace DMI.Xenoarch.UI
 
         IEnumerator PausePhase()
         {
-            var pm = FindFirstObjectByType<PauseMenu>();
+            var pm = FindAnyObjectByType<PauseMenu>();
             if (pm == null) { Rec("PauseMenu", "open", "SKIP", "no PauseMenu in scene"); yield break; }
             pm.Open();
             yield return Wait(1.2f);
@@ -361,7 +362,7 @@ namespace DMI.Xenoarch.UI
 
         IEnumerator InventoryPhase()
         {
-            var inv = FindFirstObjectByType<InventoryWindow>();
+            var inv = FindAnyObjectByType<InventoryWindow>();
             if (inv == null || XenoarchRuntime.Session == null) { Rec("Inventory", "open", "SKIP", "no InventoryWindow / session"); yield break; }
             inv.Open();
             yield return Wait(1.2f);
@@ -501,7 +502,7 @@ namespace DMI.Xenoarch.UI
 
         IEnumerator TerminalPhase<T>(string area, bool refiner) where T : TerminalWindow
         {
-            var w = FindFirstObjectByType<T>();
+            var w = FindAnyObjectByType<T>();
             if (w == null) { Rec(area, "open", "SKIP", "no " + typeof(T).Name + " in the loaded scene"); yield break; }
             w.Open();
             yield return Wait(1.2f);
@@ -555,7 +556,7 @@ namespace DMI.Xenoarch.UI
 
         IEnumerator NavPhase()
         {
-            var nav = FindFirstObjectByType<NavigationTerminal>();
+            var nav = FindAnyObjectByType<NavigationTerminal>();
             if (nav == null) { Rec("Nav", "open", "SKIP", "no NavigationTerminal in the loaded scene"); yield break; }
             nav.Open();
             yield return Wait(1.5f);
