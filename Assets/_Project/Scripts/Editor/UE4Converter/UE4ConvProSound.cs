@@ -20,8 +20,14 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public const string LogPath = "Logs/xenoarch_prosound.txt";
         const string RuinsTrigger = "Temp/xenoarch_ruins.trigger";
         public const string RuinsSource = @"A:\Unity Assets\Ruins Treasure Prop Pack v4.26\Ruins Treasure Prop Pack\RuinsTre7e7190869711V1\data\Content\RuinsTreasureProps";
-        public const string RuinsOutput = "Assets/RUINS/Ruins Treasure Prop Pack";
+        public const string RuinsOutput = "Assets/Ruins Treasure Prop Pack";
         public const string RuinsLog = "Logs/xenoarch_ruins.txt";
+        const string EgyptTrigger = "Temp/xenoarch_egypt.trigger";
+        public const string EgyptSource = @"A:\Xenoarch\Assets\UE4 Packs\Egypt_Ruins_Environment";
+        public const string EgyptOutput = "Assets/Egypt_Ruins_Environment";
+        public const string EgyptLog = "Logs/xenoarch_egypt.txt";
+        const string RelocTrigger = "Temp/xenoarch_ue4conv_reloc.trigger";
+        public const string RelocLog = "Logs/xenoarch_ue4conv_reloc.txt";
         static double _next;
 
         static UE4ConvProSound() { EditorApplication.update += Poll; }
@@ -33,6 +39,8 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating) return;
             if (File.Exists(Trigger)) { File.Delete(Trigger); Run(false); }
             else if (File.Exists(RuinsTrigger)) { File.Delete(RuinsTrigger); RunRuins(false); }
+            else if (File.Exists(EgyptTrigger)) { File.Delete(EgyptTrigger); RunEgypt(false); }
+            else if (File.Exists(RelocTrigger)) { File.Delete(RelocTrigger); RelocateConvertedPacks(); }
             else if (File.Exists("Temp/xenoarch_verify_converted.trigger")) { var p = File.ReadAllText("Temp/xenoarch_verify_converted.trigger").Trim(); File.Delete("Temp/xenoarch_verify_converted.trigger"); VerifyPrefabs(string.IsNullOrEmpty(p) ? RuinsOutput : p); }
         }
 
@@ -41,6 +49,59 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
 
         [MenuItem("Xenoarch/Tools/UE4 \u2192 Unity: Convert Ruins Treasure Prop Pack")]
         static void RuinsMenu() => RunRuins(true);
+
+        [MenuItem("Xenoarch/Tools/UE4 \u2192 Unity: Convert Egypt Ruins Environment")]
+        static void EgyptMenu() => RunEgypt(true);
+
+        /// <summary>
+        /// Moves already-converted packs from Assets/RUINS/&lt;Pack&gt; to Assets/&lt;Pack&gt; with AssetDatabase.MoveAsset so .meta GUIDs stay the same.
+        /// </summary>
+        public static void RelocateConvertedPacks()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Directory.CreateDirectory("Logs");
+                File.WriteAllText(RelocLog, "Refused: the Editor is in Play mode.\n");
+                return;
+            }
+            var moves = new[]
+            {
+                ("Assets/RUINS/Egypt_Ruins_Environment", EgyptOutput),
+                ("Assets/RUINS/Ruins Treasure Prop Pack", RuinsOutput),
+            };
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(DateTime.Now.ToString("s"));
+            foreach (var (src, dst) in moves)
+            {
+                bool srcOk = AssetDatabase.IsValidFolder(src) || Directory.Exists(src);
+                if (!srcOk) { sb.AppendLine("skip, source missing: " + src); continue; }
+                if (AssetDatabase.IsValidFolder(dst) || Directory.Exists(dst)) { sb.AppendLine("skip, destination already exists: " + dst); continue; }
+                string err = AssetDatabase.MoveAsset(src, dst);
+                if (string.IsNullOrEmpty(err)) sb.AppendLine("moved " + src + " -> " + dst);
+                else sb.AppendLine("FAILED " + src + " -> " + dst + ": " + err);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Directory.CreateDirectory("Logs");
+            File.WriteAllText(RelocLog, sb.ToString());
+            Debug.Log("[UE4 Converter] relocate:\n" + sb);
+        }
+
+        public static void RunEgypt(bool interactive)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Finish("Refused: the Editor is in Play mode.", false, EgyptLog); return; }
+            if (!Directory.Exists(EgyptSource)) { Finish("Source folder not found: " + EgyptSource, interactive, EgyptLog); return; }
+            var o = ConverterOptions.Load();
+            o.sourceFolder = EgyptSource; o.destOverride = EgyptOutput; o.audioSubfolder = "Audio"; o.packName = "Egypt_Ruins_Environment";
+            o.soundsOnly = false; o.useUModel = true; o.meshFormat = UModelMesh.Psk; o.ueGame = "(auto-detect)"; o.exportPng = true; o.exportLods = false;
+            o.dryRun = false; o.overwrite = false; o.reuseStaging = true; o.keepStaging = false; o.makePrefabs = true; o.copyAudio = true;
+            o.maskMIsMRA = false;   // this pack uses explicit _OcclusionRoughnessMetallic / _BaseColor / _Normal names
+            o.batchFolders = new System.Collections.Generic.List<string>();
+            string exe = UModel.Find(o);
+            if (exe == null) { Finish("Stopped: umodel.exe not found. " + UModel.MissingMessage, interactive, EgyptLog); return; }
+            var rep = UE4Converter.Run(o);
+            Finish(rep.Summary() + "\nUModel: " + rep.umodelSummary + "\nReport: " + rep.mdPath, interactive, EgyptLog);
+        }
 
         public static void RunRuins(bool interactive)
         {

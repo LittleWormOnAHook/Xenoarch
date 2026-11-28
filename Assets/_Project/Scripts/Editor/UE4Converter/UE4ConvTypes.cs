@@ -20,7 +20,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
     public class ConverterOptions
     {
         public string sourceFolder = "";
-        public string destRoot = "Assets/_Vendor/Converted";
+        public string destRoot = "Assets";   // each pack lands in Assets/<OriginalPackName>; add that folder to .gitignore
         public string packName = "";
         public ConvScaleMode scaleMode = ConvScaleMode.Auto;
         public float customScale = 0.01f;
@@ -58,7 +58,18 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
 
         const string PrefKey = "Xenoarch.UE4Converter.Options";
 
-        public string DestFolder => !string.IsNullOrWhiteSpace(destOverride) ? destOverride.Replace('\\', '/').TrimEnd('/') : destRoot.Replace('\\', '/').TrimEnd('/') + "/" + Sanitize(string.IsNullOrEmpty(packName) ? "Pack" : packName);
+        public string DestFolder
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(destOverride)) return destOverride.Replace('\\', '/').TrimEnd('/');
+                // Keep the original pack folder name (spaces included). Only replace characters illegal in a Windows file name.
+                string name = string.IsNullOrWhiteSpace(packName) ? "Pack" : packName.Trim().TrimEnd('\\', '/');
+                foreach (var c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+                if (name.Length == 0) name = "Pack";
+                return destRoot.Replace('\\', '/').TrimEnd('/') + "/" + name;
+            }
+        }
 
         public static string Sanitize(string s)
         {

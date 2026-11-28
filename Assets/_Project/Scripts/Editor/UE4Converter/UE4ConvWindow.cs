@@ -19,7 +19,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         bool _fMesh = true, _fPrefab = true, _fTex = true, _fMisc = true, _fUm = true;
         string _umFor = "\u0001", _umFound, _gitFor, _gitWarn;
         ConversionReport _last;
-        const string DefaultRoot = "Assets/_Vendor/Converted";   // already covered by .gitignore (/Assets/_Vendor/)
+        const string DefaultRoot = "Assets";   // each pack is written to Assets/<OriginalPackName>; that folder must be gitignored
         static readonly int[] Sizes = { 512, 1024, 2048, 4096, 8192 };
         static readonly int[] Yaws = { 0, 90, 180, 270 };
 

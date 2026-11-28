@@ -100,3 +100,13 @@ Desktop.ini
 # Pro Sound Collection (vendor .uasset pack + the audio extracted from it): never committed
 /Assets/Pro Sound Collection*/
 /Assets/Pro Sound Collection*.meta
+
+# Vendor: raw Unreal packs dropped inside the project (do not commit). Prefer A:\UE_Packs\<PackName> so Unity does not try to import .uasset files.
+/Assets/UE4 Packs/
+/Assets/UE4 Packs.meta
+
+# Vendor-derived UE4 conversions at the Assets root (same name as the original pack). Never commit.
+/Assets/Egypt_Ruins_Environment/
+/Assets/Egypt_Ruins_Environment.meta
+/Assets/Ruins Treasure Prop Pack/
+/Assets/Ruins Treasure Prop Pack.meta
