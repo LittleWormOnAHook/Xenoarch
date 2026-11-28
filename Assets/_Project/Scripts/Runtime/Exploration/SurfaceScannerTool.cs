@@ -53,15 +53,6 @@ namespace DMI.Xenoarch.Exploration
         AudioClip _beep, _lock;
         int _pulseCount;
 
-        [Header("Direction indicator")]
-        [Tooltip("Gold chevron around the crosshair pointing toward the nearest dig site while the scanner is out.")] public bool directionIndicator = true;
-        [Tooltip("Radius of the chevron's orbit around the screen centre (px).")] public float indicatorRadius = 96f;
-        [Tooltip("Sites further than scanner range x this are not indicated.")] public float indicatorRangeMult = 6f;
-        VisualElement _dirPivot, _dirArrow;
-        Label _dirLabel;
-        float _dirAngle, _dirBlink;
-        bool _dirHasAngle;
-
         static SurfaceScannerDefinition Def => XenoarchRuntime.Session?.Config.surfaceScanner;
 
         bool HasItem
@@ -114,7 +105,6 @@ namespace DMI.Xenoarch.Exploration
         void Update()
         {
             if (Equipped && !HasItem) SetEquipped(false);
-            UpdateIndicator();
             if (_pulseT >= 0f) AnimatePulse();
             if (_clearAt > 0f && Time.time >= _clearAt) SetText(ReadyText, false);
             if (UIState.BlocksGameplay) { _keyDownAt = -1f; return; }
@@ -349,7 +339,17 @@ namespace DMI.Xenoarch.Exploration
             Beep(0.7f, 1);
         }
 
+        /// <summary>Raised after each normal (non-refined) pulse has resolved. ScannerEdgeArrows uses it to flash edge arrows toward known targets.</summary>
+        public static event System.Action PulseFired;
+
         public void Pulse()
+        {
+            bool refined = Refined;
+            PulseCore();
+            if (!refined) PulseFired?.Invoke();
+        }
+
+        void PulseCore()
         {
             var s = XenoarchRuntime.Session; var d = Def;
             if (s == null || d == null) return;
@@ -396,7 +396,6 @@ namespace DMI.Xenoarch.Exploration
             Vector3 to = best.position - me; to.y = 0f;
             float bearing = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + err * ((float)rng.NextDouble() * 2f - 1f) * 40f;
             float rel = Mathf.DeltaAngle(ViewYaw(), bearing);
-            _lastTargetId = best.Id; _lastTargetUntil = Time.time + 90f;
             float depthErr = best.depth * err * 0.4f;
             float depthShown = best.depth + depthErr * ((float)rng.NextDouble() * 2f - 1f);
 
@@ -483,43 +482,13 @@ namespace DMI.Xenoarch.Exploration
             _pulse = new VisualElement(); _pulse.AddToClassList("xa-scan__pulse"); _pulse.pickingMode = PickingMode.Ignore; fill.Add(_pulse);
             XenoarchUI.Show(_pulse, false);
             _panel = new VisualElement(); _panel.AddToClassList("xa-scan"); _panel.pickingMode = PickingMode.Ignore; fill.Add(_panel);
-            BuildIndicator(fill);
             var title = new Label("SURFACE SCANNER"); title.AddToClassList("xa-scan__title"); _panel.Add(title);
             _text = new Label(); _text.AddToClassList("xa-scan__text"); _panel.Add(_text);
             var hint = new Label("LMB/RT pulse   scan from different spots to triangulate   1/D-pad up holster"); hint.AddToClassList("xa-hint"); _panel.Add(hint);
             XenoarchUI.Show(_panel, false);
         }
 
-        // ---------------------------------------------------------------- direction indicator
-        void BuildIndicator(VisualElement fill)
-        {
-            _dirPivot = new VisualElement { pickingMode = PickingMode.Ignore };
-            _dirPivot.style.position = Position.Absolute; _dirPivot.style.left = Length.Percent(50); _dirPivot.style.top = Length.Percent(50);
-            _dirPivot.style.width = 0; _dirPivot.style.height = 0;
-            fill.Add(_dirPivot);
-            _dirArrow = new VisualElement { pickingMode = PickingMode.Ignore };
-            _dirArrow.style.position = Position.Absolute; _dirArrow.style.width = 30; _dirArrow.style.height = 22;
-            _dirArrow.style.left = -15; _dirArrow.style.top = -indicatorRadius - 11;
-            _dirArrow.generateVisualContent += DrawChevron;
-            _dirPivot.Add(_dirArrow);
-            _dirLabel = new Label { pickingMode = PickingMode.Ignore };
-            _dirLabel.style.position = Position.Absolute; _dirLabel.style.left = Length.Percent(50); _dirLabel.style.top = Length.Percent(50);
-            _dirLabel.style.marginLeft = -80; _dirLabel.style.width = 160; _dirLabel.style.marginTop = indicatorRadius + 18;
-            _dirLabel.style.unityTextAlign = TextAnchor.MiddleCenter; _dirLabel.style.fontSize = 14; _dirLabel.style.color = XenoarchPalette.Highlight;
-            fill.Add(_dirLabel);
-            XenoarchUI.Show(_dirPivot, false); XenoarchUI.Show(_dirLabel, false);
-        }
-
-        static void DrawChevron(MeshGenerationContext ctx)
-        {
-            var p = ctx.painter2D; var r = ctx.visualElement.contentRect;
-            p.strokeColor = XenoarchPalette.Highlight; p.lineWidth = 4f; p.lineJoin = LineJoin.Round; p.lineCap = LineCap.Round;
-            p.BeginPath();
-            p.MoveTo(new Vector2(3f, r.height - 3f)); p.LineTo(new Vector2(r.width * 0.5f, 3f)); p.LineTo(new Vector2(r.width - 3f, r.height - 3f));
-            p.Stroke();
-        }
-
-        string _lastTargetId; float _lastTargetUntil = -1f; Camera _viewCam;
+        Camera _viewCam;
 
         /// <summary>Heading (deg) the player is looking, from the view camera's flattened forward. Uses the camera's up
         /// vector when looking almost straight down (scanning the ground), where Euler yaw is unreliable.</summary>
@@ -536,21 +505,6 @@ namespace DMI.Xenoarch.Exploration
             if (f.sqrMagnitude < 0.04f) { f = t.up; f.y = 0f; }
             if (f.sqrMagnitude < 1e-6f) return transform.eulerAngles.y;
             return Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
-        }
-
-        static ArchaeologicalSiteDefinition SiteInScene(string id, Vector3 from, float maxDist, out float dist)
-        {
-            dist = 0f;
-            var x = XenoarchRuntime.Session?.Exploration;
-            if (x == null || string.IsNullOrEmpty(id)) return null;
-            foreach (var site in x.SitesInScene(SceneManager.GetActiveScene().name))
-            {
-                if (site.Id != id) continue;
-                var f = site.position - from; f.y = 0f;
-                dist = f.magnitude;
-                return dist <= maxDist ? site : null;
-            }
-            return null;
         }
 
         /// <summary>Nearest revealable dig site in this scene (gated chain sites stay hidden), with its flat distance.</summary>
@@ -570,55 +524,6 @@ namespace DMI.Xenoarch.Exploration
             }
             dist = bd;
             return best;
-        }
-
-        static ArchaeologicalSiteDefinition _placeholder;
-        static ArchaeologicalSiteDefinition Placeholder => _placeholder != null ? _placeholder : (_placeholder = ScriptableObject.CreateInstance<ArchaeologicalSiteDefinition>());
-
-        void UpdateIndicator()
-        {
-            if (_dirPivot == null) return;
-            var d = Def;
-            bool show = directionIndicator && Equipped && d != null && !UIState.BlocksGameplay;
-            ArchaeologicalSiteDefinition site = null; float dist = 0f;
-            if (show)
-            {
-                // Focused objective site (when it has a valid destination in this scene) wins; otherwise the last
-                // pulse target, then the nearest site.
-                float lim = ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult);
-                var dest = XenoarchRuntime.Session?.Objectives?.Destination();
-                if (dest != null && !string.IsNullOrEmpty(dest.siteId))
-                    site = SiteInScene(dest.siteId, transform.position, float.MaxValue, out dist);
-                if (site == null)
-                    site = Time.time < _lastTargetUntil ? SiteInScene(_lastTargetId, transform.position, lim, out dist) : null;
-                if (site == null) site = NearestSite(transform.position, lim, out dist);
-            }
-            bool cache = false; Vector3 targetPos = site != null ? site.position : Vector3.zero; float targetRadius = site != null ? site.radius : 0f; int targetSeed = site != null ? site.seed : 0;
-            var focusedDest = XenoarchRuntime.Session?.Objectives?.Destination();
-            bool holdFocus = focusedDest != null && !string.IsNullOrEmpty(focusedDest.siteId) && site != null && site.Id == focusedDest.siteId;
-            var vdir = DMI.Xenoarch.Valuables.ValuableSiteDirector.Instance;
-            if (show && !holdFocus && vdir != null && vdir.Nearest(transform.position, site != null ? dist : ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult), true, out var cv, out float cd))
-            { cache = true; dist = cd; targetPos = cv.position; targetRadius = 0.9f; targetSeed = cv.seed; site = site ?? Placeholder; }
-            if (site == null) { XenoarchUI.Show(_dirPivot, false); XenoarchUI.Show(_dirLabel, show); if (show) _dirLabel.text = "NO SITE IN RANGE"; _dirHasAngle = false; return; }
-            bool onSite = dist <= targetRadius;
-            XenoarchUI.Show(_dirPivot, !onSite); XenoarchUI.Show(_dirLabel, true);
-
-            float yaw = ViewYaw();
-            var to = targetPos - transform.position;
-            float err = (1f - ScannerStats.HandheldAccuracy()) * (cache ? 1f : ScanTriangulation.ErrorScale(ScanTriangulation.Quality(site.Id)));
-            float wobble = (Mathf.PerlinNoise(Time.time * 0.6f, targetSeed * 0.013f) * 2f - 1f) * err * 35f; // "general direction"
-            float rel = Mathf.DeltaAngle(yaw, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + wobble);
-            _dirAngle = _dirHasAngle ? Mathf.LerpAngle(_dirAngle, rel, 1f - Mathf.Exp(-Time.deltaTime * 8f)) : rel; _dirHasAngle = true;
-            _dirPivot.style.rotate = new Rotate(new Angle(_dirAngle, AngleUnit.Degree));
-
-            // Blink like the pulse ring: faster when closer.
-            float near = 1f - Mathf.Clamp01(dist / (ScannerStats.HandheldRange() * Mathf.Max(1f, indicatorRangeMult)));
-            _dirBlink += Time.deltaTime * Mathf.Lerp(1.2f, 5f, near);
-            float a = 0.35f + 0.65f * (0.5f + 0.5f * Mathf.Cos(_dirBlink * Mathf.PI * 2f));
-            _dirArrow.style.opacity = a;
-            float shown = Mathf.Max(5f, Mathf.Round(dist * (1f + err * 0.3f) / 5f) * 5f);
-            _dirLabel.text = onSite ? (cache ? "DIG HERE" : "ON SITE") : $"{(cache ? "CACHE" : "SITE")} ~{shown:0} m";
-            _dirLabel.style.opacity = onSite ? 1f : Mathf.Lerp(0.6f, 1f, a);
         }
 
         /// <summary>Pinpoint lock: three quick rising tones.</summary>

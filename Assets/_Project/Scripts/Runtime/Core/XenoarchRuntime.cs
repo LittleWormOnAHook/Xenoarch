@@ -66,6 +66,8 @@ namespace DMI.Xenoarch.Core
             gameObject.AddComponent<DMI.Xenoarch.UI.MinimapHud>();
             gameObject.AddComponent<DMI.Xenoarch.UI.HelmetHud>();
             gameObject.AddComponent<DMI.Xenoarch.UI.DetectorSweepHud>();
+            gameObject.AddComponent<DMI.Xenoarch.UI.CompassHud>();            // t408s1998
+            gameObject.AddComponent<DMI.Xenoarch.UI.ScannerEdgeArrows>();     // t408s1998
             gameObject.AddComponent<DMI.Xenoarch.UI.InventoryWindow>();
             gameObject.AddComponent<DMI.Xenoarch.Materials.MaterialsDirector>();
             gameObject.AddComponent<DMI.Xenoarch.UI.PauseMenu>();
