@@ -164,6 +164,8 @@ namespace DMI.Xenoarch.Exploration
                 // hull" warnings); a static craft doesn't need convex colliders. The prefab asset is untouched.
                 foreach (var mc in inst.GetComponentsInChildren<MeshCollider>(true)) if (mc.convex && mc.GetComponentInParent<Rigidbody>(true) == null) mc.convex = false;
                 foreach (var rb in inst.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
+                // The craft has no Rigidbody, so its ~116 colliders were static colliders teleported every descent frame.
+                EnsureKinematicBody(holder);
                 if (def.shuttleScale > 0.01f) inst.transform.localScale = Vector3.one * def.shuttleScale; // match the bay shuttle
                 _gears.Clear();
                 if (def.shuttleGearNames != null)
@@ -364,6 +366,9 @@ namespace DMI.Xenoarch.Exploration
             if (holder == null || holder.childCount == 0) return;
             var inst = holder.GetChild(0);
             var before = inst.localPosition;
+            // Only the vendor scene pose (~1.4 km off). A preplaced zone child carries a deliberate small offset and slope tilt
+            // (Moon: (0.6, 2.9, 10.1) / (355, 356, 230)); zeroing that knocked the craft off its pad and level.
+            if (before.magnitude < 50f) return;
             if (before.sqrMagnitude > 0.01f || inst.localEulerAngles.sqrMagnitude > 0.01f)
                 Debug.Log($"[ShuttleDiag] reset prefab localPosition {before:F1} / euler {inst.localEulerAngles:F1} -> 0 (vendor prefab was saved at a scene pose)");
             inst.localPosition = Vector3.zero;
@@ -384,27 +389,91 @@ namespace DMI.Xenoarch.Exploration
         IEnumerator DescendToGround(Transform holder, Vector3 ground, string reason)
         {
             ResetPrefabLocalPose(holder);
+            // The Creepy Cat craft has no Rigidbody, so this used to teleport ~116 static colliders every frame and
+            // anything they came down on (rover, player, rocks) was shoved out by depenetration. A kinematic body moved
+            // with MovePosition in FixedUpdate sweeps them like a real moving object instead.
+            var rb = EnsureKinematicBody(holder.gameObject);
             holder.gameObject.SetActive(true);
             var start = new Vector3(ground.x, ground.y + DescendHeight, ground.z);
             holder.SetPositionAndRotation(start, holder.rotation);
-            Debug.Log($"[ShuttleDiag] descend start={start:F1} ground={ground:F1} reason={reason}");
+            if (rb != null) { rb.position = start; rb.interpolation = RigidbodyInterpolation.Interpolate; }
+            // Arrivals: hold at the top until the loading screen is gone (it used to land unseen behind it).
+            float wait = 0f;
+            while (SceneLoader.Busy && wait < 240f && holder != null) { wait += Time.unscaledDeltaTime; yield return null; }
+            if (holder == null) { _descend = null; yield break; }
+            Debug.Log($"[ShuttleDiag] descend start={start:F1} ground={ground:F1} reason={reason} heldBehindLoading={wait:0.0}s body={(rb != null ? "kinematic" : "none")}");
             float t = 0f;
             while (t < DescendSeconds && holder != null)
             {
-                t += Time.unscaledDeltaTime;
+                yield return new WaitForFixedUpdate();
+                if (holder == null) break;
+                t += Time.fixedDeltaTime;
                 float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / DescendSeconds));
-                var p = holder.position;
-                holder.position = new Vector3(ground.x, Mathf.Lerp(start.y, ground.y, u), ground.z);
-                yield return null;
+                var p = new Vector3(ground.x, Mathf.Lerp(start.y, ground.y, u), ground.z);
+                if (rb != null) rb.MovePosition(p); else holder.position = p;
             }
             if (holder != null)
             {
-                holder.position = new Vector3(ground.x, ground.y, ground.z);
+                if (rb != null) rb.interpolation = RigidbodyInterpolation.None; // parked: nothing to interpolate, no one-frame pull-back
+                holder.position = ground;
                 GroundByBounds(holder, WorldHeight(holder));
+                if (rb != null) { rb.position = holder.position; rb.rotation = holder.rotation; }
+                Physics.SyncTransforms();
                 Debug.Log($"[ShuttleDiag] descend done pos={holder.position:F1} reason={reason}");
+                LogTouchdown(holder, reason);
                 LogPlaced(holder.gameObject, reason);
             }
             _descend = null;
+        }
+
+        /// <summary>Runtime-only: a kinematic, gravity-free Rigidbody on the landing holder (never on the vendor prefab).
+        /// The shuttle is only ever moved by script, so it must never be simulated, fall, bounce or be pushed.</summary>
+        static Rigidbody EnsureKinematicBody(GameObject holder)
+        {
+            if (holder == null) return null;
+            var rb = holder.GetComponent<Rigidbody>();
+            if (rb == null) rb = holder.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
+            rb.interpolation = RigidbodyInterpolation.None;
+            return rb;
+        }
+
+        /// <summary>[ShuttleDiag] touchdown: Rigidbody state, collider make-up, the gap between the lowest collider and the
+        /// terrain (negative = buried in it), and any foreign collider inside the hull's box (the rover, player or rocks
+        /// there get pushed out by depenetration, which reads as bouncing).</summary>
+        void LogTouchdown(Transform holder, string reason)
+        {
+            if (holder == null) return;
+            var rb = holder.GetComponent<Rigidbody>();
+            int bodies = 0, dynamicBodies = 0, cols = 0, concave = 0;
+            foreach (var b in holder.GetComponentsInChildren<Rigidbody>(true)) { bodies++; if (!b.isKinematic) dynamicBodies++; }
+            bool any = false; Bounds hull = default;
+            foreach (var c in holder.GetComponentsInChildren<Collider>())
+            {
+                if (!c.enabled || c.isTrigger) continue;
+                cols++;
+                if (c is MeshCollider mc && !mc.convex) concave++;
+                if (any) hull.Encapsulate(c.bounds); else { hull = c.bounds; any = true; }
+            }
+            var hits = new List<string>();
+            if (any)
+            {
+                int n = Physics.OverlapBoxNonAlloc(hull.center, hull.extents, _buf, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < n && hits.Count < 6; i++)
+                {
+                    var c = _buf[i];
+                    if (c == null || c is TerrainCollider || c.transform.IsChildOf(holder)) continue;
+                    if (_terrain != null && c.transform.IsChildOf(_terrain.transform)) continue; // Digger chunks
+                    var arb = c.attachedRigidbody;
+                    hits.Add(arb != null ? $"{c.name}(rb{(arb.isKinematic ? " kinematic" : " dynamic")})" : c.name);
+                }
+            }
+            var hp = holder.position;
+            string gap = any && TrySurfaceY(hp.x, hp.z, out float surf, out _) ? (hull.min.y - surf).ToString("F2") : "n/a";
+            string rbs = rb != null ? $"kinematic={rb.isKinematic} gravity={rb.useGravity} interp={rb.interpolation} constraints={rb.constraints} sleeping={rb.IsSleeping()}" : "none";
+            Debug.Log($"[ShuttleDiag] touchdown reason={reason} pos={hp:F1} rb=({rbs}) bodies={bodies} dynamic={dynamicBodies} colliders={cols} concaveMesh={concave} colliderGapToTerrain={gap} m foreignInHullBox=[{string.Join(", ", hits)}]");
         }
 
         void Update()
@@ -460,7 +529,15 @@ namespace DMI.Xenoarch.Exploration
             var fwd = rig.Root.forward; fwd.y = 0f; if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
             float fp = _footprint > 0f ? _footprint : 8f;
             var around = rig.Root.position + fwd.normalized * (fp + 4f);
-            if (!PlaceOnGround(height, around, 80f, out var pos) && !PlaceOnGround(height, rig.Root.position, 160f, out pos))
+            Vector3 pos; float callYaw = rig.Root.eulerAngles.y + 90f; string callHow = "straight drop";
+            // Pick clear, semi-flat ground. The old straight drop in front of the player ignored the rover, rocks and the
+            // player (Moon log: rover deployed at (-228.7, 0.1, -144.0), the shuttle then came down 2.4 m from it).
+            var callRules = _rules; if (callRules.angles <= 0) callRules = LandingZonePicker.Rules.Default; callRules.footprint = fp;
+            var callAvoid = new List<(Vector3, float)> { (rig.Root.position, 3f + fp * 0.5f) };
+            var callScene = Shuttle.scene; var shuttleT = Shuttle.transform;
+            var callPick = LandingZonePicker.Pick(around, callAvoid, callRules, height, (c, rad) => Blocked(c, rad, callScene, _terrain, shuttleT, rig.Root), _yawOffset);
+            if (callPick.found && Vector3.Distance(callPick.position, rig.Root.position) <= 80f) { pos = callPick.position; callYaw = callPick.yaw; callHow = "clear ground " + callPick; }
+            else if (!PlaceOnGround(height, around, 80f, out pos) && !PlaceOnGround(height, rig.Root.position, 160f, out pos))
             {
                 message = "No valid ground near you for the shuttle to land.";
                 return false;
@@ -473,7 +550,7 @@ namespace DMI.Xenoarch.Exploration
             }
             ResetPrefabLocalPose(Shuttle.transform);
             Shuttle.SetActive(true);
-            Shuttle.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rig.Root.eulerAngles.y + 90f, 0f));
+            Shuttle.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, callYaw, 0f));
             GroundByBounds(Shuttle.transform, height);
             var landed = Shuttle.transform.position;
             if (!PlausibleGroundY(landed.y, rig.Root.position))
@@ -485,7 +562,7 @@ namespace DMI.Xenoarch.Exploration
                 }
                 else Debug.LogWarning($"[ShuttleDiag] CallToPlayer final Y still implausible at {landed:F1}");
             }
-            Debug.Log($"[ShuttleDiag] CallToPlayer dev={dev} player={rig.Root.position:F1} requested={pos:F1} ground={landed:F1}");
+            Debug.Log($"[ShuttleDiag] CallToPlayer dev={dev} player={rig.Root.position:F1} requested={pos:F1} ground={landed:F1} via {callHow}");
             if (!dev) _emergencyReadyAt = Time.unscaledTime + Mathf.Max(0f, emergencyCooldown);
             StartDescent(Shuttle.transform, landed, dev ? "dev summon (F7)" : "emergency call");
             message = dev ? "Shuttle summoned (dev F7)." : "Shuttle inbound. Landing near your position.";
