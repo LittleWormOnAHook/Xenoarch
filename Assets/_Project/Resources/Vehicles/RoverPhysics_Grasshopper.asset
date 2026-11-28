@@ -19,7 +19,7 @@ MonoBehaviour:
   comDown: 0.55
   comForeAft: 0
   spring: 200000
-  damper: 5500
+  damper: 16000
   travel: 0.28
   targetPosition: 0.45
   forceAppPointDistance: 0
