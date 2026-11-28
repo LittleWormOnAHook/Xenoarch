@@ -36,6 +36,8 @@ namespace DMI.Xenoarch.Vehicles
         public float damperRatio = 0.7f;
         [Tooltip("Scale the spring with planet gravity (g/9.81, clamped) so ride height and sag stay similar on the Moon and on Earth.")]
         public bool scaleSpringWithGravity = true;
+        [Tooltip("REVERT path: use the last-good 0f7a16d/b2065a1 authored springs (unscaled spring and damper, no zeta retune). Off keeps gravity-scaled springs and target zeta. Toggle on this asset; the prefab is not edited.")]
+        public bool useLastGoodAuthoredSprings = false;
         [Tooltip("WheelCollider unsprung mass (kg). Applied at runtime; the prefab is not edited.")]
         public float wheelMass = 25f;
 

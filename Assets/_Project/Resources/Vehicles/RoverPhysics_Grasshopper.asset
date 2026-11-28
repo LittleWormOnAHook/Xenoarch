@@ -22,6 +22,7 @@ MonoBehaviour:
   damper: 5500
   damperRatio: 0.7
   scaleSpringWithGravity: 1
+  useLastGoodAuthoredSprings: 0
   wheelMass: 25
   adaptToPlanet: 1
   minGravityScale: 0.15
