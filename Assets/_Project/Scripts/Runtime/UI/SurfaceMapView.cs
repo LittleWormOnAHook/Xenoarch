@@ -47,7 +47,7 @@ namespace DMI.Xenoarch.UI
         // Site / cache / base / landing markers are Kenney glyph elements (t155u icon style, classes in Xenoarch.uss).
         readonly List<VisualElement> _icons = new List<VisualElement>(), _halos = new List<VisualElement>();
         int _iconSig; bool _relayoutQueued;
-        VisualElement _ground;
+        VisualElement _ground, _paint;
         Vector2 _downPos, _lastPos; int _button = -1; bool _dragged;
 
         public static readonly Color SiteRed = new Color(0.95f, 0.2f, 0.15f), LandingGreen = new Color(0.35f, 1f, 0.55f), Amber = XenoarchPalette.Primary;
@@ -73,8 +73,15 @@ namespace DMI.Xenoarch.UI
                 _ground.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
             }
             Add(_ground);
+            // Painted marks (player arrow, shuttle, grid, scan ring) must sit above the relief
+            // texture. generateVisualContent on this element draws under children, so the
+            // texture was covering the arrow.
+            _paint = new VisualElement { pickingMode = PickingMode.Ignore, name = "map-paint" };
+            _paint.style.position = Position.Absolute;
+            _paint.style.left = 0; _paint.style.top = 0; _paint.style.right = 0; _paint.style.bottom = 0;
+            _paint.generateVisualContent += Draw;
+            Add(_paint);
             XenoarchIcons.EnsureStyles(this);
-            generateVisualContent += Draw;
             RegisterCallback<GeometryChangedEvent>(e =>
             {
                 float w = resolvedStyle.width;
@@ -122,7 +129,7 @@ namespace DMI.Xenoarch.UI
 
         float MetresToPx => contentRect.width / Mathf.Max(1f, ViewRect.width);
 
-        public void Rebuild() { Relayout(); MarkDirtyRepaint(); }
+        public void Rebuild() { Relayout(); _paint?.MarkDirtyRepaint(); }
 
         public void ResetView()
         {
@@ -165,7 +172,7 @@ namespace DMI.Xenoarch.UI
                 {
                     var h = new VisualElement { pickingMode = PickingMode.Ignore }; var ic = new VisualElement { pickingMode = PickingMode.Ignore };
                     // After the ground (index 0), under the labels.
-                    Insert(1, ic); Insert(1, h); _halos.Add(h); _icons.Add(ic);
+                    Insert(2, ic); Insert(2, h); _halos.Add(h); _icons.Add(ic); // after _ground and _paint
                 }
                 var halo = _halos[ii]; var icon = _icons[ii]; ii++;
                 var p = ToPx(m.world);
