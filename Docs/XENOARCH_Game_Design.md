@@ -29,7 +29,7 @@ Select destination → travel → orbital scan → identify anomalies → choose
 First-person, controller supplied by a **vendor FPC package (pending)** behind the `IPlayerRig` adapter. Phase 1A scenes use a static capsule placeholder.
 
 ## Starting kit (Phase 1A data, Implemented)
-Handheld Surface Scanner Mk I, Excavation Shovel, Precision Excavation Tool, 5 Sample Containers. The Excavation Brush is a pickup in the ship (used to test world persistence). The Basic Powered Drill exists as a definition for purchase later.
+Handheld Surface Scanner Mk I, Sonic Excavator (its Fine focus is the former Precision Excavation Tool), 5 Sample Containers. The Ultrasonic Brush is a pickup in the ship (used to test world persistence). The Sonic Burster (the former Basic Powered Drill) exists as a definition for purchase later.
 
 ## Environment
 Environment profiles (atmosphere, temperature band, radiation, visibility, gravity) gate equipment requirements; no survival micromanagement. Configurable gravity per location. — Planned (1B)

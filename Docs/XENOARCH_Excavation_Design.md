@@ -3,7 +3,7 @@
 _Phase 1A investigation, updated 2026-11-25 for Digger PRO. Status: **Planned** (gameplay in Phase 1C). Adapter interface + Digger adapter: **Implemented (compile-level)**._
 
 ## 1. Requirements (from the Phase 1 spec)
-Detect a buried object → remove surrounding material → expose it progressively → use precision tools near fragile finds → recover it → move it to inventory. Tool choice affects artifact condition. Excavation state must persist (no respawn, no reset). Localized dig sites only; no whole-planet deformation.
+Detect a buried object → remove surrounding material → expose it progressively → use the Sonic Excavator's Fine focus and the Ultrasonic Brush near fragile finds → recover it → move it to inventory. Tool choice affects artifact condition. Excavation state must persist (no respawn, no reset). Localized dig sites only; no whole-planet deformation.
 
 ## 2. Options compared
 
@@ -11,10 +11,10 @@ Detect a buried object → remove surrounding material → expose it progressive
 |---|---|---|---|---|---|
 | **Unity Terrain heightmap modification** | `TerrainData.SetHeights` / `SetHeightsDelayLOD` under the tool | Built-in, collision for free, works with existing terrain painting | Heightfield only: no overhangs, tunnels, chambers, or objects partially embedded in walls; resolution limited (e.g. 1 m+ per sample on large terrain, too coarse for brush work); terrain shared by whole scene, so saving deltas = saving height patches; holes need TerrainHoles | Cheap for small patches; `SyncHeightmap` + collider rebake costs ms per edit | S–M |
 | **Localized voxel excavation** (marching cubes/dual contouring on a small grid, e.g. 4×4×3 m at 5–10 cm) | Density field per dig site, remesh dirty chunks (Jobs + Burst), MeshCollider rebuild | True 3D: trenches, walls, overhangs, buried chambers; precise; easy to save (compressed density/material bytes per site); per-voxel material/hardness supports tool rules | Needs meshing code, chunking, collider rebakes; texturing via triplanar shader; must blend visually into surrounding terrain | Fine at site scale (a few 16³–32³ chunks); needs Burst for responsiveness | M–L |
-| **Modular diggable soil volumes** | Site is a stack of discrete soil "cells"/layers (prefab blocks or layered slabs, e.g. 25–50 cm). Tools remove/thin cells; artifacts sit in cells | Very simple, deterministic, trivially saveable (bitset/levels per cell), easy tool rules (shovel removes cell, brush removes last layer), fast | Blocky unless dressed with decals/particles/smoothing; coarse resolution; limited organic shapes | Excellent | S |
+| **Modular diggable soil volumes** | Site is a stack of discrete soil "cells"/layers (prefab blocks or layered slabs, e.g. 25–50 cm). Tools remove/thin cells; artifacts sit in cells | Very simple, deterministic, trivially saveable (bitset/levels per cell), easy tool rules (excavator removes cell, ultrasonic brush removes last layer), fast | Blocky unless dressed with decals/particles/smoothing; coarse resolution; limited organic shapes | Excellent | S |
 | **Mesh-based excavation** (CSG/boolean subtraction on a mesh) | Subtract tool shapes from a ground mesh (runtime CSG libraries) | Arbitrary shapes, no grid | Runtime CSG is fragile (degenerate triangles, cost grows with edit count), hard to serialize (store op list and replay), vendor libs needed | Degrades over many edits | M–L, high risk |
 | **Digger PRO (vendor, installed)** | Voxel layer on top of Unity Terrain: Burst jobs, chunked meshes, LODs; editor sculpting + runtime API (`DiggerMasterRuntime.ModifyAsyncBuffured`) | True 3D (caves, overhangs, tunnels) blended into the terrain; Terrain holes handled for us; voxel layers by depth with texture + destructible/indestructible; per-slot runtime persistence built in | Vendor code (do not edit); voxel resolution tied to terrain resolution × chunk settings, so very fine brush work stays a gameplay/VFX layer; persistence is Digger's own files, not our JSON | Burst/Jobs, async buffered edits; fine at site scale | S (adapter) |
-| **ASH surface deformation** (`ASHDeformationField` + `ASHDeformer` + accumulation shader) | Ping-pong render texture (R = layer pushed aside) sampled by a displacement/blend shader | Proven in URP in-house; great for footprints, dust/regolith trails, brush strokes on a surface layer | **Visual only**: no collision, no volume, no buried objects; texture window follows the player; saves only via texture bytes | Cheap | Reuse for VFX: S. As excavation: not viable |
+| **ASH surface deformation** (`ASHDeformationField` + `ASHDeformer` + accumulation shader) | Ping-pong render texture (R = layer pushed aside) sampled by a displacement/blend shader | Proven in URP in-house; great for footprints, dust/regolith trails, ultrasonic brush strokes on a surface layer | **Visual only**: no collision, no volume, no buried objects; texture window follows the player; saves only via texture bytes | Cheap | Reuse for VFX: S. As excavation: not viable |
 
 ## 3. Recommendation (decided 2026-11-25): hybrid, Digger PRO + Xenoarch cell data
 
@@ -25,7 +25,7 @@ Anthony chose Digger PRO (installed under `Assets/Digger`). The design is a **hy
 | Gameplay truth | Xenoarch `ExcavationSite` (Phase 1C) | Per-site bounded cell grid (variable cell size per site, e.g. 0.25 m default, finer for delicate sites). Each cell: remaining fill 0–1, material id (regolith/compacted/rock/ice), hardness. Artifacts placed in cells. Tool rules, artifact exposure, condition damage, recovery threshold. Saved in our versioned JSON (`excavation.sites`). |
 | World surface | Digger PRO via `IExcavationSurface` | Mirrors each accepted tool stroke as a voxel edit on the terrain (dig/add/smooth/paint holes). Gives the visual hole + collision, overhangs and tunnel walls. |
 | Entrances to underground areas | Unity Terrain holes **or** Digger | Authored entrances: Terrain hole (PaintHoles) + authored cave/room prefab. Player-dug entrances: Digger dig strokes through to an authored chamber volume. |
-| Polish (optional) | ASH deformation field | Dust/brush streaks on exposed surfaces. |
+| Polish (optional) | ASH deformation field | Dust/ultrasonic brush streaks on exposed surfaces. |
 
 Why: Digger gives real 3D digging and terrain sculpting without us writing a mesher; our cell grid keeps tool/condition rules deterministic, cheap to test and save, and independent of the vendor (if Digger is ever replaced, only the adapter changes).
 
@@ -35,7 +35,7 @@ Why: Digger gives real 3D digging and terrain sculpting without us writing a mes
 - Gameplay never calls Digger directly. No vendor files edited.
 
 ### 3.2 How the cell grid drives Digger (Phase 1C)
-1. Tool ray hits the site → `ExcavationSite` resolves affected cells, applies tool rules (shovel removes a whole cell layer quickly; precision tool a thin layer; brush only the last dust layer; drill breaks hard material), computes artifact damage.
+1. Tool ray hits the site → `ExcavationSite` resolves affected cells, applies tool rules (Sonic Excavator removes a whole cell layer quickly, and in Fine focus a thin layer; Ultrasonic Brush only the last dust layer; Sonic Burster breaks hard material), computes artifact damage.
 2. For each accepted stroke the site emits one `ExcavationEdit` at the stroke centre (radius ≈ tool radius, strength from removed fraction, `materialIndex` from the exposed cell material) → Digger.
 3. Rock/ice cells the current tool cannot break are refused by our rules first. Digger voxel layers can additionally be marked **indestructible** below the site floor (Advanced Voxel Generator depth layers) so nobody digs out of the site.
 4. Artifacts are our objects (prefabs placed from cell data), not voxels; exposure is computed from cell fill, so Digger mesh precision does not affect gameplay.

@@ -19,7 +19,7 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 - ☑ Compile verified in the open Editor (all 3 DMI assemblies built; see Development Log)
 - ☐ Smoke check `Xenoarch > Validate > Run Foundation Smoke Check` passed
 - ☐ EditMode tests (`DMI.Xenoarch.Tests.EditMode`, 5 tests) run in Test Runner
-- ☐ Manual Play Mode pass: Bootstrap → MainMenu → New Game → pickup brush → F5 → travel pads → F9 restores state without re-spawning the brush
+- ☐ Manual Play Mode pass: Bootstrap → MainMenu → New Game → pickup Ultrasonic Brush → F5 → travel pads → F9 restores state without re-spawning the brush
 - ☑ Git initialised, Unity .gitignore, local commits, no remote
 
 ## Phase 1 acceptance criteria (spec §27)
@@ -70,15 +70,15 @@ Legend: ☐ Planned · ◐ Implemented (not yet verified) · ☑ Tested (test na
 ## Phase 1C: Excavation and research (started 2026-11-25)
 First playable slice, batch 1C-1 (compiled clean 17:21 ET, smoke 114/0). Nothing below has been played by hand yet.
 - ◐ Dig sites: each site in Moon/Mars is a layered cell grid (0.25 m cells; dust / loose / compacted / bedrock floor), built at runtime from the site definition and rendered as a stepped trench mesh with collider inside a terrain hole. Excavation state saved per site (RLE cells, `excavation.sites`). Smoke: tool rules, bounded floor, save round trip.
-- ◐ Tools: 2 shovel (fast, damages finds), 3 precision tool (slow, safe), 4 brush (dust and loose soil only), 5 powered drill (anything but bedrock). Hold LMB/RT to dig, HUD shows soil, depth, exposure and condition.
+- ◐ Tools: 2 Sonic Excavator (fast, damages finds; 3 opens it in Fine focus: slow, safe), 4 Ultrasonic Brush (dust and loose soil only), 5 Sonic Burster (anything but bedrock). Hold LMB/RT to dig, HUD shows soil, depth, exposure and condition.
 - ◐ Buried artifacts: 22 placed across the 6 sites; hold E to recover at 50% exposure or more (prying before 90% costs condition). Recovery creates a unique instance (inventory item id + instance id) and never respawns.
 - ☑ ~30 artifact definitions (30), one civilization (the Vael, working name), condition, rarity, value formula (smoke)
 - ◐ Research lab (ship, swapped onto the existing "Research Laboratory" placeholder on the old test ring): cleaning, identification, material, age, civilization, restoration, translation (capped 60% in the Mk I lab), technology analysis. One timed job at a time. Rules + save in smoke.
 - ◐ Discovery chain evaluator (facts, prerequisites All/Any/Count, optional nodes, rewards, journal) + Moon-to-Mars chain: tablet -> origin -> translation 35% (Mars canyon site un-gated, revealed as an orbital anomaly) -> orbital scan -> navigation core -> decoded extrasolar coordinates; optional sensor lattice -> scanner tier +1. Smoke runs the whole chain and save/load.
 - ◐ Moon/Mars ground (batch 1C-2): Creepy Cat sample terrains (Moon_Closed_A 2000 m, Seamless_Mars_Surface 1500 m) rebuilt as our own TerrainData (heightmap 2049, 13.6 MB each, vendor layers + our soil layer), centred so the origin is at height 0; our placeholder objects snapped onto it. The batch-1 flat terrain is removed.
 - ◐ Digger PRO (batch 1C-2): set up for runtime in Moon/Mars (resolution x4, about 0.24 m / 0.18 m voxels) with `DiggerExcavationSurface`. The cell grid is the source of truth: it follows the terrain per column, every cut cell is carved into Digger, and on load the saved grid is replayed into Digger. With Digger present the trench mesh is off. Not played by hand yet.
-- ◐ Dig site styles (data, `Data/Excavation/DigStyle_*`): Regolith cache, Ice-bound vault (ice band: drill only), Dune shrine (soft sand), Canyon sediment (thin rock band). Each site references one. Smoke: bands drive hardness.
-- ◐ Big finds span 1-3 cells per side and 1-2 layers (tablet, navigation core, deep cache, spire cap, vault plate, relay fragment), so parts show first. Damage rule: only a crude tool (shovel, drill) cutting a find that is already visible damages it; precision tool and brush never do. Smoke covers both.
+- ◐ Dig site styles (data, `Data/Excavation/DigStyle_*`): Regolith cache, Ice-bound vault (ice band: burster only), Dune shrine (soft sand), Canyon sediment (thin rock band). Each site references one. Smoke: bands drive hardness.
+- ◐ Big finds span 1-3 cells per side and 1-2 layers (tablet, navigation core, deep cache, spire cap, vault plate, relay fragment), so parts show first. Damage rule: only a crude tool (Sonic Excavator in Wide/Mid/Tight focus, Sonic Burster) cutting a find that is already visible damages it; Fine focus and the Ultrasonic Brush never do. Smoke covers both.
 - ◐ Handheld scan: readings clear after 5 s; a pinpointing scan shows the beacon for 5 s, then a square border stays around the dig site (persists across reloads/saves).
 - ◐ Lab UI: each column scrolls vertically (keeps its scroll position while the lab refreshes).
 - ◐ Return to the ship from Moon/Mars/TradeHub always arrives at the airlock spawn.

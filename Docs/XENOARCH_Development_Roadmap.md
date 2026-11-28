@@ -36,7 +36,7 @@ _Status legend: Planned · Implemented · Tested · Incomplete._
 6. **Later.** Interstellar jumps reuse the same sequence with a longer tunnel (FTL range check from ShipState). The exterior `Fake` ship is used for any third-person departure/arrival shots.
 
 ## Expanded scope (requested 2026-11-25), in delivery order
-- **3A (done):** shovel depth/hold-to-dig, dig aim decal ring, loading screen + shader warm-up.
+- **3A (done):** Sonic Excavator (then the shovel) depth/hold-to-dig, dig aim decal ring, loading screen + shader warm-up.
 - **3B (done 2026-11-25, not yet play-tested):** airlock -> "Take Shuttle"; landed craft is a copy/instance of the Creepy Cat Mark 2 Shuttle (vendor prefab untouched; hangar later). Landing-zone choice; auto-pick of semi-flat ground near the dig site (slope threshold, footprint clearance, min distance from the grid); per-site `LandingZone` marker (gizmo, editable, saved in scene) overrides auto-pick. E at the shuttle fades back to the ship bay spawn. Scanner direction indicator to the nearest site.
 - **3C (done 2026-11-25, not yet play-tested):** solar-system map rotate/drag/zoom; galaxy map unlocked by discovery-chain info; orbit-scan terrain view with dig sites as red triangles and a selectable landing site near each.
 - **3D (done 2026-11-25, not yet play-tested):** per-planet minimap (orbit-scanned sites, random sites, shuttle); random valuable sites with data-driven loot tiers up to rare/super rare, handheld-scanner only; scan radius (orbital + handheld) as an upgradable stat.

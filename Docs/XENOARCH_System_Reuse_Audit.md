@@ -105,7 +105,7 @@ These were read only; nothing was modified.
 | `ArtifactStorage_Racks` | Lower/cargo deck `Interior_Bottom_01` (y −0.6): `P_Crate_Simple_01/02` stack at (4.4, −0.7, −2) and (−1.5..0.7, −0.6, 8.7); `P_Console_Small_01` (−4, −0.6, −4.2) as a cargo manifest console | Artifact storage container + UI |
 | `EquipmentStorage_Lockers` | Main deck `P_Char_Crate_01` (2, 5.4, −13.4) and `P_Crate_Simple_02` (5.8, 5.4, −2.7) | Equipment locker/crate interactable |
 | **Airlock** (debug travel to Moon) | Lower deck `Interior_Bottom_01/Pneumatic_Door_01` (static mesh, no script) | Becomes the exit/landing-ramp interactable; animate it with our own door component |
-| Excavation Brush pickup | Any crate/table on the main deck (e.g. `P_Char_Crate_01`) | Keep it a `WorldObjectId` pickup |
+| Ultrasonic Brush pickup | Any crate/table on the main deck (e.g. `P_Char_Crate_01`) | Keep it a `WorldObjectId` pickup |
 | Player spawn | Main deck corridor near the bridge, e.g. (0, 5.4, −10) facing −Z | Set when the ship goes into Ship_Starter |
 
 ### 6.3 FX and particles (`Prefabs/Fx`, 24 prefabs; particle materials already converted to URP Particles/Unlit)
