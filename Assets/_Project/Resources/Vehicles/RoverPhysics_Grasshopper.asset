@@ -20,7 +20,9 @@ MonoBehaviour:
   comForeAft: 0
   spring: 200000
   damper: 5500
-  damperRatio: 1.6
+  damperRatio: 0.7
+  scaleSpringWithGravity: 1
+  wheelMass: 25
   adaptToPlanet: 1
   minGravityScale: 0.15
   maxGravityScale: 2.5
@@ -52,6 +54,13 @@ MonoBehaviour:
   throttleRise: 0.45
   throttleFall: 0.22
   reverseEngageSpeed: 0.35
+  antiRoll: 60000
+  restDamping: 8
+  restAngularDamping: 8
+  restSpeed: 0.45
+  restSettleSeconds: 0.35
+  maxSuspensionSpeed: 4
+  exitRestSpeed: 0.3
   antiPitch: 18
   antiSquat: 10
   antiDive: 16

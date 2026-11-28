@@ -407,7 +407,7 @@ namespace DMI.Xenoarch.Vehicles
                 bool e = _input != null && _input.InteractPressed && (_interactor == null || _interactor.Target == null);
                 if (e)
                 {
-                    if (_rb.linearVelocity.magnitude > exitSpeed) Toast.Show("Stop the rover to get out.", 2f);
+                    if (!IsSlowEnoughToExit()) Toast.Show("Stop the rover to get out.", 2f);
                     else StartCoroutine(ExitRoutine());
                 }
             }
