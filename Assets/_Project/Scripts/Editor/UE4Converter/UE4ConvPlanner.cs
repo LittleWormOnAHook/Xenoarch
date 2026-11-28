@@ -67,7 +67,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
                         if (gltfOk) p.meshes.Add(MakeMesh(o, rep, f, rel, relDir, ext, stem));
                         else p.pendingGltf.Add(f);
                     }
-                    else if (TexExt.Contains(ext)) texEntries.Add(MakeTex(f, relDir, ext, stem));
+                    else if (TexExt.Contains(ext)) texEntries.Add(MakeTex(f, relDir, ext, stem, o.maskMIsMRA));
                     else if (AudioExt.Contains(ext))
                     {
                         if (o.copyAudio) p.audio.Add((f, J(p.dest, o.audioSubfolder, UE4Names.StripLead(relDir), Path.GetFileName(f))));
@@ -303,10 +303,11 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
 
         // ---- textures -------------------------------------------------------------------------------------------
 
-        static TexEntry MakeTex(string f, string relDir, string ext, string stem)
+        static TexEntry MakeTex(string f, string relDir, string ext, string stem, bool maskMIsMra = false)
         {
             var role = UE4Names.Classify(stem, out string key, out int[] layout, out bool invert, out bool gl, out bool dx);
-            return new TexEntry { src = f, relDir = relDir, stem = stem, ext = ext, role = role, layout = layout, invert = invert, gl = gl, dx = dx, key = key, normKey = UE4Names.Norm(key) };
+            if (maskMIsMra && role == TexRole.Metallic && stem.EndsWith("_M", StringComparison.OrdinalIgnoreCase)) { role = TexRole.Packed; layout = new[] { 2, 1, 0 }; }   // layout = {AO, rough, metal} channel indices
+        return new TexEntry { src = f, relDir = relDir, stem = stem, ext = ext, role = role, layout = layout, invert = invert, gl = gl, dx = dx, key = key, normKey = UE4Names.Norm(key) };
         }
 
         static void BuildSets(Plan p, ConversionReport rep, List<TexEntry> entries)

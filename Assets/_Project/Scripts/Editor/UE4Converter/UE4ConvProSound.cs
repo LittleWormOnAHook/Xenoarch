@@ -33,6 +33,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating) return;
             if (File.Exists(Trigger)) { File.Delete(Trigger); Run(false); }
             else if (File.Exists(RuinsTrigger)) { File.Delete(RuinsTrigger); RunRuins(false); }
+            else if (File.Exists("Temp/xenoarch_verify_converted.trigger")) { var p = File.ReadAllText("Temp/xenoarch_verify_converted.trigger").Trim(); File.Delete("Temp/xenoarch_verify_converted.trigger"); VerifyPrefabs(string.IsNullOrEmpty(p) ? RuinsOutput : p); }
         }
 
         [MenuItem("Xenoarch/Tools/UE4 \u2192 Unity: Extract Pro Sound Collection Audio")]
@@ -48,12 +49,50 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             var o = ConverterOptions.Load();
             o.sourceFolder = RuinsSource; o.destOverride = RuinsOutput; o.audioSubfolder = "Audio"; o.packName = "RuinsTreasureProps";
             o.soundsOnly = false; o.useUModel = true; o.meshFormat = UModelMesh.Psk; o.ueGame = "(auto-detect)"; o.exportPng = true; o.exportLods = false;
-            o.dryRun = false; o.overwrite = false; o.reuseStaging = true; o.keepStaging = false; o.makePrefabs = true; o.copyAudio = true;
+            o.dryRun = false; o.overwrite = true; o.reuseStaging = true; o.keepStaging = false; o.makePrefabs = true; o.copyAudio = true; o.maskMIsMRA = true;
             o.batchFolders = new System.Collections.Generic.List<string>();
             string exe = UModel.Find(o);
             if (exe == null) { Finish("Stopped: umodel.exe not found. " + UModel.MissingMessage, interactive, RuinsLog); return; }
             var rep = UE4Converter.Run(o);
             Finish(rep.Summary() + "\nUModel: " + rep.umodelSummary + "\nReport: " + rep.mdPath, interactive, RuinsLog);
+        }
+
+        /// <summary>Read-only check of converted prefabs: size in metres, face direction, material textures. Result in Logs/xenoarch_verify_converted.txt.</summary>
+        public static void VerifyPrefabs(string folder)
+        {
+            var sb = new System.Text.StringBuilder();
+            var guids = AssetDatabase.FindAssets("t:Prefab", new[] { folder });
+            int bad = 0;
+            foreach (var g in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(g);
+                var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (go == null) { sb.AppendLine("LOAD FAIL " + path); bad++; continue; }
+                var rs = go.GetComponentsInChildren<Renderer>(true);
+                Bounds b = default; bool first = true; int tex = 0, mats = 0, noTex = 0; double vote = 0; long tris = 0; var notes = new System.Collections.Generic.List<string>();
+                foreach (var r in rs)
+                {
+                    if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds);
+                    foreach (var m in r.sharedMaterials) { mats++; if (m == null) { notes.Add("null material"); continue; } if (m.HasProperty("_BaseMap") && m.GetTexture("_BaseMap") != null) tex++; else noTex++; }
+                    var mf = r.GetComponent<MeshFilter>();
+                    if (mf != null && mf.sharedMesh != null)
+                    {
+                        var me = mf.sharedMesh; var c = me.bounds.center;
+                        var mda = Mesh.AcquireReadOnlyMeshData(me); var md0 = mda[0];
+                        var vn = new Unity.Collections.NativeArray<Vector3>(md0.vertexCount, Unity.Collections.Allocator.Temp); md0.GetVertices(vn);
+                        var tn = new Unity.Collections.NativeArray<int>((int)md0.GetSubMesh(0).indexCount, Unity.Collections.Allocator.Temp);
+                        var v = vn.ToArray(); int[] t;
+                        { var all = new System.Collections.Generic.List<int>(); for (int sm = 0; sm < md0.subMeshCount; sm++) { var si = md0.GetSubMesh(sm); var tmp = new Unity.Collections.NativeArray<int>(si.indexCount, Unity.Collections.Allocator.Temp); md0.GetIndices(tmp, sm); all.AddRange(tmp.ToArray()); tmp.Dispose(); } t = all.ToArray(); }
+                        vn.Dispose(); tn.Dispose(); mda.Dispose();
+                        tris += t.Length / 3;
+                        for (int i = 0; i + 2 < t.Length; i += 3) { var a = v[t[i]]; var bb = v[t[i + 1]]; var cc = v[t[i + 2]]; vote += Vector3.Dot(Vector3.Cross(bb - a, cc - a), (a + bb + cc) / 3f - c) > 0 ? 1 : -1; }
+                    }
+                }
+                string dir = tris > 0 ? ((vote / tris) >= 0.5 ? "outward" : "INWARD?") : "n/a(not readable)";
+                sb.AppendLine($"{path.Substring(folder.Length)}  size {b.size.x:0.00} x {b.size.y:0.00} x {b.size.z:0.00} m  renderers {rs.Length}  mats {mats} (baseTex {tex}, none {noTex})  faces {dir} {(tris > 0 ? (vote / tris).ToString("0.00") : "")} {string.Join(",", notes)}");
+            }
+            sb.Insert(0, $"{guids.Length} prefabs, {bad} failed to load\n");
+            Directory.CreateDirectory("Logs"); File.WriteAllText("Logs/xenoarch_verify_converted.txt", sb.ToString());
         }
 
         static void Finish(string msg, bool dialog, string log = null)
@@ -73,7 +112,8 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
 
             o.sourceFolder = Path.Combine(root, Source);
             o.destOverride = Output; o.audioSubfolder = ""; o.packName = "ProSoundCollection_v4.26";
-            o.soundsOnly = true; o.useUModel = true; o.meshFormat = UModelMesh.None; o.ueGame = "(auto-detect)";   // verified: -game=ue4.26 makes UModel report every clip as empty; auto-detect exports them o.exportPng = false; o.exportLods = false;
+            o.soundsOnly = true; o.useUModel = true; o.meshFormat = UModelMesh.None; // verified: -game=ue4.26 makes UModel report every clip as empty; auto-detect exports them
+            o.ueGame = "(auto-detect)"; o.exportPng = false; o.exportLods = false;
             o.dryRun = false; o.overwrite = false; o.reuseStaging = true; o.keepStaging = false; o.makePrefabs = false; o.copyAudio = true;
             o.batchFolders = new System.Collections.Generic.List<string>();
 

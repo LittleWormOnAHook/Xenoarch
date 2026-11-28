@@ -191,6 +191,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
             {
                 _o.copyAudio = EditorGUILayout.Toggle("Copy audio (wav/ogg/mp3)", _o.copyAudio);
                 _o.soundsOnly = EditorGUILayout.Toggle("Sounds only", _o.soundsOnly);
+                _o.maskMIsMRA = EditorGUILayout.Toggle("_M = Metal/Rough/AO mask", _o.maskMIsMRA);
                 _o.overwrite = EditorGUILayout.Toggle(new GUIContent("Overwrite existing", "Off: anything that already exists at the destination is left alone and listed as skipped."), _o.overwrite);
                 _o.dryRun = EditorGUILayout.Toggle(new GUIContent("Dry run", "Scan and report what would happen; writes nothing under Assets."), _o.dryRun);
             }

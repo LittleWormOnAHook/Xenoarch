@@ -48,6 +48,7 @@ namespace DMI.Xenoarch.EditorTools.UE4Convert
         public bool exportPng = true;
         public bool exportLods = false;
         public bool keepStaging = false;
+        public bool maskMIsMRA = false;                // "_M" textures are packed masks: R=Metallic, G=Roughness, B=AO (inferred per pack)
         public bool soundsOnly = false;                 // skip meshes/textures/animations (UModel -nomesh -nostat -noanim -notex)
         public string destOverride = "";                // exact destination folder (ignores destRoot/packName)
         public string audioSubfolder = "Audio";         // "" puts clips straight under the destination
