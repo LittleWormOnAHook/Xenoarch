@@ -7,8 +7,8 @@ namespace DMI.Xenoarch.Audio
 {
     /// <summary>
     /// Extra footstep variations to append onto <see cref="FootstepSurfaceMap"/> at runtime. Existing ASH / project
-    /// clips stay as the fallback. Pro Sound Collection slots stay empty until the Unreal pack is converted.
-    /// Also registers Gravel and Grating surfaces.
+    /// clips stay as the fallback. Assigned Pro Sound walks are preferred when present; missing vendor refs are
+    /// skipped so a clone without the pack still uses the ASH clips. Also registers Gravel and Grating surfaces.
     /// </summary>
     [CreateAssetMenu(menuName = "Xenoarch/Audio/Pro Sound Footstep Catalog", fileName = "ProSoundFootstepCatalog")]
     public sealed class ProSoundFootstepCatalog : ScriptableObject

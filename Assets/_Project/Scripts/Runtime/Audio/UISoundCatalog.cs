@@ -4,8 +4,9 @@ using UnityEngine;
 namespace DMI.Xenoarch.Audio
 {
     /// <summary>
-    /// Clip slots for <see cref="UISound"/>. Temporary defaults are Kenney Interface / Sci-Fi (CC0) already in
-    /// Xenoarch_Free. Pro Sound Collection assignment is pending conversion of the Unreal .uasset pack.
+    /// Clip slots for <see cref="UISound"/>. <see cref="Entry.clip"/> holds the committed Kenney CC0 fallback
+    /// (always valid in a fresh clone). <see cref="Entry.vendorClip"/> holds a Pro Sound Collection clip when
+    /// that pack is extracted locally; missing vendor refs are skipped so a clone without the pack still plays Kenney.
     /// </summary>
     [CreateAssetMenu(menuName = "Xenoarch/Audio/UI Sound Catalog", fileName = "UISoundCatalog")]
     public sealed class UISoundCatalog : ScriptableObject
@@ -14,9 +15,14 @@ namespace DMI.Xenoarch.Audio
         public sealed class Entry
         {
             public UISoundEvent evt;
+            [Tooltip("Kenney CC0 fallback, committed with the repo.")]
             public AudioClip clip;
-            [Tooltip("Optional extra variations; a clip is picked at random with the primary clip.")]
+            [Tooltip("Optional extra Kenney (or other committed) variations.")]
             public AudioClip[] extras;
+            [Tooltip("Preferred Pro Sound Collection clip. May be missing on a clone that does not have the pack.")]
+            public AudioClip vendorClip;
+            [Tooltip("Optional extra Pro Sound variations. Null slots are ignored.")]
+            public AudioClip[] vendorExtras;
             [Range(0f, 1f)] public float volume = 1f;
             public Vector2 pitch = new Vector2(0.97f, 1.03f);
             [Tooltip("Minimum seconds between plays of this event (unscaled). Hover/slider/typing use this to avoid spam.")]
@@ -38,38 +44,45 @@ namespace DMI.Xenoarch.Audio
             return null;
         }
 
+        /// <summary>Prefers a present vendor (Pro Sound) clip; otherwise the Kenney fallback.</summary>
         public AudioClip Pick(UISoundEvent evt)
         {
             var e = Get(evt);
             if (e == null) return null;
-            int extra = 0;
-            if (e.extras != null)
-                for (int i = 0; i < e.extras.Length; i++)
-                    if (e.extras[i] != null) extra++;
-            int n = (e.clip != null ? 1 : 0) + extra;
-            if (n <= 0) return null;
-            if (n == 1) return e.clip != null ? e.clip : FirstExtra(e);
-            int pick = UnityEngine.Random.Range(0, n);
-            if (e.clip != null)
-            {
-                if (pick == 0) return e.clip;
-                pick--;
-            }
-            if (e.extras == null) return e.clip;
-            for (int i = 0; i < e.extras.Length; i++)
-            {
-                if (e.extras[i] == null) continue;
-                if (pick == 0) return e.extras[i];
-                pick--;
-            }
-            return e.clip;
+            var vendor = PickFrom(e.vendorClip, e.vendorExtras);
+            return vendor != null ? vendor : PickFrom(e.clip, e.extras);
         }
 
-        static AudioClip FirstExtra(Entry e)
+        static AudioClip PickFrom(AudioClip primary, AudioClip[] extras)
         {
-            if (e.extras == null) return null;
-            for (int i = 0; i < e.extras.Length; i++)
-                if (e.extras[i] != null) return e.extras[i];
+            int extra = 0;
+            if (extras != null)
+                for (int i = 0; i < extras.Length; i++)
+                    if (extras[i] != null) extra++;
+            int n = (primary != null ? 1 : 0) + extra;
+            if (n <= 0) return null;
+            if (n == 1) return primary != null ? primary : First(extras);
+            int pick = UnityEngine.Random.Range(0, n);
+            if (primary != null)
+            {
+                if (pick == 0) return primary;
+                pick--;
+            }
+            if (extras == null) return primary;
+            for (int i = 0; i < extras.Length; i++)
+            {
+                if (extras[i] == null) continue;
+                if (pick == 0) return extras[i];
+                pick--;
+            }
+            return primary;
+        }
+
+        static AudioClip First(AudioClip[] extras)
+        {
+            if (extras == null) return null;
+            for (int i = 0; i < extras.Length; i++)
+                if (extras[i] != null) return extras[i];
             return null;
         }
     }

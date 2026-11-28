@@ -10,6 +10,188 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d3dd3f11b1755a41a6e57923e42262e, type: 3}
-  m_Name: ProSoundFootstepCatalog
-  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Audio.ProSoundFootstepCatalog
-  surfaces: []
+  m_Name: 
+  m_EditorClassIdentifier: 
+  surfaces:
+  - surfaceId: MoonRegolith
+    clips:
+    - {fileID: 8300000, guid: 58f76efeabe97ce40a045cb69a1bc50d, type: 3}
+    - {fileID: 8300000, guid: 0410b8ada0853b1459639a5f455500df, type: 3}
+    - {fileID: 8300000, guid: 98185912e5ebaae4ba424edbfa295d0d, type: 3}
+    - {fileID: 8300000, guid: 1d3bf34d924c75548bd9c0ba0db40bdd, type: 3}
+    - {fileID: 8300000, guid: 48377067e3ad87d4590082b32e1d7068, type: 3}
+    - {fileID: 8300000, guid: c7c22ed2a4acde34eaf410e20890a183, type: 3}
+    - {fileID: 8300000, guid: 1247baf723b4b3a4391cd1385d7009d4, type: 3}
+    - {fileID: 8300000, guid: 75bf1ad173d53fa4bafd0139c104bb58, type: 3}
+    - {fileID: 8300000, guid: 2fb9aa8241ba2244c9a1d9e2fb299187, type: 3}
+    - {fileID: 8300000, guid: 839b03e77a096a34daab98be4b6de30b, type: 3}
+    - {fileID: 8300000, guid: 252eaaac32b5d314e8ddd277e232ce23, type: 3}
+    - {fileID: 8300000, guid: 4faec181a006a5f43a0b3430cd1856f9, type: 3}
+  - surfaceId: Dust
+    clips:
+    - {fileID: 8300000, guid: b67d343dc79566b4fba37ab7f688d775, type: 3}
+    - {fileID: 8300000, guid: b1d597ca34775624ea20d2a5536b1ae9, type: 3}
+    - {fileID: 8300000, guid: dc2e0d9c6abd06f4c9dcf03f6c939171, type: 3}
+    - {fileID: 8300000, guid: c84a9df4596b1a1479c310aace6a9287, type: 3}
+    - {fileID: 8300000, guid: 802dc726b0d4b26458d07a0d32f25779, type: 3}
+    - {fileID: 8300000, guid: 83bef795f4fe3b64c9a5748058c80d00, type: 3}
+    - {fileID: 8300000, guid: ce495332003f36249bfa55ec500460dd, type: 3}
+    - {fileID: 8300000, guid: 0181472576a5aed4ebf9c3654bc34e64, type: 3}
+    - {fileID: 8300000, guid: 787bc77adf4c9834e98e262552c432de, type: 3}
+    - {fileID: 8300000, guid: 1b9963228d99ac14d80f394119324aa2, type: 3}
+    - {fileID: 8300000, guid: 6cb3c4649a4aee9458044344d95ba2a6, type: 3}
+    - {fileID: 8300000, guid: ff92e20a3dbd1c9499c207ee322c12ce, type: 3}
+  - surfaceId: Sand
+    clips:
+    - {fileID: 8300000, guid: 58f76efeabe97ce40a045cb69a1bc50d, type: 3}
+    - {fileID: 8300000, guid: 0410b8ada0853b1459639a5f455500df, type: 3}
+    - {fileID: 8300000, guid: 98185912e5ebaae4ba424edbfa295d0d, type: 3}
+    - {fileID: 8300000, guid: 1d3bf34d924c75548bd9c0ba0db40bdd, type: 3}
+    - {fileID: 8300000, guid: 48377067e3ad87d4590082b32e1d7068, type: 3}
+    - {fileID: 8300000, guid: c7c22ed2a4acde34eaf410e20890a183, type: 3}
+    - {fileID: 8300000, guid: 1247baf723b4b3a4391cd1385d7009d4, type: 3}
+    - {fileID: 8300000, guid: 75bf1ad173d53fa4bafd0139c104bb58, type: 3}
+    - {fileID: 8300000, guid: 2fb9aa8241ba2244c9a1d9e2fb299187, type: 3}
+    - {fileID: 8300000, guid: 839b03e77a096a34daab98be4b6de30b, type: 3}
+  - surfaceId: Snow
+    clips:
+    - {fileID: 8300000, guid: ed1f40115617caf4386fa30f65847f9f, type: 3}
+    - {fileID: 8300000, guid: 28508e7b076074e40b41f97c582d4cde, type: 3}
+    - {fileID: 8300000, guid: 5fced04b9be83584886222eeebb968dd, type: 3}
+    - {fileID: 8300000, guid: 12e17e463beb44c47b0fdd657a67e185, type: 3}
+    - {fileID: 8300000, guid: e6ef25186e98f014b888bb432ce58bd8, type: 3}
+    - {fileID: 8300000, guid: 81f889017bc66d64399f34d8fb79b447, type: 3}
+    - {fileID: 8300000, guid: 4f654b77d3fdebf4f9c48d6db7f05424, type: 3}
+    - {fileID: 8300000, guid: 60120c88cf42abc478ffe103bd4f37f7, type: 3}
+    - {fileID: 8300000, guid: 5ef556f2388d25f4282990b04b4ecc1c, type: 3}
+    - {fileID: 8300000, guid: 8cce5a4470fed1749a8ce1758be74865, type: 3}
+    - {fileID: 8300000, guid: e5bdfdda71a10d246894db1dcde8d6cb, type: 3}
+    - {fileID: 8300000, guid: 930edb5033498174cb971dd8a5956e36, type: 3}
+  - surfaceId: Mud
+    clips:
+    - {fileID: 8300000, guid: db2d1f8edbde90445917213e0872356b, type: 3}
+    - {fileID: 8300000, guid: 0798e46ce64e16a47abee4313eefd8e5, type: 3}
+    - {fileID: 8300000, guid: 070f88f0572eb9f498bc399007ecf91c, type: 3}
+    - {fileID: 8300000, guid: b88d7b1374f84924985869572c0af90c, type: 3}
+    - {fileID: 8300000, guid: 20f5aa77cb7f20a43aec1d368abceba3, type: 3}
+    - {fileID: 8300000, guid: 851fefd067cfe264ca4e80a81ca3071a, type: 3}
+    - {fileID: 8300000, guid: 7601ce8921cb77246a4e0bfbf7e72164, type: 3}
+    - {fileID: 8300000, guid: 163827cc3d852d14b9d0b0028e2072b9, type: 3}
+    - {fileID: 8300000, guid: 657426dd4b0d5bc40bb19e0cde1e05e3, type: 3}
+  - surfaceId: Dirt
+    clips:
+    - {fileID: 8300000, guid: b67d343dc79566b4fba37ab7f688d775, type: 3}
+    - {fileID: 8300000, guid: b1d597ca34775624ea20d2a5536b1ae9, type: 3}
+    - {fileID: 8300000, guid: dc2e0d9c6abd06f4c9dcf03f6c939171, type: 3}
+    - {fileID: 8300000, guid: c84a9df4596b1a1479c310aace6a9287, type: 3}
+    - {fileID: 8300000, guid: 802dc726b0d4b26458d07a0d32f25779, type: 3}
+    - {fileID: 8300000, guid: 83bef795f4fe3b64c9a5748058c80d00, type: 3}
+    - {fileID: 8300000, guid: ce495332003f36249bfa55ec500460dd, type: 3}
+    - {fileID: 8300000, guid: 0181472576a5aed4ebf9c3654bc34e64, type: 3}
+    - {fileID: 8300000, guid: 787bc77adf4c9834e98e262552c432de, type: 3}
+    - {fileID: 8300000, guid: 1b9963228d99ac14d80f394119324aa2, type: 3}
+    - {fileID: 8300000, guid: 6cb3c4649a4aee9458044344d95ba2a6, type: 3}
+    - {fileID: 8300000, guid: ff92e20a3dbd1c9499c207ee322c12ce, type: 3}
+  - surfaceId: Rock
+    clips:
+    - {fileID: 8300000, guid: 4fcfbef2472e61546af6718945ab1443, type: 3}
+    - {fileID: 8300000, guid: ee292b2ce11dca247b7256ed26a5d1bc, type: 3}
+    - {fileID: 8300000, guid: 9df9e0cca469c04449116dbfc55ad799, type: 3}
+    - {fileID: 8300000, guid: c2fddafea4136484199830d333433da6, type: 3}
+    - {fileID: 8300000, guid: 9649c5cc9b02c1044a42333a4c024f6a, type: 3}
+    - {fileID: 8300000, guid: bb0a0d212d7b9ea4c9c4beadffda75d8, type: 3}
+    - {fileID: 8300000, guid: 508ef9ec99d87a44d8c4fd0fc2c47fb2, type: 3}
+    - {fileID: 8300000, guid: 941700e412500ab498d93dcd82fa633a, type: 3}
+    - {fileID: 8300000, guid: f8851c15ca391f842a90d29113030804, type: 3}
+    - {fileID: 8300000, guid: ffb202130cc42824d82205f341cd5794, type: 3}
+    - {fileID: 8300000, guid: 2cf89a637e2acce43bf9b31b7e55ab7b, type: 3}
+    - {fileID: 8300000, guid: 334ca75fb5b98594f9a23a61d25b91a5, type: 3}
+  - surfaceId: Ice
+    clips:
+    - {fileID: 8300000, guid: 13f4467ca67c38f4e95fcc4bf29136b6, type: 3}
+    - {fileID: 8300000, guid: fa32e4095325f214f9f4f9c96b2abf6f, type: 3}
+    - {fileID: 8300000, guid: 36b2fa7075aa83a4d99782b352fa23a7, type: 3}
+    - {fileID: 8300000, guid: a894b1e91b63580408741c6b9e79a336, type: 3}
+    - {fileID: 8300000, guid: be31697db1801b145a764088f96493e9, type: 3}
+    - {fileID: 8300000, guid: f42d67d57aa2cff4b8ae8a4cd5a1b719, type: 3}
+    - {fileID: 8300000, guid: 761fa175a5810af44ba47a4f202cabd8, type: 3}
+    - {fileID: 8300000, guid: ad52a183e6ecdec4b999e93980e6d194, type: 3}
+  - surfaceId: Basalt
+    clips:
+    - {fileID: 8300000, guid: 4fcfbef2472e61546af6718945ab1443, type: 3}
+    - {fileID: 8300000, guid: ee292b2ce11dca247b7256ed26a5d1bc, type: 3}
+    - {fileID: 8300000, guid: 9df9e0cca469c04449116dbfc55ad799, type: 3}
+    - {fileID: 8300000, guid: c2fddafea4136484199830d333433da6, type: 3}
+    - {fileID: 8300000, guid: 9649c5cc9b02c1044a42333a4c024f6a, type: 3}
+    - {fileID: 8300000, guid: bb0a0d212d7b9ea4c9c4beadffda75d8, type: 3}
+    - {fileID: 8300000, guid: 508ef9ec99d87a44d8c4fd0fc2c47fb2, type: 3}
+    - {fileID: 8300000, guid: 941700e412500ab498d93dcd82fa633a, type: 3}
+    - {fileID: 8300000, guid: f8851c15ca391f842a90d29113030804, type: 3}
+    - {fileID: 8300000, guid: ffb202130cc42824d82205f341cd5794, type: 3}
+    - {fileID: 8300000, guid: 2cf89a637e2acce43bf9b31b7e55ab7b, type: 3}
+    - {fileID: 8300000, guid: 334ca75fb5b98594f9a23a61d25b91a5, type: 3}
+  - surfaceId: Metal
+    clips:
+    - {fileID: 8300000, guid: 6c0aaa04b1a9a494cbc41a44d39efd6a, type: 3}
+    - {fileID: 8300000, guid: 2f752dba9484ff64fa19f6c7cba78f9c, type: 3}
+    - {fileID: 8300000, guid: a9c45ec25c642744b8225ed6683a2b46, type: 3}
+    - {fileID: 8300000, guid: 3b34041f86a6de04a84b19dd70731207, type: 3}
+    - {fileID: 8300000, guid: 630c42523d36af44095035acf48d66d8, type: 3}
+    - {fileID: 8300000, guid: 6c15f1195ac90d44bb6bd4e8cc582d57, type: 3}
+    - {fileID: 8300000, guid: 227b926cf88a28243b4712b628ac4edb, type: 3}
+    - {fileID: 8300000, guid: 0a2274f3959721c4ba1b59cdcb45ccc9, type: 3}
+    - {fileID: 8300000, guid: 9a1388d5a0d16ba419bfe996e75b60fa, type: 3}
+    - {fileID: 8300000, guid: 420b33240dd1c734999f30deda9f87d8, type: 3}
+    - {fileID: 8300000, guid: 2224df5e05baa1247855b6819183fe62, type: 3}
+    - {fileID: 8300000, guid: e9ac1f642b53665438cfe707e693265b, type: 3}
+  - surfaceId: Gravel
+    clips:
+    - {fileID: 8300000, guid: 252eaaac32b5d314e8ddd277e232ce23, type: 3}
+    - {fileID: 8300000, guid: 4faec181a006a5f43a0b3430cd1856f9, type: 3}
+    - {fileID: 8300000, guid: eeb4d0338b35a2145b3c59c20d26d887, type: 3}
+    - {fileID: 8300000, guid: 2e504f158546d634693d163ad73cd08d, type: 3}
+    - {fileID: 8300000, guid: a6306d731237dd847bf15d0c9ee0d0d6, type: 3}
+    - {fileID: 8300000, guid: b7816bb8fb54f3e4aa5b41146d6bbc1e, type: 3}
+    - {fileID: 8300000, guid: 026cdf80561f9fe4c9333538c433fdaa, type: 3}
+    - {fileID: 8300000, guid: 2f0c7d883f25ff14aafbe1c1c40f4632, type: 3}
+    - {fileID: 8300000, guid: b8fcf8a1f42265f4fa91c8132d481ba6, type: 3}
+    - {fileID: 8300000, guid: 56c0381416c7e134886ec4a2c19974c3, type: 3}
+    - {fileID: 8300000, guid: 5ccc8d1685380ef4d8b65fc5818f0476, type: 3}
+    - {fileID: 8300000, guid: 9acc38cda03645e44841d040c540c10a, type: 3}
+  - surfaceId: Grating
+    clips:
+    - {fileID: 8300000, guid: ceb49be5f942d97418d829675011c083, type: 3}
+    - {fileID: 8300000, guid: fa99f2cf12682db4d8dc744aef06fd36, type: 3}
+    - {fileID: 8300000, guid: c0fe32b4da196044c897e1ee07214fb3, type: 3}
+    - {fileID: 8300000, guid: bd402ce413b377744b157894f3c6ca54, type: 3}
+    - {fileID: 8300000, guid: 4f372db6f36004344894fa1c2cc1a605, type: 3}
+    - {fileID: 8300000, guid: f989f08400e0d4a4d87cd71fae850995, type: 3}
+    - {fileID: 8300000, guid: 5ca4cab9dea4fd04b9284dbd6c52afdb, type: 3}
+    - {fileID: 8300000, guid: fae05b4f1a340ce4f9096fa430e566e8, type: 3}
+    - {fileID: 8300000, guid: b1e6eeaef8610134a9e83c60ca8a2ebe, type: 3}
+    - {fileID: 8300000, guid: 9ba5771733805fe439930a683118a8c7, type: 3}
+  - surfaceId: Wood
+    clips:
+    - {fileID: 8300000, guid: b9b9d96c3d2bcb649a4d115fcea39f26, type: 3}
+    - {fileID: 8300000, guid: 2ae97078ef936b840891082287d64954, type: 3}
+    - {fileID: 8300000, guid: a1d2fbb23494f3545bbd3ea6e7a0c7f1, type: 3}
+    - {fileID: 8300000, guid: 7fdab59ef3c7aaf4db9d9b9d8e56dbcc, type: 3}
+    - {fileID: 8300000, guid: 58f084feceab1a04984ede06846937c0, type: 3}
+    - {fileID: 8300000, guid: b16259650b0f4cb4d94a77f95c7fa7a3, type: 3}
+    - {fileID: 8300000, guid: 346d0df286e1c5940b0dd7d7fb4fce88, type: 3}
+    - {fileID: 8300000, guid: 240c195cabecbd04cab234259d708153, type: 3}
+    - {fileID: 8300000, guid: 6e88a9900b47bac4585d78b2a459d1b6, type: 3}
+    - {fileID: 8300000, guid: 2a01e305885b3fc47963e2e4aef50a79, type: 3}
+    - {fileID: 8300000, guid: 3343791f7ba49604caeb3f9022a24bf9, type: 3}
+    - {fileID: 8300000, guid: a7fff668842f31144b1f0948321c14ea, type: 3}
+  - surfaceId: Water
+    clips:
+    - {fileID: 8300000, guid: e4752b742b98f8047ac8c0ee7989a498, type: 3}
+    - {fileID: 8300000, guid: 6ea04324f99d6b34195f43b3a248da68, type: 3}
+    - {fileID: 8300000, guid: cfaf47a6531086243974eb7a0cfd055a, type: 3}
+    - {fileID: 8300000, guid: 36640eb9bcb91314cb81984c7d49fa3c, type: 3}
+    - {fileID: 8300000, guid: 90a264c03d52ca84599d7f57b192066e, type: 3}
+    - {fileID: 8300000, guid: 4aa3760b2e3f9f048921f0d96c994820, type: 3}
+    - {fileID: 8300000, guid: f8df9ced2aedf784fb81d6cdd9e72f46, type: 3}
+    - {fileID: 8300000, guid: e50440607d60f3f41bbcaacff836af14, type: 3}
+    - {fileID: 8300000, guid: df4ddf3b3fd58f54a8129d18dd77d6ec, type: 3}

@@ -7,9 +7,9 @@ using UnityEngine;
 namespace DMI.Xenoarch.Editor
 {
     /// <summary>
-    /// Creates the UI / footstep sound catalogs and fills UI slots with temporary Kenney CC0 clips already in
-    /// Xenoarch_Free. When converted Pro Sound Collection wavs appear under Assets/Pro Sound Collection (or
-    /// Extracted/), this prefers those clips instead. Does not copy or move vendor files.
+    /// Creates the UI / footstep sound catalogs. Kenney CC0 clips (in Xenoarch_Free) stay in the committed
+    /// fallback slots. When Pro Sound Collection wavs are present under Assets/Pro Sound Collection v4.26 Audio,
+    /// they are assigned to vendor slots (preferred at runtime). Does not copy or move vendor files.
     /// </summary>
     [InitializeOnLoad]
     public static class ProSoundCatalogBuilder
@@ -20,17 +20,47 @@ namespace DMI.Xenoarch.Editor
         const string StubPath = "Assets/_Project/Resources/Audio/UISoundCatalogStub.asset";
         const string KenneyUi = "Assets/Xenoarch_Free/Audio/Kenney_InterfaceSounds/";
         const string KenneySciFi = "Assets/Xenoarch_Free/Audio/Kenney_SciFiSounds/";
+        const string ExtractedStereo = "Assets/Pro Sound Collection v4.26 Audio/ProSoundCollection";
+        const string ExtractedMono = "Assets/Pro Sound Collection v4.26 Audio/ProSoundCollectionMONO";
+        const int FootstepCap = 12;
 
-        static ProSoundCatalogBuilder()
+        static readonly string[] LegacyExtractedRoots =
         {
-            EditorApplication.delayCall += EnsureCatalogs;
+            "Assets/Pro Sound Collection v4.26 Audio",
+            "Assets/Pro Sound Collection",
+            "Assets/ProSoundCollection",
+            "Assets/RUINS/Pro Sound Collection v4.26/Extracted"
+        };
+
+        [InitializeOnLoadMethod]
+        static void Boot()
+        {
+            EditorApplication.delayCall += RunAfterReload;
+        }
+
+        static void RunAfterReload()
+        {
+            var project = System.IO.Directory.GetParent(Application.dataPath)?.FullName;
+            var trigger = project != null
+                ? System.IO.Path.Combine(project, "Temp", "xenoarch_rebuild_uisound.trigger")
+                : null;
+            bool force = !string.IsNullOrEmpty(trigger) && System.IO.File.Exists(trigger);
+            // Only run a full rebuild when explicitly requested. Indexing the extracted
+            // pack (~10k clips) on every domain reload stalls the Editor for minutes.
+            if (!force) return;
+            System.IO.File.Delete(trigger);
+            Debug.Log("[Xenoarch] Rebuilding UI sound catalogs (trigger).");
+            EnsureCatalogs(true);
         }
 
         [MenuItem("Xenoarch/Audio/Rebuild UI Sound Catalog")]
         public static void RebuildMenu()
         {
             EnsureCatalogs(force: true);
-            Debug.Log("[Xenoarch] UI sound catalogs rebuilt. Pro Sound Collection assignment is pending .uasset conversion.");
+            int n = CountVendor();
+            Debug.Log(n > 0
+                ? $"[Xenoarch] UI sound catalogs rebuilt with {n} Pro Sound vendor UI clips (Kenney kept as fallback)."
+                : "[Xenoarch] UI sound catalogs rebuilt. Pro Sound Collection wavs not found; Kenney fallbacks are in use.");
         }
 
         static void EnsureCatalogs() => EnsureCatalogs(false);
@@ -82,15 +112,31 @@ namespace DMI.Xenoarch.Editor
             foreach (var e in ui.entries)
             {
                 if (e == null) continue;
-                if (e.clip != null && !force) continue;
                 var path = KenneyPath(e.evt);
                 if (string.IsNullOrEmpty(path)) continue;
-                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-                if (clip != null) e.clip = clip;
+                var kenney = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (kenney == null) continue;
+                // If an older build stored a Pro Sound clip in the fallback slot, move it to the vendor slot.
+                if (e.clip != null && e.clip != kenney && LooksLikeProSound(e.clip.name) && e.vendorClip == null)
+                    e.vendorClip = e.clip;
+                if (e.clip == null || force || LooksLikeProSound(e.clip.name))
+                    e.clip = kenney;
             }
             ui.muteWhileLoading = true;
             if (ui.volume <= 0f) ui.volume = 1f;
             EditorUtility.SetDirty(ui);
+        }
+
+        static bool LooksLikeProSound(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            return name.StartsWith("ui_menu_", StringComparison.OrdinalIgnoreCase)
+                   || name.StartsWith("sci-fi_", StringComparison.OrdinalIgnoreCase)
+                   || name.StartsWith("footstep_", StringComparison.OrdinalIgnoreCase)
+                   || name.StartsWith("item_pickup_", StringComparison.OrdinalIgnoreCase)
+                   || name.StartsWith("collect_item", StringComparison.OrdinalIgnoreCase)
+                   || name.StartsWith("chime_bell_", StringComparison.OrdinalIgnoreCase)
+                   || name.StartsWith("small_box_", StringComparison.OrdinalIgnoreCase);
         }
 
         static UISoundCatalog.Entry[] DefaultEntries()
@@ -161,17 +207,12 @@ namespace DMI.Xenoarch.Editor
             }
         }
 
-        /// <summary>If converted wavs from Pro Sound Collection are present, prefer them over Kenney temps.</summary>
         static void TryAssignConvertedProSound(UISoundCatalog ui, ProSoundFootstepCatalog feet)
         {
-            // Future-proof: look for extracted / converted wavs the UE4 converter may write later.
-            string[] roots =
-            {
-                "Assets/Pro Sound Collection",
-                "Assets/ProSoundCollection",
-                "Assets/RUINS/Pro Sound Collection v4.26/Extracted"
-            };
-            // UI name map used once conversion lands.
+            // Stereo first for UI (do not overwrite with mono). Footsteps are indexed mono-first below.
+            var uiClips = IndexAudio(new[] { ExtractedStereo, ExtractedMono }.ConcatLegacy());
+            if (uiClips.Count == 0) return;
+
             var want = new Dictionary<UISoundEvent, string[]>
             {
                 { UISoundEvent.Click, new[] { "ui_menu_button_click_16" } },
@@ -191,41 +232,49 @@ namespace DMI.Xenoarch.Editor
                 { UISoundEvent.MapPing, new[] { "sci-fi_radar_ui_scan_01" } },
                 { UISoundEvent.TerminalPowerOn, new[] { "sci-fi_power_on_rise_beep_01" } },
             };
-            var clips = IndexAudio(roots);
-            if (clips.Count == 0) return;
             bool any = false;
             foreach (var e in ui.entries)
             {
                 if (e == null || !want.TryGetValue(e.evt, out var names)) continue;
-                var found = FindClip(clips, names);
-                if (found != null) { e.clip = found; any = true; }
+                var found = FindClip(uiClips, names);
+                if (found != null) { e.vendorClip = found; any = true; }
             }
             if (any) EditorUtility.SetDirty(ui);
 
-            AssignFoot(feet, clips, "MoonRegolith", "footstep_dirt_loose_", "footstep_gravel_walk_");
-            AssignFoot(feet, clips, "Dust", "footstep_dirt_walk_");
-            AssignFoot(feet, clips, "Sand", "footstep_dirt_loose_");
-            AssignFoot(feet, clips, "Snow", "footstep_snow_walk_");
-            AssignFoot(feet, clips, "Mud", "footstep_mud_walk_");
-            AssignFoot(feet, clips, "Dirt", "footstep_dirt_walk_");
-            AssignFoot(feet, clips, "Rock", "footstep_concrete_walk_");
-            AssignFoot(feet, clips, "Ice", "footstep_ice_crunchy_walk_");
-            AssignFoot(feet, clips, "Basalt", "footstep_concrete_walk_");
-            AssignFoot(feet, clips, "Metal", "footstep_metal_low_walk_");
-            AssignFoot(feet, clips, "Gravel", "footstep_gravel_walk_");
-            AssignFoot(feet, clips, "Grating", "footstep_metal_high_walk_");
-            AssignFoot(feet, clips, "Wood", "footstep_wood_walk_");
-            AssignFoot(feet, clips, "Water", "footstep_water_walk_");
+            // Mono walks first (cleaner for world footsteps), then stereo if a prefix is missing.
+            var footClips = IndexAudio(new[] { ExtractedMono, ExtractedStereo }.ConcatLegacy());
+            AssignFoot(feet, footClips, "MoonRegolith", "footstep_dirt_loose_", "footstep_gravel_walk_");
+            AssignFoot(feet, footClips, "Dust", "footstep_dirt_walk_");
+            AssignFoot(feet, footClips, "Sand", "footstep_dirt_loose_");
+            AssignFoot(feet, footClips, "Snow", "footstep_snow_walk_");
+            AssignFoot(feet, footClips, "Mud", "footstep_mud_walk_");
+            AssignFoot(feet, footClips, "Dirt", "footstep_dirt_walk_");
+            AssignFoot(feet, footClips, "Rock", "footstep_concrete_walk_");
+            AssignFoot(feet, footClips, "Ice", "footstep_ice_crunchy_walk_");
+            AssignFoot(feet, footClips, "Basalt", "footstep_concrete_walk_");
+            AssignFoot(feet, footClips, "Metal", "footstep_metal_low_walk_");
+            AssignFoot(feet, footClips, "Gravel", "footstep_gravel_walk_");
+            AssignFoot(feet, footClips, "Grating", "footstep_metal_high_walk_");
+            AssignFoot(feet, footClips, "Wood", "footstep_wood_walk_");
+            AssignFoot(feet, footClips, "Water", "footstep_water_walk_");
         }
 
         static void AssignFoot(ProSoundFootstepCatalog feet, Dictionary<string, AudioClip> clips, string id, params string[] prefixes)
         {
             var found = new List<AudioClip>();
-            foreach (var kv in clips)
-                foreach (var p in prefixes)
-                    if (kv.Key.StartsWith(p, StringComparison.OrdinalIgnoreCase))
-                    { found.Add(kv.Value); break; }
+            foreach (var prefix in prefixes)
+            {
+                var batch = new List<KeyValuePair<string, AudioClip>>();
+                foreach (var kv in clips)
+                    if (kv.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                        batch.Add(kv);
+                batch.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.OrdinalIgnoreCase));
+                foreach (var kv in batch)
+                    if (!found.Contains(kv.Value)) found.Add(kv.Value);
+            }
             if (found.Count == 0) return;
+            if (found.Count > FootstepCap) found = found.GetRange(0, FootstepCap);
+
             if (feet.surfaces == null) feet.surfaces = Array.Empty<ProSoundFootstepCatalog.SurfaceClips>();
             for (int i = 0; i < feet.surfaces.Length; i++)
             {
@@ -249,13 +298,14 @@ namespace DMI.Xenoarch.Editor
             var map = new Dictionary<string, AudioClip>(StringComparer.OrdinalIgnoreCase);
             foreach (var root in roots)
             {
-                if (!AssetDatabase.IsValidFolder(root)) continue;
+                if (string.IsNullOrEmpty(root) || !AssetDatabase.IsValidFolder(root)) continue;
                 foreach (var guid in AssetDatabase.FindAssets("t:AudioClip", new[] { root }))
                 {
                     var path = AssetDatabase.GUIDToAssetPath(guid);
                     var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
                     if (clip == null) continue;
                     var name = System.IO.Path.GetFileNameWithoutExtension(path);
+                    if (name.EndsWith("_Cue", StringComparison.OrdinalIgnoreCase)) continue;
                     if (!map.ContainsKey(name)) map[name] = clip;
                 }
             }
@@ -265,8 +315,26 @@ namespace DMI.Xenoarch.Editor
         static AudioClip FindClip(Dictionary<string, AudioClip> clips, string[] names)
         {
             for (int i = 0; i < names.Length; i++)
-                if (clips.TryGetValue(names[i], out var c)) return c;
+                if (clips.TryGetValue(names[i], out var c) && c != null) return c;
             return null;
+        }
+
+        static int CountVendor()
+        {
+            var ui = AssetDatabase.LoadAssetAtPath<UISoundCatalog>(UiPath);
+            if (ui == null || ui.entries == null) return 0;
+            int n = 0;
+            foreach (var e in ui.entries)
+                if (e != null && e.vendorClip != null) n++;
+            return n;
+        }
+
+        static string[] ConcatLegacy(this string[] preferred)
+        {
+            var list = new List<string>(preferred);
+            foreach (var r in LegacyExtractedRoots)
+                if (!list.Contains(r)) list.Add(r);
+            return list.ToArray();
         }
     }
 }
