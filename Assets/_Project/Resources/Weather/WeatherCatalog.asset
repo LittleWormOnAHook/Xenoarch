@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4f59f4d7f05011448e8c59fe6c10645, type: 3}
+  m_Name: WeatherCatalog
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Weather.WeatherCatalog
+  weatherEnabled: 1
+  intensityMultiplier: 1
+  extremePreset: 0
+  particleBudgetScale: 1
+  bodies:
+  - bodyId: body.sol.moon
+    profile: {fileID: 11400000, guid: bcb211f8028b26640b0cc42d5085f8a6, type: 2}
+  - bodyId: body.sol.mars
+    profile: {fileID: 11400000, guid: 5ec66c2a4f393594299ed547a8191ff9, type: 2}
+  - bodyId: body.alpha_centauri.p0
+    profile: {fileID: 11400000, guid: 35c5439fa3dc17c45bc69d8c0339c356, type: 2}
+  - bodyId: body.alpha_centauri.p1
+    profile: {fileID: 11400000, guid: f557f1e22ba2a044dad0db4c775bff53, type: 2}
+  - bodyId: body.barnards_star.p0
+    profile: {fileID: 11400000, guid: bb8446c73faf0684ab67ac50648c9449, type: 2}
+  - bodyId: body.barnards_star.p1
+    profile: {fileID: 11400000, guid: 47babc28e76fcc54a995a6000fa2f936, type: 2}
+  - bodyId: body.barnards_star.p2
+    profile: {fileID: 11400000, guid: 7000393beda5a9b4f8e3c4d9ecbe721f, type: 2}
+  - bodyId: body.barnards_star.p3
+    profile: {fileID: 11400000, guid: e9abbd079c32ade479630d13041c2f1e, type: 2}
+  - bodyId: body.sirius.p0
+    profile: {fileID: 11400000, guid: 3c65b0255667daf4f9cb4b847e6d1787, type: 2}
+  - bodyId: body.epsilon_eridani.p1
+    profile: {fileID: 11400000, guid: e1ec4c5b2364cd24cb27bcafa2fd8e68, type: 2}
+  - bodyId: body.tau_ceti.p0
+    profile: {fileID: 11400000, guid: dc1378f3dc03f9644853e6e6ef810ddb, type: 2}
+  - bodyId: body.tau_ceti.p1
+    profile: {fileID: 11400000, guid: e213be1fef3bb1242be86011ab47cf96, type: 2}
+  - bodyId: body.tau_ceti.p2
+    profile: {fileID: 11400000, guid: af6987f9b8922d345945076afb3f2a7e, type: 2}
+  - bodyId: body.tau_ceti.p3
+    profile: {fileID: 11400000, guid: eadb652c3a5a9924b9f01eeb01c3fa20, type: 2}
+  - bodyId: body.proxima_centauri.p0
+    profile: {fileID: 11400000, guid: 5030019b6c97f714295d3ff40049d3e3, type: 2}
+  - bodyId: body.proxima_centauri.p1
+    profile: {fileID: 11400000, guid: 1e3a34a5a78523d4e905256ad5945249, type: 2}
+  - bodyId: body.proxima_centauri.p2
+    profile: {fileID: 11400000, guid: 8e8bd690de27c6d44842ecefde7bd6a8, type: 2}
+  - bodyId: body.g93ce5fd0.p0
+    profile: {fileID: 11400000, guid: e8527c5d02fd5494cb4deaf7047c9908, type: 2}
+  - bodyId: body.g93ce5fd0.p1
+    profile: {fileID: 11400000, guid: c940998d311604c4082e9deed39e5dac, type: 2}
+  - bodyId: body.g93ce5fd0.p2
+    profile: {fileID: 11400000, guid: 6d89f764ea1ee03439ad8b7209a020d7, type: 2}
+  - bodyId: body.g94ce6163.p0
+    profile: {fileID: 11400000, guid: a49cad55640b7a24385af34576552931, type: 2}
+  - bodyId: body.g94ce6163.p1
+    profile: {fileID: 11400000, guid: 2f496654a883e6e4ca498cea0dc26943, type: 2}
+  - bodyId: body.g95ce62f6.p0
+    profile: {fileID: 11400000, guid: 8a71985d2fd8cd74bb7bbdc99fc9ffc2, type: 2}
+  - bodyId: body.g95ce62f6.p1
+    profile: {fileID: 11400000, guid: 636c1f884fa8e1b45bd123ba3144012c, type: 2}
+  archetypeDefaults:
+  - {fileID: 11400000, guid: fc9d9b28a42a52a43890f0157ed15ffd, type: 2}
+  - {fileID: 11400000, guid: efe73b8185bca624a87fe523593706bd, type: 2}
+  - {fileID: 11400000, guid: 907989eb9ad45ce469a9fed2fa6073c3, type: 2}
+  - {fileID: 11400000, guid: 076ed34dc73a71040bd3597e54ce6677, type: 2}
+  - {fileID: 11400000, guid: 4f333ccb727ffd649967e409731a6276, type: 2}
+  - {fileID: 11400000, guid: 870ef984c42579141a22c4f1e72472ad, type: 2}
+  alphaMaterial: {fileID: 2100000, guid: d9c1a0fe953657d4caa368276857d0b2, type: 2}
+  additiveMaterial: {fileID: 2100000, guid: 0b72a71ae7abdfe47ad6d956d35df9ba, type: 2}
+  streakMaterial: {fileID: 2100000, guid: fd6fea7e262ae05459b954e243859c5b, type: 2}
+  thunder:
+  - {fileID: 8300000, guid: e2250e2110a905b4c9758419c99e7ce5, type: 3}
+  - {fileID: 8300000, guid: cee71fe22897e734c97d59e9ef6d0445, type: 3}
+  windSoft: {fileID: 0}
+  windStrong: {fileID: 0}
+  windHowl: {fileID: 0}
+  rainSoft: {fileID: 0}
+  rainHeavy: {fileID: 0}

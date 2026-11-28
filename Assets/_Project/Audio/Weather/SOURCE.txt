@@ -1,0 +1,12 @@
+﻿Weather audio and art - sources and licenses
+============================================
+Thunder: ASH_Thunder_01.ogg, ASH_Thunder_02.ogg
+  Copied unchanged from A:\ASH\Assets\_ASH\Audio\Phase2A (Anthony's ASH project; the ASH repo and project were only read).
+  ASH_Thunder_01.ogg  https://opengameart.org/content/100-cc0-sfx-2 (thunder_01), author rubberduck, CC0.
+  ASH_Thunder_02.ogg  https://opengameart.org/content/rain-long-thunder (16 s cut at 0:18), author WuxiaScrub, CC0.
+  (Per ASH Docs/AudioCredits.md.)
+
+Not copied on purpose: ASH's wind and rain loops are the purchased "QP01" library (project license, not for redistribution in a repo)
+and its morning ambience / Enviro thunder are Enviro 3 (Asset Store EULA). Xenoarch instead synthesises its own wind, rain, grit and
+helmet-static loops in code (Scripts/Runtime/Weather/WeatherSynth.cs): original, no license needed. To use hand-picked loops, assign
+clips to the WeatherCatalog (Resources/Weather/WeatherCatalog.asset) windSoft/windStrong/windHowl/rainSoft/rainHeavy slots.

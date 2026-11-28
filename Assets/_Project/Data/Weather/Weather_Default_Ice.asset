@@ -1,0 +1,129 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3430d10df8e48694ab385323c4be60c4, type: 3}
+  m_Name: Weather_Default_Ice
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Weather.WeatherProfile
+  bodyId: default.Ice
+  displayName: Default Ice
+  archetype: 4
+  notes: Used for a body that has no profile of its own.
+  pressureKPa: 25
+  temperatureC: -160
+  windSpeedMax: 34.349144
+  gustiness: 0.26961732
+  gustFrequency: 0.26970613
+  windVolume: 1
+  windPitch: 0.91868836
+  windLowPassHz: 4854.5283
+  rainVolume: 1
+  staticVolume: 0
+  baselineMotes: 0
+  transitionSeconds: 40
+  calmBetweenMajorMinutes: {x: 3, y: 9}
+  majorChance: 0.65
+  presets:
+  - name: Clear
+    weight: 2.5
+    major: 0
+    minutes: {x: 4, y: 9}
+    rain: 0
+    snow: 0
+    ashfall: 0
+    dust: 0
+    devils: 0
+    motes: 0
+    wind: 0.2
+    fog: 0
+    darkness: 0
+    thunderPerMinute: 0
+    particleSize: 1
+  - name: Diamond Dust
+    weight: 1.2
+    major: 0
+    minutes: {x: 3, y: 8}
+    rain: 0
+    snow: 0.08
+    ashfall: 0
+    dust: 0
+    devils: 0
+    motes: 0
+    wind: 0.1
+    fog: 0
+    darkness: 0
+    thunderPerMinute: 0
+    particleSize: 0.5
+  - name: Light Snow
+    weight: 2.5
+    major: 0
+    minutes: {x: 3, y: 8}
+    rain: 0
+    snow: 0.3
+    ashfall: 0
+    dust: 0
+    devils: 0
+    motes: 0
+    wind: 0.25
+    fog: 0.8
+    darkness: 0.1
+    thunderPerMinute: 0
+    particleSize: 1
+  - name: Snow Flurry
+    weight: 2
+    major: 0
+    minutes: {x: 3, y: 8}
+    rain: 0
+    snow: 0.55
+    ashfall: 0
+    dust: 0
+    devils: 0
+    motes: 0
+    wind: 0.45
+    fog: 1.8
+    darkness: 0.2
+    thunderPerMinute: 0
+    particleSize: 1
+  - name: Spindrift
+    weight: 1.2
+    major: 0
+    minutes: {x: 3, y: 8}
+    rain: 0
+    snow: 0.1
+    ashfall: 0
+    dust: 0.45
+    devils: 0
+    motes: 0
+    wind: 0.75
+    fog: 1.5
+    darkness: 0
+    thunderPerMinute: 0
+    particleSize: 1
+  - name: Blizzard
+    weight: 1.5
+    major: 1
+    minutes: {x: 3, y: 7}
+    rain: 0
+    snow: 1
+    ashfall: 0
+    dust: 0.3
+    devils: 0
+    motes: 0
+    wind: 1
+    fog: 8
+    darkness: 0.5
+    thunderPerMinute: 0
+    particleSize: 1.2
+  dustColor: {r: 0.86, g: 0.92, b: 1, a: 0.45}
+  ashColor: {r: 0.34, g: 0.32, b: 0.31, a: 0.85}
+  snowColor: {r: 0.94, g: 0.97, b: 1, a: 0.95}
+  rainColor: {r: 0.72, g: 0.78, b: 0.86, a: 0.5}
+  fogTint: {r: 0.78, g: 0.86, b: 0.94, a: 1}
+  emberShare: 0
