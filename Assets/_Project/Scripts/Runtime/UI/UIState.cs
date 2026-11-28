@@ -13,7 +13,7 @@ namespace DMI.Xenoarch.UI
         static readonly HashSet<string> Open = new HashSet<string>();
         public static event Action Changed;
         public static bool ManageCursor = true;
-        /// <summary>Seated at the cockpit: free cursor for clicking the consoles, without blocking stand-up (E / Space).</summary>
+        /// <summary>Seated: free cursor for clicking cockpit screens (hold Alt, or while a gauge zoom is held). Does not block stand-up (E / Space).</summary>
         static bool _consoleCursor;
         public static bool ConsoleCursor
         {

@@ -14,8 +14,8 @@ namespace DMI.Xenoarch.Ship
     /// <summary>
     /// Live NAV/FTL and SYSTEMS/SCAN readouts on the Constellation cockpit's Screen_D and Screen_B. Runtime only:
     /// finds the vendor meshes, instances their materials onto RenderTextures driven by UITK, and never writes the
-    /// Creepy Cat assets or the open ship scene. Seated players get a free cursor and can click a gauge (or a region)
-    /// to zoom the camera in; Esc, right-click or a second click zooms out.
+    /// Creepy Cat assets or the open ship scene. Mouse look stays on in every seat. Hold Alt to free the cursor and
+    /// click a gauge (or a region) to zoom in, or left-click while looking at one (reticle). Esc, right-click or a second click zooms out.
     /// </summary>
     public sealed class CockpitFtlDisplays : MonoBehaviour
     {
@@ -216,8 +216,12 @@ namespace DMI.Xenoarch.Ship
             if (mouse == null || !mouse.leftButton.wasPressedThisFrame) return;
             var cam = CameraOf(CockpitSeat.Occupied);
             if (cam == null) return;
-            var ray = cam.ScreenPointToRay(mouse.position.ReadValue());
-            if (!Physics.Raycast(ray, out var hit, 4.5f, 1 << IgnoreRaycastLayer, QueryTriggerInteraction.Ignore))
+            // Locked cursor: click the gauge under the reticle. Free cursor (hold Alt): aim with the pointer.
+            Vector2 sp = UIState.ConsoleCursor
+                ? mouse.position.ReadValue()
+                : new Vector2(cam.pixelWidth * 0.5f, cam.pixelHeight * 0.5f);
+            var ray = cam.ScreenPointToRay(sp);
+            if (!Physics.Raycast(ray, out var hit, 4.5f, 1 << IgnoreRaycastLayer, QueryTriggerInteraction.Collide))
             {
                 if (_zoom.kind == ZoomKind.Hold || _zoom.kind == ZoomKind.In) StartZoom(ZoomKind.Out, default, 0f, 0f);
                 return;
@@ -395,7 +399,10 @@ namespace DMI.Xenoarch.Ship
             var col = r.GetComponent<MeshCollider>();
             if (col == null) col = r.gameObject.AddComponent<MeshCollider>();
             col.sharedMesh = face.filter.sharedMesh;
-            col.convex = false;
+            // Trigger: a solid MeshCollider on Screen_D / Screen_B blocked the walk to the helm.
+            // Non-convex meshes cannot be triggers, so cook a convex hull (these screens are thin panels).
+            col.convex = true;
+            col.isTrigger = true;
             face.originalLayer = r.gameObject.layer;
             r.gameObject.layer = IgnoreRaycastLayer;
             face.collider = col;

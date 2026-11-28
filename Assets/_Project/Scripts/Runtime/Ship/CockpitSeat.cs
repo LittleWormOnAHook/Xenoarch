@@ -10,7 +10,8 @@ namespace DMI.Xenoarch.Ship
 {
     /// <summary>
     /// Press E to sit in a cockpit chair. The player glides into the seat (root to the chair's centre, camera lowered to
-    /// seated eye height, turned to face the console), locomotion stops and look is clamped. Press E (looking at nothing
+    /// seated eye height, turned to face the console), locomotion stops and look is clamped. Mouse look stays on in every
+    /// seat; hold Alt to free the cursor and click cockpit screens. Press E (looking at nothing
     /// usable) or Space to stand back up where you sat down from. Nothing on the chair is moved: the anchor is computed
     /// from the chair's renderer bounds at runtime, or taken from <see cref="seatAnchor"/> if set.
     /// The Kade rig has no sit animation, so the body is hidden while seated (first-person view only).
@@ -158,8 +159,8 @@ namespace DMI.Xenoarch.Ship
             p.EnableSeatLook(seatYaw, yawRange, pitchDown, pitchUp);
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
-            InteractionPromptHud.IdlePrompt = "Stand up";
-            UIState.ConsoleCursor = true;
+            InteractionPromptHud.IdlePrompt = "Stand up  ·  Hold Alt to use screens";
+            UIState.ConsoleCursor = false;
             PowerUpConsole();
             onSeated?.Invoke();
         }
@@ -211,6 +212,12 @@ namespace DMI.Xenoarch.Ship
         {
             if (!IsOccupied || _player == null) return;
             if (!Transitioning && !_player.Seated) { Release(); return; } // stood up by a teleport/load
+            if (!Transitioning)
+            {
+                // Default: locked cursor and seated mouse look. Hold Alt to click screens; stay free while zoomed.
+                bool alt = Keyboard.current != null && (Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed);
+                UIState.ConsoleCursor = alt || CockpitFtlDisplays.ZoomBusy;
+            }
             if (Transitioning || !_player.InputEnabled || UIState.BlocksGameplay || Time.unscaledTime - _seatedAt < 0.35f) return;
             bool space = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
             bool e = _input != null && _input.InteractPressed && (_interactor == null || _interactor.Target == null);
