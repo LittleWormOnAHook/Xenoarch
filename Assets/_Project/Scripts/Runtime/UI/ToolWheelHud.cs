@@ -273,8 +273,7 @@ namespace DMI.Xenoarch.UI
             }
             if (id == PlayerLighting.FloodLightId)
             {
-                if (PlacedFloodLight.TryPlaceFromPlayer(out var floodWhy)) Toast.Show("Flood light placed. E to pick it up.");
-                else Toast.Show(floodWhy ?? "Couldn't place the flood light.");
+                if (!PlacedFloodLight.BeginPlacement(out var floodWhy)) Toast.Show(floodWhy ?? "Couldn't place the flood light.");
                 return;
             }
             if (d != null && d.category == ItemCategory.Consumable)

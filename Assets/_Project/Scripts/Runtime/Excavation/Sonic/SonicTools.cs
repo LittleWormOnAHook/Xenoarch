@@ -56,12 +56,13 @@ namespace DMI.Xenoarch.Excavation
         static readonly float[] _heat = new float[4];
         static readonly bool[] _locked = new bool[4];
         static float _lastSpendAt = -10f;
+        static float _lastDrainAt = -10f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             Head = SonicHead.Sphere; Power = SonicPower.Med; Focus = SonicFocus.Wide;
-            Size = 0.45f; Reach = 3f; Spread = 0.45f; Energy = EnergyMax; _lastSpendAt = -10f;
+            Size = 0.45f; Reach = 3f; Spread = 0.45f; Energy = EnergyMax; _lastSpendAt = -10f; _lastDrainAt = -10f;
             for (int i = 0; i < 4; i++) { _heat[i] = 0f; _locked[i] = false; }
         }
 
@@ -178,6 +179,17 @@ namespace DMI.Xenoarch.Excavation
             _lastSpendAt = Time.time;
         }
 
+        /// <summary>True while the suit has charge for the lights.</summary>
+        public static bool HasPower => Energy > 0.05f;
+
+        /// <summary>Continuous draw (the player lights): takes <paramref name="amount"/> from the suit pool and pauses the small
+        /// field trickle while it is draining, so a light really runs the pool down. Returns false once the pool is empty.</summary>
+        public static bool DrainEnergy(float amount)
+        {
+            if (amount > 0f) { Energy = Mathf.Max(0f, Energy - amount); _lastDrainAt = Time.time; }
+            return Energy > 0.05f;
+        }
+
         public static void AddEnergy(float amount) => Energy = Mathf.Clamp(Energy + amount, 0f, EnergyMax);
 
         public static int Cells => XenoarchRuntime.Session != null ? XenoarchRuntime.Session.Inventory.Count(PowerCellId) : 0;
@@ -206,7 +218,8 @@ namespace DMI.Xenoarch.Excavation
             {
                 var s = XenoarchRuntime.Session;
                 bool ship = s != null && s.AboardShip;
-                Energy = Mathf.Min(EnergyMax, Energy + (ship ? 25f : 0.5f) * dt);   // small field trickle so the suit never soft-locks
+                bool lightsDraining = !ship && Time.time - _lastDrainAt < 0.3f;     // no field trickle while a light is draining the pool
+                if (!lightsDraining) Energy = Mathf.Min(EnergyMax, Energy + (ship ? 25f : 0.5f) * dt);   // small field trickle so the suit never soft-locks
             }
             SonicBlueprints.Archive();
         }

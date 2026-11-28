@@ -57,6 +57,27 @@ namespace DMI.Xenoarch.Lighting
         [Tooltip("Camera-space offset used when the held mesh is hidden (m).")]
         public Vector3 handheldCameraOffset = new Vector3(0.12f, -0.08f, 0.18f);
 
+        [Header("Battery (suit power: the pool is 100, a Power Cell adds 60; X recharges)")]
+        [Tooltip("Suit power drained per second while the helmet lamps are on (both lamps together). 0.2 = about 8 minutes from full.")]
+        [Range(0f, 100f)] public float helmetDrainPerSec = 0.2f;
+        [Tooltip("Suit power drained per second while the handheld flashlight is lit. 0.15 = about 11 minutes from full.")]
+        [Range(0f, 100f)] public float handheldDrainPerSec = 0.15f;
+        [Tooltip("Power a placed flood light stand holds (units; 60 = one Power Cell). It runs on its own charge, not the suit.")]
+        [Range(1f, 10000f)] public float floodCapacity = 60f;
+        [Tooltip("Power a placed flood light uses per second. 0.2 on 60 = 5 minutes per charge.")]
+        [Range(0f, 100f)] public float floodDrainPerSec = 0.2f;
+        [Tooltip("Warn when suit power falls to this fraction while a light is on.")]
+        [Range(0f, 1f)] public float lowPowerWarn = 0.15f;
+
+        [Header("Flood light placement")]
+        [Tooltip("How far from the camera the ghost can sit (m).")]
+        [Range(1f, 60f)] public float placeRange = 8f;
+        [Tooltip("Steepest ground the stand can be placed on (degrees from flat).")]
+        [Range(0f, 89f)] public float placeMaxSlope = 40f;
+        [Tooltip("Yaw per mouse-wheel notch (degrees).")]
+        [Range(1f, 90f)] public float placeYawStep = 15f;
+
+        public static PlayerLighting Current { get; private set; }
         public bool HelmetOn { get; private set; }
         public bool FlashlightEquipped { get; private set; }
 
@@ -72,8 +93,12 @@ namespace DMI.Xenoarch.Lighting
             return pl != null ? pl : root.gameObject.AddComponent<PlayerLighting>();
         }
 
+        bool _lowWarned;
+
         void Awake()
         {
+            Current = this;
+            if (GetComponent<FloodLightPlacer>() == null) gameObject.AddComponent<FloodLightPlacer>();
             _rig = GetComponent<IPlayerRig>() ?? GetComponentInParent<IPlayerRig>();
             _arms = GetComponentInChildren<FirstPersonArms>(true);
             _helmL = MakeSpot("HelmetLamp_L", shadows: false);
@@ -146,12 +171,38 @@ namespace DMI.Xenoarch.Lighting
                 var kb = Keyboard.current;
                 if (kb != null && kb.fKey.wasPressedThisFrame) SetHelmetOn(!HelmetOn);
                 HandleHotbar(kb);
+                // X recharges the suit from a Power Cell when no sonic tool is out (with one out, the dig tool handles X).
+                if (kb != null && kb.xKey.wasPressedThisFrame && !AnyToolOut)
+                {
+                    if (SonicTools.UseCell()) Toast.Show($"Power Cell used: suit power {SonicTools.Energy01:P0}. {SonicTools.Cells} left.", 2.5f);
+                    else Toast.Show(SonicTools.Cells < 1 ? "No Power Cells. Craft them aboard the ship." : "Suit power is already full.", 2.5f);
+                }
             }
+            DrainBattery();
             if (FlashlightEquipped)
             {
                 if (!Has(FlashlightId) || OtherToolOut()) SetFlashlightEquipped(false);
             }
             ApplyActiveLights();
+        }
+
+        /// <summary>The lamps and flashlight draw from the suit pool; they go dark when it is empty.</summary>
+        void DrainBattery()
+        {
+            float rate = (HelmetOn ? helmetDrainPerSec : 0f) + (FlashlightEquipped ? handheldDrainPerSec : 0f);
+            if (rate <= 0f) return;
+            if (Time.deltaTime > 0f && !SonicTools.DrainEnergy(rate * Time.deltaTime))
+            {
+                HelmetOn = false;
+                FlashlightEquipped = false;
+                _lowWarned = false;
+                Toast.Show("Suit power is empty: lights off. A Power Cell (X) recharges it.", 4f);
+                Debug.Log("[FlashlightDiag] suit power empty, lights off");
+                return;
+            }
+            float e = SonicTools.Energy01;
+            if (e <= lowPowerWarn && !_lowWarned) { _lowWarned = true; Toast.Show($"Suit power low ({e:P0}). A Power Cell (X) recharges it.", 3.5f); }
+            else if (e > lowPowerWarn + 0.1f) _lowWarned = false;
         }
 
         void HandleHotbar(Keyboard kb)
@@ -166,9 +217,8 @@ namespace DMI.Xenoarch.Lighting
                 if (id == FlashlightId) { SetFlashlightEquipped(!FlashlightEquipped); return; }
                 if (id == FloodLightId)
                 {
-                    if (PlacedFloodLight.TryPlaceFromPlayer(out var why))
-                        Toast.Show("Flood light placed. E to pick it up.");
-                    else if (!string.IsNullOrEmpty(why)) Toast.Show(why);
+                    if (FloodLightPlacer.Active) FloodLightPlacer.Cancel();
+                    else if (!PlacedFloodLight.BeginPlacement(out var why) && !string.IsNullOrEmpty(why)) Toast.Show(why);
                     return;
                 }
             }
@@ -176,6 +226,7 @@ namespace DMI.Xenoarch.Lighting
 
         public void SetHelmetOn(bool on)
         {
+            if (on && !SonicTools.HasPower) { Toast.Show("Suit power is empty. A Power Cell (X) recharges it.", 3f); on = false; }
             HelmetOn = on;
             Debug.Log($"[FlashlightDiag] helmet lamps {(on ? "ON" : "OFF")} range={helmetRange:0.#} angle={helmetSpotAngle:0.#} intensity={helmetIntensity:0.##}");
         }
@@ -189,12 +240,23 @@ namespace DMI.Xenoarch.Lighting
                     Toast.Show(DigTool.NotOwnedText("handheld flashlight"), 3f);
                     on = false;
                 }
+                else if (!SonicTools.HasPower)
+                {
+                    Toast.Show("Suit power is empty. A Power Cell (X) recharges it.", 3f);
+                    on = false;
+                }
                 else HolsterOthers();
             }
             if (FlashlightEquipped == on) return;
             FlashlightEquipped = on;
             Debug.Log($"[FlashlightDiag] handheld flashlight {(on ? "EQUIPPED" : "HOLSTERED")} range={handheldRange:0.#} angle={handheldSpotAngle:0.#} intensity={handheldIntensity:0.##}");
         }
+
+        /// <summary>Another tool (dig tools, scanner, depth probe) is currently out.</summary>
+        public bool AnyToolOut => OtherToolOut();
+
+        /// <summary>Puts away every held tool except the flashlight (used when placing a flood light).</summary>
+        public void HolsterTools() => HolsterOthers();
 
         void HolsterOthers()
         {
@@ -286,6 +348,7 @@ namespace DMI.Xenoarch.Lighting
 
         void OnDestroy()
         {
+            if (Current == this) Current = null;
             DestroyLight(_helmL); _helmL = null;
             DestroyLight(_helmR); _helmR = null;
             DestroyLight(_hand); _hand = null;

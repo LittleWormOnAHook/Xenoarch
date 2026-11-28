@@ -26,6 +26,7 @@ namespace DMI.Xenoarch.UI
             if (pressed)
             {
                 if (IsOpen) Close();
+                else if (DMI.Xenoarch.Lighting.FloodLightPlacer.TryHandleEscape()) { }
                 else if (DMI.Xenoarch.Ship.CockpitFtlDisplays.TryHandleEscape()) { }
                 else if (CanOpen()) Open();
             }

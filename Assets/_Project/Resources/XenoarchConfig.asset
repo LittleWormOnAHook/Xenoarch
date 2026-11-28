@@ -82,6 +82,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8cdf95548ded2194a87ea6d07975c08e, type: 2}
   - {fileID: 11400000, guid: 1d93e462a2897a54580b416c4c0907bd, type: 2}
   - {fileID: 11400000, guid: 28c852594d8bb8146841c54b3d7cfb58, type: 2}
+  - {fileID: 11400000, guid: 8fcb8fb54965447aa1848cc7aa12a3fe, type: 2}
+  - {fileID: 11400000, guid: 66b6bfa22bad47fb9ba18e5edf8d2fb5, type: 2}
   defaultEnvironment: {fileID: 11400000, guid: 5fac926dabbf55d4a95db386765f0917, type: 2}
   defaultSpaceSkybox: {fileID: 2100000, guid: 8ba5043e1a9251278cb647dc04d2b025, type: 2}
   preferOrbitViews: 1

@@ -1,4 +1,5 @@
 using DMI.Xenoarch.Core;
+using DMI.Xenoarch.Excavation;
 using DMI.Xenoarch.Interaction;
 using DMI.Xenoarch.Player;
 using DMI.Xenoarch.UI;
@@ -25,13 +26,22 @@ namespace DMI.Xenoarch.Lighting
         [Range(0f, 80f)] public float aimDown = 25f;
 
         Light _light;
+        float _charge = -1f;
+
+        /// <summary>Power left (units; the capacity and drain rate live on <see cref="PlayerLighting"/> so they can be tuned in one place).</summary>
+        public float Charge => Mathf.Max(0f, _charge);
+        float Capacity => PlayerLighting.Current != null ? PlayerLighting.Current.floodCapacity : 60f;
+        float DrainRate => PlayerLighting.Current != null ? PlayerLighting.Current.floodDrainPerSec : 0.2f;
+        public float Charge01 => Mathf.Clamp01(Charge / Mathf.Max(1f, Capacity));
+        bool NeedsCell(GameSession s) => s != null && Charge01 < 0.25f && s.Inventory.Count(SonicTools.PowerCellId) > 0;
 
         public Transform InteractionTransform => transform;
 
         public float GetPriority(in InteractionContext c) =>
             c.Session != null ? 2f : -1f;
 
-        public string GetPrompt(in InteractionContext c) => "Pick up Flood Light";
+        public string GetPrompt(in InteractionContext c) =>
+            NeedsCell(c.Session) ? $"Swap in a Power Cell (flood light {Charge01:P0})" : "Pick up Flood Light";
 
         public float GetHoldDuration(in InteractionContext c) => 0f;
 
@@ -39,6 +49,13 @@ namespace DMI.Xenoarch.Lighting
         {
             var s = c.Session;
             if (s == null) return false;
+            if (NeedsCell(s))
+            {
+                if (s.Inventory.Remove(SonicTools.PowerCellId, 1) < 1) return false;
+                _charge = Mathf.Min(Capacity, Charge + SonicTools.CellEnergy);
+                Toast.Show($"Flood light recharged ({Charge01:P0}).", 2.5f);
+                return true;
+            }
             int left = s.Inventory.Add(PlayerLighting.FloodLightId, 1);
             if (left != 0)
             {
@@ -48,6 +65,12 @@ namespace DMI.Xenoarch.Lighting
             Debug.Log("[FlashlightDiag] flood light picked up");
             Destroy(gameObject);
             return true;
+        }
+
+        void Update()
+        {
+            if (_charge < 0f) _charge = Capacity;                       // a new stand starts fully charged
+            if (_charge > 0f) _charge = Mathf.Max(0f, _charge - DrainRate * Time.deltaTime);
         }
 
         void LateUpdate()
@@ -62,51 +85,28 @@ namespace DMI.Xenoarch.Lighting
             _light.color = color;
             _light.shadows = LightShadows.None;
             _light.bounceIntensity = 0f;
+            _light.enabled = _charge != 0f;                              // dark once the battery is empty
         }
 
-        /// <summary>Places one flood light on the ground in front of the player and consumes one from inventory.</summary>
-        public static bool TryPlaceFromPlayer(out string why)
+        /// <summary>Starts placement mode (<see cref="FloodLightPlacer"/>): a ghost follows the ground under the crosshair, the
+        /// mouse wheel turns it, left-click places, right-click or Esc cancels. Returns false (with a reason) if it can't start.</summary>
+        public static bool BeginPlacement(out string why) => FloodLightPlacer.Begin(out why);
+
+        /// <summary>Spawns the real stand at a ground point (aligned to the surface normal) and consumes one from inventory.</summary>
+        public static bool PlaceAt(Vector3 point, Quaternion rotation, out string why)
         {
             why = null;
             var s = XenoarchRuntime.Session;
             if (s == null) { why = "No game session."; return false; }
-            if (s.Inventory.Count(PlayerLighting.FloodLightId) <= 0)
-            {
-                why = DigToolNotOwned();
-                return false;
-            }
-            var rig = PlayerRigLocator.Find();
-            if (rig == null || rig.Root == null) { why = "No player."; return false; }
-
-            Vector3 look = rig.ViewCamera != null ? rig.ViewCamera.transform.forward : rig.Root.forward;
-            Vector3 flat = Vector3.ProjectOnPlane(look, Vector3.up);
-            if (flat.sqrMagnitude < 0.01f) flat = Vector3.ProjectOnPlane(rig.Root.forward, Vector3.up);
-            if (flat.sqrMagnitude < 0.01f) flat = Vector3.forward;
-            flat.Normalize();
-
-            const float distance = 2.2f;
-            Vector3 probe = rig.Root.position + flat * distance + Vector3.up * 3f;
-            if (!Physics.Raycast(probe, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore))
-            {
-                why = "No ground in front of you.";
-                return false;
-            }
-
             if (s.Inventory.Remove(PlayerLighting.FloodLightId, 1) < 1)
             {
                 why = "Couldn't take the flood light from inventory.";
                 return false;
             }
-
-            var rot = Quaternion.LookRotation(flat, Vector3.up);
-            var go = Build(hit.point, rot);
-            var lamp = go.GetComponent<PlacedFloodLight>();
-            if (lamp != null && lamp._light != null)
-                lamp._light.transform.localRotation = Quaternion.Euler(lamp.aimDown, 0f, 0f);
-            Debug.Log($"[FlashlightDiag] flood light placed at {hit.point} yaw={rot.eulerAngles.y:0.#}");
+            Build(point, rotation);
+            Debug.Log($"[FlashlightDiag] flood light placed at {point} yaw={rotation.eulerAngles.y:0.#}");
             return true;
         }
-
         static string DigToolNotOwned() =>
             DMI.Xenoarch.Excavation.DigTool.NotOwnedText("flood light");
 

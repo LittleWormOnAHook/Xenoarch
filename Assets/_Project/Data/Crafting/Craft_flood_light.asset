@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d799ebf045304cf47ab127bbfc99b2fa, type: 3}
+  m_Name: Craft_flood_light
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Crafting.CraftRecipe
+  id: craft.flood_light
+  displayName: Flood Light Stand
+  description: A tripod work light with its own power cell charge. Place it to light a dig site.
+  category: 2
+  ingredients:
+  - itemId: item.component.alloy_plate
+    count: 2
+  - itemId: item.component.wiring
+    count: 2
+  outputItemId: item.equipment.flood_light
+  outputAmount: 1
+  upgradeId: 
+  upgradeLevel: 0
+  craftSeconds: 5
+  station: 1
+  unlockFact: 

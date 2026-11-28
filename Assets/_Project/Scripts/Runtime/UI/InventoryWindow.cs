@@ -223,7 +223,7 @@ namespace DMI.Xenoarch.UI
                     int n = inv.Count(d.Id);
                     Btn(mid, n > 0 ? "Place flood light" : "Place flood light (none carried)", () =>
                     {
-                        if (PlacedFloodLight.TryPlaceFromPlayer(out var why)) { Toast.Show("Flood light placed. E to pick it up."); Close(); }
+                        if (PlacedFloodLight.BeginPlacement(out var why)) Close();
                         else { Toast.Show(why); Refresh(); }
                     }, n > 0);
                 }

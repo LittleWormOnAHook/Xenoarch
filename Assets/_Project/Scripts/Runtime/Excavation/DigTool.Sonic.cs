@@ -66,7 +66,7 @@ namespace DMI.Xenoarch.Excavation
                     else Toast.Show(SonicTools.Cells < 1 ? "No Power Cells. Craft them aboard the ship." : "Suit power is already full.", 2.5f);
                 }
             }
-            if (mouse == null) return;
+            if (mouse == null || DMI.Xenoarch.Lighting.FloodLightPlacer.Active) return;   // the wheel rotates a flood light being placed
             float sy = mouse.scroll.ReadValue().y;
             if (Mathf.Abs(sy) < 0.01f) return;
             int dir = sy > 0f ? 1 : -1;
