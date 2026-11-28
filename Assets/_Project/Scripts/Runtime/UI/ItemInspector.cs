@@ -41,7 +41,11 @@ namespace DMI.Xenoarch.UI
         Vector2 _lastPtr;
         float _baseDist = 1.6f;
 
-        public static void Open(ItemStack stack)
+        bool _dockRight = true;
+
+        /// <summary>Open (or retarget) the docked inspector. <paramref name="panelPos"/> is the clicked panel position:
+        /// the inspector docks on the opposite half of the screen so the grid you clicked stays visible and clickable.</summary>
+        public static void Open(ItemStack stack, Vector2? panelPos = null)
         {
             if (stack == null || stack.IsEmpty) return;
             if (_i == null)
@@ -50,7 +54,7 @@ namespace DMI.Xenoarch.UI
                 DontDestroyOnLoad(go);
                 _i = go.AddComponent<ItemInspector>();
             }
-            _i.Show(stack);
+            _i.Show(stack, panelPos);
         }
 
         public static void Close()
@@ -58,10 +62,17 @@ namespace DMI.Xenoarch.UI
             if (_i != null) _i.Hide();
         }
 
-        void Show(ItemStack stack)
+        void Show(ItemStack stack, Vector2? panelPos)
         {
+            bool wasOpen = _open;
             _stack = stack.Clone();
             EnsureUi();
+            if (!wasOpen)
+            {
+                float w = _doc.rootVisualElement.layout.width;
+                if (float.IsNaN(w) || w < 100f) w = 1920f;
+                _dockRight = !panelPos.HasValue || panelPos.Value.x < w * 0.5f;
+            }
             EnsureRig();
             BuildPreview();
             BuildUi();
@@ -69,7 +80,7 @@ namespace DMI.Xenoarch.UI
             if (_cam != null) _cam.enabled = true;
             XenoarchUI.Show(_root, true);
             UIState.SetOpen(PanelId, true);
-            UISound.Play(UISoundEvent.WindowOpen);
+            if (!wasOpen) UISound.Play(UISoundEvent.WindowOpen);
         }
 
         void Hide()
@@ -116,6 +127,7 @@ namespace DMI.Xenoarch.UI
             _root = new VisualElement();
             _root.AddToClassList("xa-fill");
             _root.AddToClassList("xa-inspect-root");
+            _root.pickingMode = PickingMode.Ignore; // docked, not modal: only the panel itself takes clicks
             docRoot.Add(_root);
             XenoarchUI.Show(_root, false);
         }
@@ -198,6 +210,8 @@ namespace DMI.Xenoarch.UI
             }
             if (inst == null && def is ArtifactDefinition art)
                 inst = BuildShape(art);
+            if (inst == null && def != null)
+                inst = BuildStandIn(def);
             if (inst == null)
                 inst = BuildIconQuad(def);
 
@@ -274,6 +288,195 @@ namespace DMI.Xenoarch.UI
             return go;
         }
 
+        // ------------------------------------------------------------------ procedural stand-ins by kind
+        // Items with no mesh (materials, valuables, components, consumables) get a simple model that reads as the item.
+        static Color StandInTint(string id)
+        {
+            Color C(float r, float g, float b) => new Color(r, g, b, 1f);
+            if (id.Contains("copper")) return C(0.85f, 0.45f, 0.25f);
+            if (id.Contains("gold") || id.Contains("auriferous")) return C(1f, 0.78f, 0.25f);
+            if (id.Contains("platin")) return C(0.8f, 0.82f, 0.88f);
+            if (id.Contains("nickel")) return C(0.62f, 0.66f, 0.62f);
+            if (id.Contains("iridium")) return C(0.58f, 0.6f, 0.78f);
+            if (id.Contains("meteoric") || id.Contains("iron")) return C(0.46f, 0.32f, 0.27f);
+            if (id.Contains("silver")) return C(0.86f, 0.88f, 0.92f);
+            if (id.Contains("alloy")) return C(0.6f, 0.66f, 0.72f);
+            if (id.Contains("quartz")) return C(0.92f, 0.86f, 0.62f);
+            if (id.Contains("methane")) return C(0.55f, 0.86f, 0.96f);
+            if (id.Contains("ice") || id.Contains("frost")) return C(0.62f, 0.9f, 1f);
+            if (id.Contains("salt")) return C(0.92f, 0.9f, 0.86f);
+            if (id.Contains("regolith")) return C(0.55f, 0.42f, 0.35f);
+            if (id.Contains("sulfide")) return C(0.5f, 0.62f, 0.5f);
+            if (id.Contains("helium")) return C(0.78f, 0.92f, 0.96f);
+            if (id.Contains("fuel")) return C(0.95f, 0.5f, 0.2f);
+            if (id.Contains("reagent")) return C(0.4f, 0.9f, 0.5f);
+            if (id.Contains("starstone")) return C(0.72f, 0.5f, 1f);
+            if (id.Contains("vael")) return C(0.3f, 0.8f, 0.8f);
+            if (id.Contains("geode")) return C(0.66f, 0.4f, 0.82f);
+            if (id.Contains("circuit")) return C(0.2f, 0.62f, 0.4f);
+            return C(0.55f, 0.65f, 0.7f);
+        }
+
+        static GameObject Part(Transform parent, PrimitiveType type, Vector3 pos, Vector3 scale, Vector3 euler, Material mat)
+        {
+            var p = GameObject.CreatePrimitive(type);
+            foreach (var col in p.GetComponentsInChildren<Collider>(true)) Destroy(col);
+            p.transform.SetParent(parent, false);
+            p.transform.localPosition = pos;
+            p.transform.localScale = scale;
+            p.transform.localRotation = Quaternion.Euler(euler);
+            var r = p.GetComponent<Renderer>();
+            if (r != null) r.sharedMaterial = mat;
+            return p;
+        }
+
+        static Material StandMat(Color c, float metallic, float smooth)
+        {
+            var m = PreviewMat(c);
+            if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", metallic);
+            if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth);
+            return m;
+        }
+
+        GameObject BuildStandIn(ItemDefinition def)
+        {
+            string id = def.Id.ToLowerInvariant();
+            var go = new GameObject("StandIn_" + def.Id);
+            var t = go.transform;
+            Color tint = StandInTint(id);
+            var P = PrimitiveType.Cube; var S = PrimitiveType.Sphere; var Cy = PrimitiveType.Cylinder;
+            var dark = StandMat(new Color(0.16f, 0.17f, 0.2f), 0.7f, 0.5f);
+
+            if (id.Contains("frost") || id.Contains("ice"))
+            {
+                // Frost crystal cluster: tall faceted prisms radiating from a base.
+                var m = StandMat(tint, 0.05f, 0.9f);
+                Part(t, P, new Vector3(0f, 0.18f, 0f), new Vector3(0.12f, 0.46f, 0.12f), new Vector3(8f, 20f, 4f), m);
+                Part(t, P, new Vector3(0.16f, 0.1f, 0.04f), new Vector3(0.09f, 0.34f, 0.09f), new Vector3(10f, 60f, -28f), m);
+                Part(t, P, new Vector3(-0.15f, 0.09f, 0.03f), new Vector3(0.1f, 0.3f, 0.1f), new Vector3(-6f, 110f, 30f), m);
+                Part(t, P, new Vector3(0.03f, 0.07f, -0.15f), new Vector3(0.08f, 0.26f, 0.08f), new Vector3(-32f, 10f, 8f), m);
+                Part(t, P, new Vector3(-0.04f, 0.06f, 0.16f), new Vector3(0.08f, 0.24f, 0.08f), new Vector3(30f, 200f, -6f), m);
+                Part(t, Cy, new Vector3(0f, -0.02f, 0f), new Vector3(0.42f, 0.03f, 0.42f), Vector3.zero, StandMat(tint * 0.6f, 0.1f, 0.5f));
+            }
+            else if (id.Contains("ingot"))
+            {
+                var m = StandMat(tint, 0.95f, 0.65f);
+                Part(t, P, new Vector3(0f, 0.04f, 0f), new Vector3(0.5f, 0.14f, 0.24f), Vector3.zero, m);
+                Part(t, P, new Vector3(0f, 0.15f, 0f), new Vector3(0.42f, 0.08f, 0.17f), Vector3.zero, m);
+            }
+            else if (id.Contains("fuel_cell") || id.Contains("helium") || id.Contains("methane") || id.Contains("container") || id.Contains("reagent"))
+            {
+                var m = StandMat(tint, 0.35f, 0.7f);
+                bool sphere = id.Contains("helium");
+                if (sphere) Part(t, S, Vector3.zero, Vector3.one * 0.42f, Vector3.zero, m);
+                else Part(t, Cy, Vector3.zero, new Vector3(0.22f, 0.26f, 0.22f), Vector3.zero, m);
+                Part(t, Cy, new Vector3(0f, sphere ? 0.22f : 0.27f, 0f), new Vector3(0.14f, 0.025f, 0.14f), Vector3.zero, dark);
+                if (!sphere) Part(t, Cy, new Vector3(0f, -0.27f, 0f), new Vector3(0.24f, 0.02f, 0.24f), Vector3.zero, dark);
+                Part(t, Cy, new Vector3(0f, sphere ? 0.0f : 0.02f, 0f), new Vector3(sphere ? 0.44f : 0.235f, sphere ? 0.025f : 0.05f, sphere ? 0.44f : 0.235f), Vector3.zero, StandMat(Color.Lerp(tint, Color.white, 0.5f), 0.2f, 0.5f));
+            }
+            else if (id.Contains("coin"))
+            {
+                Part(t, Cy, Vector3.zero, new Vector3(0.4f, 0.025f, 0.4f), new Vector3(90f, 0f, 0f), StandMat(tint, 0.9f, 0.7f));
+                Part(t, Cy, new Vector3(0f, 0f, 0.012f), new Vector3(0.28f, 0.01f, 0.28f), new Vector3(90f, 0f, 0f), StandMat(tint * 0.7f, 0.9f, 0.5f));
+            }
+            else if (id.Contains("starstone"))
+            {
+                var m = StandMat(tint, 0.2f, 0.95f);
+                Part(t, P, Vector3.zero, new Vector3(0.3f, 0.3f, 0.3f), new Vector3(45f, 0f, 35f), m);
+                Part(t, P, Vector3.zero, new Vector3(0.3f, 0.3f, 0.3f), new Vector3(0f, 45f, 54.7f), m);
+            }
+            else if (id.Contains("geode"))
+            {
+                Part(t, S, Vector3.zero, new Vector3(0.44f, 0.4f, 0.42f), Vector3.zero, StandMat(new Color(0.42f, 0.36f, 0.32f), 0f, 0.2f));
+                var m = StandMat(tint, 0.1f, 0.9f);
+                for (int i = 0; i < 6; i++)
+                {
+                    float a = i * 60f * Mathf.Deg2Rad;
+                    Part(t, P, new Vector3(Mathf.Cos(a) * 0.08f, 0.2f, Mathf.Sin(a) * 0.08f), new Vector3(0.05f, 0.12f, 0.05f), new Vector3(Mathf.Sin(a) * 25f, 0f, -Mathf.Cos(a) * 25f), m);
+                }
+            }
+            else if (id.Contains("nugget") || id.Contains("iridium") || id.Contains("meteoric"))
+            {
+                var m = StandMat(tint, id.Contains("meteoric") ? 0.6f : 0.9f, 0.45f);
+                Part(t, S, Vector3.zero, new Vector3(0.34f, 0.24f, 0.28f), new Vector3(10f, 20f, 0f), m);
+                Part(t, S, new Vector3(0.12f, -0.03f, 0.05f), new Vector3(0.2f, 0.17f, 0.2f), Vector3.zero, m);
+                Part(t, S, new Vector3(-0.1f, 0.06f, -0.06f), new Vector3(0.16f, 0.15f, 0.16f), Vector3.zero, m);
+            }
+            else if (id.Contains("ore") || id.Contains("quartz") || id.Contains("regolith") || id.Contains("sulfide") || id.Contains("salt"))
+            {
+                bool pile = id.Contains("regolith") || id.Contains("salt");
+                var rock = StandMat(pile ? tint : Color.Lerp(new Color(0.3f, 0.27f, 0.26f), tint, 0.25f), 0f, 0.15f);
+                if (pile)
+                {
+                    for (int i = 0; i < 14; i++)
+                    {
+                        float a = i * 2.4f; float r = 0.05f + 0.16f * Mathf.Sqrt(i / 14f);
+                        Part(t, S, new Vector3(Mathf.Cos(a) * r, 0.04f + 0.16f * (1f - i / 14f), Mathf.Sin(a) * r), Vector3.one * (0.09f + 0.03f * ((i * 7) % 3)), Vector3.zero, rock);
+                    }
+                }
+                else
+                {
+                    Part(t, P, Vector3.zero, new Vector3(0.34f, 0.26f, 0.3f), new Vector3(14f, 28f, 8f), rock);
+                    Part(t, P, new Vector3(0.12f, -0.04f, 0.06f), new Vector3(0.22f, 0.2f, 0.22f), new Vector3(-8f, 60f, 14f), rock);
+                    var fleck = StandMat(tint, id.Contains("quartz") ? 0.1f : 0.85f, 0.8f);
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float a = i * 72f * Mathf.Deg2Rad;
+                        Part(t, P, new Vector3(Mathf.Cos(a) * 0.13f, 0.12f - 0.05f * (i % 2), Mathf.Sin(a) * 0.12f), Vector3.one * 0.06f, new Vector3(30f * i, 20f * i, 10f), fleck);
+                    }
+                }
+            }
+            else if (id.Contains("plate"))
+            {
+                Part(t, P, Vector3.zero, new Vector3(0.5f, 0.04f, 0.38f), Vector3.zero, StandMat(tint, 0.9f, 0.6f));
+                var bolt = dark;
+                foreach (var sx in new[] { -1f, 1f }) foreach (var sz in new[] { -1f, 1f })
+                    Part(t, Cy, new Vector3(sx * 0.2f, 0.03f, sz * 0.15f), new Vector3(0.04f, 0.012f, 0.04f), Vector3.zero, bolt);
+            }
+            else if (id.Contains("circuit"))
+            {
+                Part(t, P, Vector3.zero, new Vector3(0.5f, 0.025f, 0.36f), Vector3.zero, StandMat(tint, 0.1f, 0.6f));
+                Part(t, P, new Vector3(-0.08f, 0.03f, 0.04f), new Vector3(0.14f, 0.035f, 0.14f), Vector3.zero, dark);
+                Part(t, P, new Vector3(0.12f, 0.025f, -0.06f), new Vector3(0.08f, 0.025f, 0.06f), Vector3.zero, dark);
+                Part(t, P, new Vector3(0.14f, 0.025f, 0.09f), new Vector3(0.05f, 0.02f, 0.05f), Vector3.zero, StandMat(new Color(0.9f, 0.75f, 0.3f), 0.9f, 0.6f));
+            }
+            else if (id.Contains("sensor"))
+            {
+                Part(t, P, new Vector3(0f, -0.06f, 0f), new Vector3(0.36f, 0.14f, 0.26f), Vector3.zero, dark);
+                Part(t, Cy, new Vector3(0f, 0.08f, 0f), new Vector3(0.05f, 0.1f, 0.05f), Vector3.zero, dark);
+                Part(t, Cy, new Vector3(0f, 0.2f, 0f), new Vector3(0.36f, 0.02f, 0.36f), new Vector3(-20f, 0f, 0f), StandMat(tint, 0.8f, 0.7f));
+                Part(t, S, new Vector3(0f, 0.17f, 0.04f), Vector3.one * 0.05f, Vector3.zero, StandMat(new Color(0.4f, 0.9f, 0.9f), 0f, 0.9f));
+            }
+            else if (id.Contains("wiring"))
+            {
+                var m = StandMat(new Color(0.85f, 0.45f, 0.25f), 0.9f, 0.5f);
+                for (int i = 0; i < 4; i++)
+                    Part(t, Cy, new Vector3(0f, -0.1f + i * 0.065f, 0f), new Vector3(0.36f, 0.02f, 0.36f), Vector3.zero, i % 2 == 0 ? m : StandMat(new Color(0.15f, 0.15f, 0.18f), 0.2f, 0.4f));
+                Part(t, Cy, new Vector3(0f, 0f, 0f), new Vector3(0.1f, 0.3f, 0.1f), Vector3.zero, dark);
+            }
+            else if (id.Contains("flood"))
+            {
+                Part(t, P, new Vector3(-0.08f, 0f, 0f), new Vector3(0.3f, 0.3f, 0.3f), Vector3.zero, dark);
+                Part(t, Cy, new Vector3(0.12f, 0f, 0f), new Vector3(0.28f, 0.04f, 0.28f), new Vector3(0f, 0f, 90f), StandMat(new Color(1f, 0.95f, 0.75f), 0f, 0.95f));
+                Part(t, P, new Vector3(-0.08f, -0.2f, 0f), new Vector3(0.1f, 0.12f, 0.2f), Vector3.zero, dark);
+            }
+            else if (id.Contains("grasshopper") || id.Contains("vehicle"))
+            {
+                Part(t, P, new Vector3(0f, 0.06f, 0f), new Vector3(0.7f, 0.18f, 0.4f), Vector3.zero, StandMat(new Color(0.72f, 0.72f, 0.68f), 0.5f, 0.5f));
+                Part(t, P, new Vector3(0.1f, 0.2f, 0f), new Vector3(0.28f, 0.13f, 0.3f), Vector3.zero, StandMat(new Color(0.25f, 0.5f, 0.6f), 0.2f, 0.9f));
+                foreach (var sx in new[] { -1f, 1f }) foreach (var sz in new[] { -1f, 1f })
+                    Part(t, Cy, new Vector3(sx * 0.24f, -0.03f, sz * 0.24f), new Vector3(0.16f, 0.04f, 0.16f), new Vector3(90f, 0f, 0f), dark);
+            }
+            else
+            {
+                // Generic fragment: a small faceted shard.
+                var m = StandMat(tint, 0.3f, 0.6f);
+                Part(t, P, Vector3.zero, new Vector3(0.18f, 0.4f, 0.14f), new Vector3(14f, 30f, 20f), m);
+                Part(t, P, new Vector3(0.1f, -0.06f, 0.02f), new Vector3(0.12f, 0.26f, 0.1f), new Vector3(-10f, 70f, -25f), m);
+            }
+            return go;
+        }
+
         GameObject BuildIconQuad(ItemDefinition d)
         {
             var go = new GameObject("IconQuad");
@@ -343,10 +546,10 @@ namespace DMI.Xenoarch.UI
             var artInst = !string.IsNullOrEmpty(_stack.instanceId) ? s.Artifacts.Get(_stack.instanceId) : null;
             var artDef = def as ArtifactDefinition;
 
-            var dim = new VisualElement(); dim.AddToClassList("xa-inspect-dim"); _root.Add(dim);
-            dim.RegisterCallback<PointerDownEvent>(e => { if (e.button == 0) Hide(); });
-
-            var modal = new VisualElement(); modal.AddToClassList("xa-inspect"); _root.Add(modal);
+            // Docked beside the grid: no full-screen dim, so the other items stay clickable (right-click retargets).
+            var modal = new VisualElement(); modal.AddToClassList("xa-inspect");
+            modal.AddToClassList(_dockRight ? "xa-inspect--right" : "xa-inspect--left");
+            _root.Add(modal);
 
             _view = new VisualElement(); _view.AddToClassList("xa-inspect__view");
             _view.style.backgroundImage = new StyleBackground(Background.FromRenderTexture(_rt));

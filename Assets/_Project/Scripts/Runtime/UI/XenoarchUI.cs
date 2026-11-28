@@ -53,6 +53,7 @@ namespace DMI.Xenoarch.UI
             root.style.position = Position.Absolute;
             root.style.left = 0; root.style.top = 0; root.style.right = 0; root.style.bottom = 0;
             DMI.Xenoarch.Audio.UISoundBind.Attach(root);
+            UIClickKit.Attach(root);
         }
 
         public static void Show(VisualElement e, bool visible)

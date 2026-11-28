@@ -61,6 +61,7 @@ namespace DMI.Xenoarch.UI
 
         protected override void Tick()
         {
+            if (UIClickKit.Busy) return; // timed rebuilds wait while a button is held or a context menu is open
             if (Session.Crafting.Busy && Time.unscaledTime >= _nextRefresh) { _nextRefresh = Time.unscaledTime + 0.2f; Refresh(); }
             else if (IsOpen && Time.unscaledTime >= _nextRefresh &&
                 ((ShuttleDirector.Instance != null && ShuttleDirector.Instance.EmergencyCooldownRemaining > 0f)
@@ -101,6 +102,7 @@ namespace DMI.Xenoarch.UI
                 var line = Text(left, $"{kv.Key} crate: {used}/{h.Capacity} slots" + (used > 0 ? $"  ({string.Join(", ", top)}{(h.Slots.Count(x => !x.IsEmpty) > 4 ? ", ..." : "")})" : "") + "   [drop here]", "xa-term__dim");
                 var role = kv.Key; var hold = h;
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToCrate(role, hold, p));
+                CrateLine(left, "crate:" + role, line, hold.Slots);
             }
             if (!s.AboardShip) Text(left, "On the surface: drop a stack here to send it to the ship.", "xa-term__dim");
 
@@ -110,12 +112,14 @@ namespace DMI.Xenoarch.UI
                 var sh = cargo.Shuttle; int used = sh.Capacity - sh.FreeSlots;
                 var line = Text(left, $"Shuttle stash: {used}/{sh.Capacity} slots   [drop here]", "xa-term__dim");
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToVehicle(sh, "shuttle", p));
+                CrateLine(left, "shuttle", line, sh.Slots);
             }
             if (cargo != null && VehicleCargo.RoverNearby())
             {
                 var rv = cargo.Rover; int used = rv.Capacity - rv.FreeSlots;
                 var line = Text(left, $"Rover stash: {used}/{rv.Capacity} slots   [drop here]", "xa-term__dim");
                 DragDrop.Target(line, p => p.kind == "backpack", p => DropToVehicle(rv, "rover", p));
+                CrateLine(left, "rover", line, rv.Slots);
             }
 
             Text(left, "EMERGENCY CALLS", "xa-term__h");
@@ -465,6 +469,36 @@ namespace DMI.Xenoarch.UI
                     : $"{name} taken off the hotbar. You don't have one yet: craft it aboard the ship, then drag it from the backpack onto the hotbar.", 4f);
         }
 
+        readonly System.Collections.Generic.HashSet<string> _openCrates = new System.Collections.Generic.HashSet<string>();
+
+        /// <summary>Storage summary line: click to open its contents as a tile grid; right-click a tile to inspect it.</summary>
+        void CrateLine(VisualElement left, string key, Label line, System.Collections.Generic.IEnumerable<ItemStack> slots)
+        {
+            line.AddToClassList("xa-term__row");
+            line.tooltip = "Click to show / hide the contents. Drop a backpack stack here to store it.";
+            bool open = _openCrates.Contains(key);
+            line.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (e.button != 0 || Drag.Dragging) return;
+                if (!_openCrates.Remove(key)) _openCrates.Add(key);
+                Refresh();
+            });
+            if (!open) return;
+            var g = ItemSlotUI.Grid(6, 64);
+            int n = 0;
+            foreach (var st in slots)
+            {
+                if (st == null || st.IsEmpty) continue;
+                n++;
+                var stack = st.Clone();
+                var tile = ItemSlotUI.Create(64, false);
+                ItemSlotUI.Paint(tile, Def(stack.itemId), stack, false, "Right-click: inspect");
+                UIClickKit.InspectOnRightClick(tile, () => stack);
+                g.Add(tile);
+            }
+            if (n == 0) Text(left, "Empty.", "xa-term__dim"); else left.Add(g);
+        }
+
         VisualElement HotbarTile(int k)
         {
             var bar = Session.Hotbar; string id = bar.At(k);
@@ -488,16 +522,17 @@ namespace DMI.Xenoarch.UI
             t.Add(key);
             bool owned = id != null && Session.Inventory.Count(id) > 0;
             t.tooltip = k == 0 ? "1: handheld scanner (fixed)" : id != null ? $"{k + 1}: {(d != null ? d.DisplayNameOrId : id)}" + (owned ? " (drag off to clear, right-click to drop or destroy)" : " (not owned yet: craft it aboard the ship)") : $"{k + 1}: empty (drag an item here)";
-            if (k > 0 && bar.StackAt(k) != null)
+            if (id != null)
             {
-                int slot = k;
+                int slot = k; string hid = id;
                 t.RegisterCallback<PointerDownEvent>(e =>
                 {
                     if (e.button != 1) return;
                     e.StopPropagation();
-                    var held = Session.Hotbar.StackAt(slot);
-                    if (held == null) return;
-                    ShowItemMenu(held.Clone(), () => Session.Hotbar.Clear(slot), e.position);
+                    var held = slot > 0 ? Session.Hotbar.StackAt(slot) : null;
+                    if (held != null) { ShowItemMenu(held.Clone(), () => Session.Hotbar.Clear(slot), e.position); return; }
+                    // Slot 1 (the scanner) and ghost slots (assigned but not owned yet): inspect via the item definition.
+                    ItemInspector.Open(new ItemStack(hid, 1), e.position);
                 });
             }
             if (k > 0)

@@ -54,7 +54,7 @@ namespace DMI.Xenoarch.Ship
                 if (facts != null)
                     foreach (var pl in facts.planets)
                     {
-                        var r = new VisualElement(); r.AddToClassList("xa-term__row"); r.AddToClassList("xa-term__row--child"); r.AddToClassList("xa-term__row--locked");
+                        var r = new VisualElement(); r.AddToClassList("xa-term__row"); r.AddToClassList("xa-term__row--child"); r.AddToClassList("xa-term__row--locked"); r.AddToClassList("xa-term__row--static");
                         r.Add(new Label(pl.name)); var t = new Label(pl.Candidate ? "candidate" : "planet"); t.style.color = XenoarchPalette.SecondaryText; r.Add(t);
                         list.Add(r);
                     }

@@ -275,6 +275,8 @@
     --xa-m-line-2: rgba(232, 226, 208, 0.28);
     --xa-m-track: rgba(232, 226, 208, 0.12);
     --xa-m-gold: rgb(255, 200, 80);
+    /* Opaque window background: the inspector and other docked panels must never show the scene through. */
+    --xa-m-bg: rgb(40, 9, 14);
 }
 .xa-m-medium, .xa-term__title, .xa-term__h, .xa-obj__title, .xa-m-head, .xa-m-tab, .xa-m-key, .xa-button, .xa-term__btn, .xa-m-badge, .xa-scan__title, .xa-detector__title {
     -unity-font-definition: url("/Assets/_Project/Art/Fonts/Jost/Jost-500-Medium.ttf");
@@ -526,18 +528,21 @@
 
 .xa-inspect-root { }
 .xa-inspect-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(8, 2, 4, 0.72); }
+/* Docked inspector: opaque panel on one side of the screen (opposite the clicked item), no full-screen dim. */
 .xa-inspect {
     position: absolute;
-    left: 6%;
     top: 7%;
-    width: 88%;
+    width: 46%;
+    min-width: 760px;
     height: 86%;
     flex-direction: row;
     background-color: var(--xa-m-bg);
     border-width: 1px;
-    border-color: var(--xa-m-line);
-    padding: 16px;
+    border-color: var(--xa-m-line-2);
+    padding: 14px;
 }
+.xa-inspect--right { right: 3%; }
+.xa-inspect--left { left: 3%; }
 .xa-inspect__view {
     flex-grow: 1;
     flex-shrink: 1;
@@ -564,7 +569,9 @@
 }
 .xa-inspect__hint { flex-direction: row; align-items: center; margin-bottom: 4px; }
 .xa-inspect__hint .xa-m-key, .xa-inspect__hint .xa-key { margin-right: 8px; }
-.xa-inspect__side { width: 38%; min-width: 320px; flex-shrink: 0; padding: 4px 8px 8px 8px; overflow: hidden; }
+.xa-inspect__side { width: 40%; min-width: 300px; flex-shrink: 0; align-self: stretch; padding: 4px 8px 8px 12px; overflow: hidden; background-color: var(--xa-m-bg); border-left-width: 1px; border-left-color: var(--xa-m-line); }
+.xa-inspect__side > .unity-scroll-view__content-viewport { background-color: var(--xa-m-bg); }
+.xa-inspect__side .unity-scroll-view__content-container { background-color: var(--xa-m-bg); }
 .xa-inspect__kicker { font-size: 11px; letter-spacing: 3px; color: var(--xa-highlight); margin-bottom: 2px; }
 .xa-inspect__title { font-size: 22px; letter-spacing: 1px; color: var(--xa-heading); white-space: normal; margin-bottom: 8px; }
 .xa-inspect__chips { flex-direction: row; flex-wrap: wrap; margin-bottom: 10px; }
@@ -592,3 +599,18 @@
 /* t310u: existing library waypoint icon for map markers (no new art). */
 .xa-icon--nav-waypoint { background-image: url("/Assets/Xenoarch/UI/Icons/Navigation/icon_nav_waypoint.png"); }
 .xa-map-icon--waypoint { -unity-background-image-tint-color: var(--xa-highlight); }
+
+/* ---- click pass: whole-control hit areas and visible hover (nav terminal, lists, dropdowns) ---- */
+.xa-term__row { margin: 0 0 2px 0; min-height: 40px; padding: 8px 10px; }
+.xa-term__row:hover { background-color: var(--xa-m-tile-hi); border-color: var(--xa-highlight); }
+.xa-term__row:active { background-color: rgba(104, 223, 214, 0.22); }
+.xa-term__row--sel:hover { background-color: rgba(104, 223, 214, 0.24); }
+.xa-term__row--static:hover { background-color: var(--xa-m-tile); border-color: var(--xa-m-line); }
+.xa-term__row:disabled:hover { background-color: var(--xa-m-tile); border-color: var(--xa-m-line); }
+.xa-term__dropdown { min-height: 42px; padding: 8px 12px; margin: 0 0 4px 0; flex-shrink: 0; flex-direction: row; justify-content: space-between; align-items: center; }
+.xa-term__dropdown:hover { background-color: var(--xa-m-tile-hi); border-color: var(--xa-highlight); }
+.xa-term__dropdown:active { background-color: rgba(104, 223, 214, 0.22); }
+.xa-term__btn:active { background-color: var(--xa-highlight); }
+.xa-term__btn--ghost:active { background-color: var(--xa-m-tile-hi); }
+.xa-item-slot:hover { border-color: var(--xa-highlight); background-color: rgba(118, 28, 39, 0.55); }
+.xa-recipe:active { background-color: rgba(104, 223, 214, 0.2); }

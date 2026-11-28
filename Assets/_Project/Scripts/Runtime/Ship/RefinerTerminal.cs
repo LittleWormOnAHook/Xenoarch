@@ -21,6 +21,10 @@ namespace DMI.Xenoarch.Ship
         string _selectedId;
         int _amount = 1;
         VisualElement _slotsRoot;
+        string _baySig;
+        string _selMat;
+        readonly System.Collections.Generic.List<VisualElement> _matTiles = new System.Collections.Generic.List<VisualElement>();
+        readonly System.Collections.Generic.List<(Label lbl, VisualElement fill, int uid)> _bayLive = new System.Collections.Generic.List<(Label, VisualElement, int)>();
 
         protected override void OnOpened() => Session.Materials.RefineCompleted += OnDone;
         protected override void OnClosed() { if (Session != null) Session.Materials.RefineCompleted -= OnDone; }
@@ -36,7 +40,32 @@ namespace DMI.Xenoarch.Ship
             if (!Session.Materials.Busy || Time.unscaledTime < _nextRefresh) return;
             _nextRefresh = Time.unscaledTime + 0.25f;
             UpdateStatus();
-            if (_slotsRoot != null) BuildSlots(_slotsRoot);
+            if (_slotsRoot == null) return;
+            // Only rebuild the bays when a job starts / finishes / is cancelled (and never mid-click): otherwise update
+            // the countdown text and bar in place, so Cancel / Collect buttons keep their hover state and every click lands.
+            if (BaySig() != _baySig)
+            {
+                if (!UIClickKit.Busy) BuildSlots(_slotsRoot);
+                return;
+            }
+            var m = Session.Materials;
+            foreach (var (lbl, fill, uid) in _bayLive)
+            {
+                foreach (var j in m.Jobs)
+                {
+                    if (j.uid != uid) continue;
+                    lbl.text = $"{Mathf.Max(0f, j.duration - j.elapsed):0} s left · x{j.Batches}";
+                    fill.style.width = Length.Percent(Mathf.Clamp01(j.elapsed / Mathf.Max(0.01f, j.duration)) * 100f);
+                    break;
+                }
+            }
+        }
+
+        string BaySig()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var j in Session.Materials.Jobs) sb.Append(j.uid).Append(j.done ? 'd' : 'r').Append(',');
+            return sb.ToString();
         }
 
         string Inputs(RefineRecipe r, int n) => string.Join(" + ", r.inputs.Select(i => $"{i.count * n} {Session.Materials.Name(i.itemId)}"));
@@ -70,19 +99,29 @@ namespace DMI.Xenoarch.Ship
                 row.AddToClassList("xa-recipe");
                 if (rec.Id == _selectedId) row.AddToClassList("xa-recipe--sel");
                 var outDef = rec.outputs.Count > 0 && Session.Items.TryGetItem(rec.outputs[0].itemId, out var od) ? od : null;
-                var iconWrap = ItemSlotUI.Create(56, rec.Id == _selectedId);
+                var iconWrap = ItemSlotUI.Create(80, rec.Id == _selectedId);
                 ItemSlotUI.Paint(iconWrap, outDef, rec.outputs.Count > 0 ? new ItemStack(rec.outputs[0].itemId, rec.outputs[0].count) : new ItemStack(), rec.Id == _selectedId);
                 iconWrap.pickingMode = PickingMode.Ignore;
                 row.Add(iconWrap);
-                var info = new VisualElement(); info.style.flexGrow = 1; info.style.marginLeft = 8;
+                row.style.alignItems = Align.Center;
+                row.style.minHeight = 96;
+                if (outDef != null)
+                {
+                    // Left-click selects the recipe; right-click inspects what it makes (docked inspector).
+                    var outStack = new ItemStack(outDef.Id, 1);
+                    row.RegisterCallback<PointerDownEvent>(e => { if (e.button == 1) { e.StopPropagation(); ItemInspector.Open(outStack, e.position); } });
+                }
+                var info = new VisualElement(); info.style.flexGrow = 1; info.style.marginLeft = 10;
                 var nm = new Label((rec.displayName ?? rec.Id).ToUpperInvariant()); nm.AddToClassList("xa-recipe__name"); info.Add(nm);
                 var io = new VisualElement(); io.style.flexDirection = FlexDirection.Row; io.style.alignItems = Align.Center; io.style.flexWrap = Wrap.Wrap;
                 void AddAmt(ItemAmount a)
                 {
                     Session.Items.TryGetItem(a.itemId, out var d);
-                    var chip = new VisualElement(); chip.style.flexDirection = FlexDirection.Row; chip.style.alignItems = Align.Center; chip.style.marginRight = 6;
-                    chip.Add(ItemSlotUI.Icon(d, 20));
-                    var lab = new Label("x" + a.count); lab.AddToClassList("xa-term__dim"); lab.style.fontSize = 12; chip.Add(lab);
+                    var chip = new VisualElement(); chip.style.flexDirection = FlexDirection.Row; chip.style.alignItems = Align.Center; chip.style.marginRight = 10; chip.style.marginTop = 2; chip.style.marginBottom = 2;
+                    chip.Add(ItemSlotUI.Icon(d, 32));
+                    var lab = new Label("x" + a.count); lab.AddToClassList("xa-term__dim"); lab.style.fontSize = 14; lab.style.marginLeft = 4; chip.Add(lab);
+                    if (d != null) UIClickKit.InspectOnRightClick(chip, () => new ItemStack(d.Id, 1));
+                    chip.pickingMode = PickingMode.Position; lab.pickingMode = PickingMode.Ignore;
                     io.Add(chip);
                 }
                 foreach (var inp in rec.inputs) AddAmt(inp);
@@ -133,6 +172,7 @@ namespace DMI.Xenoarch.Ship
             Text(cargoCol, "Backpack + ship crates. Inputs come from the backpack first; products go to the backpack, then a crate.", "xa-term__dim");
             var matRow = new VisualElement(); matRow.style.flexDirection = FlexDirection.Row; matRow.style.flexWrap = Wrap.Wrap; cargoCol.Add(matRow);
             int n = 0;
+            _matTiles.Clear();
             var stock = Session.Stock;
             foreach (var id in stock.Ids().ToList())
             {
@@ -140,8 +180,20 @@ namespace DMI.Xenoarch.Ship
                 if (md == null) continue;
                 n++;
                 int allStock = stock.Count(id);
-                var tile = ItemSlotUI.Create(64, id == _selectedId);
-                ItemSlotUI.Paint(tile, md, new ItemStack(id, allStock), id == _selectedId, ResourceGroups.GroupLabel(md));
+                bool isSel = id == _selMat;
+                var tile = ItemSlotUI.Create(80, isSel);
+                ItemSlotUI.Paint(tile, md, new ItemStack(id, allStock), isSel, ResourceGroups.GroupLabel(md) + "\nLeft-click: select   Right-click: inspect");
+                string matId = id; int matCount = allStock;
+                _matTiles.Add(tile);
+                tile.userData = matId;
+                tile.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    if (e.button == 1) { e.StopPropagation(); ItemInspector.Open(new ItemStack(matId, matCount), e.position); return; }
+                    if (e.button != 0) return;
+                    _selMat = matId;
+                    foreach (var t in _matTiles) ItemSlotUI.SetSelected(t, (string)t.userData == matId);
+                    if (ItemInspector.IsOpen) ItemInspector.Open(new ItemStack(matId, matCount), e.position);
+                });
                 matRow.Add(tile);
             }
             if (n == 0) Text(cargoCol, "None. Collect deposits on planet surfaces (hold E).");
@@ -241,6 +293,8 @@ namespace DMI.Xenoarch.Ship
         void BuildSlots(VisualElement host)
         {
             host.Clear();
+            _bayLive.Clear();
+            _baySig = BaySig();
             var m = Session.Materials;
             Text(host, "REFINER BAYS", "xa-term__h");
             for (int slot = 0; slot < MaterialsService.RefinerSlots; slot++)
@@ -262,9 +316,9 @@ namespace DMI.Xenoarch.Ship
                 var row = new VisualElement(); row.style.flexDirection = FlexDirection.Row; row.style.alignItems = Align.Center;
                 block.Add(row);
                 var outDef = r != null && r.outputs.Count > 0 && Session.Items.TryGetItem(r.outputs[0].itemId, out var od) ? od : null;
-                var icon = ItemSlotUI.Create(56, job.done);
-                ItemSlotUI.Paint(icon, outDef, r != null && r.outputs.Count > 0 ? new ItemStack(r.outputs[0].itemId, r.outputs[0].count * n) : new ItemStack(), job.done);
-                icon.pickingMode = PickingMode.Ignore;
+                var icon = ItemSlotUI.Create(80, job.done);
+                ItemSlotUI.Paint(icon, outDef, r != null && r.outputs.Count > 0 ? new ItemStack(r.outputs[0].itemId, r.outputs[0].count * n) : new ItemStack(), job.done, "Right-click: inspect");
+                if (outDef != null) UIClickKit.InspectOnRightClick(icon, () => new ItemStack(outDef.Id, 1));
                 row.Add(icon);
                 var info = new VisualElement(); info.style.flexGrow = 1; info.style.marginLeft = 10; row.Add(info);
                 var head = new VisualElement(); head.style.flexDirection = FlexDirection.Row; head.style.justifyContent = Justify.SpaceBetween;
@@ -275,8 +329,10 @@ namespace DMI.Xenoarch.Ship
                 }
                 info.Add(head);
                 if (job.done) Text(info, $"Ready · x{n}", "xa-term__dim");
-                else Text(info, $"{Mathf.Max(0f, job.duration - job.elapsed):0} s left · x{n}", "xa-term__dim");
-                Bar(info, job.elapsed / Mathf.Max(0.01f, job.duration));
+                Label timeLbl = null;
+                if (!job.done) timeLbl = Text(info, $"{Mathf.Max(0f, job.duration - job.elapsed):0} s left · x{n}", "xa-term__dim");
+                var barFill = Bar(info, job.elapsed / Mathf.Max(0.01f, job.duration));
+                if (timeLbl != null) _bayLive.Add((timeLbl, barFill, uid));
                 if (job.done)
                 {
                     Text(block, "Finished. Cargo is full: make room, then collect.", "xa-term__warn");
@@ -302,13 +358,14 @@ namespace DMI.Xenoarch.Ship
             var b = Btn(parent, text, onClick, enabled);
             b.style.flexGrow = 0;
             b.style.flexShrink = 0;
-            b.style.minWidth = 52;
+            b.style.minWidth = 76;
+            b.style.minHeight = 46;
             b.style.width = StyleKeyword.Auto;
-            b.style.marginTop = 2;
-            b.style.marginBottom = 2;
-            b.style.marginRight = 6;
-            b.style.paddingLeft = 10;
-            b.style.paddingRight = 10;
+            b.style.marginTop = 3;
+            b.style.marginBottom = 3;
+            b.style.marginRight = 8;
+            b.style.paddingLeft = 14;
+            b.style.paddingRight = 14;
             return b;
         }
 

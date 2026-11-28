@@ -32,10 +32,20 @@ namespace DMI.Xenoarch.UI
             public Action<VisualElement> BuildExtra;
         }
 
+        static VisualElement _openMenu;
+        /// <summary>True while a right-click menu is on screen (timed rebuilds must not destroy it).</summary>
+        public static bool AnyOpen => _openMenu != null && _openMenu.parent != null;
+
         public static VisualElement Show(Request req, Vector2 screenPos)
         {
             if (req?.Host == null || req.Stack == null || req.Stack.IsEmpty || req.Session == null) return null;
             Hide(req.Host);
+            // With the docked inspector open, a right-click on any item retargets it directly (no menu, no Close first).
+            if (ItemInspector.IsOpen)
+            {
+                ItemInspector.Open(req.Stack, screenPos);
+                return null;
+            }
             var s = req.Session;
             var st = req.Stack;
             var d = s.Items.TryGetItem(st.itemId, out var def) ? def : null;
@@ -62,7 +72,7 @@ namespace DMI.Xenoarch.UI
             Btn(menu, "Inspect", () =>
             {
                 Hide(req.Host);
-                ItemInspector.Open(st);
+                ItemInspector.Open(st, screenPos);
             });
 
             if (req.OnMove != null)
@@ -158,6 +168,7 @@ namespace DMI.Xenoarch.UI
 
             Btn(menu, "Cancel", () => Hide(req.Host)).AddToClassList("xa-term__btn--ghost");
             req.Host.Add(menu);
+            _openMenu = menu;
             var local = req.Host.WorldToLocal(screenPos);
             menu.style.left = local.x; menu.style.top = local.y;
             menu.RegisterCallback<GeometryChangedEvent>(_ =>
@@ -203,6 +214,7 @@ namespace DMI.Xenoarch.UI
             panel.style.position = Position.Absolute;
             panel.style.left = 40; panel.style.top = 80;
             panel.style.minWidth = 340;
+            _openMenu = panel;
             var h = new Label($"Split {name}"); h.AddToClassList("xa-term__h"); panel.Add(h);
             var count = new Label(amount.ToString());
             count.AddToClassList("xa-term__text");

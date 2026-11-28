@@ -47,6 +47,7 @@ namespace DMI.Xenoarch.UI
 
         readonly List<Label> _labels = new List<Label>();
         Vector2 _downPos, _lastPos; int _button = -1; bool _dragged; bool _shift, _ctrl;
+        int _hover = -1; // index into Items of the body under the pointer (hover highlight + label)
         // Static: the terminal rebuilds the map on the first click, so a per-instance record would miss the second one.
         static string _lastClickId; static float _lastClickTime;
 
@@ -64,6 +65,7 @@ namespace DMI.Xenoarch.UI
             RegisterCallback<PointerDownEvent>(OnDown);
             RegisterCallback<PointerMoveEvent>(OnMove);
             RegisterCallback<PointerUpEvent>(OnUp);
+            RegisterCallback<PointerLeaveEvent>(_ => SetHover(-1));
             RegisterCallback<WheelEvent>(OnWheel);
             RegisterCallback<KeyDownEvent>(OnKey);
             RegisterCallback<ContextClickEvent>(e => e.StopPropagation());
@@ -99,16 +101,18 @@ namespace DMI.Xenoarch.UI
         {
             if (float.IsNaN(contentRect.width) || contentRect.width < 4f) return;
             int li = 0;
-            foreach (var it in Items)
+            for (int ii = 0; ii < Items.Count; ii++)
             {
+                var it = Items[ii];
+                bool hov = ii == _hover;
                 if (string.IsNullOrEmpty(it.label)) continue;
-                if (!(it.alwaysLabel || it.selected || it.here || State.zoom >= 1.6f)) continue;
+                if (!(hov || it.alwaysLabel || it.selected || it.here || State.zoom >= 1.6f)) continue;
                 if (li >= _labels.Count) { var l = new Label { pickingMode = PickingMode.Ignore }; l.AddToClassList("xa-map-label"); _labels.Add(l); Add(l); }
                 var lbl = _labels[li++];
                 var p = ToScreen(it.pos, out _);
                 lbl.text = (it.here ? "> " : "") + it.label;
                 lbl.style.left = p.x + it.size * 0.5f + 3f; lbl.style.top = p.y - 8f;
-                lbl.style.color = it.here ? XenoarchPalette.Primary : it.selected ? XenoarchPalette.Highlight : XenoarchPalette.A(XenoarchPalette.Text, it.dim ? 0.45f : 0.85f);
+                lbl.style.color = hov ? XenoarchPalette.Highlight : it.here ? XenoarchPalette.Primary : it.selected ? XenoarchPalette.Highlight : XenoarchPalette.A(XenoarchPalette.Text, it.dim ? 0.45f : 0.85f);
                 lbl.style.display = contentRect.Contains(p) ? DisplayStyle.Flex : DisplayStyle.None;
             }
             for (int i = li; i < _labels.Count; i++) _labels[i].style.display = DisplayStyle.None;
@@ -142,9 +146,16 @@ namespace DMI.Xenoarch.UI
             {
                 var it = Items[i];
                 var s = ToScreen(it.pos, out _);
-                float rad = Mathf.Max(2f, it.size * 0.5f);
-                p2.fillColor = it.dim ? new Color(it.color.r * 0.5f, it.color.g * 0.5f, it.color.b * 0.55f, 0.8f) : it.color;
+                bool hov = i == _hover;
+                float rad = Mathf.Max(2f, it.size * 0.5f) * (hov ? 1.35f : 1f);
+                var baseCol = it.dim ? new Color(it.color.r * 0.5f, it.color.g * 0.5f, it.color.b * 0.55f, 0.8f) : it.color;
+                p2.fillColor = hov ? Color.Lerp(baseCol, Color.white, 0.4f) : baseCol;
                 p2.BeginPath(); p2.Arc(s, rad, 0f, 360f); p2.Fill();
+                if (hov && !(it.selected || it.here))
+                {
+                    p2.lineWidth = 2f; p2.strokeColor = XenoarchPalette.A(XenoarchPalette.Highlight, 0.9f);
+                    p2.BeginPath(); p2.Arc(s, rad + 5f, 0f, 360f); p2.Stroke(); p2.lineWidth = 1f;
+                }
                 if (it.selected || it.here)
                 {
                     p2.lineWidth = 2f; p2.strokeColor = it.selected ? XenoarchPalette.Highlight : XenoarchPalette.Primary;
@@ -164,7 +175,8 @@ namespace DMI.Xenoarch.UI
 
         void OnMove(PointerMoveEvent e)
         {
-            if (_button < 0 || !this.HasPointerCapture(e.pointerId)) return;
+            if (_button < 0) { SetHover(HitIndex((Vector2)e.localPosition)); return; }
+            if (!this.HasPointerCapture(e.pointerId)) return;
             var pos = (Vector2)e.localPosition; var d = pos - _lastPos; _lastPos = pos;
             if ((pos - _downPos).sqrMagnitude > 16f) _dragged = true;
             if (!_dragged) return;
@@ -193,20 +205,36 @@ namespace DMI.Xenoarch.UI
             bool click = _button == 0 && !_dragged;
             _button = -1;
             if (!click) return;
-            var pos = (Vector2)e.localPosition;
-            string best = null; float bestD = float.MaxValue; Vector3 bestPos = default;
-            foreach (var it in Items)
-            {
-                if (string.IsNullOrEmpty(it.id)) continue; // display-only item
-                var s = ToScreen(it.pos, out _);
-                float d = (s - pos).magnitude, hit = Mathf.Max(10f, it.size * 0.5f + 5f);
-                if (d <= hit && d < bestD) { bestD = d; best = it.id; bestPos = it.pos; }
-            }
-            if (best == null) return;
+            int hi = HitIndex((Vector2)e.localPosition);
+            if (hi < 0) return;
+            string best = Items[hi].id; Vector3 bestPos = Items[hi].pos;
             bool dbl = best == _lastClickId && Time.unscaledTime - _lastClickTime < 0.4f;
             _lastClickId = best; _lastClickTime = Time.unscaledTime;
             if (dbl) { FocusOn(bestPos); Focused?.Invoke(best); _lastClickId = null; }
             else Clicked?.Invoke(best);
+        }
+
+        /// <summary>Nearest clickable body within a generous pick radius (never smaller than 16 px), or -1.</summary>
+        int HitIndex(Vector2 pos)
+        {
+            int best = -1; float bestD = float.MaxValue;
+            for (int i = 0; i < Items.Count; i++)
+            {
+                var it = Items[i];
+                if (string.IsNullOrEmpty(it.id)) continue; // display-only item
+                var s = ToScreen(it.pos, out _);
+                float d = (s - pos).magnitude, hit = Mathf.Max(16f, it.size * 0.5f + 9f);
+                if (d <= hit && d < bestD) { bestD = d; best = i; }
+            }
+            return best;
+        }
+
+        void SetHover(int i)
+        {
+            if (i == _hover) return;
+            _hover = i;
+            Relayout();
+            MarkDirtyRepaint();
         }
 
         /// <summary>Fly the orbit pivot to a world point (rotation then orbits around it); zooms in a little if far out.</summary>

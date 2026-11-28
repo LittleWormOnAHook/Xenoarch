@@ -37,7 +37,8 @@ namespace DMI.Xenoarch.Ship
 
         protected override void Tick()
         {
-            if (Session.Artifacts.Busy && Time.unscaledTime >= _nextRefresh) { _nextRefresh = Time.unscaledTime + 0.25f; Refresh(); }
+            // Never rebuild mid-click (a rebuild between press and release drops the click) or under an open menu.
+            if (Session.Artifacts.Busy && Time.unscaledTime >= _nextRefresh && !UIClickKit.Busy) { _nextRefresh = Time.unscaledTime + 0.5f; Refresh(); }
         }
 
         protected override void Build(VisualElement body)
