@@ -402,6 +402,8 @@ namespace DMI.Xenoarch.Exploration
             while (SceneLoader.Busy && wait < 240f && holder != null) { wait += Time.unscaledDeltaTime; yield return null; }
             if (holder == null) { _descend = null; yield break; }
             Debug.Log($"[ShuttleDiag] descend start={start:F1} ground={ground:F1} reason={reason} heldBehindLoading={wait:0.0}s body={(rb != null ? "kinematic" : "none")}");
+            var thrusters = ShuttleThrusters.For(holder);
+            if (thrusters != null) thrusters.Ignite();   // reactor afterburners run for the whole descent
             float t = 0f;
             while (t < DescendSeconds && holder != null)
             {
@@ -412,6 +414,7 @@ namespace DMI.Xenoarch.Exploration
                 var p = new Vector3(ground.x, Mathf.Lerp(start.y, ground.y, u), ground.z);
                 if (rb != null) rb.MovePosition(p); else holder.position = p;
             }
+            if (thrusters != null) thrusters.Cut();   // touchdown: engines off
             if (holder != null)
             {
                 if (rb != null) rb.interpolation = RigidbodyInterpolation.None; // parked: nothing to interpolate, no one-frame pull-back
