@@ -56,12 +56,12 @@ namespace DMI.Xenoarch.EditorTools
             if (loot.tiers == null || loot.tiers.Count == 0) // keep his tuning once it exists
             {
                 float[] weights = { 60f, 28f, 10f, 2f };
-                loot.tiers = new List<LootTierEntry>();
+                loot.tiers = new List<LootTableDefinition.LootTierEntry>();
                 foreach (LootTier t in System.Enum.GetValues(typeof(LootTier)))
-                    loot.tiers.Add(new LootTierEntry
+                    loot.tiers.Add(new LootTableDefinition.LootTierEntry
                     {
                         tier = t, weight = weights[(int)t], extraRolls = t == LootTier.Common ? 1 : 0,
-                        items = Defs.Where(d => d.tier == t).Select(d => new LootEntry { itemId = d.id, min = d.min, max = d.max }).ToList(),
+                        items = Defs.Where(d => d.tier == t).Select(d => new LootTableDefinition.LootEntry { itemId = d.id, min = d.min, max = d.max }).ToList(),
                     });
             }
             EditorUtility.SetDirty(loot);

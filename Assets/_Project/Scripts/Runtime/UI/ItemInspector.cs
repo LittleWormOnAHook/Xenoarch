@@ -350,7 +350,10 @@ namespace DMI.Xenoarch.UI
 
             _view = new VisualElement(); _view.AddToClassList("xa-inspect__view");
             _view.style.backgroundImage = new StyleBackground(Background.FromRenderTexture(_rt));
-            _view.style.unityBackgroundScaleMode = ScaleMode.ScaleAndCrop;
+            _view.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+            _view.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
+            _view.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
+            _view.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
             modal.Add(_view);
             var cap = new Label("3D VIEWPORT  ·  INTERACTIVE"); cap.AddToClassList("xa-inspect__cap"); _view.Add(cap);
             var hints = new VisualElement(); hints.AddToClassList("xa-inspect__hints");

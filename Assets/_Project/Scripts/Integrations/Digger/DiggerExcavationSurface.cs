@@ -60,7 +60,7 @@ namespace DMI.Xenoarch.Integrations.Digger
         // the listener is not serialized, so scenes and the vendor Digger files stay untouched.
         void HookChunkShadows()
         {
-            foreach (var ds in FindObjectsByType<DiggerSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var ds in FindObjectsByType<DiggerSystem>(FindObjectsInactive.Include))
             {
                 if (ds.onChunkObjectCreated == null) ds.onChunkObjectCreated = new UnityEvent<ChunkObject>();
                 ds.onChunkObjectCreated.RemoveListener(MakeShadowless);
@@ -81,7 +81,7 @@ namespace DMI.Xenoarch.Integrations.Digger
         void Start()
         {
             if (shadowlessDigs)
-                foreach (var c in FindObjectsByType<ChunkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None)) MakeShadowless(c);
+                foreach (var c in FindObjectsByType<ChunkObject>(FindObjectsInactive.Include)) MakeShadowless(c);
             var ds = FindAnyObjectByType<DiggerSystem>();
             if (ds != null)
                 Debug.Log($"[Xenoarch] Digger voxels: {ds.HeightmapScale.x:0.###} x {ds.HeightmapScale.y:0.###} m (h x v), min carve radius {_minRadius:0.##} m");

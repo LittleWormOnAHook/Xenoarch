@@ -7,17 +7,6 @@ namespace DMI.Xenoarch.Valuables
 {
     public enum LootTier { Common = 0, Uncommon = 1, Rare = 2, SuperRare = 3 }
 
-    [Serializable] public sealed class LootEntry { public string itemId; [Min(1)] public int min = 1; [Min(1)] public int max = 1; }
-
-    [Serializable]
-    public sealed class LootTierEntry
-    {
-        public LootTier tier;
-        [Tooltip("Relative chance of a cache rolling this tier.")] [Min(0f)] public float weight = 1f;
-        [Tooltip("One of these is picked (equal chance) per roll.")] public List<LootEntry> items = new List<LootEntry>();
-        [Tooltip("Extra rolls from the same tier list.")] [Min(0)] public int extraRolls;
-    }
-
     /// <summary>
     /// Loot for random valuable caches (not part of the discovery chain): weighted tiers up to super rare, each with an
     /// item list. Pure data; rolls are deterministic per cache seed so a cache always holds the same thing.
@@ -25,6 +14,18 @@ namespace DMI.Xenoarch.Valuables
     [CreateAssetMenu(menuName = "Xenoarch/Valuables/Loot Table", fileName = "Loot_")]
     public sealed class LootTableDefinition : DefinitionAsset
     {
+        // Nested so Unity does not emit a MonoScript for these plain serializable types (ExtensionOfNativeClass).
+        [Serializable] public sealed class LootEntry { public string itemId; [Min(1)] public int min = 1; [Min(1)] public int max = 1; }
+
+        [Serializable]
+        public sealed class LootTierEntry
+        {
+            public LootTier tier;
+            [Tooltip("Relative chance of a cache rolling this tier.")] [Min(0f)] public float weight = 1f;
+            [Tooltip("One of these is picked (equal chance) per roll.")] public List<LootEntry> items = new List<LootEntry>();
+            [Tooltip("Extra rolls from the same tier list.")] [Min(0)] public int extraRolls;
+        }
+
         protected override string DefaultIdPrefix => "loot.";
         public List<LootTierEntry> tiers = new List<LootTierEntry>();
 

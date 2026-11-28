@@ -19,8 +19,17 @@ namespace DMI.Xenoarch.Footsteps
         bool _decalMode;
         Shader _decalShader;
         Material _quadShared;
-        readonly System.Collections.Generic.Dictionary<int, Material> _decalMats =
-            new System.Collections.Generic.Dictionary<int, Material>(16);
+        readonly System.Collections.Generic.Dictionary<DecalKey, Material> _decalMats =
+            new System.Collections.Generic.Dictionary<DecalKey, Material>(16);
+
+        struct DecalKey : System.IEquatable<DecalKey>
+        {
+            public EntityId albedo, nrm;
+            public int nrmStr;
+            public bool Equals(DecalKey other) => albedo == other.albedo && nrm == other.nrm && nrmStr == other.nrmStr;
+            public override bool Equals(object obj) => obj is DecalKey k && Equals(k);
+            public override int GetHashCode() => albedo.GetHashCode() ^ (nrm.GetHashCode() * 397) ^ (nrmStr * 1009);
+        }
         Mesh _quad;
 
         struct Slot
@@ -187,9 +196,12 @@ namespace DMI.Xenoarch.Footsteps
 
         Material DecalMaterial(Texture2D albedo, Texture2D nrm, FootstepSurfaceMap.Surface surface)
         {
-            int key = (albedo != null ? albedo.GetInstanceID() : 0)
-                ^ (nrm != null ? nrm.GetInstanceID() * 397 : 0)
-                ^ (Mathf.RoundToInt(surface.printNormalStrength * 20f) * 1009);
+            var key = new DecalKey
+            {
+                albedo = albedo != null ? albedo.GetEntityId() : EntityId.None,
+                nrm = nrm != null ? nrm.GetEntityId() : EntityId.None,
+                nrmStr = Mathf.RoundToInt(surface.printNormalStrength * 20f)
+            };
             if (_decalMats.TryGetValue(key, out var mat) && mat != null) return mat;
             mat = new Material(_decalShader) { name = "XA_FootprintDecal_" + surface.id };
             if (albedo != null) mat.SetTexture("Base_Map", albedo);
