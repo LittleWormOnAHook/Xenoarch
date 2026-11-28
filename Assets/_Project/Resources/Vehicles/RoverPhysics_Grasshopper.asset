@@ -18,7 +18,7 @@ MonoBehaviour:
   mass: 2800
   comDown: 0.55
   comForeAft: 0
-  spring: 200000
+  spring: 200200
   damper: 5500
   damperRatio: 0.7
   scaleSpringWithGravity: 1
@@ -48,7 +48,7 @@ MonoBehaviour:
   boostSpeedKph: 80
   acceleration: 5.5
   brakeDecel: 12
-  maxSteer: 90
+  maxSteer: 35
   highSpeedSteer: 8
   boostSeconds: 3.5
   boostRechargeSeconds: 7
