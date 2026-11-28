@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55a70f1ce5d778a4d9b4f4e15bf8640d, type: 3}
+  m_Name: SonicToolAudio
+  m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Excavation.SonicToolAudioCatalog
+  entries:
+  - id: 0
+    clip: {fileID: 8300000, guid: 7657de4d792d0a142b9de2c3b6d9a61d, type: 3}
+    vendorClip: {fileID: 8300000, guid: 39b5d9efd6175114cab765596ea1fda4, type: 3}
+    vendorExtras:
+    - {fileID: 8300000, guid: 4352339f167176946a60bf4fbb7d8eb0, type: 3}
+    - {fileID: 8300000, guid: 13e31bb8072e0944d826e92440a9e939, type: 3}
+    volume: 0.6
+  - id: 1
+    clip: {fileID: 0}
+    vendorClip: {fileID: 8300000, guid: 89507e9f450b5554096a1dbcbfbc507f, type: 3}
+    vendorExtras:
+    - {fileID: 8300000, guid: 5631800973cf30845882d97d6a91483b, type: 3}
+    volume: 0.45
+  - id: 2
+    clip: {fileID: 0}
+    vendorClip: {fileID: 8300000, guid: cf877d14fbfaf2548b21c29d75fbe930, type: 3}
+    vendorExtras: []
+    volume: 0.4
+  - id: 3
+    clip: {fileID: 8300000, guid: 22199c20878a21143bf2cbf8d79d828b, type: 3}
+    vendorClip: {fileID: 8300000, guid: 687a9779f2094e448ba879771af970c3, type: 3}
+    vendorExtras: []
+    volume: 0.5
+  - id: 4
+    clip: {fileID: 8300000, guid: 790c90fdbc2efc74e9498b779572b3ee, type: 3}
+    vendorClip: {fileID: 8300000, guid: 43d9e2856c812b84dbb2390a4586d40c, type: 3}
+    vendorExtras: []
+    volume: 0.7
+  - id: 5
+    clip: {fileID: 8300000, guid: 8ee4971a8f927a8409c624a332c38641, type: 3}
+    vendorClip: {fileID: 8300000, guid: 3c14f3fd3d201c9499d0345cc7264758, type: 3}
+    vendorExtras:
+    - {fileID: 8300000, guid: aa1bf566731fb4d44816886b8a981702, type: 3}
+    volume: 0.6
+  - id: 6
+    clip: {fileID: 8300000, guid: d04377f8c2929ba45988904d4148c810, type: 3}
+    vendorClip: {fileID: 0}
+    vendorExtras: []
+    volume: 0.6

@@ -4,7 +4,7 @@ using DMI.Xenoarch.Save;
 
 namespace DMI.Xenoarch.Excavation
 {
-    [Serializable] public sealed class BuriedArtifactState { public int index; public float condition; public bool recovered; public string instanceId; }
+    [Serializable] public sealed class BuriedArtifactState { public int index; public float condition; public float clean; public bool recovered; public string instanceId; }
 
     [Serializable]
     public sealed class SiteExcavationState
@@ -51,7 +51,7 @@ namespace DMI.Xenoarch.Excavation
             g.strokes = s.strokes;
             foreach (var a in g.artifacts)
                 foreach (var st in s.artifacts)
-                    if (st.index == a.index) { a.condition = st.condition; a.recovered = st.recovered; }
+                    if (st.index == a.index) { a.condition = st.condition; a.recovered = st.recovered; a.clean = st.clean; }
             return true;
         }
 
@@ -67,7 +67,7 @@ namespace DMI.Xenoarch.Excavation
                 string inst = null;
                 foreach (var o in old) if (o.index == a.index) inst = o.instanceId;
                 if (a.index == recoveredIndex) inst = recoveredInstance;
-                s.artifacts.Add(new BuriedArtifactState { index = a.index, condition = a.condition, recovered = a.recovered, instanceId = inst });
+                s.artifacts.Add(new BuriedArtifactState { index = a.index, condition = a.condition, clean = a.clean, recovered = a.recovered, instanceId = inst });
             }
         }
     }

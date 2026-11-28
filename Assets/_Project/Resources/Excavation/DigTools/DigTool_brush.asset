@@ -17,7 +17,7 @@ MonoBehaviour:
   enabledInGame: 1
   spec:
     itemId: item.tool.brush
-    name: Brush
+    name: Ultrasonic Brush
     shortName: brush
     radius: 0.6
     removal: 0.035
@@ -27,3 +27,4 @@ MonoBehaviour:
     rate: 7
     cells: 1
     minBite: 0.005
+    brush: 0

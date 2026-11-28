@@ -49,6 +49,7 @@ namespace DMI.Xenoarch.Excavation
         [Tooltip("Optional cap on cells cut per column per stroke (0 = no cap: the chunk size decides).")] public int cells;
         [Tooltip("Smallest bite (cell fraction) a stroke always takes from the aimed column, however hard the band (0 = 0.03), " +
                  "so slow digging still shows progress.")] public float minBite;
+        [Tooltip("Head shape of the stroke on a mirrored surface (sonic excavator).")] public ExcavationBrush brush;
     }
 
     public static class DigTools
@@ -102,6 +103,8 @@ namespace DMI.Xenoarch.Excavation
         public int index, x, y, z, footprint = 1, height = 1;
         public float fragility = 0.5f, condition = 1f;
         public bool recovered;
+        /// <summary>Share of dust brushed off an exposed find (ultrasonic brush), 0..1. Saved with the site.</summary>
+        public float clean;
 
     }
 

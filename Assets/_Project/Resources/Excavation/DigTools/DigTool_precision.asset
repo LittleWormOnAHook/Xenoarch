@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Excavation.DigToolDefinition
   id: digtool.precision
   slotOrder: 1
-  enabledInGame: 1
+  enabledInGame: 0
   spec:
     itemId: item.tool.precision_tool
     name: Precision tool
@@ -27,3 +27,4 @@ MonoBehaviour:
     rate: 5
     cells: 1
     minBite: 0.02
+    brush: 0

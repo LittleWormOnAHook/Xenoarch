@@ -13,7 +13,7 @@ namespace DMI.Xenoarch.Excavation
     /// 4 brush, 5 powered drill (each needs its item in the inventory; same key again holsters). Hold LMB / RT on a dig
     /// site to dig: strokes go to the site's cell grid, which decides removal, refusals and artifact damage.
     /// </summary>
-    public sealed class DigTool : MonoBehaviour
+    public sealed partial class DigTool : MonoBehaviour
     {
         public const float Reach = 3f;
         public int Equipped { get; private set; } = -1;
@@ -30,7 +30,7 @@ namespace DMI.Xenoarch.Excavation
                 if (Equipped < 0) return default;
                 var t = DigTools.All[Equipped];
                 t.removal *= strengthScale;
-                return t;
+                return SonicTools.Effective(t);
             }
         }
 
@@ -49,6 +49,7 @@ namespace DMI.Xenoarch.Excavation
 
         void Awake()
         {
+            SonicAwake();
             _arms = GetComponentInChildren<FirstPersonArms>(true);
             _scanner = GetComponentInChildren<SurfaceScannerTool>(true);
             _rig = GetComponent<IPlayerRig>() ?? GetComponentInParent<IPlayerRig>();
@@ -64,6 +65,7 @@ namespace DMI.Xenoarch.Excavation
         static int ToolIndex(string itemId)
         {
             if (string.IsNullOrEmpty(itemId)) return -1;
+            if (itemId == SonicTools.LegacyPrecisionId) itemId = SonicTools.ExcavatorId;   // precision merged into the excavator's Fine focus
             var all = DigTools.All;
             for (int i = 0; i < all.Length; i++) if (all[i].itemId == itemId) return i;
             return -1;
@@ -74,14 +76,15 @@ namespace DMI.Xenoarch.Excavation
         {
             var bar = XenoarchRuntime.Session?.Hotbar;
             if (bar == null || toolIndex < 0) return 0;
-            for (int k = 1; k < DMI.Xenoarch.Inventory.Hotbar.Size; k++) if (bar.At(k) == DigTools.All[toolIndex].itemId) return k + 1;
+            for (int k = 1; k < DMI.Xenoarch.Inventory.Hotbar.Size; k++) { var id = bar.At(k); if (id == DigTools.All[toolIndex].itemId || (id == SonicTools.LegacyPrecisionId && DigTools.All[toolIndex].itemId == SonicTools.ExcavatorId)) return k + 1; }
             return 0;
         }
 
         /// <summary>Feedback for a hotbar key whose tool is not in the backpack (ZEN-21).</summary>
         public static string NotOwnedText(string name) => $"You don't have a {name} yet. Craft it aboard the ship, then press the key again.";
 
-        static bool Has(string itemId) => XenoarchRuntime.Session != null && XenoarchRuntime.Session.Inventory.Count(itemId) > 0;
+        static bool Has(string itemId) => XenoarchRuntime.Session != null && (XenoarchRuntime.Session.Inventory.Count(itemId) > 0
+            || (itemId == SonicTools.ExcavatorId && XenoarchRuntime.Session.Inventory.Count(SonicTools.LegacyPrecisionId) > 0));   // old saves hold the precision tool
 
         public void Equip(int index)
         {
@@ -91,6 +94,7 @@ namespace DMI.Xenoarch.Excavation
             Equipped = index;
             if (_arms != null) _arms.SetHeld(Hand.Right, true);
             XenoarchUI.Show(_panel, true);
+            OnSonicEquip();
         }
 
         public void Holster()
@@ -100,6 +104,7 @@ namespace DMI.Xenoarch.Excavation
             if (_arms != null) _arms.SetHeld(Hand.Right, false);
             XenoarchUI.Show(_panel, false);
             if (_ring != null) _ring.Hide();
+            OnSonicHolster();
         }
 
         static readonly Key[] SlotKeys = { Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
@@ -107,6 +112,7 @@ namespace DMI.Xenoarch.Excavation
         void Update()
         {
             if (XenoarchRuntime.Session == null) return;
+            SonicTools.Advance(Time.deltaTime);
             var kb = Keyboard.current; var gp = Gamepad.current; var mouse = Mouse.current;
             if (!UIState.BlocksGameplay && kb != null)
             {
@@ -116,42 +122,48 @@ namespace DMI.Xenoarch.Excavation
                 {
                     if (!kb[SlotKeys[k]].wasPressedThisFrame) continue;
                     int i = ToolIndex(bar.At(k + 1));
-                    if (i >= 0) Equip(Equipped == i ? -1 : i);
+                    if (i >= 0) KeyEquip(i, bar.At(k + 1));
                     else if (Equipped >= 0) Holster();
                 }
             }
             if (Equipped < 0) return;
             if (!Has(Current.itemId) || (_scanner != null && _scanner.Equipped)) { Holster(); return; }
+            _kind = SonicTools.KindOf(Current.itemId);
+            bool sonic = _kind != SonicToolKind.None;
+            if (sonic) SonicInput(kb, mouse);
 
             var cam = _rig?.ViewCamera != null ? _rig.ViewCamera : Camera.main;
             ExcavationSite site = null; RaycastHit hit = default;
             bool aimed = cam != null && Aim(cam, out hit);
-            bool inReach = aimed && hit.distance <= Reach;
+            bool inReach = aimed && hit.distance <= (sonic ? SonicTools.Reach : Reach);
             if (aimed) site = SiteFor(hit);
             var tool = Current;
 
             bool held = !UIState.BlocksGameplay && ((mouse != null && mouse.leftButton.isPressed) || (gp != null && gp.rightTrigger.isPressed));
             bool refusedHere = false;
-            if (held && site != null && inReach && Time.time >= _nextStroke)
+            string lockWhy = sonic ? SonicTools.Blocked(_kind) : null;
+            if (lockWhy != null && held && site != null && inReach) SonicLocked(lockWhy);
+            if (lockWhy == null && held && site != null && inReach && Time.time >= _nextStroke)
             {
                 _nextStroke = Time.time + 1f / Mathf.Max(0.5f, tool.rate);
                 var r = site.Stroke(hit.point, tool);
+                if (sonic && !r.refused) { SonicTools.Spend(_kind); if (_kind == SonicToolKind.Brush) BrushClean(site, hit.point); }
                 if (r.accepted)
                 {
                     _digUntil = Time.time + 0.6f;
-                    _audio.pitch = Random.Range(0.85f, 1.15f);
-                    _audio.PlayOneShot(_scrape);
+                    if (sonic) SonicFx(site, hit, tool);
+                    else { _audio.pitch = Random.Range(0.85f, 1.15f); _audio.PlayOneShot(_scrape); }
                     if (_arms != null && !_arms.Reaching) _arms.Reach(hit.point, null);
                     StrataFinds(site, r);
                     DigSiteFlags.Instance?.OnStroke(site, hit.point);
                     if (r.emerged != null)
                     {
-                        Toast.Show("Something is emerging from the soil! Switch to the precision tool (3) or brush (4).", 4f);
+                        Toast.Show("Something is emerging from the soil! Switch to the Fine focus (T) or the brush.", 4f);
                         _audio.pitch = 1.6f; _audio.PlayOneShot(_clunk, 0.7f);
                     }
-                    if (r.jarred) Flash($"The {tool.name.ToLowerInvariant()} jarred something buried just below! Condition {r.damaged.condition:P0}. Go gently: precision tool (3) or brush (4).");
-                    else if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Switch to the precision tool (3) or brush (4).");
-                    else if (r.hiddenBelow != null && tool.crude) Flash("The soil feels different here: something solid below. Slow down with the precision tool (3).");
+                    if (r.jarred) Flash($"The {tool.name.ToLowerInvariant()} jarred something buried just below! Condition {r.damaged.condition:P0}. Go gently: Fine focus (T) or the brush.");
+                    else if (r.damageDealt > 0.001f) Flash($"Damaging the find! Condition {r.damaged.condition:P0}. Switch to the Fine focus (T) or the brush.");
+                    else if (r.hiddenBelow != null && tool.crude) Flash("The soil feels different here: something solid below. Slow down with the Fine focus (T).");
                 }
                 else if (r.refused)
                 {
@@ -164,7 +176,7 @@ namespace DMI.Xenoarch.Excavation
             }
             if (_ring != null)
             {
-                if (!aimed || UIState.BlocksGameplay) _ring.Hide();
+                if (!aimed || UIState.BlocksGameplay || (sonic && _kind == SonicToolKind.Excavator && !SonicTools.IsFine(_kind))) _ring.Hide();
                 else
                 {
                     float rad = tool.radius;
@@ -173,6 +185,7 @@ namespace DMI.Xenoarch.Excavation
                     _ring.Show(hit.point, hit.normal, rad, st);
                 }
             }
+            if (sonic) SonicFrame(aimed, inReach, held, lockWhy, hit, tool, cam, site);
             if (!inReach) site = null;
             UpdateHud(site, hit);
         }
@@ -189,7 +202,7 @@ namespace DMI.Xenoarch.Excavation
             for (int i = 0; i < n; i++)
             {
                 var h = _hits[i];
-                if (h.collider == null || h.distance >= bd) continue;
+                if (h.collider == null || h.distance >= bd || h.collider.gameObject.layer == 2) continue;   // layer 2: sonic FX, rock chunks
                 if (h.collider.transform.IsChildOf(transform.root)) continue;           // the player rig, held tools
                 if (h.collider.GetComponentInParent<BuriedArtifact>() != null) continue; // finds: aim through to the soil
                 bd = h.distance; best = h;
@@ -256,7 +269,10 @@ namespace DMI.Xenoarch.Excavation
         void UpdateHud(ExcavationSite site, RaycastHit hit)
         {
             if (_line1 == null) return;
-            string l1 = $"{Current.name}   [hold LMB to dig]   1 scanner  {ToolKeys()}";
+            _nearFind = null;
+            string l1 = _kind != SonicToolKind.None
+                ? $"{Current.name} Mk {SonicTools.MkText}   [hold LMB]   1 scanner  {ToolKeys()}"
+                : $"{Current.name}   [hold LMB to dig]   1 scanner  {ToolKeys()}";
             string l2;
             if (site == null) l2 = "Aim at a dig site within 3 m.";
             else
@@ -283,13 +299,14 @@ namespace DMI.Xenoarch.Excavation
                     float d = Vector3.Distance(site.CellCentre(a.x, a.y, a.z), hit.point);
                     if (d < best && site.Exposure(a) > 0.01f) { best = d; near = a; }
                 }
+                _nearFind = near;
                 if (near != null)
                 {
                     float e = site.Exposure(near);
                     string state = e >= BuriedArtifact.SafeExposure ? "READY: hold E to recover"
                         : e >= BuriedArtifact.MinExposure ? $"can pry out (E), safe at {BuriedArtifact.SafeExposure:P0}"
                         : $"recoverable at {BuriedArtifact.MinExposure:P0}";
-                    l2 += $"   |   find {Bar(e)} {e:P0} exposed, condition {near.condition:P0}, {state}";
+                    l2 += $"   |   find {Bar(e)} {e:P0} exposed, condition {near.condition:P0}{(_kind == SonicToolKind.Brush ? $", cleaned {near.clean:P0}" : "")}, {state}";
                 }
             }
             if (_flash != null && Time.time < _flashUntil) l2 = _flash;
@@ -336,6 +353,7 @@ namespace DMI.Xenoarch.Excavation
             _panel.style.maxWidth = Length.Percent(72);   // long hints wrap instead of running under the side HUD
             _line2.style.whiteSpace = WhiteSpace.Normal;
             _panel.Add(_line1); _panel.Add(_line2);
+            _hud = SonicHud.Build(_panel, root);
             root.Add(_panel);
             XenoarchUI.Show(_panel, Equipped >= 0);
         }

@@ -11,6 +11,9 @@ namespace DMI.Xenoarch.Excavation
         TerrainHole // open a Unity Terrain hole (entrances into underground areas)
     }
 
+    /// <summary>Head shape of a stroke (sonic excavator chisel head); the adapter maps it to the backend's brush.</summary>
+    public enum ExcavationBrush : byte { Sphere, Disc, Cube, Cone }
+
     /// <summary>One tool stroke, in world space. Gameplay (cells, artifact damage) decides the stroke; the surface only renders it.</summary>
     public struct ExcavationEdit
     {
@@ -21,6 +24,8 @@ namespace DMI.Xenoarch.Excavation
         public ExcavationStroke stroke;
         /// <summary>Backend material/texture layer index (e.g. regolith, compacted, rock).</summary>
         public int materialIndex;
+        /// <summary>Head shape (default Sphere).</summary>
+        public ExcavationBrush brush;
     }
 
     /// <summary>

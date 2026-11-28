@@ -17,8 +17,8 @@ MonoBehaviour:
   enabledInGame: 1
   spec:
     itemId: item.tool.excavation_shovel
-    name: Excavation shovel
-    shortName: shovel
+    name: Sonic Excavator
+    shortName: excavator
     radius: 0.45
     removal: 2
     maxHardness: 2
@@ -27,3 +27,4 @@ MonoBehaviour:
     rate: 5.6
     cells: 0
     minBite: 0
+    brush: 0

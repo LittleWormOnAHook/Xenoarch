@@ -87,6 +87,14 @@ namespace DMI.Xenoarch.Integrations.Digger
                 Debug.Log($"[Xenoarch] Digger voxels: {ds.HeightmapScale.x:0.###} x {ds.HeightmapScale.y:0.###} m (h x v), min carve radius {_minRadius:0.##} m");
         }
 
+        BrushType MapBrush(ExcavationBrush b) => b switch
+        {
+            ExcavationBrush.Disc => BrushType.HalfSphere,
+            ExcavationBrush.Cube => BrushType.RoundedCube,
+            ExcavationBrush.Cone => BrushType.Stalagmite,
+            _ => brush
+        };
+
         public bool Apply(in ExcavationEdit edit)
         {
             if (digger == null) return false;
@@ -97,7 +105,7 @@ namespace DMI.Xenoarch.Integrations.Digger
                 ExcavationStroke.TerrainHole => ActionType.PaintHoles,
                 _ => ActionType.Dig,
             };
-            return digger.ModifyAsyncBuffured(edit.position, brush, action, Mathf.Max(0, edit.materialIndex),
+            return digger.ModifyAsyncBuffured(edit.position, MapBrush(edit.brush), action, Mathf.Max(0, edit.materialIndex),
                 Mathf.Clamp01(edit.strength), Mathf.Max(_minRadius, edit.radius));
         }
 

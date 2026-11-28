@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Item_tool_brush
   m_EditorClassIdentifier: DMI.Xenoarch.Runtime::DMI.Xenoarch.Items.ItemDefinition
   id: item.tool.brush
-  displayName: Excavation Brush
-  description: Removes the last layer of dust without damaging surfaces.
+  displayName: Ultrasonic Brush
+  description: A fan of ultrasonic waves that lifts dust and loose soil off a find
+    without touching it. Scroll sets the spread.
   icon: {fileID: 21300000, guid: 63781db07e0c5b8409a49fef03552ffe, type: 3}
   category: 0
   maxStack: 1

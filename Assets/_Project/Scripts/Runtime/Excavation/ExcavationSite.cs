@@ -204,6 +204,7 @@ namespace DMI.Xenoarch.Excavation
             // The Digger carve is at least CarveRadius wide, so the grid stroke covers the same footprint (otherwise the hole
             // looks dug where the grid still says "surface", and the next aim there reads depth 0).
             if (_surface != null) tool.radius = Mathf.Max(tool.radius, CarveRadius * 0.8f);
+            _brush = tool.brush;
             var r = Grid.StrokeAt(l.x, l.z, l.y, tool);
             if (!r.accepted) return r;
             if (_mesh != null) Rebuild();
@@ -312,7 +313,7 @@ namespace DMI.Xenoarch.Excavation
             }
             float rad = Mathf.Max(CarveRadius, strokeRadius);
             var centre = transform.TransformPoint(new Vector3(sx / cut.Count, minFloor, sz / cut.Count)) + transform.up * (rad * 0.9f);
-            QueueCarve(centre, rad, Grid.LayerAt(deepest).diggerTexture);
+            QueueCarve(centre, rad, Grid.LayerAt(deepest).diggerTexture, _brush);
         }
 
         /// <summary>One carve for a whole column down to its current floor (load replay).</summary>
@@ -324,19 +325,21 @@ namespace DMI.Xenoarch.Excavation
             return Carve(pos, rad, Grid.LayerAt(top).diggerTexture);
         }
 
-        bool Carve(Vector3 pos, float rad, int texture) => _surface.Apply(new ExcavationEdit
+        ExcavationBrush _brush;   // head shape of the stroke being carved (sonic excavator)
+
+        bool Carve(Vector3 pos, float rad, int texture, ExcavationBrush brush = ExcavationBrush.Sphere) => _surface.Apply(new ExcavationEdit
         {
-            position = pos, radius = rad, strength = 1f, stroke = ExcavationStroke.Remove, materialIndex = texture,
+            position = pos, radius = rad, strength = 1f, stroke = ExcavationStroke.Remove, materialIndex = texture, brush = brush,
         });
 
         const int MaxPendingCarves = 24;
-        void QueueCarve(Vector3 pos, float rad, int texture)
+        void QueueCarve(Vector3 pos, float rad, int texture, ExcavationBrush brush = ExcavationBrush.Sphere)
         {
             // Digger refuses edits while its buffer is full: keep them and retry (a deeper carve later in the queue
             // covers older ones, so the oldest are dropped first if the player out-digs Digger for a long time).
-            if (_pendingCarves.Count == 0 && Carve(pos, rad, texture)) return;
+            if (_pendingCarves.Count == 0 && Carve(pos, rad, texture, brush)) return;
             if (_pendingCarves.Count >= MaxPendingCarves) _pendingCarves.Dequeue();
-            _pendingCarves.Enqueue((pos, rad, texture));
+            _pendingCarves.Enqueue((pos, rad, texture, brush));
         }
 
         /// <summary>Re-carves the saved dug state into the Digger surface (Digger edits are not persisted separately).</summary>
@@ -642,9 +645,12 @@ namespace DMI.Xenoarch.Excavation
             return s != null && s.UpdateCleared();
         }
 
-        readonly Queue<(Vector3 pos, float rad, int tex)> _pendingCarves = new Queue<(Vector3, float, int)>();
+        readonly Queue<(Vector3 pos, float rad, int tex, ExcavationBrush brush)> _pendingCarves = new Queue<(Vector3, float, int, ExcavationBrush)>();
         /// <summary>Carves waiting for Digger's buffer (the hole is still catching up with the grid).</summary>
         public int PendingCarves => _pendingCarves.Count;
+
+        /// <summary>Mark the site state changed outside a stroke (brush cleaning) so it saves.</summary>
+        public void NotifyChanged() { _dirty = true; _saveAt = Time.unscaledTime + 1f; }
 
         void Update()
         {
@@ -652,8 +658,8 @@ namespace DMI.Xenoarch.Excavation
             TryAwardSurveyCache();
             for (int n = 0; n < 4 && _pendingCarves.Count > 0 && !_replaying; n++)   // capped per frame
             {
-                var (pos, rad, tex) = _pendingCarves.Peek();
-                if (!Carve(pos, rad, tex)) break;
+                var (pos, rad, tex, brush) = _pendingCarves.Peek();
+                if (!Carve(pos, rad, tex, brush)) break;
                 _pendingCarves.Dequeue();
             }
         }

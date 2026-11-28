@@ -103,8 +103,9 @@ namespace DMI.Xenoarch.Player
             var slot = _arms != null ? _arms.RightSlot : null;
             if (slot == null) return null;
             GameObject prefab = _catalog != null ? _catalog.PrefabFor(itemId) : null;
-            GameObject inst;
-            if (prefab != null)
+            GameObject inst = SonicHeldModel.Build(itemId);   // sonic excavator / brush: procedural model
+            if (inst != null) inst.transform.SetParent(slot, false);
+            else if (prefab != null)
             {
                 inst = Instantiate(prefab, slot);
                 inst.name = prefab.name;
