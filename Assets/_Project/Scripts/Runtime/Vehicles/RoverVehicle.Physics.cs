@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using DMI.Xenoarch.Galaxy;
-using DMI.Xenoarch.World;
 using DMI.Xenoarch.Player;
 using DMI.Xenoarch.UI;
 using UnityEngine;
@@ -25,14 +24,6 @@ namespace DMI.Xenoarch.Vehicles
         float _settleTimer;
         float _throttleSmooth;
         float _prevFwdVel;
-        float _speedScale = 1f;
-        float _rollDrag;
-        float _appliedSpring, _appliedDamper;
-        float _downforceBlend;
-        Transform _worldWheelRoot;
-        float[] _prevCompress;
-        bool[] _prevCompValid;
-        string _adaptKey;
         bool _pivotsBound;
         readonly List<Corner> _corners = new List<Corner>();
 
@@ -50,7 +41,6 @@ namespace DMI.Xenoarch.Vehicles
         {
             _profile = RoverPhysicsProfile.LoadOrDefault();
             _zoomStep = Mathf.Clamp(PlayerPrefs.GetInt(ZoomPref, 1), 0, 2);
-            EnsureWorldScaleWheelRoot();
             SubscribeProfileChanges();
             ApplyProfile();
             BindPivots();
@@ -86,7 +76,7 @@ namespace DMI.Xenoarch.Vehicles
             _brakeTorque = mass * brakeDecel * r / n;
             ApplyHandlingFromProfile();
             AlignWheelCollidersToVisuals();
-            ApplySuspensionSprings(); // AdaptToPlanet(true) refreshes _appliedSpring/_appliedDamper for the watchdog
+            ApplySuspensionSprings();
             ApplyCom();
         }
 
@@ -158,7 +148,7 @@ namespace DMI.Xenoarch.Vehicles
                 w.collider.radius = worldR / sc;
                 w.collider.suspensionDistance = travel / sc;
                 w.collider.forceAppPointDistance = (p != null ? p.forceAppPointDistance : 0f) / sc;
-                w.collider.mass = p != null && p.wheelMass > 0.1f ? p.wheelMass : 25f;
+                w.collider.mass = 25f;
                 // Attachment sits above the visual centre so mid-travel matches the authored wheel.
                 w.collider.transform.position = b.center + Vector3.up * (travel * target);
                 w.collider.transform.rotation = Quaternion.LookRotation(Fwd.sqrMagnitude > 0.01f ? Fwd : transform.forward, Vector3.up);
@@ -169,98 +159,19 @@ namespace DMI.Xenoarch.Vehicles
         {
             var p = _profile;
             if (p == null) return;
-            AdaptToPlanet(true);
-        }
-
-        /// <summary>
-        /// Scale spring, damper, grip and speed for the current gravity, terrain and temperature. Spring scales with
-        /// g/9.81 so sag stays similar; damper is target zeta (0.6-0.8) times 2 * sqrt(k * sprung mass per wheel).
-        /// </summary>
-        void AdaptToPlanet(bool force = false)
-        {
-            var p = _profile;
-            if (p == null) return;
-            float g = PlanetGravity();
-            var env = FindAnyObjectByType<EnvironmentDirector>() is { Current: var cur } ? cur : null;
-            var surf = FindAnyObjectByType<ProceduralSurface>();
-            var ptype = surf != null && surf.Recipe != null ? surf.Recipe.type : (ProceduralPlanetType?)null;
-            float temp = env != null ? env.surfaceTemperatureC : 15f;
             int n = Mathf.Max(1, WheelCount());
-            string key = $"{g:0.00}|{ptype}|{temp:0}|{n}";
-            if (!force && key == _adaptKey) return;
-            _adaptKey = key;
-
-            float gScale = 1f, grip = 1f, roll = p.defaultRoll, speed = 1f;
-            if (p.adaptToPlanet)
-            {
-                gScale = Mathf.Clamp(g / 9.81f, Mathf.Max(0.05f, p.minGravityScale), Mathf.Max(p.minGravityScale, p.maxGravityScale));
-                if (ptype == ProceduralPlanetType.Ice || temp <= p.coldGripBelowC) { grip *= p.iceGrip; roll = p.iceRoll; speed *= p.iceSpeed > 0.05f ? p.iceSpeed : 0.8f; }
-                else if (ptype == ProceduralPlanetType.Desert) { grip *= p.sandGrip; roll = p.sandRoll; }
-                else if (ptype == ProceduralPlanetType.Volcanic || ptype == ProceduralPlanetType.Barren) grip *= p.rockGrip;
-                if (temp <= p.coldGripBelowC) grip *= p.coldGrip;
-                else if (temp >= p.hotGripAboveC) grip *= p.hotGrip;
-                if (env != null)
-                {
-                    string id = (env.Id ?? env.name ?? "").ToLowerInvariant();
-                    if (id.Contains("moon") || id.Contains("icy")) { grip *= Mathf.Min(1f, p.iceGrip + 0.2f); roll = Mathf.Max(roll, p.iceRoll * 0.6f); }
-                    else if (id.Contains("mars")) grip *= p.sandGrip;
-                }
-            }
-            grip = Mathf.Clamp(grip, 0.15f, 3f);
-            _speedScale = Mathf.Clamp(speed, 0.3f, 1.5f);
-            _rollDrag = Mathf.Max(0f, roll);
-
-            // Spring scales with g so sag stays similar; damper is zeta * critical from sprung mass per wheel (t311u).
-            // The old hop damper (always-on vertical vel kill) is not used: it fought the springs. Rest damping only
-            // runs when nearly stopped.
             float sprung = mass / n;
             float spring = p.spring > 0f ? p.spring : sprung * 90f;
-            float critical;
-            float zeta;
-            float damper;
-            if (p.useLastGoodAuthoredSprings)
-            {
-                // REVERT path: last-good 0f7a16d/b2065a1 authored springs (unscaled, damper as authored).
-                critical = 2f * Mathf.Sqrt(Mathf.Max(1f, spring * sprung));
-                damper = p.damper > 0f ? p.damper : 0.4f * critical;
-                zeta = critical > 1f ? damper / critical : 0f;
-            }
-            else
-            {
-                if (p.adaptToPlanet && p.scaleSpringWithGravity) spring *= gScale;
-                critical = 2f * Mathf.Sqrt(Mathf.Max(1f, spring * sprung));
-                zeta = p.damperRatio > 0.01f ? Mathf.Clamp(p.damperRatio, 0.2f, 3f) : 0.7f;
-                damper = zeta * critical;
-            }
-            float sc = 0f; int scN = 0;
-            foreach (var w in wheels)
-                if (w != null && w.collider != null) { sc += ScaleOf(w.collider); scN++; }
-            sc = scN > 0 ? Mathf.Clamp(sc / scN, 0.05f, 8f) : 1f;
-            float wheelMass = p.wheelMass > 0.1f ? p.wheelMass : 25f;
-            _appliedSpring = spring; _appliedDamper = damper;
+            float damper = p.damper > 0f ? p.damper : 0.4f * 2f * Mathf.Sqrt(spring * sprung);
             foreach (var w in wheels)
             {
                 if (w == null || w.collider == null) continue;
-                w.collider.mass = wheelMass;
                 w.collider.suspensionSpring = new JointSpring
                 {
                     spring = spring,
                     damper = damper,
                     targetPosition = Mathf.Clamp01(p.targetPosition)
                 };
-            }
-            float rbMass = _rb != null ? _rb.mass : 0f; float liveSpring = 0f, liveDamper = 0f; foreach (var w0 in wheels) if (w0 != null && w0.collider != null) { liveSpring = w0.collider.suspensionSpring.spring; liveDamper = w0.collider.suspensionSpring.damper; break; }
-            Debug.Log($"[RoverDiag] g={g:0.00} gScale={gScale:0.00} spring={spring:0} damper={damper:0} critical={critical:0} zeta={zeta:0.00} mass={mass:0} rbMass={rbMass:0} liveSpring={liveSpring:0} liveDamper={liveDamper:0} wheels={n} travel={p.travel:0.00} scale={sc:0.000} wheelMass={wheelMass:0} type={ptype} temp={temp:0} springScaled={p.scaleSpringWithGravity && p.adaptToPlanet && !p.useLastGoodAuthoredSprings} lastGood={p.useLastGoodAuthoredSprings}");
-            // Grip: re-apply stiffness scaled by the terrain/temperature factor.
-            foreach (var w in wheels)
-            {
-                if (w == null || w.collider == null) continue;
-                var side = w.collider.sidewaysFriction;
-                side.stiffness = p.sidewaysStiffness * grip;
-                w.collider.sidewaysFriction = side;
-                var fw = w.collider.forwardFriction;
-                fw.stiffness = p.forwardStiffness * grip;
-                w.collider.forwardFriction = fw;
             }
         }
 
@@ -445,7 +356,7 @@ namespace DMI.Xenoarch.Vehicles
         float PlanetGravity()
         {
             float mul = _profile != null ? _profile.gravityMultiplier : 1f;
-            var env = FindAnyObjectByType<EnvironmentDirector>();
+            var env = FindFirstObjectByType<EnvironmentDirector>();
             if (env != null && env.Current != null && env.Current.gravity > 0.05f)
                 return env.Current.gravity * mul;
             if (_player != null && _player.gravity > 0.05f) return _player.gravity * mul;
@@ -471,20 +382,9 @@ namespace DMI.Xenoarch.Vehicles
             float g = PlanetGravity();
             bool grounded = AnyWheelGrounded();
             var p = _profile;
-            AdaptToPlanet();
-            // Do not snap extra downforce off the instant a wheel unloads: that is a pogo loop in low g.
-            float down = g;
-            float extra = (p != null ? p.extraDownforceG : 0f) * g;
-            _downforceBlend = Mathf.MoveTowards(_downforceBlend, grounded ? 1f : 0f, Time.fixedDeltaTime / 0.25f);
-            if (extra > 0f) down += extra * _downforceBlend;
-            if (p != null && p.minWheelLoad > 0f) down = Mathf.Max(down, p.minWheelLoad);
-            _rb.AddForce(Vector3.down * down, ForceMode.Acceleration);
-            EnsureSpringsStillApplied();
-            if (grounded && _rollDrag > 0f)
-            {
-                var rollPlanar = _rb.linearVelocity; rollPlanar.y = 0f;
-                _rb.AddForce(-rollPlanar * _rollDrag, ForceMode.Acceleration);
-            }
+            _rb.AddForce(Vector3.down * g, ForceMode.Acceleration);
+            if (grounded && p != null && p.extraDownforceG > 0f)
+                _rb.AddForce(Vector3.down * (g * p.extraDownforceG), ForceMode.Acceleration);
 
             var vel = _rb.linearVelocity;
             var planar = vel; planar.y = 0f;
@@ -519,10 +419,8 @@ namespace DMI.Xenoarch.Vehicles
             _rb.linearVelocity = vel;
 
             ApplyAntiPitch(grounded);
-            ApplyAntiRoll();
-            ClampSuspensionSpikes();
 
-            bool parked = !_autoPilot && (_state != State.Driving || !_powered);
+            bool parked = _state != State.Driving || !_powered;
             if (parked)
             {
                 foreach (var w in wheels)
@@ -532,8 +430,19 @@ namespace DMI.Xenoarch.Vehicles
                     w.collider.brakeTorque = _brakeTorque * 1.4f;
                     w.collider.steerAngle = 0f;
                 }
+                vel = _rb.linearVelocity;
+                if (grounded && vel.magnitude < 0.15f && _rb.angularVelocity.magnitude < 0.15f)
+                {
+                    _settleTimer += Time.fixedDeltaTime;
+                    if (_settleTimer > 0.4f)
+                    {
+                        _rb.linearVelocity = Vector3.zero;
+                        _rb.angularVelocity = Vector3.zero;
+                        _rb.Sleep();
+                    }
+                }
+                else _settleTimer = 0f;
             }
-            ApplyRestDamping(grounded, parked);
         }
 
         void ClampPlanarSpeed(float cap)
@@ -590,177 +499,13 @@ namespace DMI.Xenoarch.Vehicles
             }
         }
 
-
-        float GravityScale()
-        {
-            var p = _profile;
-            if (p == null || !p.adaptToPlanet) return 1f;
-            return Mathf.Clamp(PlanetGravity() / 9.81f, Mathf.Max(0.05f, p.minGravityScale), Mathf.Max(p.minGravityScale, p.maxGravityScale));
-        }
-
-        /// <summary>Current spring compression in world metres (0 = fully extended). Negative if the wheel is airborne.</summary>
-        float WheelCompression(WheelCollider wc)
-        {
-            if (wc == null || !wc.GetGroundHit(out var hit)) return -1f;
-            float travel = _profile != null ? _profile.travel : suspension;
-            float length = Vector3.Dot(wc.transform.position - hit.point, wc.transform.up) - WorldRadius(wc);
-            return Mathf.Clamp(travel - length, 0f, travel);
-        }
-
-        void ApplyAntiRoll()
-        {
-            var p = _profile;
-            if (p == null || p.antiRoll <= 0f || _rb == null) return;
-            WheelSlot fl = null, fr = null, rl = null, rr = null;
-            foreach (var w in wheels)
-            {
-                if (w == null || w.collider == null) continue;
-                float x = transform.InverseTransformPoint(w.collider.transform.position).x;
-                if (w.front) { if (x < 0f) fl = w; else fr = w; }
-                else { if (x < 0f) rl = w; else rr = w; }
-            }
-            float k = p.antiRoll * GravityScale();
-            AntiRollPair(fl, fr, k);
-            AntiRollPair(rl, rr, k);
-        }
-
-        void AntiRollPair(WheelSlot a, WheelSlot b, float stiffness)
-        {
-            if (a == null || b == null || a.collider == null || b.collider == null) return;
-            float ca = WheelCompression(a.collider), cb = WheelCompression(b.collider);
-            if (ca < 0f || cb < 0f) return; // only while both wheels on an axle are planted
-            float force = (ca - cb) * stiffness;
-            _rb.AddForceAtPosition(-a.collider.transform.up * force, a.collider.transform.position);
-            _rb.AddForceAtPosition(b.collider.transform.up * force, b.collider.transform.position);
-        }
-
-        void ClampSuspensionSpikes()
-        {
-            if (_rb == null || wheels == null) return;
-            int n = wheels.Count;
-            if (_prevCompress == null || _prevCompress.Length != n) { _prevCompress = new float[n]; _prevCompValid = new bool[n]; }
-            float maxV = _profile != null ? _profile.maxSuspensionSpeed : 4f;
-            float dt = Mathf.Max(1e-5f, Time.fixedDeltaTime);
-            float sumV = 0f; int counted = 0;
-            for (int i = 0; i < n; i++)
-            {
-                var w = wheels[i];
-                if (w == null || w.collider == null) { _prevCompValid[i] = false; continue; }
-                float c = WheelCompression(w.collider);
-                if (c < 0f) { _prevCompValid[i] = false; continue; }
-                if (_prevCompValid[i]) { sumV += (c - _prevCompress[i]) / dt; counted++; }
-                _prevCompress[i] = c;
-                _prevCompValid[i] = true;
-            }
-            if (maxV <= 0f || counted == 0) return;
-            float avgV = sumV / counted;
-            if (Mathf.Abs(avgV) <= maxV) return;
-            var vel = _rb.linearVelocity;
-            // Compressing faster than allowed usually means the chassis is dropping; extending too fast means it is leaping.
-            if (avgV > maxV && vel.y < -maxV) vel.y = -maxV;
-            else if (avgV < -maxV && vel.y > maxV) vel.y = maxV;
-            _rb.linearVelocity = vel;
-        }
-
-        /// <summary>Reparent WheelColliders under a counter-scaled holder so lossy scale is 1 (prefab leftover is 0.606).</summary>
-        void EnsureWorldScaleWheelRoot()
-        {
-            if (wheels == null) return;
-            var ls = transform.lossyScale;
-            if (_worldWheelRoot == null)
-            {
-                var existing = transform.Find("[Rover Wheels World]");
-                _worldWheelRoot = existing != null ? existing : new GameObject("[Rover Wheels World]").transform;
-                _worldWheelRoot.SetParent(transform, false);
-            }
-            _worldWheelRoot.localPosition = Vector3.zero;
-            _worldWheelRoot.localRotation = Quaternion.identity;
-            _worldWheelRoot.localScale = new Vector3(1f / Mathf.Max(1e-4f, ls.x), 1f / Mathf.Max(1e-4f, ls.y), 1f / Mathf.Max(1e-4f, ls.z));
-            foreach (var w in wheels)
-            {
-                if (w == null || w.collider == null) continue;
-                var t = w.collider.transform;
-                if (t.parent == _worldWheelRoot) continue;
-                var pos = t.position;
-                var rot = t.rotation;
-                t.SetParent(_worldWheelRoot, true);
-                t.position = pos;
-                t.rotation = rot;
-                t.localScale = Vector3.one;
-            }
-        }
-
-        void EnsureSpringsStillApplied()
-        {
-            if (_appliedSpring <= 0f) return;
-            foreach (var w in wheels)
-            {
-                if (w == null || w.collider == null) continue;
-                var js = w.collider.suspensionSpring;
-                if (Mathf.Abs(js.spring - _appliedSpring) > 1f || Mathf.Abs(js.damper - _appliedDamper) > 1f)
-                {
-                    Debug.LogWarning($"[RoverDiag] springs were overwritten (had spring={js.spring:0} damper={js.damper:0}); reapplying spring={_appliedSpring:0} damper={_appliedDamper:0}");
-                    AdaptToPlanet(true);
-                    return;
-                }
-            }
-        }
-
-        /// <summary>When nearly stopped (no throttle), damp leftover bounce so the rover actually comes to rest, then sleep if parked.</summary>
-        void ApplyRestDamping(bool grounded, bool parked)
-        {
-            if (_rb == null) { _settleTimer = 0f; return; }
-            var p = _profile;
-            float restSpeed = p != null ? Mathf.Max(0.05f, p.restSpeed) : 0.45f;
-            float lin = p != null ? p.restDamping : 8f;
-            float ang = p != null ? p.restAngularDamping : 8f;
-            var vel = _rb.linearVelocity;
-            var planar = vel; planar.y = 0f;
-            bool wantsMove = !parked && Mathf.Abs(_throttleSmooth) > 0.05f;
-            // Do not wait for |vy| to be small: that is the bounce we are trying to kill.
-            bool idle = !wantsMove && planar.magnitude < restSpeed;
-            if (!idle)
-            {
-                _settleTimer = 0f;
-                return;
-            }
-            float dt = Time.fixedDeltaTime;
-            if (lin > 0f) vel = Vector3.Lerp(vel, Vector3.zero, 1f - Mathf.Exp(-lin * dt));
-            _rb.linearVelocity = vel;
-            if (ang > 0f) _rb.angularVelocity *= Mathf.Exp(-ang * dt);
-            vel = _rb.linearVelocity;
-            if (vel.magnitude < 0.08f && _rb.angularVelocity.magnitude < 0.08f)
-            {
-                _rb.linearVelocity = Vector3.zero;
-                _rb.angularVelocity = Vector3.zero;
-                if (parked)
-                {
-                    _settleTimer += dt;
-                    float need = p != null ? Mathf.Max(0.05f, p.restSettleSeconds) : 0.35f;
-                    if (_settleTimer >= need) _rb.Sleep();
-                }
-            }
-            else _settleTimer = 0f;
-        }
-
-        /// <summary>True if the rover is rolling slowly enough to get out (ignores leftover vertical bounce below the cap).</summary>
-        public bool IsSlowEnoughToExit()
-        {
-            if (_rb == null) return true;
-            float rest = _profile != null ? Mathf.Max(0.05f, _profile.exitRestSpeed) : 0.3f;
-            var vel = _rb.linearVelocity;
-            var planar = new Vector3(vel.x, 0f, vel.z);
-            if (planar.magnitude <= rest) return true;
-            return vel.magnitude <= Mathf.Max(exitSpeed, rest);
-        }
         void ApplyAntiPitch(bool grounded)
         {
             if (!grounded || _rb == null || _state != State.Driving || !_powered) { _prevFwdVel = _rb != null ? Vector3.Dot(_rb.linearVelocity, Fwd) : 0f; return; }
             var p = _profile;
             var right = transform.right;
             float pitchRate = Vector3.Dot(_rb.angularVelocity, right); // + = nose up
-            float gScale = p != null && p.adaptToPlanet ? Mathf.Clamp(PlanetGravity() / 9.81f, Mathf.Max(0.05f, p.minGravityScale), Mathf.Max(p.minGravityScale, p.maxGravityScale)) : 1f;
-            float damp = (p != null ? p.antiPitch : 18f) * gScale;
+            float damp = p != null ? p.antiPitch : 18f;
             if (damp > 0f) _rb.AddTorque(-right * pitchRate * damp, ForceMode.Acceleration);
 
             float dt = Time.fixedDeltaTime;

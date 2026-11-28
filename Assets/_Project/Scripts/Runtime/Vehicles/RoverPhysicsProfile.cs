@@ -5,7 +5,6 @@ namespace DMI.Xenoarch.Vehicles
     /// <summary>
     /// Adjustable Grasshopper drive / suspension / air profile (t213u). Loaded at runtime from
     /// Resources/Vehicles/RoverPhysics_Grasshopper so the uncommitted prefab does not need a new reference.
-    /// Springs, dampers and settle values are applied at runtime; this asset is the place to tune extremes.
     /// </summary>
     [CreateAssetMenu(menuName = "Xenoarch/Rover Physics Profile", fileName = "RoverPhysics_Grasshopper")]
     public sealed class RoverPhysicsProfile : ScriptableObject
@@ -28,44 +27,8 @@ namespace DMI.Xenoarch.Vehicles
         public float comForeAft = 0f;
 
         [Header("Suspension (world metres / N / N-s)")]
-        [Tooltip("Earth-reference spring (N/m). When scaleSpringWithGravity is on, this is multiplied by g/9.81 so sag stays similar.")]
         public float spring = 70000f;
-        [Tooltip("Unused when damperRatio is set. Kept so older profile assets still load.")]
         public float damper = 5500f;
-        [Tooltip("Target damping ratio (zeta). Damper = zeta * 2 * sqrt(spring * sprung mass per wheel). 0.6-0.8 settles quickly; 1 is critical.")]
-        public float damperRatio = 0.7f;
-        [Tooltip("Scale the spring with planet gravity (g/9.81, clamped) so ride height and sag stay similar on the Moon and on Earth.")]
-        public bool scaleSpringWithGravity = true;
-        [Tooltip("REVERT path: use the last-good 0f7a16d/b2065a1 authored springs (unscaled spring and damper, no zeta retune). Off keeps gravity-scaled springs and target zeta. Toggle on this asset; the prefab is not edited.")]
-        public bool useLastGoodAuthoredSprings = false;
-        [Tooltip("WheelCollider unsprung mass (kg). Applied at runtime; the prefab is not edited.")]
-        public float wheelMass = 25f;
-
-        [Header("Planet adaptation (wide ranges; 0 disables a term)")]
-        [Tooltip("Scale spring, damper, anti-pitch and grip with local gravity and terrain/temperature.")]
-        public bool adaptToPlanet = true;
-        [Tooltip("Clamps gravity/9.81 used to scale the springs (0.05-4).")]
-        public float minGravityScale = 0.15f;
-        public float maxGravityScale = 2.5f;
-        [Tooltip("While grounded, add extra downward acceleration so wheel load never falls below this (m/s^2). Keeps low-g worlds plantable. 0 = off.")]
-        public float minWheelLoad = 3.5f;
-        [Tooltip("Ice / very cold grip multiplier (0-2).")]
-        public float iceGrip = 0.55f;
-        [Tooltip("Loose sand / desert grip multiplier (0-2).")]
-        public float sandGrip = 0.75f;
-        [Tooltip("Rock / highland grip multiplier (0-2).")]
-        public float rockGrip = 1.05f;
-        public float coldGripBelowC = -80f;
-        public float coldGrip = 0.7f;
-        public float hotGripAboveC = 80f;
-        public float hotGrip = 0.85f;
-        [Tooltip("Extra planar drag on ice (1/s).")]
-        public float iceRoll = 0.04f;
-        [Tooltip("Extra planar drag on sand (1/s).")]
-        public float sandRoll = 0.08f;
-        public float defaultRoll = 0.015f;
-        [Tooltip("Top-speed scale on ice (0.3-1.5).")]
-        public float iceSpeed = 0.8f;
         [Tooltip("Suspension travel in world metres.")]
         public float travel = 0.28f;
         [Tooltip("Spring target (0 = full droop, 1 = fully compressed).")]
@@ -92,22 +55,6 @@ namespace DMI.Xenoarch.Vehicles
         public float throttleFall = 0.22f;
         [Tooltip("Do not apply reverse/forward drive torque until speed along the body is below this (m/s). Brakes only until then.")]
         public float reverseEngageSpeed = 0.35f;
-
-        [Header("Settle and roll")]
-        [Tooltip("Anti-roll stiffness (N per metre of left-right compression difference). Scaled with gravity. 0 disables.")]
-        public float antiRoll = 60000f;
-        [Tooltip("Extra linear damping (1/s) when nearly stopped, so a parked or idling rover comes to rest. 0 disables.")]
-        public float restDamping = 8f;
-        [Tooltip("Extra angular damping (1/s) when nearly stopped. 0 disables.")]
-        public float restAngularDamping = 8f;
-        [Tooltip("Planar speed (m/s) below which rest damping applies.")]
-        public float restSpeed = 0.45f;
-        [Tooltip("Seconds of being nearly stopped before a parked rover is slept.")]
-        public float restSettleSeconds = 0.35f;
-        [Tooltip("Max suspension compression rate (m/s). Spikes above this are clipped so a wheel landing does not throw the chassis. 0 disables.")]
-        public float maxSuspensionSpeed = 4f;
-        [Tooltip("If planar (rolling) speed is at or below this (m/s), you can get out even if the chassis still has a little vertical bounce.")]
-        public float exitRestSpeed = 0.3f;
 
         [Header("Air / bounce")]
         [Header("Pitch (wide ranges; 0 disables each one)")]

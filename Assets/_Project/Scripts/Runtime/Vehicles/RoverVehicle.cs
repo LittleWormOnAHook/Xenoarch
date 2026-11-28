@@ -407,7 +407,7 @@ namespace DMI.Xenoarch.Vehicles
                 bool e = _input != null && _input.InteractPressed && (_interactor == null || _interactor.Target == null);
                 if (e)
                 {
-                    if (!IsSlowEnoughToExit()) Toast.Show("Stop the rover to get out.", 2f);
+                    if (_rb.linearVelocity.magnitude > exitSpeed) Toast.Show("Stop the rover to get out.", 2f);
                     else StartCoroutine(ExitRoutine());
                 }
             }
@@ -645,7 +645,7 @@ namespace DMI.Xenoarch.Vehicles
             float v = Vector3.Dot(_rb.linearVelocity, Fwd);
             bool dry = fuel <= 0.01f;
             if (dry) throttle = 0f;
-            float cap = (boosting ? boostSpeed : maxSpeed) * Mathf.Max(0.3f, _speedScale);
+            float cap = boosting ? boostSpeed : maxSpeed;
             if (speedCap > 0.1f) cap = Mathf.Min(cap, speedCap);
             float limit = throttle >= 0f ? cap : maxSpeed / 3f;
             float rise = _profile != null ? Mathf.Max(0.05f, _profile.throttleRise) : 0.45f;
