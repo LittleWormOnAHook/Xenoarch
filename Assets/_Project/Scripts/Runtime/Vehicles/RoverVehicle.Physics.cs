@@ -356,7 +356,7 @@ namespace DMI.Xenoarch.Vehicles
         float PlanetGravity()
         {
             float mul = _profile != null ? _profile.gravityMultiplier : 1f;
-            var env = FindFirstObjectByType<EnvironmentDirector>();
+            var env = FindAnyObjectByType<EnvironmentDirector>();
             if (env != null && env.Current != null && env.Current.gravity > 0.05f)
                 return env.Current.gravity * mul;
             if (_player != null && _player.gravity > 0.05f) return _player.gravity * mul;
