@@ -11,8 +11,9 @@ namespace DMI.Xenoarch.Ship
     /// <summary>
     /// Press E to sit in a cockpit chair. The player glides into the seat (root to the chair's centre, camera lowered to
     /// seated eye height, turned to face the console), locomotion stops and look is clamped. Mouse look stays on in every
-    /// seat; hold Alt to free the cursor and click cockpit screens. Press E (looking at nothing
-    /// usable) or Space to stand back up where you sat down from. Nothing on the chair is moved: the anchor is computed
+    /// seat; hold Alt and click a screen to open it in a view-only panel. Press E while looking at the
+    /// console to open the Ship Console, or look to either side (past <see cref="standYaw"/>) and press E
+    /// (or Space) to stand back up where you sat down from. Nothing on the chair is moved: the anchor is computed
     /// from the chair's renderer bounds at runtime, or taken from <see cref="seatAnchor"/> if set.
     /// The Kade rig has no sit animation, so the body is hidden while seated (first-person view only).
     /// </summary>
@@ -30,6 +31,8 @@ namespace DMI.Xenoarch.Ship
         [Range(20f, 170f)] public float yawRange = 80f;
         [Range(10f, 80f)] public float pitchDown = 55f;
         [Range(10f, 80f)] public float pitchUp = 60f;
+        [Tooltip("Look this far left or right (degrees from the seat facing) and press E to stand up. Looking more forward, E opens the Ship Console.")]
+        [Range(20f, 90f)] public float standYaw = 60f;
 
         public static CockpitSeat Occupied { get; private set; }
         public bool IsOccupied => Occupied == this;
@@ -159,7 +162,7 @@ namespace DMI.Xenoarch.Ship
             p.EnableSeatLook(seatYaw, yawRange, pitchDown, pitchUp);
             Transitioning = false;
             _seatedAt = Time.unscaledTime;
-            InteractionPromptHud.IdlePrompt = "Stand up  ·  Hold Alt + click: screens / console";
+            InteractionPromptHud.IdlePrompt = PromptForward;
             InteractionPromptHud.ForceIdlePrompt = true;
             UIState.ConsoleCursor = false;
             PowerUpConsole();
@@ -216,29 +219,29 @@ namespace DMI.Xenoarch.Ship
             if (!Transitioning && !_player.Seated) { Release(); return; } // stood up by a teleport/load
             if (!Transitioning)
             {
-                // Default: locked cursor and seated mouse look. Hold Alt to click screens; stay free while zoomed.
+                // Default: locked cursor and seated mouse look. Hold Alt to click screens; stay free while a panel is open (ZoomBusy is unused, kept for callers).
                 bool alt = Application.isFocused && Keyboard.current != null && (Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed); // not focused (Alt+Tab): never stay stuck on a free cursor
                 UIState.ConsoleCursor = alt || CockpitFtlDisplays.ZoomBusy;
+                InteractionPromptHud.IdlePrompt = LookingAside ? PromptAside : PromptForward;
             }
             if (Transitioning || !_player.InputEnabled || UIState.BlocksGameplay || Time.unscaledTime - _seatedAt < 0.35f) return;
             bool space = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-            // E always stands while seated so the helm (or anything else under the reticle) cannot eat the key.
             bool e = _input != null && _input.InteractPressed;
-            if (space || e) Stand();
+            if (space || (e && LookingAside)) Stand();
+            else if (e) OpenConsole();
         }
 
-        /// <summary>Alt + click on the console body (not a screen): open the ship console menu (helm, nav map, scanner).</summary>
-        public bool TryClickConsole(Ray ray)
+        const string PromptForward = "E: Ship Console  ·  Hold Alt + click: screens";
+        const string PromptAside = "E: Stand up";
+
+        /// <summary>True when the seat camera is turned past <see cref="standYaw"/> left or right of the console.</summary>
+        public bool LookingAside => _player != null && Mathf.Abs(_player.SeatYawOffset) >= standYaw;
+
+        /// <summary>E while looking at the console: open the Ship Console menu.</summary>
+        void OpenConsole()
         {
-            if (!IsOccupied || Transitioning || _helm == null || _helm.IsOpen || _helm.Busy) return false;
-            var rs = _helm.GetComponentsInChildren<Renderer>();
-            if (rs.Length == 0) return false;
-            var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
-            b.Expand(0.1f);
-            if (!b.IntersectRay(ray, out float d) || d > 4.5f) return false;
-            CockpitFtlDisplays.CancelZoom(true);
+            if (_helm == null || _helm.IsOpen || _helm.Busy) return;
             _helm.Open();
-            return _helm.IsOpen;
         }
 
         void OnDisable() { if (IsOccupied && _player != null && _player.Seated) { _player.EndSeat(); } if (IsOccupied) Release(); }

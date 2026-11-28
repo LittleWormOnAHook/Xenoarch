@@ -45,6 +45,8 @@ namespace DMI.Xenoarch.Player
         public bool Seated { get; private set; }
         public Vector3 SeatExitPosition { get; private set; }
         public float Pitch => _pitch;
+        /// <summary>Yaw from the seat facing, degrees (negative = left). 0 when not seated.</summary>
+        public float SeatYawOffset => _yawOffset;
         /// <summary>Camera height above the root while standing (prefab value).</summary>
         public float StandingEyeHeight => _standEyeY;
 

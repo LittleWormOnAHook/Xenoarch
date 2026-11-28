@@ -184,13 +184,25 @@ namespace DMI.Xenoarch.Ship
             var cam = CameraOf(seat);
             if (cam == null) return;
             var ray = cam.ScreenPointToRay(mouse.position.ReadValue());
-            // Mesh ray, not the convex trigger colliders (no valid textureCoord).
+            // Mesh ray first (convex trigger MeshColliders have no valid textureCoord). If the ray just
+            // misses the thin mesh (Editor Game-view scale can offset the pointer), the screen's own
+            // renderer bounds still count. The helm's combined bounds are never used: that was opening
+            // the Ship Console on every near-miss, because the screens live inside the helm.
             ScreenFace face = null;
             float best = float.MaxValue;
-            if (TryMeshUv(_left, ray, 4.5f, out _, out _, out var dL) && dL < best) { best = dL; face = _left; }
-            if (TryMeshUv(_right, ray, 4.5f, out _, out _, out var dR) && dR < best) { best = dR; face = _right; }
-            if (face == null) { seat.TryClickConsole(ray); return; }   // console body: ship console menu
+            if (TryHitScreen(_left, ray, 4.5f, out var dL) && dL < best) { best = dL; face = _left; }
+            if (TryHitScreen(_right, ray, 4.5f, out var dR) && dR < best) { best = dR; face = _right; }
+            if (face == null) return;
             OpenView(face, cam);
+        }
+
+        static bool TryHitScreen(ScreenFace face, Ray ray, float maxDist, out float dist)
+        {
+            if (TryMeshUv(face, ray, maxDist, out _, out _, out dist)) return true;
+            if (face == null || face.renderer == null) { dist = 0f; return false; }
+            var b = face.renderer.bounds;
+            b.Expand(0.05f);
+            return b.IntersectRay(ray, out dist) && dist >= 0f && dist <= maxDist;
         }
 
         static Camera CameraOf(CockpitSeat seat)
